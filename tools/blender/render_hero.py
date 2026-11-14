@@ -123,13 +123,17 @@ def main():
                 scene.render.filepath = str(file_path)
                 bpy.ops.render.render(write_still=True)
                 ids.append(frame_id)
+            events = []
+            if state == "attack":
+                release_frame = int(config["projectile_release_frame"])
+                release_index = min(range(len(frame_numbers)),
+                                    key=lambda i: abs(frame_numbers[i] - release_frame))
+                events.append({"frame": release_index, "name": "projectile_release"})
             manifest["animations"][f"{state}_{direction}"] = {
                 "loop": state in ("idle", "walk"),
                 "frame_duration_ms": round(1000 / fps),
                 "frames": ids,
-                "events": ([{"frame": int(config["projectile_release_frame"]),
-                             "name": "projectile_release"}]
-                           if state == "attack" else [])
+                "events": events
             }
 
     armature.rotation_euler = original_rotation
@@ -137,7 +141,7 @@ def main():
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                               encoding="utf-8")
     print(f"Rendered complete frame sequence. Manifest: {manifest_path}")
-    print("Atlas packing is a separate deterministic build step; no frames were omitted.")
+    print("Next: run pack_hero_atlases.py in Blender to create atlas PNGs and metadata.")
 
 
 if __name__ == "__main__":
