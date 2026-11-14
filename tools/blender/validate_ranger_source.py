@@ -40,10 +40,10 @@ def main():
     if len(meshes) < 35:
         fail("Expected detailed character mesh parts; found only " + str(len(meshes)))
     unparented = [obj.name for obj in meshes
-                  if obj.parent != rig or obj.parent_type != "BONE" or
-                  obj.parent_bone not in REQUIRED_BONES]
+                  if obj.parent != rig or obj.parent_type != "OBJECT"]
     if unparented:
-        fail("Mesh parts are not attached to expected bones: " + ", ".join(unparented[:12]))
+        fail("Rigid sprite parts must preserve world transforms under Ranger_Rig: " +
+             ", ".join(unparented[:12]))
     material_names = {mat.name for mat in bpy.data.materials}
     for required in ("Forest Green Enamel", "Warm Gold Trim", "Chestnut Leather",
                      "Silver White Hair", "Sapphire Blue Eyes", "Emerald Bow Energy"):
