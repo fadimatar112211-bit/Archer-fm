@@ -44,6 +44,16 @@ def main():
     if unparented:
         fail("Rigid sprite parts must preserve world transforms under Ranger_Rig: " +
              ", ".join(unparented[:12]))
+    incorrectly_skinned = []
+    for obj in meshes:
+        bone_groups = {group.name for group in obj.vertex_groups}
+        armature_modifiers = [mod for mod in obj.modifiers
+                              if mod.type == "ARMATURE" and mod.object == rig]
+        if len(bone_groups) != 1 or not armature_modifiers:
+            incorrectly_skinned.append(obj.name)
+    if incorrectly_skinned:
+        fail("Every rigid mesh part must have one bone vertex group and an armature modifier: " +
+             ", ".join(incorrectly_skinned[:12]))
     material_names = {mat.name for mat in bpy.data.materials}
     for required in ("Forest Green Enamel", "Warm Gold Trim", "Chestnut Leather",
                      "Silver White Hair", "Sapphire Blue Eyes", "Emerald Bow Energy"):
