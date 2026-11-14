@@ -215,6 +215,15 @@ def build_character():
     uv_sphere("Bow_Gem", (1.1, -0.23, 1.92), (0.09, 0.08, 0.13), "green_glow", "bow")
 
 
+def reset_pose():
+    """Clear every pose channel so no Action can inherit a previous pose."""
+    for bone in ARM.pose.bones:
+        bone.rotation_mode = "XYZ"
+        bone.location = (0.0, 0.0, 0.0)
+        bone.rotation_euler = (0.0, 0.0, 0.0)
+        bone.scale = (1.0, 1.0, 1.0)
+
+
 def animate():
     scene = bpy.context.scene
     poses = {
@@ -245,11 +254,16 @@ def animate():
         action = bpy.data.actions.new(action_name)
         ARM.animation_data_create()
         ARM.animation_data.action = action
-        for frame, bone_values in frames.items():
-            for bone_name, rotation in bone_values.items():
+        for frame in sorted(frames):
+            bone_values = frames[frame]
+            # Key every bone at every key time. An Action that leaves a bone
+            # unkeyed keeps whatever pose the previously evaluated Action left
+            # behind, so a Death-only channel such as root rotation would leak
+            # into idle/walk/attack and render a toppled character.
+            for bone_name in ARM.pose.bones.keys():
                 pb = ARM.pose.bones[bone_name]
                 pb.rotation_mode = "XYZ"
-                pb.rotation_euler = rotation
+                pb.rotation_euler = bone_values.get(bone_name, (0.0, 0.0, 0.0))
                 pb.keyframe_insert(data_path="rotation_euler", frame=frame,
                                    group=bone_name)
         for fc in action.fcurves:
@@ -261,8 +275,10 @@ def animate():
                     key.handle_left_type = "AUTO"
                     key.handle_right_type = "AUTO"
         action.use_fake_user = True
+    reset_pose()
     ARM.animation_data.action = bpy.data.actions["Ranger_Idle"]
     scene.frame_start, scene.frame_end = 1, 24
+    scene.frame_set(1)
 
 
 def setup_scene():

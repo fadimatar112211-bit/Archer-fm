@@ -56,4 +56,17 @@ The renderer maps the configured source-timeline projectile release frame to the
 
 ## Automated Blender build
 
-A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks all scripts, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
+A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks all scripts, runs the pure-Python packer/validator unit tests, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
+
+The artifact is uploaded even when a validation step fails, so a red run still supplies the frames that the failure report refers to.
+
+## Action completeness and pose isolation
+
+Every Action keys every pose bone at every key time. Blender only evaluates the F-curves that exist in the active Action, so a channel that exists only in one Action (for example the `root` rotation that tips the Ranger over in `Ranger_Death`) would otherwise survive an Action switch and deform every later state. `render_hero.py` additionally clears all pose channels before each Action is evaluated. This is what keeps idle/walk/attack upright; a renderer that assigns Actions without resetting the pose will silently produce a toppled character.
+
+## Measured framing and pivot
+
+`orthographic_scale` in `render_config.json` is a **minimum**: the renderer evaluates every sampled pose, projects the union bounds through all eight orbit directions, and widens the scale if any pose would cross the configured margins. `pivot_margin` (default `0.02`) is the normalized clearance kept on every edge.
+
+The `ground_anchor` world point (default `[0, 0, 0]`, the ground under the rig) is pinned to the manifest `pivot` for every direction, and the renderer fails if the projected anchor is more than 0.5% of a frame away from the configured pivot. The stored pivot therefore describes where the feet actually land, for all eight directions and all four states. Do not hand-tune `orthographic_scale` to fix clipping: clipping means a pose exceeds the canvas, and the measured fit is the gate that proves it does not.
+

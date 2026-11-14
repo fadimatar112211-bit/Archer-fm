@@ -28,5 +28,7 @@
     "x": 0.5,
     "y": 0.86
   },
+  "pivot_margin": 0.02,
+  "ground_anchor": [0.0, 0.0, 0.0],
   "output_directory": "assets/heroes/ranger/renders"
 }
