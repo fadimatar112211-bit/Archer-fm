@@ -256,4 +256,6 @@ Still to decide or test:
 - User approved the generated hero-selection concept as the visual direction: colorful, polished 3D/2.5D chibi fantasy heroes, with four distinct identities (green archer, red fire knight, purple shadow hunter, blue storm guardian). This approves the art direction, not the final production assets or UI implementation.
 - Existing SVG sprites are retained as legacy source/reference assets; they do not yet match or implement the approved 3D/2.5D look.
 - No hero runtime code, game engine scaffold, backend, or hero tests have been implemented yet.
-- Next action: define each hero's production visual sheet/animation requirements and evaluate a rendering prototype before selecting the engine.
+- Balanced Ranger first-pass character sheet generated and accepted as the visual reference: green hooded cloak, white hair, blue eyes, gold-trimmed leather armor, quiver, and green energy bow; front/three-quarter/side/back plus idle, walk, attack, and defeat pose references.
+- This is a concept sheet, not production-ready animation or an implemented game asset. No runtime code or in-game animation test exists yet.
+- Next action: inspect the legacy ranger SVG frames against this design, define the production asset pipeline (2D skeletal/2.5D vs true 3D), then build a small rendering prototype.
