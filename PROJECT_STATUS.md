@@ -168,7 +168,7 @@ Still to decide or test:
 - What happens if all players lose every crystal, and the interaction between rebuilding and the “last player with crystals” match-ending rule.
 - Minimum player count and exact matchmaking timeout/start behavior when fewer than four players join.
 - LAN host migration/host disconnect handling and secure account progression synchronization.
-- Whether the initial visual approach should be advanced 2D or 3D; choose after a mobile performance/quality prototype.
+- Final rendering direction: 2.5D sprite sheets rendered from a consistent 3D Chibi source model; runtime engine remains undecided.
 - Networking technology, backend, hosting, persistence schema, and anti-cheat architecture.
 
 ## 6. Implementation status
@@ -264,3 +264,14 @@ Still to decide or test:
 - Rendering pipeline decision is now fixed: use 2.5D characters rendered from a consistent 3D chibi model into optimized transparent sprite sheets (not real-time 3D in gameplay). This preserves the approved 3D look while reducing runtime/GPU cost for mid- and low-range phones and keeping the current 2D-oriented project direction viable.
 - Ranger production target: orthographic game-camera renders, consistent lighting/materials/pivot/scale, 8-direction views where gameplay requires directional facing, with idle/walk/attack/death animation sets. Start with a small performance/visual prototype before generating the full set.
 - Next action: define the sprite-sheet technical specification and implement a small renderer/asset preview workflow; then produce the Ranger's final animation set. Android emulator testing remains the final completion gate.
+
+
+## 10. Latest work checkpoint — Sprite Atlas specification
+
+- Added `docs/heroes/SPRITE_ATLAS_SPEC.md` and committed the 2.5D asset contract.
+- Defined provisional 256×256 frame size with 192×192 and 320×320 comparison variants; final size remains performance-gated.
+- Defined consistent orthographic camera, transparent RGBA frames, normalized ground pivot, 8-direction naming, animation loop policy, and one-shot `projectile_release` event.
+- Defined atlas/manifest JSON contract and asset acceptance checks, including alpha, cropping, pivot stability, frame order, memory footprint, and light/dark preview.
+- Prototype scope is intentionally small: one diagonal direction, idle/walk only, 6–8 sample frames per animation, and three resolution variants.
+- No 3D source model, final production frames, runtime atlas loader, game engine, or Android test has been created yet. The generated concept sheet is not a production sprite atlas and is not being treated as one.
+- Next: inspect the legacy repository for reusable hero source/rendering materials and inspect available tooling before committing to a renderer workflow. Then make the engine decision based on a small measurable prototype.
