@@ -24,7 +24,7 @@ from pathlib import Path
 
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 
 DIRECTIONS = {
@@ -115,10 +115,23 @@ def orbit_offset(base_offset, degrees):
 
 
 def camera_axes(offset):
-    """Return (rotation, screen-right, screen-up) for a camera at target + offset."""
-    rotation = (-offset).to_track_quat("-Z", "Y")
-    matrix = rotation.to_matrix()
-    return rotation, matrix.col[0].copy(), matrix.col[1].copy()
+    """Return (rotation, screen-right, screen-up) for a camera at target + offset.
+
+    The basis is built explicitly instead of with `to_track_quat` so all eight
+    orbit angles share one horizon convention: screen-right is perpendicular to
+    both the view direction and world up, and screen-up is what remains. A
+    rolled camera would change which way is up between directions and make the
+    ground anchor useless as a shared pivot.
+    """
+    view = (-offset).normalized()
+    world_up = Vector((0.0, 0.0, 1.0))
+    right = view.cross(world_up)
+    if right.length < 1e-6:  # Looking straight down or up.
+        right = Vector((1.0, 0.0, 0.0))
+    right.normalize()
+    up = right.cross(view)
+    rotation = Matrix((right, up, -view)).transposed().to_quaternion()
+    return rotation, right, up
 
 
 def projected_extents(corners, ground, right, up):
@@ -262,21 +275,42 @@ def main():
     for direction, degrees in DIRECTIONS.items():
         offset = orbit_offset(base_offset, degrees)
         rotation, right, up = camera_axes(offset)
-        camera.rotation_euler = rotation.to_euler()
-        camera.location = base_camera_location
+        # Orbit the camera position too, not just its rotation: keeping the
+        # authored position while turning to face east or north points the
+        # camera across the character, and the flattened view plane slices
+        # through the model (which is exactly how a 56x80 sprite turned into a
+        # thin sliver). `target + offset` keeps the authored distance and
+        # elevation for every direction.
+        camera_position = target + offset
+        camera.matrix_world = (Matrix.Translation(camera_position)
+                               @ rotation.to_matrix().to_4x4())
         bpy.context.view_layer.update()
         # Measure where the ground anchor currently projects, then slide the
         # camera parallel to the image plane until it lands on the manifest
         # pivot. The shift uses right/up only, never the view axis, so the
-        # camera keeps its original distance from the character and the rig
-        # stays in front of the near clip plane for all eight directions.
+        # camera keeps its orbit distance and the rig stays in front of the
+        # view plane for all eight directions.
         anchor = world_to_camera_view(scene, camera, ground)
-        camera.location = base_camera_location + (
+        camera.matrix_world = (Matrix.Translation(camera_position + (
             (anchor.x - pivot_x) * scale * right
-            + (anchor.y - (1.0 - pivot_y)) * scale * up)
+            + (anchor.y - (1.0 - pivot_y)) * scale * up))
+            @ rotation.to_matrix().to_4x4())
         bpy.context.view_layer.update()
 
         projected = world_to_camera_view(scene, camera, ground)
+        # Guard against the camera sliding behind the character. An orthographic
+        # camera still clips geometry that is behind its view plane, which
+        # silently replaces the sprite with a thin sliver of the model.
+        depths = [(world_to_camera_view(scene, camera, Vector(corner)).z, corner)
+                  for low, high in pose_bounds.values()
+                  for corner in bounds_corners(low, high)]
+        nearest_depth, nearest_corner = min(depths, key=lambda item: item[0])
+        print(f"CAMERA {direction} loc=({camera.location.x:.3f},"
+              f"{camera.location.y:.3f},{camera.location.z:.3f}) "
+              f"anchor=({anchor.x:.4f},{anchor.y:.4f}) "
+              f"projected=({projected.x:.4f},{projected.y:.4f}) "
+              f"nearest={nearest_depth:.3f}@"
+              f"({nearest_corner.x:.2f},{nearest_corner.y:.2f},{nearest_corner.z:.2f})")
         require(abs(projected.x - pivot_x) <= PIVOT_TOLERANCE
                 and abs((1.0 - projected.y) - pivot_y) <= PIVOT_TOLERANCE,
                 f"{direction}: ground anchor lands at "
@@ -284,15 +318,9 @@ def main():
                 f"configured pivot ({pivot_x:.4f}, {pivot_y:.4f})")
         check_direction_framing(pose_bounds, ground, right, up, scale,
                                 pivot_x, pivot_y, margin, direction)
-        # Guard against the camera sliding behind the character. An orthographic
-        # camera still clips geometry that is behind its view plane, which
-        # silently replaces the sprite with a thin sliver of the model.
-        distances = [world_to_camera_view(scene, camera, Vector(corner)).z
-                     for low, high in pose_bounds.values()
-                     for corner in bounds_corners(low, high)]
-        require(min(distances) > 0.5,
+        require(nearest_depth > 0.5,
                 f"{direction}: camera view plane intersects the character "
-                f"(nearest corner is {min(distances):.3f} units in front)")
+                f"(nearest corner is {nearest_depth:.3f} units in front)")
 
         low, high = pose_bounds[(STATES[0], sampled_frames(config, STATES[0])[0])]
         predicted = [world_to_camera_view(scene, camera, Vector(corner))

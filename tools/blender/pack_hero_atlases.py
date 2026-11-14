@@ -86,6 +86,12 @@ def main():
         image = bpy.data.images.new("atlas_" + animation_name,
                                     width=atlas_w, height=atlas_h,
                                     alpha=True, float_buffer=False)
+        # The atlas is a byte-for-byte copy of the rendered PNGs. Pin both the
+        # source frames and the atlas to a data colour space so Blender does
+        # not round-trip the pixels through scene-linear colour, which shifts
+        # anti-aliased and semi-transparent edge pixels.
+        image.colorspace_settings.name = "Non-Color"
+        image.alpha_mode = "STRAIGHT"
         pixels = array("f", [0.0]) * (atlas_w * atlas_h * 4)
         state, direction = animation_name.rsplit("_", 1)
         frame_meta = {}
@@ -94,6 +100,8 @@ def main():
             if not source_path.is_file():
                 raise RuntimeError(f"Missing frame: {source_path}")
             source = bpy.data.images.load(str(source_path))
+            source.colorspace_settings.name = "Non-Color"
+            source.alpha_mode = "STRAIGHT"
             # Verify source image dimensions match expected frame size
             if source.size[0] != fw or source.size[1] != fh:
                 bpy.data.images.remove(source)

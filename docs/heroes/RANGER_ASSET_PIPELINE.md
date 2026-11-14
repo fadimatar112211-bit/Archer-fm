@@ -70,7 +70,9 @@ Every Action keys every pose bone at every key time. Blender only evaluates the 
 
 The `ground_anchor` world point (default `[0, 0, 0]`, the ground under the rig) is pinned to the manifest `pivot` for every direction, and the renderer fails if the projected anchor is more than 0.5% of a frame away from the configured pivot. The stored pivot therefore describes where the feet actually land, for all eight directions and all four states. Do not hand-tune `orthographic_scale` to fix clipping: clipping means a pose exceeds the canvas, and the measured fit is the gate that proves it does not.
 
-The camera is positioned by measuring where the ground anchor currently projects and then sliding it parallel to the image plane (never along the view axis) until the anchor lands on the pivot. Sliding along the view axis would leave the projection unchanged on paper but push the rig behind the orthographic view plane, where Blender clips it and renders a sliver instead of the character. The renderer therefore also fails when any pose corner is less than 0.5 units in front of the camera.
+The camera orbits around `camera_target` by moving to `target + offset`, so it keeps the authored distance and elevation for every direction, then its rotation and its projected ground anchor are pinned as described below. Rotating the camera in place instead of orbiting it is a silent trapping: the camera keeps its authored position while turning to face east, so it looks *across* the character and the flattened view plane slices through the model. That produced a 56×80 sprite for `s` and a thin sliver for `w`.
+
+After orbiting, the camera is slid parallel to the image plane (never along the view axis) by measuring where the ground anchor actually projects and moving it until the anchor lands on the pivot. Sliding along the view axis would leave the projection unchanged on paper but push the rig behind the orthographic view plane, where Blender clips it. The renderer therefore also fails when any pose corner is less than 0.5 units in front of the camera.
 
 ## Death pose and ground clamp
 
