@@ -265,7 +265,7 @@ def animate():
 
 def setup_scene():
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    scene.render.engine = "BLENDER_EEVEE"  # Ubuntu 24.04 Blender 4.0 package compatibility
     scene.render.resolution_x = scene.render.resolution_y = 256
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
