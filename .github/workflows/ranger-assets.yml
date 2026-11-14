@@ -31,7 +31,8 @@ jobs:
             tools/blender/build_ranger_source.py \
             tools/blender/render_hero.py \
             tools/blender/pack_hero_atlases.py \
-            tools/blender/validate_ranger_source.py
+            tools/blender/validate_ranger_source.py \\
+            tools/blender/validate_rendered_frames.py
 
       - name: Build editable Ranger source
         run: blender -b --python tools/blender/build_ranger_source.py
