@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-14
-> Project status: Planning / repository initialization
+> Project status: Hero asset audit and transfer in progress
 > Default branch: `main`
 
 ## 1. Project identity
@@ -178,7 +178,7 @@ Still to decide or test:
 | New private GitHub repository | Done | `Archer-fm`, branch `main` |
 | Product vision and core requirements | Documented | Based on confirmed planning decisions |
 | Preliminary balance design | Not finalized | Numbers require simulation and playtesting |
-| Legacy asset audit | Not started | No assets copied |
+| Legacy asset audit | Partial | Hero sprites audited and copied; other systems not audited |
 | Engine/architecture decision | Not started | Must evaluate 2D/3D and mobile constraints |
 | Project scaffold | Not started | No game code committed yet |
 | Gameplay implementation | Not started | No gameplay systems implemented |
@@ -202,7 +202,7 @@ Still to decide or test:
 
 | # | النظام الرئيسي | ما يشمله | حالة Archer FM | فحص Archero_fm |
 |---|---|---|---|---|
-| 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | لم يبدأ | لم يبدأ |
+| 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | تم تدقيق الأصول ونسخ 16 ملف SVG؛ برمجة النظام لم تبدأ | اكتمل فحص الكتالوج والرسومات؛ راجع `docs/heroes/HEROES_AUDIT.md` |
 | 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | لم يبدأ | لم يبدأ |
 | 3 | القتال والأسلحة والقدرات | الهجوم اليدوي، الكومبو، الأسلحة، الضرر، المدى، الطاقة، القدرات والتأثيرات | لم يبدأ | لم يبدأ |
 | 4 | الخريطة والعالم | حجم الخريطة، المناطق الحيوية، العوائق، الأنهار والجسور والمياه، الضباب، الكاميرا | لم يبدأ | لم يبدأ |
@@ -251,6 +251,7 @@ Still to decide or test:
 
 - Repository verified as private and accessible.
 - `main` was empty at initialization.
-- This tracker is the first project file.
-- No game code, assets, architecture, backend, or tests have been added or completed yet.
-- Next action: perform a read-only audit of `Archero_fm` and report the exact reusable asset inventory before copying anything.
+- `PROJECT_STATUS.md` is the project tracker; `docs/heroes/HEROES_AUDIT.md` records the first system audit.
+- Hero asset audit completed: 16 SVG files copied and verified in `assets/heroes/`.
+- No hero runtime code, game engine scaffold, backend, or hero tests have been implemented yet.
+- Next action: decide/confirm rendering engine and create a data-driven hero model plus a shared four-state animation renderer.
