@@ -22,7 +22,7 @@ jobs:
       - name: Install Blender
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender libegl1 libgl1
+          sudo apt-get install -y blender libegl1 libgl1 python3-pil
           blender --version
 
       - name: Python syntax check
@@ -46,6 +46,11 @@ jobs:
           blender -b assets/heroes/ranger/source/ranger_source.blend \
             --python tools/blender/render_hero.py -- \
             --config assets/heroes/ranger/source/render_config.json
+
+      - name: Reject flattened or invalid rendered frames
+        run: |
+          python3 tools/blender/validate_rendered_frames.py \
+            --root assets/heroes/ranger/renders --resolution 192
 
       - name: Pack sprite atlases
         run: |
