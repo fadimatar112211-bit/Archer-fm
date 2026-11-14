@@ -5,6 +5,7 @@ Run:
 """
 from __future__ import annotations
 import argparse
+from array import array
 import json
 import sys
 from pathlib import Path
@@ -35,7 +36,7 @@ def main():
         image = bpy.data.images.new("atlas_" + animation_name,
                                     width=atlas_w, height=atlas_h,
                                     alpha=True, float_buffer=False)
-        pixels = [0.0] * (atlas_w * atlas_h * 4)
+        pixels = array("f", [0.0]) * (atlas_w * atlas_h * 4)
         state, direction = animation_name.rsplit("_", 1)
         frame_meta = {}
         for index, frame_id in enumerate(frame_ids):
@@ -45,7 +46,7 @@ def main():
             source = bpy.data.images.load(str(source_path), check_existing=False)
             if tuple(source.size) != (fw, fh):
                 raise RuntimeError("Unexpected frame dimensions: " + str(source_path))
-            src = list(source.pixels[:])
+            src = array("f", source.pixels[:])
             col, row = index % cols, index // cols
             for y in range(fh):
                 src_start = y * fw * 4
