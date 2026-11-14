@@ -3,7 +3,7 @@
   "resolution": 192,
   "fps": 12,
   "render_engine": "BLENDER_EEVEE",
-  "orthographic_scale": 3.2,
+  "orthographic_scale": 4.6,
   "armature_object": "Ranger_Rig",
   "actions": {
     "idle": "Ranger_Idle",
