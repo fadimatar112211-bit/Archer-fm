@@ -52,3 +52,8 @@ The builder script is the reproducible source generator. The binary `.blend` is 
    `python tools/validate_hero_assets.py assets/heroes/ranger/renders/ranger_manifest.json`
 
 The renderer maps the configured source-timeline projectile release frame to the nearest rendered frame index, so the manifest event index refers to the sampled animation array. The atlas packer writes unrotated, untrimmed frame rectangles with full source dimensions and uses compact float arrays to limit peak memory.
+
+
+## Automated Blender build
+
+A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks all scripts, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
