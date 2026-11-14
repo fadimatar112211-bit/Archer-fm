@@ -104,19 +104,14 @@ def smooth(obj):
 
 
 def attach(obj, bone):
-    # Keep the authored silhouette stable in the sprite renderer. Blender's
-    # bone-parent transform for short limb bones was producing large offsets
-    # when actions were evaluated in background rendering. Until weighted
-    # deformation is introduced, rigid parts are attached to the torso anchor;
-    # head pieces use the head anchor. This preserves the exact authored world
-    # placement while retaining a valid editable rig and coherent whole-body
-    # animation.
-    anchor = "head" if bone == "head" else "torso"
+    # Sprite source uses rigid assembled parts. Parent each part to the rig
+    # object (not pose bones): bone parenting without skin weights applies
+    # bone-space transforms to the complete mesh and caused the character to
+    # collapse/lie down when actions were evaluated. Keep the authored world
+    # transform exactly; the rig remains editable and drives global direction.
     world_matrix = obj.matrix_world.copy()
     obj.parent = ARM
-    obj.parent_type = "BONE"
-    obj.parent_bone = anchor
-    bpy.context.view_layer.update()
+    obj.parent_type = "OBJECT"
     obj.matrix_world = world_matrix
 
 
