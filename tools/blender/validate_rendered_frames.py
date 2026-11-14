@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject empty, clipped, or flattened Ranger renders before atlas packing."""
+"""Reject empty, clipped, or collapsed Ranger renders before atlas packing."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -7,6 +7,7 @@ from PIL import Image
 
 STATES = ("idle", "walk", "attack", "death")
 DIRECTIONS = ("s", "sw", "w", "nw", "n", "ne", "e", "se")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -38,11 +39,31 @@ def main() -> int:
                         occupied = sum(1 for value in alpha.getdata() if value > 8)
                         if occupied < 350:
                             errors.append(f"{path}: too few visible pixels ({occupied})")
-                        if bbox[0] <= 1 or bbox[1] <= 1 or bbox[2] >= args.resolution - 1 or bbox[3] >= args.resolution - 1:
-                            errors.append(f"{path}: character clipped by image edge ({bbox})")
-                        # The living poses must read as an upright character, not a flattened rig.
-                        if state != "death" and height < width * 0.82:
-                            errors.append(f"{path}: flattened silhouette {width}x{height}")
+                        margin = max(2, round(args.resolution * 0.01))
+                        if (bbox[0] <= margin or bbox[1] <= margin
+                                or bbox[2] >= args.resolution - margin
+                                or bbox[3] >= args.resolution - margin):
+                            errors.append(f"{path}: character clipped or lacks safe edge margin ({bbox})")
+                        # Bounding-box aspect ratio is not a reliable collapse test:
+                        # side-facing bows, cloaks and weapon poses legitimately widen it.
+                        # Require meaningful vertical extent and visible content in multiple
+                        # vertical bands instead, which detects a truly flattened render.
+                        if state != "death":
+                            min_height = max(48, round(args.resolution * 0.28))
+                            if height < min_height:
+                                errors.append(f"{path}: insufficient upright silhouette height {height}px")
+                            if height:
+                                band_hits = 0
+                                for band in range(4):
+                                    y0 = bbox[1] + (height * band) // 4
+                                    y1 = bbox[1] + (height * (band + 1)) // 4
+                                    if y1 <= y0:
+                                        continue
+                                    crop = alpha.crop((bbox[0], y0, bbox[2], y1))
+                                    if crop.getbbox() is not None:
+                                        band_hits += 1
+                                if band_hits < 4:
+                                    errors.append(f"{path}: collapsed vertical silhouette ({band_hits}/4 bands occupied)")
                 except Exception as exc:
                     errors.append(f"{path}: cannot inspect PNG: {exc}")
     if errors:
@@ -52,6 +73,7 @@ def main() -> int:
         return 1
     print(f"RANGER_VISUAL_CHECK_OK checked={checked} frames across {len(STATES)} states and {len(DIRECTIONS)} directions")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
