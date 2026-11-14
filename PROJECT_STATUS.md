@@ -150,7 +150,7 @@ Expected reusable assets from `Archero_fm`:
 - Four hero characters and their artwork/animations.
 - Four monster types and their artwork/animations.
 
-No legacy files have been copied into this repository yet. Before reuse, inspect file formats, animation structure, licenses/ownership, dependencies, and technical suitability. Do not copy proprietary third-party code or unlicensed assets.
+Hero audit and transfer: the four heroes' 16 SVG animation files (idle, walk, attack, death) have been audited, copied, and verified under `assets/heroes/`. No legacy gameplay code was copied. The legacy repository did not show a clear root license file; ownership/licensing must be confirmed before public distribution. Monster assets have not yet been audited or copied.
 
 Legacy repository: `https://github.com/fadimatar112211-bit/Archero_fm`
 
@@ -179,7 +179,7 @@ Still to decide or test:
 | Product vision and core requirements | Documented | Based on confirmed planning decisions |
 | Preliminary balance design | Not finalized | Numbers require simulation and playtesting |
 | Legacy asset audit | Partial | Hero sprites audited and copied; other systems not audited |
-| Engine/architecture decision | Not started | Must evaluate 2D/3D and mobile constraints |
+| Engine/architecture decision | Not started | Art direction approved as colorful 3D/2.5D chibi; rendering engine and gameplay dimensionality still need a mobile prototype |
 | Project scaffold | Not started | No game code committed yet |
 | Gameplay implementation | Not started | No gameplay systems implemented |
 | Backend/multiplayer | Not started | No networking code or services configured |
@@ -202,7 +202,7 @@ Still to decide or test:
 
 | # | النظام الرئيسي | ما يشمله | حالة Archer FM | فحص Archero_fm |
 |---|---|---|---|---|
-| 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | تم تدقيق الأصول ونسخ 16 ملف SVG؛ برمجة النظام لم تبدأ | اكتمل فحص الكتالوج والرسومات؛ راجع `docs/heroes/HEROES_AUDIT.md` |
+| 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | تم تدقيق الأصول ونسخ 16 ملف SVG؛ تم اعتماد اتجاه فني كرتوني 3D/2.5D؛ برمجة النظام لم تبدأ | اكتمل فحص الكتالوج والرسومات؛ راجع `docs/heroes/HEROES_AUDIT.md` |
 | 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | لم يبدأ | لم يبدأ |
 | 3 | القتال والأسلحة والقدرات | الهجوم اليدوي، الكومبو، الأسلحة، الضرر، المدى، الطاقة، القدرات والتأثيرات | لم يبدأ | لم يبدأ |
 | 4 | الخريطة والعالم | حجم الخريطة، المناطق الحيوية، العوائق، الأنهار والجسور والمياه، الضباب، الكاميرا | لم يبدأ | لم يبدأ |
@@ -253,5 +253,7 @@ Still to decide or test:
 - `main` was empty at initialization.
 - `PROJECT_STATUS.md` is the project tracker; `docs/heroes/HEROES_AUDIT.md` records the first system audit.
 - Hero asset audit completed: 16 SVG files copied and verified in `assets/heroes/`.
+- User approved the generated hero-selection concept as the visual direction: colorful, polished 3D/2.5D chibi fantasy heroes, with four distinct identities (green archer, red fire knight, purple shadow hunter, blue storm guardian). This approves the art direction, not the final production assets or UI implementation.
+- Existing SVG sprites are retained as legacy source/reference assets; they do not yet match or implement the approved 3D/2.5D look.
 - No hero runtime code, game engine scaffold, backend, or hero tests have been implemented yet.
-- Next action: decide/confirm rendering engine and create a data-driven hero model plus a shared four-state animation renderer.
+- Next action: define each hero's production visual sheet/animation requirements and evaluate a rendering prototype before selecting the engine.
