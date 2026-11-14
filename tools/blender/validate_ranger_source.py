@@ -39,20 +39,22 @@ def main():
     meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
     if len(meshes) < 35:
         fail("Expected detailed character mesh parts; found only " + str(len(meshes)))
-    incorrectly_parented = [obj.name for obj in meshes if obj.parent is not None]
+    incorrectly_parented = [
+        obj.name for obj in meshes
+        if obj.parent != rig or obj.parent_type != "BONE"
+        or obj.parent_bone not in REQUIRED_BONES
+    ]
     if incorrectly_parented:
-        fail("Mesh parts must not also be parented to the rig; armature modifier handles deformation: " +
+        fail("Every rigid mesh part must be parented directly to its intended rig bone: " +
              ", ".join(incorrectly_parented[:12]))
-    incorrectly_skinned = []
-    for obj in meshes:
-        bone_groups = {group.name for group in obj.vertex_groups}
-        armature_modifiers = [mod for mod in obj.modifiers
-                              if mod.type == "ARMATURE" and mod.object == rig]
-        if len(bone_groups) != 1 or not armature_modifiers:
-            incorrectly_skinned.append(obj.name)
-    if incorrectly_skinned:
-        fail("Every rigid mesh part must have one bone vertex group and an armature modifier: " +
-             ", ".join(incorrectly_skinned[:12]))
+    double_deformed = [
+        obj.name for obj in meshes
+        if any(mod.type == "ARMATURE" for mod in obj.modifiers)
+        or len(obj.vertex_groups) > 0
+    ]
+    if double_deformed:
+        fail("Bone-parented mesh parts must not also use vertex weights or Armature modifiers: " +
+             ", ".join(double_deformed[:12]))
     material_names = {mat.name for mat in bpy.data.materials}
     for required in ("Forest Green Enamel", "Warm Gold Trim", "Chestnut Leather",
                      "Silver White Hair", "Sapphire Blue Eyes", "Emerald Bow Energy"):
