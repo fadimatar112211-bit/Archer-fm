@@ -275,3 +275,13 @@ Still to decide or test:
 - Prototype scope is intentionally small: one diagonal direction, idle/walk only, 6–8 sample frames per animation, and three resolution variants.
 - No 3D source model, final production frames, runtime atlas loader, game engine, or Android test has been created yet. The generated concept sheet is not a production sprite atlas and is not being treated as one.
 - Next: inspect the legacy repository for reusable hero source/rendering materials and inspect available tooling before committing to a renderer workflow. Then make the engine decision based on a small measurable prototype.
+
+
+## 11. تدقيق إضافي — خط إنتاج الرامي القديم
+
+- فُحصت ملفات `pubspec.yaml`, `hero_catalog.dart`, `game_screen.dart`, `sprite_sheet_frame.dart`, `combat_painters.dart`, `main.dart`, واختبار كتالوج الأبطال، بالإضافة إلى لوحات SVG الأربع.
+- العارض القديم يقتطع SVG أفقياً فقط باستخدام Flutter widgets؛ لا يقرأ manifest ولا يدير pivot أو 8 اتجاهات أو animation events.
+- حلقة إطلاق الأسهم في شاشة اللعب القديمة منفصلة عن إطارات الهجوم وتعمل بمؤقت دوري؛ لا ننقلها لأن Archer FM يتطلب حدث إطلاق واحداً متزامناً مع حركة الهجوم.
+- لم نجد في الملفات المفحوصة نموذج 3D أو Blender أو خط تصيير 3D أو مولّد Atlas. الأصول القديمة مرجع 2D فقط.
+- أضيف التقرير التفصيلي: `docs/heroes/LEGACY_RANGER_PIPELINE_AUDIT.md`.
+- القرار العملي: نبني لاحقاً فاحص PNG/manifest مستقل عن المحرك، ونؤجل عارض اللعبة حتى اختيار المحرك. إنتاج إطارات 2.5D النهائية يتطلب نموذج 3D وأداة تصيير فعلية؛ لا نعامل concept sheet كأصل تشغيل.
