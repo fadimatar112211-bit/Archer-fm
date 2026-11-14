@@ -44,7 +44,7 @@ def main():
     args = arguments()
     config_path = Path(args.config).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    root = config_path.parent.parent.parent.parent
+    root = config_path.parents[4]
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
