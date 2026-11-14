@@ -7,8 +7,9 @@ Creates:
   assets/heroes/ranger/source/ranger_source.blend
 
 This is procedural original geometry, not a downloaded/third-party model.
-All visible parts are separate meshes parented to named armature bones so the
-scene is editable and its Actions can be refined in Blender.
+All visible parts are separate meshes with rigid single-bone vertex weights
+and Armature modifiers. Avoid object parenting to the rig to prevent applying
+the rig transform twice; the scene remains editable in Blender.
 """
 from __future__ import annotations
 
