@@ -2,7 +2,7 @@
   "hero_id": "ranger",
   "resolution": 256,
   "fps": 12,
-  "render_engine": "BLENDER_EEVEE_NEXT",
+  "render_engine": "BLENDER_EEVEE",
   "orthographic_scale": 3.2,
   "armature_object": "Ranger_Rig",
   "actions": {
