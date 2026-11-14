@@ -9,6 +9,20 @@ STATES = ("idle", "walk", "attack", "death")
 DIRECTIONS = ("s", "sw", "w", "nw", "n", "ne", "e", "se")
 
 
+def ascii_preview(image, bbox, columns=44):
+    """Render the alpha silhouette as text so a failing CI run is inspectable."""
+    alpha = image.getchannel("A")
+    pad = 4
+    crop = alpha.crop((max(0, bbox[0] - pad), max(0, bbox[1] - pad),
+                       min(image.width, bbox[2] + pad), min(image.height, bbox[3] + pad)))
+    rows = max(1, round(columns * crop.height / max(1, crop.width) * 0.5))
+    crop = crop.resize((columns, rows), Image.BILINEAR)
+    ramp = " .:-=+*#%@"
+    return ["".join(ramp[min(len(ramp) - 1, crop.getpixel((x, y)) * len(ramp) // 256)]
+                    for x in range(crop.width))
+            for y in range(crop.height)]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -16,6 +30,7 @@ def main() -> int:
     args = parser.parse_args()
     errors = []
     checked = 0
+    previews = []
     for state in STATES:
         for direction in DIRECTIONS:
             frames = sorted((args.root / state / direction).glob("*.png"))
@@ -37,6 +52,8 @@ def main() -> int:
                             continue
                         width, height = bbox[2] - bbox[0], bbox[3] - bbox[1]
                         occupied = sum(1 for value in alpha.getdata() if value > 8)
+                        if path.name.endswith("_000.png") and len(previews) < 8:
+                            previews.append((path, bbox, ascii_preview(image, bbox)))
                         if occupied < 350:
                             errors.append(f"{path}: too few visible pixels ({occupied})")
                         margin = max(2, round(args.resolution * 0.01))
@@ -69,6 +86,10 @@ def main() -> int:
     if errors:
         for error in errors[:80]:
             print("VISUAL_ERROR: " + error)
+        for path, bbox, lines in previews:
+            print(f"VISUAL_PREVIEW {path.relative_to(args.root)} bbox={bbox}")
+            for line in lines:
+                print("  |" + line + "|")
         print(f"RANGER_VISUAL_CHECK_FAILED checked={checked} errors={len(errors)}")
         return 1
     print(f"RANGER_VISUAL_CHECK_OK checked={checked} frames across {len(STATES)} states and {len(DIRECTIONS)} directions")

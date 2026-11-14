@@ -237,6 +237,15 @@ def main():
         for frame in sampled_frames(config, state):
             evaluate_pose(armature, action, frame)
             pose_bounds[(state, frame)] = union_bounds()
+    for (state, frame), (low, high) in sorted(pose_bounds.items()):
+        print(f"POSE_BOUNDS {state}[{frame}] "
+              f"x={low.x:.2f}..{high.x:.2f} y={low.y:.2f}..{high.y:.2f} "
+              f"z={low.z:.2f}..{high.z:.2f}")
+    rest_frame = sampled_frames(config, "idle")[0]
+    evaluate_pose(armature, bpy.data.actions[actions["idle"]], rest_frame)
+    print("POSE_DEBUG idle[%d] %s" % (rest_frame, ", ".join(
+        f"{bone.name}={tuple(round(value, 3) for value in bone.rotation_euler)}"
+        for bone in armature.pose.bones)))
 
     # Orbit the camera instead of rotating the rig. This preserves the authored
     # pose under the same camera elevation and avoids direction-dependent clipping.
