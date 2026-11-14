@@ -104,13 +104,9 @@ def smooth(obj):
 
 
 def attach(obj, bone):
-    # Rigidly skin each assembled mesh part to exactly one armature bone.
-    # This preserves the authored silhouette while allowing the named Actions
-    # to animate limbs, head, cloak, bow and quiver as separate rigid pieces.
-    world_matrix = obj.matrix_world.copy()
-    obj.parent = ARM
-    obj.parent_type = "OBJECT"
-    obj.matrix_world = world_matrix
+    # Keep each part in world space and deform it through the armature modifier.
+    # Parenting to the rig as well would apply the rig transform twice and can
+    # collapse/flatten the assembled character during evaluated rendering.
     group = obj.vertex_groups.new(name=bone)
     group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
     modifier = obj.modifiers.new("Ranger rigid bone deformation", "ARMATURE")
