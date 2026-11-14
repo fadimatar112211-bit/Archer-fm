@@ -39,11 +39,10 @@ def main():
     meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
     if len(meshes) < 35:
         fail("Expected detailed character mesh parts; found only " + str(len(meshes)))
-    unparented = [obj.name for obj in meshes
-                  if obj.parent != rig or obj.parent_type != "OBJECT"]
-    if unparented:
-        fail("Rigid sprite parts must preserve world transforms under Ranger_Rig: " +
-             ", ".join(unparented[:12]))
+    incorrectly_parented = [obj.name for obj in meshes if obj.parent is not None]
+    if incorrectly_parented:
+        fail("Mesh parts must not also be parented to the rig; armature modifier handles deformation: " +
+             ", ".join(incorrectly_parented[:12]))
     incorrectly_skinned = []
     for obj in meshes:
         bone_groups = {group.name for group in obj.vertex_groups}
