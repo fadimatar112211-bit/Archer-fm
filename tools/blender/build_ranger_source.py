@@ -104,13 +104,16 @@ def smooth(obj):
 
 
 def attach(obj, bone):
+    # Preserve the mesh's evaluated world transform while assigning a bone
+    # parent. Let Blender calculate the correct local basis for bone parenting;
+    # manually inverting PoseBone.matrix omits the rest-bone offset and can
+    # scatter the character's parts around the render.
+    world_matrix = obj.matrix_world.copy()
     obj.parent = ARM
     obj.parent_type = "BONE"
     obj.parent_bone = bone
-    # Cancel the full evaluated bone transform to preserve the mesh world pose.
     bpy.context.view_layer.update()
-    bone_world = ARM.matrix_world @ ARM.pose.bones[bone].matrix
-    obj.matrix_parent_inverse = bone_world.inverted()
+    obj.matrix_world = world_matrix
 
 
 def make_armature():
