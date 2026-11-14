@@ -1,0 +1,69 @@
+name: Ranger Blender Asset Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/blender/**"
+      - "assets/heroes/ranger/source/render_config.json"
+      - ".github/workflows/ranger-assets.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --version
+
+      - name: Python syntax check
+        run: |
+          python3 -m py_compile \
+            tools/blender/build_ranger_source.py \
+            tools/blender/render_hero.py \
+            tools/blender/pack_hero_atlases.py \
+            tools/blender/validate_ranger_source.py
+
+      - name: Build editable Ranger source
+        run: blender -b --python tools/blender/build_ranger_source.py
+
+      - name: Validate Blender scene and rig
+        run: |
+          blender -b assets/heroes/ranger/source/ranger_source.blend \
+            --python tools/blender/validate_ranger_source.py
+
+      - name: Render all states and directions
+        run: |
+          blender -b assets/heroes/ranger/source/ranger_source.blend \
+            --python tools/blender/render_hero.py -- \
+            --config assets/heroes/ranger/source/render_config.json
+
+      - name: Pack sprite atlases
+        run: |
+          blender -b assets/heroes/ranger/source/ranger_source.blend \
+            --python tools/blender/pack_hero_atlases.py -- \
+            --manifest assets/heroes/ranger/renders/ranger_manifest.json
+
+      - name: Validate final sprite manifest
+        run: |
+          python3 tools/validate_hero_assets.py \
+            assets/heroes/ranger/renders/ranger_manifest.json
+
+      - name: Upload generated source and sprites
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranger-blender-source-and-sprites
+          path: |
+            assets/heroes/ranger/source/ranger_source.blend
+            assets/heroes/ranger/renders/
+          if-no-files-found: error
+          retention-days: 14
