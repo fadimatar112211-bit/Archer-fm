@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Euler
+from mathutils import Vector
 
 
 DIRECTIONS = {
@@ -101,10 +101,19 @@ def main():
         }
     }
 
-    original_rotation = armature.rotation_euler.copy()
+    # Orbit the camera instead of rotating the rig. This preserves the authored
+    # pose under the same camera elevation and avoids direction-dependent clipping.
+    target = Vector(config.get("camera_target", [0.0, 0.0, 1.45]))
+    base_camera_location = camera.location.copy()
+    camera_offset = base_camera_location - target
     for direction, degrees in DIRECTIONS.items():
-        armature.rotation_euler = Euler((original_rotation.x, original_rotation.y,
-                                         original_rotation.z + math.radians(degrees)), "XYZ")
+        angle = math.radians(-degrees)
+        camera.location = target + Vector((
+            camera_offset.x * math.cos(angle) - camera_offset.y * math.sin(angle),
+            camera_offset.x * math.sin(angle) + camera_offset.y * math.cos(angle),
+            camera_offset.z,
+        ))
+        camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
         for state in STATES:
             action = bpy.data.actions[actions[state]]
             armature.animation_data_create()
@@ -136,7 +145,8 @@ def main():
                 "events": events
             }
 
-    armature.rotation_euler = original_rotation
+    camera.location = base_camera_location
+    camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     manifest_path = output_root / "ranger_manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                               encoding="utf-8")
