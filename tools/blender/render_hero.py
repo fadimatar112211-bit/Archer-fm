@@ -262,11 +262,18 @@ def main():
     for direction, degrees in DIRECTIONS.items():
         offset = orbit_offset(base_offset, degrees)
         rotation, right, up = camera_axes(offset)
-        # Pin the ground anchor to the manifest pivot for every direction.
-        shift = ((pivot_x - 0.5) * scale * right
-                 + (0.5 - pivot_y) * scale * up)
-        camera.location = ground - shift
         camera.rotation_euler = rotation.to_euler()
+        camera.location = base_camera_location
+        bpy.context.view_layer.update()
+        # Measure where the ground anchor currently projects, then slide the
+        # camera parallel to the image plane until it lands on the manifest
+        # pivot. The shift uses right/up only, never the view axis, so the
+        # camera keeps its original distance from the character and the rig
+        # stays in front of the near clip plane for all eight directions.
+        anchor = world_to_camera_view(scene, camera, ground)
+        camera.location = base_camera_location + (
+            (anchor.x - pivot_x) * scale * right
+            + (anchor.y - (1.0 - pivot_y)) * scale * up)
         bpy.context.view_layer.update()
 
         projected = world_to_camera_view(scene, camera, ground)
@@ -277,6 +284,26 @@ def main():
                 f"configured pivot ({pivot_x:.4f}, {pivot_y:.4f})")
         check_direction_framing(pose_bounds, ground, right, up, scale,
                                 pivot_x, pivot_y, margin, direction)
+        # Guard against the camera sliding behind the character. An orthographic
+        # camera still clips geometry that is behind its view plane, which
+        # silently replaces the sprite with a thin sliver of the model.
+        distances = [world_to_camera_view(scene, camera, Vector(corner)).z
+                     for low, high in pose_bounds.values()
+                     for corner in bounds_corners(low, high)]
+        require(min(distances) > 0.5,
+                f"{direction}: camera view plane intersects the character "
+                f"(nearest corner is {min(distances):.3f} units in front)")
+
+        low, high = pose_bounds[(STATES[0], sampled_frames(config, STATES[0])[0])]
+        predicted = [world_to_camera_view(scene, camera, Vector(corner))
+                     for corner in bounds_corners(low, high)]
+        xs = [point.x * resolution for point in predicted]
+        ys = [(1.0 - point.y) * resolution for point in predicted]
+        print(f"FRAMING {direction} ortho_scale={camera.data.ortho_scale:.3f} "
+              f"res={scene.render.resolution_x}x{scene.render.resolution_y}"
+              f"@{scene.render.resolution_percentage}% "
+              f"predicted_idle_px=x{min(xs):.1f}..{max(xs):.1f} "
+              f"y{min(ys):.1f}..{max(ys):.1f}")
 
         for state in STATES:
             action = bpy.data.actions[actions[state]]

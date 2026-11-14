@@ -14,6 +14,7 @@ the rig transform twice; the scene remains editable in Blender.
 from __future__ import annotations
 
 import math
+import sys
 from pathlib import Path
 
 import bpy
@@ -224,6 +225,60 @@ def reset_pose():
         bone.scale = (1.0, 1.0, 1.0)
 
 
+def scene_mesh_bounds():
+    """World-space AABB of every evaluated mesh in the current frame."""
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    low = Vector((math.inf, math.inf, math.inf))
+    high = Vector((-math.inf, -math.inf, -math.inf))
+    for obj in bpy.context.scene.objects:
+        if obj.type != "MESH":
+            continue
+        evaluated = obj.evaluated_get(depsgraph)
+        matrix = evaluated.matrix_world
+        for corner in evaluated.bound_box:
+            point = matrix @ Vector(corner)
+            low = Vector((min(low.x, point.x), min(low.y, point.y), min(low.z, point.z)))
+            high = Vector((max(high.x, point.x), max(high.y, point.y), max(high.z, point.z)))
+    return low, high
+
+
+def clamp_action_to_ground(action_name, frames):
+    """Lift a falling Action so no sampled pose sinks below the ground plane.
+
+    A death topple rotates around the feet, so a shoulder, hood or quiver can be
+    driven through z = 0. The root bone points along world +Z, so translating it
+    along its local Y lifts the whole rig without changing the pose. Lifts are
+    measured from evaluated mesh bounds at every sampled frame, then keyed, and
+    the result is re-measured so a regression fails the build log loudly.
+    """
+    scene = bpy.context.scene
+    ARM.animation_data.action = bpy.data.actions[action_name]
+    root = ARM.pose.bones["root"]
+    # Express world +Z in the root bone's local axes instead of assuming the
+    # bone points straight up, so the lift cannot move the rig sideways.
+    axis = root.bone.matrix_local.to_3x3().inverted() @ Vector((0.0, 0.0, 1.0))
+    axis.normalize()
+    lifts = {}
+    for frame in frames:
+        scene.frame_set(frame)
+        bpy.context.view_layer.update()
+        low, _ = scene_mesh_bounds()
+        lifts[frame] = round(max(0.0, -low.z), 4)
+    for frame in sorted(lifts):
+        scene.frame_set(frame)
+        root.location = axis * lifts[frame]
+        root.keyframe_insert(data_path="location", frame=frame, group="root")
+    for frame in sorted(lifts):
+        scene.frame_set(frame)
+        bpy.context.view_layer.update()
+        low, high = scene_mesh_bounds()
+        print(f"GROUND_CLAMP {action_name}[{frame}] lift={lifts[frame]:.3f} "
+              f"z={low.z:.3f}..{high.z:.3f}")
+        if low.z < -0.001:
+            print(f"RANGER_SOURCE_ERROR: {action_name}[{frame}] still below "
+                  f"ground at z={low.z:.3f}", file=sys.stderr)
+
+
 def animate():
     scene = bpy.context.scene
     poses = {
@@ -244,10 +299,17 @@ def animate():
             18: {"arm.R": (0,0,0), "arm.L": (0,0,0), "torso": (0,0,0)}
         },
         "Ranger_Death": {
-            1: {"root": (0,0,0), "torso": (0,0,0), "head": (0,0,0)},
-            8: {"root": (0.25,0,0.15), "torso": (0.7,0,0.1), "head": (0.2,0,0)},
-            16: {"root": (1.2,0,0.25), "torso": (1.25,0,0), "head": (0.5,0,0), "cloak": (0.5,0,0)},
-            24: {"root": (1.2,0,0.25), "torso": (1.25,0,0), "head": (0.5,0,0), "cloak": (0.5,0,0)}
+            1: {"root": (0,0,0), "torso": (0,0,0), "head": (0,0,0),
+                "leg.L": (0,0,0), "leg.R": (0,0,0)},
+            8: {"root": (0.28,0,0.06), "torso": (0.42,0,0.05), "head": (0.35,0,0),
+                "arm.L": (0.45,0,0.15), "arm.R": (0.55,0,-0.1), "cloak": (0.30,0,0),
+                "leg.L": (-0.05,0,0), "leg.R": (0.04,0,0)},
+            16: {"root": (1.32,0,0.10), "torso": (0.45,0,0), "head": (0.40,0,0),
+                 "arm.L": (0.65,0,0.20), "arm.R": (0.55,0,-0.15), "cloak": (0.65,0,0),
+                 "leg.L": (-0.18,0,0), "leg.R": (0.12,0,0)},
+            24: {"root": (1.50,0,0.10), "torso": (0.30,0,0), "head": (0.25,0,0),
+                 "arm.L": (0.50,0,0.20), "arm.R": (0.40,0,-0.15), "cloak": (0.75,0,0),
+                 "leg.L": (-0.08,0,0), "leg.R": (0.06,0,0)}
         }
     }
     for action_name, frames in poses.items():
@@ -264,7 +326,10 @@ def animate():
                 pb = ARM.pose.bones[bone_name]
                 pb.rotation_mode = "XYZ"
                 pb.rotation_euler = bone_values.get(bone_name, (0.0, 0.0, 0.0))
+                pb.location = (0.0, 0.0, 0.0)
                 pb.keyframe_insert(data_path="rotation_euler", frame=frame,
+                                   group=bone_name)
+                pb.keyframe_insert(data_path="location", frame=frame,
                                    group=bone_name)
         for fc in action.fcurves:
             for key in fc.keyframe_points:
@@ -275,6 +340,9 @@ def animate():
                     key.handle_left_type = "AUTO"
                     key.handle_right_type = "AUTO"
         action.use_fake_user = True
+    # The renderer samples death frames 1, 9, 16 and 24; those poses must rest
+    # on the ground plane instead of folding through it.
+    clamp_action_to_ground("Ranger_Death", [1, 9, 16, 24])
     reset_pose()
     ARM.animation_data.action = bpy.data.actions["Ranger_Idle"]
     scene.frame_start, scene.frame_end = 1, 24

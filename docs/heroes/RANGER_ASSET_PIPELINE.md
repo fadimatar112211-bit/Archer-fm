@@ -70,3 +70,9 @@ Every Action keys every pose bone at every key time. Blender only evaluates the 
 
 The `ground_anchor` world point (default `[0, 0, 0]`, the ground under the rig) is pinned to the manifest `pivot` for every direction, and the renderer fails if the projected anchor is more than 0.5% of a frame away from the configured pivot. The stored pivot therefore describes where the feet actually land, for all eight directions and all four states. Do not hand-tune `orthographic_scale` to fix clipping: clipping means a pose exceeds the canvas, and the measured fit is the gate that proves it does not.
 
+The camera is positioned by measuring where the ground anchor currently projects and then sliding it parallel to the image plane (never along the view axis) until the anchor lands on the pivot. Sliding along the view axis would leave the projection unchanged on paper but push the rig behind the orthographic view plane, where Blender clips it and renders a sliver instead of the character. The renderer therefore also fails when any pose corner is less than 0.5 units in front of the camera.
+
+## Death pose and ground clamp
+
+`Ranger_Death` is a forward topple with a short settle. Because the rig rotates around the feet, a falling pose can drive the hood, a shoulder or the quiver below `z = 0`; that would force the measured fit to reserve most of the frame for geometry under the floor and shrink every other state. `build_ranger_source.py` therefore measures the evaluated mesh bounds at every sampled death frame and keys a root-bone translation along world +Z so the lowest point rests exactly on the ground, then re-measures and reports the result (`GROUND_CLAMP ...`).
+
