@@ -1,6 +1,6 @@
 {
   "hero_id": "ranger",
-  "resolution": 256,
+  "resolution": 192,
   "fps": 12,
   "render_engine": "BLENDER_EEVEE",
   "orthographic_scale": 3.2,
@@ -12,18 +12,33 @@
     "death": "Ranger_Death"
   },
   "action_ranges": {
-    "idle": [1, 24],
-    "walk": [1, 16],
-    "attack": [1, 18],
-    "death": [1, 24]
+    "idle": [
+      1,
+      24
+    ],
+    "walk": [
+      1,
+      16
+    ],
+    "attack": [
+      1,
+      18
+    ],
+    "death": [
+      1,
+      24
+    ]
   },
   "frame_counts": {
-    "idle": 12,
-    "walk": 8,
-    "attack": 9,
-    "death": 12
+    "idle": 4,
+    "walk": 4,
+    "attack": 5,
+    "death": 4
   },
   "projectile_release_frame": 5,
-  "pivot": {"x": 0.5, "y": 0.86},
+  "pivot": {
+    "x": 0.5,
+    "y": 0.86
+  },
   "output_directory": "assets/heroes/ranger/renders"
 }
