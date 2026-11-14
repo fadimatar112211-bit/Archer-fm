@@ -245,8 +245,8 @@ class AtlasPackerTests(unittest.TestCase):
         gap_y = y2 - (y0 + h0)
         self.assertEqual(gap_y, 4, f"Vertical gap {gap_y} != padding 4")
 
-    def test_sprite_source_size_includes_padding(self):
-        """Test that spriteSourceSize includes padding around frame."""
+    def test_sprite_source_size_matches_frame_when_no_trim(self):
+        """Test that spriteSourceSize uses 0,0 origin when no trimming (TexturePacker spec)."""
         manifest_path = self.create_manifest(animations={
             "idle_sw": {
                 "loop": True,
@@ -265,11 +265,15 @@ class AtlasPackerTests(unittest.TestCase):
 
         frame_meta = meta["frames"]["ranger_idle_sw_000"]
         sss = frame_meta["spriteSourceSize"]
-        # spriteSourceSize should be frame + padding on each side
-        self.assertEqual(sss["x"], -2)
-        self.assertEqual(sss["y"], -2)
-        self.assertEqual(sss["w"], 32 + 4)  # 32 + 2*2
-        self.assertEqual(sss["h"], 32 + 4)
+        frame = frame_meta["frame"]
+        # When trimmed=false, spriteSourceSize should be 0,0 (position in original untrimmed image)
+        self.assertEqual(sss["x"], 0)
+        self.assertEqual(sss["y"], 0)
+        self.assertEqual(sss["w"], frame["w"])
+        self.assertEqual(sss["h"], frame["h"])
+        # Source size should be the frame size
+        self.assertEqual(frame_meta["sourceSize"], {"w": 32, "h": 32})
+        self.assertFalse(frame_meta["trimmed"])
 
     def test_meta_contains_padding_and_memory_estimate(self):
         """Test that atlas meta includes padding and memory estimate."""
@@ -339,7 +343,16 @@ class AtlasPackerTests(unittest.TestCase):
 
     def test_attack_has_exactly_one_projectile_release(self):
         """Test that attack animations have exactly one projectile_release event."""
-        manifest_path = self.create_manifest()
+        manifest_path = self.create_manifest(animations={
+            "attack_sw": {
+                "loop": False,
+                "frame_duration_ms": 75,
+                "frames": ["ranger_attack_sw_000", "ranger_attack_sw_001",
+                           "ranger_attack_sw_002", "ranger_attack_sw_003",
+                           "ranger_attack_sw_004"],
+                "events": [{"frame": 2, "name": "projectile_release"}]
+            }
+        })
         self.create_frame_dirs("attack", "sw",
                                ["ranger_attack_sw_000", "ranger_attack_sw_001",
                                 "ranger_attack_sw_002", "ranger_attack_sw_003",

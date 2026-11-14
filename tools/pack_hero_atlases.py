@@ -16,6 +16,153 @@ import struct
 DEFAULT_PADDING = 2
 
 
+class PNGError(Exception):
+    pass
+
+
+def read_png(path: Path) -> tuple[int, int, array]:
+    """Read a PNG file and return (width, height, pixels_array).
+
+    pixels_array is an array('f') of RGBA values in range 0.0..1.0,
+    laid out row-major (top to bottom, left to right).
+    """
+    with path.open("rb") as f:
+        data = f.read()
+
+    if len(data) < 29 or data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise PNGError(f"{path}: not a valid PNG file (bad signature)")
+
+    # Parse chunks
+    pos = 8
+    ihdr_data = None
+    idat_chunks = []
+
+    while pos < len(data):
+        if pos + 8 > len(data):
+            raise PNGError(f"{path}: truncated chunk header")
+        length = struct.unpack(">I", data[pos:pos+4])[0]
+        chunk_type = data[pos+4:pos+8]
+        pos += 8
+
+        if pos + length > len(data):
+            raise PNGError(f"{path}: truncated chunk data")
+        chunk_data = data[pos:pos+length]
+        pos += length
+
+        if pos + 4 > len(data):
+            raise PNGError(f"{path}: truncated chunk CRC")
+        crc = data[pos:pos+4]
+        pos += 4
+
+        # Verify CRC
+        expected_crc = struct.pack(">I", zlib.crc32(chunk_type + chunk_data) & 0xffffffff)
+        if crc != expected_crc:
+            raise PNGError(f"{path}: CRC mismatch in {chunk_type.decode('ascii', errors='ignore')} chunk")
+
+        if chunk_type == b"IHDR":
+            if length != 13:
+                raise PNGError(f"{path}: IHDR chunk has invalid length")
+            ihdr_data = chunk_data
+        elif chunk_type == b"IDAT":
+            idat_chunks.append(chunk_data)
+        elif chunk_type == b"IEND":
+            break
+        # Ignore other chunks (gAMA, cHRM, sRGB, tEXt, etc.)
+
+    if ihdr_data is None:
+        raise PNGError(f"{path}: missing IHDR chunk")
+    if not idat_chunks:
+        raise PNGError(f"{path}: missing IDAT chunks")
+
+    # Parse IHDR
+    width, height, bit_depth, color_type, compression, filter_method, interlace = struct.unpack(">IIBBBBB", ihdr_data)
+
+    if bit_depth != 8:
+        raise PNGError(f"{path}: only 8-bit depth supported, got {bit_depth}")
+    if color_type != 6:
+        raise PNGError(f"{path}: only truecolor with alpha (color_type=6) supported, got {color_type}")
+    if compression != 0:
+        raise PNGError(f"{path}: unknown compression method")
+    if filter_method != 0:
+        raise PNGError(f"{path}: unknown filter method")
+    if interlace != 0:
+        raise PNGError(f"{path}: interlaced PNGs not supported")
+
+    # Decompress IDAT data
+    compressed = b"".join(idat_chunks)
+    try:
+        raw = zlib.decompress(compressed)
+    except zlib.error as e:
+        raise PNGError(f"{path}: failed to decompress IDAT: {e}")
+
+    # Unfilter scanlines
+    bytes_per_pixel = 4  # RGBA
+    stride = width * bytes_per_pixel
+    expected_len = height * (1 + stride)  # 1 filter byte per row
+    if len(raw) != expected_len:
+        raise PNGError(f"{path}: decompressed data length mismatch: expected {expected_len}, got {len(raw)}")
+
+    pixels = array("f", [0.0]) * (width * height * 4)
+    prev_row = None
+
+    for y in range(height):
+        row_start = y * (1 + stride)
+        filter_type = raw[row_start]
+        row_data = raw[row_start + 1:row_start + 1 + stride]
+
+        if filter_type == 0:  # None
+            recon = row_data
+        elif filter_type == 1:  # Sub
+            recon = bytearray(stride)
+            for i in range(stride):
+                left = recon[i - bytes_per_pixel] if i >= bytes_per_pixel else 0
+                recon[i] = (row_data[i] + left) & 0xff
+        elif filter_type == 2:  # Up
+            recon = bytearray(stride)
+            for i in range(stride):
+                up = prev_row[i] if prev_row else 0
+                recon[i] = (row_data[i] + up) & 0xff
+        elif filter_type == 3:  # Average
+            recon = bytearray(stride)
+            for i in range(stride):
+                left = recon[i - bytes_per_pixel] if i >= bytes_per_pixel else 0
+                up = prev_row[i] if prev_row else 0
+                recon[i] = (row_data[i] + ((left + up) // 2)) & 0xff
+        elif filter_type == 4:  # Paeth
+            recon = bytearray(stride)
+            for i in range(stride):
+                left = recon[i - bytes_per_pixel] if i >= bytes_per_pixel else 0
+                up = prev_row[i] if prev_row else 0
+                up_left = prev_row[i - bytes_per_pixel] if prev_row and i >= bytes_per_pixel else 0
+                # Paeth predictor
+                p = left + up - up_left
+                pa = abs(p - left)
+                pb = abs(p - up)
+                pc = abs(p - up_left)
+                if pa <= pb and pa <= pc:
+                    pr = left
+                elif pb <= pc:
+                    pr = up
+                else:
+                    pr = up_left
+                recon[i] = (row_data[i] + pr) & 0xff
+        else:
+            raise PNGError(f"{path}: unknown filter type {filter_type}")
+
+        prev_row = recon
+        # Convert to float 0..1
+        for i, val in enumerate(recon):
+            pixels[y * stride + i] = val / 255.0
+
+    return width, height, pixels
+
+
+def read_png_dimensions(path: Path) -> tuple[int, int]:
+    """Read PNG width/height from file header."""
+    width, height, _ = read_png(path)
+    return width, height
+
+
 def make_png(width: int, height: int, pixels: array | None = None) -> bytes:
     """Create a minimal valid PNG with given pixel data."""
     def chunk(kind: bytes, data: bytes) -> bytes:
@@ -30,23 +177,13 @@ def make_png(width: int, height: int, pixels: array | None = None) -> bytes:
     else:
         raw = b""
         for y in range(height):
-            raw += b"\x00"
+            raw += b"\x00"  # filter type 0 (None)
             row_start = y * width * 4
             row_data = bytes(int(p * 255) for p in pixels[row_start:row_start + width * 4])
             raw += row_data
 
     idat = zlib.compress(raw)
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b"")
-
-
-def read_png_dimensions(path: Path) -> tuple[int, int]:
-    """Read PNG width/height from file header."""
-    with path.open("rb") as f:
-        header = f.read(24)
-    if len(header) != 24 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
-        raise RuntimeError(f"{path}: not a valid PNG header")
-    width, height = struct.unpack(">II", header[16:24])
-    return width, height
 
 
 def extrude_edges(pixels: array, fw: int, fh: int, atlas_w: int, atlas_h: int,
@@ -121,21 +258,17 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
         for index, frame_id in enumerate(frame_ids):
             source_path = base / state / direction / (frame_id + ".png")
             if not source_path.is_file():
-                # For testing without real frames, create a placeholder
-                src = array("f", [0.0] * (fw * fh * 4))
-                # Add a visible pattern so we can verify packing
-                for y in range(fh):
-                    for x in range(fw):
-                        i = (y * fw + x) * 4
-                        # Red channel = frame index, Green = x, Blue = y
-                        src[i] = (index % 256) / 255.0
-                        src[i + 1] = x / max(1, fw - 1)
-                        src[i + 2] = y / max(1, fh - 1)
-                        src[i + 3] = 1.0
-            else:
-                # In production, load actual PNG
-                # For now we'll just use placeholder since we can't load PNGs in pure stdlib easily
-                src = array("f", [0.0] * (fw * fh * 4))
+                raise RuntimeError(f"Missing frame file: {source_path}")
+
+            # Read actual PNG data
+            src_w, src_h, src_pixels = read_png(source_path)
+
+            # Verify dimensions match expected frame size
+            if src_w != fw or src_h != fh:
+                raise RuntimeError(
+                    f"Frame {frame_id} has dimensions {src_w}x{src_h}, "
+                    f"expected {fw}x{fh} (from manifest frame_size)"
+                )
 
             col, row = index % cols, index // cols
             base_x = col * fw + (col + 1) * padding
@@ -144,16 +277,20 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
             for y in range(fh):
                 src_start = y * fw * 4
                 dst_start = ((base_y + y) * atlas_w + base_x) * 4
-                pixels[dst_start:dst_start + fw * 4] = src[src_start:src_start + fw * 4]
+                pixels[dst_start:dst_start + fw * 4] = src_pixels[src_start:src_start + fw * 4]
 
             if padding > 0:
                 extrude_edges(pixels, fw, fh, atlas_w, atlas_h, col, row, padding)
 
+            # TexturePacker-style metadata:
+            # - frame: position and size of the sprite in the atlas (without padding)
+            # - spriteSourceSize: position and size in the original untrimmed image (same as frame since no trim)
+            # - sourceSize: original image size (fw, fh)
+            # - trimmed: false (we don't trim)
             frame_meta[frame_id] = {
                 "frame": {"x": base_x, "y": base_y, "w": fw, "h": fh},
                 "rotated": False, "trimmed": False,
-                "spriteSourceSize": {"x": -padding, "y": -padding,
-                                     "w": fw + 2 * padding, "h": fh + 2 * padding},
+                "spriteSourceSize": {"x": 0, "y": 0, "w": fw, "h": fh},
                 "sourceSize": {"w": fw, "h": fh}
             }
 

@@ -144,7 +144,7 @@ def validate(manifest_path: Path) -> list[str]:
                 require(isinstance(event_name, str) and bool(event_name.strip()),
                         f"{name}: event name is required")
             for state in ("attack",):
-                if name.endswith("_" + state):
+                if name.startswith(state + "_"):
                     release_events = [e for e in events
                                       if isinstance(e, dict) and e.get("name") == "projectile_release"]
                     require(len(release_events) == 1,
