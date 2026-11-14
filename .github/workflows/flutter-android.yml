@@ -20,10 +20,21 @@ jobs:
         with:
           channel: stable
           cache: true
+      - run: flutter create --platforms=android --project-name archer_fm --org com.archerfm --no-pub .
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
       - run: flutter build apk --debug
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          script: |
+            adb install build/app/outputs/flutter-apk/app-debug.apk
+            adb shell am start -n com.archerfm.archer_fm/.MainActivity
+            sleep 5
+            adb shell pidof com.archerfm.archer_fm
       - uses: actions/upload-artifact@v4
         with:
           name: archer-fm-debug-apk
