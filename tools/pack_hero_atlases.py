@@ -1,7 +1,9 @@
 """Pure Python atlas packer for Ranger sprite sheets (testable without Blender).
 
-This module mirrors the Blender atlas packing logic in tools/blender/pack_hero_atlases.py
-but uses only Python standard library. It can be unit tested independently.
+This is the single atlas packer implementation. `tools/blender/pack_hero_atlases.py`
+loads it so the CI pipeline and these unit tests exercise exactly the same code,
+and so the atlas is written from the decoded PNG bytes instead of a
+Blender-managed image buffer with its own colour and row-order conventions.
 """
 from __future__ import annotations
 import argparse
@@ -20,12 +22,8 @@ class PNGError(Exception):
     pass
 
 
-def read_png(path: Path) -> tuple[int, int, array]:
-    """Read a PNG file and return (width, height, pixels_array).
-
-    pixels_array is an array('f') of RGBA values in range 0.0..1.0,
-    laid out row-major (top to bottom, left to right).
-    """
+def read_png_bytes(path: Path) -> tuple[int, int, bytearray]:
+    """Decode an 8-bit RGBA PNG into a row-major, top-to-bottom RGBA buffer."""
     with path.open("rb") as f:
         data = f.read()
 
@@ -102,7 +100,7 @@ def read_png(path: Path) -> tuple[int, int, array]:
     if len(raw) != expected_len:
         raise PNGError(f"{path}: decompressed data length mismatch: expected {expected_len}, got {len(raw)}")
 
-    pixels = array("f", [0.0]) * (width * height * 4)
+    out = bytearray(width * height * 4)
     prev_row = None
 
     for y in range(height):
@@ -150,21 +148,42 @@ def read_png(path: Path) -> tuple[int, int, array]:
             raise PNGError(f"{path}: unknown filter type {filter_type}")
 
         prev_row = recon
-        # Convert to float 0..1
-        for i, val in enumerate(recon):
-            pixels[y * stride + i] = val / 255.0
+        out[y * stride:(y + 1) * stride] = recon
 
+    return width, height, out
+
+
+def read_png(path: Path) -> tuple[int, int, array]:
+    """Read a PNG file and return (width, height, pixels_array).
+
+    pixels_array is an array('f') of RGBA values in range 0.0..1.0,
+    laid out row-major (top to bottom, left to right).
+    """
+    width, height, raw = read_png_bytes(path)
+    pixels = array("f", [0.0]) * len(raw)
+    for i, val in enumerate(raw):
+        pixels[i] = val / 255.0
     return width, height, pixels
 
 
 def read_png_dimensions(path: Path) -> tuple[int, int]:
     """Read PNG width/height from file header."""
-    width, height, _ = read_png(path)
+    width, height, _ = read_png_bytes(path)
     return width, height
 
 
-def make_png(width: int, height: int, pixels: array | None = None) -> bytes:
-    """Create a minimal valid PNG with given pixel data."""
+def _to_byte(value: float) -> int:
+    """Quantise a 0..1 float without the off-by-one that plain int() truncation gives."""
+    return min(255, max(0, int(round(value * 255.0))))
+
+
+def make_png(width: int, height: int, pixels: array | bytearray | bytes | None = None) -> bytes:
+    """Create a minimal valid PNG with given pixel data.
+
+    Exactly one input pixel produces exactly one output byte: a byte buffer is
+    copied verbatim, and a float buffer is quantised once with rounding. The
+    packer passes byte buffers so atlases are byte-identical to the renders.
+    """
     def chunk(kind: bytes, data: bytes) -> bytes:
         return (struct.pack(">I", len(data)) + kind + data +
                 struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff))
@@ -179,18 +198,24 @@ def make_png(width: int, height: int, pixels: array | None = None) -> bytes:
         for y in range(height):
             raw += b"\x00"  # filter type 0 (None)
             row_start = y * width * 4
-            row_data = bytes(int(p * 255) for p in pixels[row_start:row_start + width * 4])
-            raw += row_data
+            row = pixels[row_start:row_start + width * 4]
+            if isinstance(row, (bytes, bytearray)):
+                raw += bytes(row)
+            else:
+                raw += bytes(_to_byte(p) for p in row)
 
     idat = zlib.compress(raw)
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b"")
 
 
-def extrude_edges(pixels: array, fw: int, fh: int, atlas_w: int, atlas_h: int,
+def extrude_edges(pixels: array | bytearray, fw: int, fh: int, atlas_w: int, atlas_h: int,
                   col: int, row: int, padding: int) -> None:
     """Copy edge pixels into padding area to prevent texture filtering seams."""
-    base_x = col * fw + (col + 1) * padding
-    base_y = row * fh + (row + 1) * padding
+    # Every frame owns `padding` pixels on each side, so the gap between two
+    # neighbouring frames is 2 * padding and neither frame's extrusion can
+    # overwrite the other's.
+    base_x = col * (fw + 2 * padding) + padding
+    base_y = row * (fh + 2 * padding) + padding
 
     # Left edge
     for y in range(fh):
@@ -247,11 +272,16 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
         frame_ids = animation["frames"]
         cols = min(columns, len(frame_ids))
         rows = (len(frame_ids) + cols - 1) // cols
-        atlas_w = cols * fw + (cols + 1) * padding
-        atlas_h = rows * fh + (rows + 1) * padding
+        # Each frame gets `padding` pixels on all four sides. Between two
+        # frames that is a 2 * padding gap, so both frames' extruded edges fit
+        # side by side instead of overwriting each other.
+        cell_w = fw + 2 * padding
+        cell_h = fh + 2 * padding
+        atlas_w = cols * cell_w
+        atlas_h = rows * cell_h
 
-        # Create atlas pixel array (RGBA float 0..1)
-        pixels = array("f", [0.0]) * (atlas_w * atlas_h * 4)
+        # Create atlas byte buffer (top-down RGBA, same order as the PNG rows)
+        pixels = bytearray(atlas_w * atlas_h * 4)
         state, direction = animation_name.rsplit("_", 1)
         frame_meta = {}
 
@@ -260,8 +290,9 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
             if not source_path.is_file():
                 raise RuntimeError(f"Missing frame file: {source_path}")
 
-            # Read actual PNG data
-            src_w, src_h, src_pixels = read_png(source_path)
+            # Read actual PNG data. Byte buffers, not floats or Blender image
+            # pixels: both have their own row order at the edges of the API.
+            src_w, src_h, src_pixels = read_png_bytes(source_path)
 
             # Verify dimensions match expected frame size
             if src_w != fw or src_h != fh:
@@ -271,8 +302,8 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
                 )
 
             col, row = index % cols, index // cols
-            base_x = col * fw + (col + 1) * padding
-            base_y = row * fh + (row + 1) * padding
+            base_x = col * cell_w + padding
+            base_y = row * cell_h + padding
 
             for y in range(fh):
                 src_start = y * fw * 4
@@ -327,14 +358,106 @@ def pack_atlas(manifest_path: Path, columns: int = 4, padding: int = DEFAULT_PAD
     return manifest
 
 
+def _pixel(buffer: bytearray, width: int, x: int, y: int) -> bytes:
+    start = (y * width + x) * 4
+    return bytes(buffer[start:start + 4])
+
+
+def verify_packed(manifest: dict, base: Path) -> None:
+    """Re-read every written atlas and prove it reproduces the rendered frames.
+
+    Atlas metadata uses PNG (top-left origin) coordinates, while some image APIs
+    store pixels bottom-up. That mismatch is invisible to a structural manifest
+    validator: every rectangle is still inside the image and every atlas frame
+    id still exists, yet the rectangles point at mirrored or shifted pixels.
+    This pass compares the actual bytes, including the extruded padding strips,
+    and fails the build instead of shipping a wrong atlas.
+    """
+    problems: list[str] = []
+    for entry in manifest["atlases"]:
+        name = entry["animation"]
+        atlas_path = base / entry["image"]
+        meta_path = base / entry["meta"]
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        atlas_w, atlas_h, atlas = read_png_bytes(atlas_path)
+        declared = meta.get("meta", {}).get("size", {})
+        if declared and (declared.get("w") != atlas_w or declared.get("h") != atlas_h):
+            problems.append(f"{atlas_path.name}: is {atlas_w}x{atlas_h}, metadata says "
+                            f"{declared.get('w')}x{declared.get('h')}")
+            continue
+        padding = int(meta.get("meta", {}).get("padding", 0))
+        state, direction = name.rsplit("_", 1)
+        rects: list[tuple[str, int, int, int, int]] = []
+        for frame_id in manifest["animations"][name]["frames"]:
+            rect = meta["frames"][frame_id]["frame"]
+            x, y, w, h = rect["x"], rect["y"], rect["w"], rect["h"]
+            if x < padding or y < padding or x + w + padding > atlas_w or y + h + padding > atlas_h:
+                problems.append(f"{name}/{frame_id}: rect {rect} leaves no room for "
+                                f"{padding}px padding inside {atlas_w}x{atlas_h}")
+                continue
+            rects.append((frame_id, x, y, w, h))
+            source_path = base / state / direction / f"{frame_id}.png"
+            src_w, src_h, source = read_png_bytes(source_path)
+            if (src_w, src_h) != (w, h):
+                problems.append(f"{name}/{frame_id}: source is {src_w}x{src_h}, "
+                                f"atlas rect is {w}x{h}")
+                continue
+            for row in range(h):
+                atlas_start = ((y + row) * atlas_w + x) * 4
+                source_start = row * src_w * 4
+                if atlas[atlas_start:atlas_start + w * 4] != source[source_start:source_start + w * 4]:
+                    problems.append(f"{name}/{frame_id}: atlas pixels differ from "
+                                    f"{source_path.name} on row {row}")
+                    break
+            if not padding:
+                continue
+            for row in range(h):
+                left = _pixel(atlas, atlas_w, x, y + row)
+                right = _pixel(atlas, atlas_w, x + w - 1, y + row)
+                for offset in range(1, padding + 1):
+                    if _pixel(atlas, atlas_w, x - offset, y + row) != left:
+                        problems.append(f"{name}/{frame_id}: left padding is not the "
+                                        f"frame edge at row {row}")
+                    if _pixel(atlas, atlas_w, x + w - 1 + offset, y + row) != right:
+                        problems.append(f"{name}/{frame_id}: right padding is not the "
+                                        f"frame edge at row {row}")
+            for column in range(w):
+                top = _pixel(atlas, atlas_w, x + column, y)
+                bottom = _pixel(atlas, atlas_w, x + column, y + h - 1)
+                for offset in range(1, padding + 1):
+                    if _pixel(atlas, atlas_w, x + column, y - offset) != top:
+                        problems.append(f"{name}/{frame_id}: top padding is not the "
+                                        f"frame edge at column {column}")
+                    if _pixel(atlas, atlas_w, x + column, y + h - 1 + offset) != bottom:
+                        problems.append(f"{name}/{frame_id}: bottom padding is not the "
+                                        f"frame edge at column {column}")
+        for i in range(len(rects)):
+            for j in range(i + 1, len(rects)):
+                a, b = rects[i], rects[j]
+                if (a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+                        and a[2] < b[2] + b[4] and b[2] < a[2] + a[4]):
+                    problems.append(f"{name}: {a[0]} and {b[0]} overlap")
+    if problems:
+        for problem in problems[:20]:
+            print(f"ATLAS_ERROR: {problem}", file=sys.stderr)
+        raise RuntimeError(f"Atlas verification failed with {len(problems)} problem(s)")
+    print(f"Verified {len(manifest['atlases'])} atlases: every tile and padding "
+          f"strip reproduces its rendered frame")
+
+
 def parse_args():
-    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    # `blender -b file.blend --python this.py -- --manifest ...` puts the script
+    # arguments after a bare `--`; a plain `python3 this.py --manifest ...`
+    # invocation has no separator.
+    args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--columns", type=int, default=4)
     parser.add_argument("--padding", type=int, default=DEFAULT_PADDING,
-                        help=f"Pixel gap between frames (default: {DEFAULT_PADDING})")
-    return parser.parse_args(argv)
+                        help="Pixels of extruded padding on each side of every frame "
+                             f"(default: {DEFAULT_PADDING}); neighbouring frames are "
+                             "therefore 2 * padding apart")
+    return parser.parse_args(args)
 
 
 def main():
@@ -343,6 +466,7 @@ def main():
     manifest = pack_atlas(manifest_path, opt.columns, opt.padding)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                              encoding="utf-8")
+    verify_packed(manifest, manifest_path.parent)
     print(f"Packed {len(manifest['atlases'])} atlases into {manifest_path.parent / 'atlases'}")
 
 

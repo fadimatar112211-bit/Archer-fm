@@ -51,14 +51,26 @@ The builder script is the reproducible source generator. The binary `.blend` is 
 4. Run structural validation:
    `python tools/validate_hero_assets.py assets/heroes/ranger/renders/ranger_manifest.json`
 
-The renderer maps the configured source-timeline projectile release frame to the nearest rendered frame index, so the manifest event index refers to the sampled animation array. The atlas packer writes unrotated, untrimmed frame rectangles with full source dimensions and uses compact float arrays to limit peak memory.
+The renderer maps the configured source-timeline projectile release frame to the nearest rendered frame index, so the manifest event index refers to the sampled animation array. The atlas packer writes unrotated, untrimmed frame rectangles with full source dimensions.
+
+### Atlas packing
+
+`tools/pack_hero_atlases.py` is the single packer implementation. It uses only the Python standard library, is covered by `tools/tests/test_pack_hero_atlases.py`, and `tools/blender/pack_hero_atlases.py` is a thin launcher so the pipeline command above keeps working without a second implementation drifting from the tested one. Invoking the pure script directly is equivalent:
+
+`python3 tools/pack_hero_atlases.py --manifest assets/heroes/ranger/renders/ranger_manifest.json`
+
+The packer decodes and re-encodes the rendered PNGs as bytes. It does not copy `bpy.data.images` pixels: Blender stores image buffers bottom-up while atlas metadata uses top-left PNG coordinates, and an earlier packer that copied those buffers wrote every tile to the mirrored rows at the other end of the atlas. Writing byte buffers also avoids a colour-management round trip, so each atlas tile is byte-identical to its rendered frame.
+
+Every frame gets `padding` (default 2) extruded pixels on all four sides, so neighbouring frames are `2 * padding` apart and one frame's extrusion can never overwrite another's. Padding strips repeat the adjacent frame edge instead of being transparent.
+
+After writing each atlas, `verify_packed()` re-reads the atlas and the source frames and fails the build when a tile differs from its frame by even one byte, when metadata rectangles point at the wrong rows, when padding strips are not the frame edges, or when rectangles overlap. The structural validator in `tools/validate_hero_assets.py` checks the manifest contract; this pass proves the pixels.
 
 
 ## Automated Blender build
 
-A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks all scripts, runs the pure-Python packer/validator unit tests, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
+A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks the Blender scripts, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs and verifies atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. The packer and asset-validator unit tests run with `python3 -m unittest discover -s tools/tests -p 'test_*.py'`. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
 
-The artifact is uploaded even when a validation step fails, so a red run still supplies the frames that the failure report refers to.
+A failed validation stops the job before the artifact upload, so red runs are diagnosed from the failing step's log and the renderer's per-frame diagnostics, then reproduced locally with the commands above. Uploading the frames even on failure needs a workflow change, which is prepared but cannot be pushed without GitHub's `workflow` token scope.
 
 ## Action completeness and pose isolation
 
