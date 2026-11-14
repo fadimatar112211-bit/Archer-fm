@@ -94,6 +94,13 @@ def main():
             if not source_path.is_file():
                 raise RuntimeError(f"Missing frame: {source_path}")
             source = bpy.data.images.load(str(source_path))
+            # Verify source image dimensions match expected frame size
+            if source.size[0] != fw or source.size[1] != fh:
+                bpy.data.images.remove(source)
+                raise RuntimeError(
+                    f"Frame {frame_id} has dimensions {source.size[0]}x{source.size[1]}, "
+                    f"expected {fw}x{fh} (from manifest frame_size)"
+                )
             src = array("f", source.pixels[:])
             bpy.data.images.remove(source)
             col, row = index % cols, index // cols
@@ -106,11 +113,15 @@ def main():
             # Extrude edges into padding area to prevent texture seams
             if padding > 0:
                 extrude_edges(pixels, fw, fh, atlas_w, atlas_h, col, row, padding)
+            # TexturePacker-style metadata for untrimmed frames:
+            # - frame: position and size in atlas (with padding offset)
+            # - spriteSourceSize: position and size in original untrimmed image (0,0, fw, fh)
+            # - sourceSize: original image size (fw, fh)
+            # - trimmed: false
             frame_meta[frame_id] = {
                 "frame": {"x": base_x, "y": base_y, "w": fw, "h": fh},
                 "rotated": False, "trimmed": False,
-                "spriteSourceSize": {"x": -padding, "y": -padding,
-                                     "w": fw + 2 * padding, "h": fh + 2 * padding},
+                "spriteSourceSize": {"x": 0, "y": 0, "w": fw, "h": fh},
                 "sourceSize": {"w": fw, "h": fh}
             }
         image.pixels[:] = pixels

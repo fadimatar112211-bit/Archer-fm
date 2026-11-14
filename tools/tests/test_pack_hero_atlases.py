@@ -417,6 +417,67 @@ class AtlasPackerTests(unittest.TestCase):
                 self.assertAlmostEqual(pixels[i], 1.0, places=5,
                                        msg=f"Bottom padding not extruded at x={x}, py={py}")
 
+    def test_metadata_matches_blender_packer_spec(self):
+        """Verify Python packer metadata matches Blender packer TexturePacker spec.
+
+        Both packers should produce identical frame metadata structure for untrimmed frames:
+        - frame: position in atlas (includes padding offset)
+        - spriteSourceSize: position in original image (0,0) with frame dimensions
+        - sourceSize: original image size (fw, fh)
+        - trimmed: false
+        - rotated: false
+        """
+        manifest_path = self.create_manifest(animations={
+            "idle_sw": {
+                "loop": True,
+                "frame_duration_ms": 160,
+                "frames": ["ranger_idle_sw_000", "ranger_idle_sw_001"],
+                "events": []
+            }
+        })
+        self.create_frame_dirs("idle", "sw", ["ranger_idle_sw_000", "ranger_idle_sw_001"])
+
+        manifest = pack_atlas(manifest_path, columns=2, padding=2)
+
+        entry = manifest["atlases"][0]
+        meta_path = self.root / entry["meta"]
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+
+        frames = meta["frames"]
+        for frame_id, frame_meta in frames.items():
+            # frame should have padding offset
+            self.assertIn("frame", frame_meta)
+            frame_rect = frame_meta["frame"]
+            self.assertEqual(frame_rect["w"], 32)
+            self.assertEqual(frame_rect["h"], 32)
+            self.assertGreaterEqual(frame_rect["x"], 2)  # padding offset
+            self.assertGreaterEqual(frame_rect["y"], 2)
+
+            # spriteSourceSize should be at 0,0 with frame dimensions (untrimmed)
+            sss = frame_meta["spriteSourceSize"]
+            self.assertEqual(sss["x"], 0, f"{frame_id}: spriteSourceSize.x should be 0")
+            self.assertEqual(sss["y"], 0, f"{frame_id}: spriteSourceSize.y should be 0")
+            self.assertEqual(sss["w"], 32, f"{frame_id}: spriteSourceSize.w should match frame width")
+            self.assertEqual(sss["h"], 32, f"{frame_id}: spriteSourceSize.h should match frame height")
+
+            # sourceSize should match frame dimensions
+            source_size = frame_meta["sourceSize"]
+            self.assertEqual(source_size["w"], 32)
+            self.assertEqual(source_size["h"], 32)
+
+            # Should not be trimmed or rotated
+            self.assertFalse(frame_meta["trimmed"], f"{frame_id}: trimmed should be false")
+            self.assertFalse(frame_meta["rotated"], f"{frame_id}: rotated should be false")
+
+        # Meta should contain padding, frame_size, pivot, memory estimate
+        m = meta["meta"]
+        self.assertEqual(m["padding"], 2)
+        self.assertEqual(m["frame_size"], {"w": 32, "h": 32})
+        self.assertEqual(m["pivot"], {"x": 0.5, "y": 0.86})
+        self.assertIn("memory_estimate_mb", m)
+        self.assertIsInstance(m["memory_estimate_mb"], (int, float))
+        self.assertGreater(m["memory_estimate_mb"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
