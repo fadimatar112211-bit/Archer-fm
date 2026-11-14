@@ -105,13 +105,14 @@ def smooth(obj):
 
 
 def attach(obj, bone):
-    # Keep each part in world space and deform it through the armature modifier.
-    # Parenting to the rig as well would apply the rig transform twice and can
-    # collapse/flatten the assembled character during evaluated rendering.
-    group = obj.vertex_groups.new(name=bone)
-    group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
-    modifier = obj.modifiers.new("Ranger rigid bone deformation", "ARMATURE")
-    modifier.object = ARM
+    # Rigid bone parenting preserves each mesh part's authored world transform
+    # while following the named pose bone. Do not add an Armature modifier:
+    # that would deform the already bone-parented transform a second time.
+    world_matrix = obj.matrix_world.copy()
+    obj.parent = ARM
+    obj.parent_type = "BONE"
+    obj.parent_bone = bone
+    obj.matrix_world = world_matrix
 
 
 def make_armature():
