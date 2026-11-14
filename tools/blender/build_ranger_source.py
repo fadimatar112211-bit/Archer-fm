@@ -107,7 +107,10 @@ def attach(obj, bone):
     obj.parent = ARM
     obj.parent_type = "BONE"
     obj.parent_bone = bone
-    obj.matrix_parent_inverse = ARM.matrix_world.inverted()
+    # Cancel the full evaluated bone transform to preserve the mesh world pose.
+    bpy.context.view_layer.update()
+    bone_world = ARM.matrix_world @ ARM.pose.bones[bone].matrix
+    obj.matrix_parent_inverse = bone_world.inverted()
 
 
 def make_armature():
@@ -271,7 +274,7 @@ def setup_scene():
     scene.render.fps = 12
     scene.view_settings.view_transform = "AgX"
 
-    bpy.ops.object.camera_add(location=(4.8, -7.5, 4.3))
+    bpy.ops.object.camera_add(location=(0, -8.0, 3.9))
     camera = bpy.context.object
     camera.name = "Ranger_Orthographic_Camera"
     target = Vector((0, 0, 1.45))
