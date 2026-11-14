@@ -104,15 +104,17 @@ def smooth(obj):
 
 
 def attach(obj, bone):
-    # Sprite source uses rigid assembled parts. Parent each part to the rig
-    # object (not pose bones): bone parenting without skin weights applies
-    # bone-space transforms to the complete mesh and caused the character to
-    # collapse/lie down when actions were evaluated. Keep the authored world
-    # transform exactly; the rig remains editable and drives global direction.
+    # Rigidly skin each assembled mesh part to exactly one armature bone.
+    # This preserves the authored silhouette while allowing the named Actions
+    # to animate limbs, head, cloak, bow and quiver as separate rigid pieces.
     world_matrix = obj.matrix_world.copy()
     obj.parent = ARM
     obj.parent_type = "OBJECT"
     obj.matrix_world = world_matrix
+    group = obj.vertex_groups.new(name=bone)
+    group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+    modifier = obj.modifiers.new("Ranger rigid bone deformation", "ARMATURE")
+    modifier.object = ARM
 
 
 def make_armature():
