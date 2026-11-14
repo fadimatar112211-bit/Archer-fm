@@ -258,4 +258,5 @@ Still to decide or test:
 - No hero runtime code, game engine scaffold, backend, or hero tests have been implemented yet.
 - Balanced Ranger first-pass character sheet generated and accepted as the visual reference: green hooded cloak, white hair, blue eyes, gold-trimmed leather armor, quiver, and green energy bow; front/three-quarter/side/back plus idle, walk, attack, and defeat pose references.
 - This is a concept sheet, not production-ready animation or an implemented game asset. No runtime code or in-game animation test exists yet.
-- Next action: inspect the legacy ranger SVG frames against this design, define the production asset pipeline (2D skeletal/2.5D vs true 3D), then build a small rendering prototype.
+- User instruction: do not test or present the Balanced Ranger as complete until the character is fully implemented; then run a full test on the Android emulator/device setup referenced in the legacy Archero_fm project files. Re-inspect the old project's emulator configuration/instructions at that stage and verify the same emulator is usable with Archer FM.
+- Next action: inspect the legacy ranger SVG frames against this design, define the production asset pipeline (2D skeletal/2.5D vs true 3D), then build the character completely before the emulator test.
