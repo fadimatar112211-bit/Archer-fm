@@ -5,7 +5,7 @@ Run:
 
 The builder writes `hero_id`, `hero_prefix` and `rig_object` into the scene, so
 one validator covers every hero in the shared pipeline. It checks the rig, the
-rigid-part parenting contract, the shaded material network, and the eight
+single-bone skinning contract, the shaded material network, and the eight
 authored Actions with their expected frame ranges.
 """
 from __future__ import annotations
@@ -90,28 +90,57 @@ def main():
     if len(meshes) < hero_profiles.MIN_MESH_PARTS:
         fail(f"{hero_id}: expected detailed character mesh parts; found only "
              f"{len(meshes)} (minimum {hero_profiles.MIN_MESH_PARTS})")
-    incorrectly_parented = [
-        obj.name for obj in meshes
-        if obj.parent != rig or obj.parent_type != "BONE"
-        or obj.parent_bone not in REQUIRED_BONES
-    ]
-    if incorrectly_parented:
-        fail("Every rigid mesh part must be parented directly to its intended "
-             "rig bone: " + ", ".join(incorrectly_parented[:12]))
-    double_deformed = [
-        obj.name for obj in meshes
-        if any(mod.type == "ARMATURE" for mod in obj.modifiers)
-        or len(obj.vertex_groups) > 0
-    ]
-    if double_deformed:
-        fail("Bone-parented mesh parts must not also use vertex weights or "
-             "Armature modifiers: " + ", ".join(double_deformed[:12]))
+    rigging_errors = []
+    for obj in meshes:
+        bone_name = obj.get("rig_bone")
+        if obj.parent is not None:
+            rigging_errors.append(f"{obj.name}: mesh object is still parented")
+        if not isinstance(bone_name, str) or bone_name not in rig.data.bones:
+            rigging_errors.append(f"{obj.name}: missing or invalid rig_bone binding")
+            continue
+        if not rig.data.bones[bone_name].use_deform:
+            rigging_errors.append(f"{obj.name}: target bone {bone_name} is not deforming")
+
+        armature_modifiers = [modifier for modifier in obj.modifiers
+                              if modifier.type == "ARMATURE"]
+        if len(armature_modifiers) != 1 or armature_modifiers[0].object is not rig:
+            rigging_errors.append(
+                f"{obj.name}: expected exactly one Armature modifier targeting {rig.name}")
+        else:
+            modifier = armature_modifiers[0]
+            if not modifier.use_vertex_groups or modifier.use_bone_envelopes:
+                rigging_errors.append(
+                    f"{obj.name}: Armature modifier must use vertex groups, not envelopes")
+
+        groups = list(obj.vertex_groups)
+        if len(groups) != 1:
+            rigging_errors.append(f"{obj.name}: expected exactly one vertex group, found {len(groups)}")
+            continue
+        group = groups[0]
+        if group.name != bone_name:
+            rigging_errors.append(
+                f"{obj.name}: vertex group {group.name!r} does not match rig_bone {bone_name!r}")
+            continue
+        if not obj.data.vertices:
+            rigging_errors.append(f"{obj.name}: mesh has no vertices to weight")
+            continue
+        for vertex in obj.data.vertices:
+            memberships = [entry for entry in vertex.groups if entry.group == group.index]
+            if len(memberships) != 1 or abs(memberships[0].weight - 1.0) > 1e-5:
+                rigging_errors.append(
+                    f"{obj.name}: vertex {vertex.index} is not weighted 1.0 to {bone_name}")
+                break
+
+    if rigging_errors:
+        fail("Every mesh must be unparented and bound to one deform bone by exactly "
+             "one 1.0-weight vertex group and one Armature modifier: " +
+             "; ".join(rigging_errors[:12]))
     for part in profile["required_parts"]:
         obj = bpy.data.objects.get(part)
         if obj is None or obj.type != "MESH":
             fail(f"{hero_id}: signature mesh part missing: {part}")
-        if obj.parent != rig:
-            fail(f"{hero_id}: signature part {part} is not parented to the rig")
+        if obj.parent is not None or obj.get("rig_bone") not in rig.data.bones:
+            fail(f"{hero_id}: signature part {part} must be unparented and carry a valid rig_bone binding")
 
     material_names = {mat.name for mat in bpy.data.materials}
     for required in REQUIRED_MATERIALS:

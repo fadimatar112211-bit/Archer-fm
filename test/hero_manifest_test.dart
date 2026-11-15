@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archer_fm/hero/hero_assets.dart';
+import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,16 +69,19 @@ void main() {
     for (final direction in _directions) {
       final attack = manifest.clipFor('attack', direction)!;
       final skill = manifest.clipFor('skill', direction)!;
-      expect(
-        attack.events.map((event) => event.name),
-        contains('projectile_release'),
-        reason: 'attack_$direction',
-      );
-      expect(
-        skill.events.map((event) => event.name),
-        contains('volley_release'),
-        reason: 'skill_$direction',
-      );
+      final releases = attack.events
+          .where((event) => event.name == 'projectile_release')
+          .toList();
+      expect(releases, hasLength(1), reason: 'attack_$direction');
+      expect(releases.single.frame, attack.frames.length ~/ 2,
+          reason: 'projectile_release must map to the configured release frame');
+
+      final volleys = skill.events
+          .where((event) => event.name == 'volley_release')
+          .toList();
+      expect(volleys, hasLength(1), reason: 'skill_$direction');
+      expect(volleys.single.frame, skill.frames.length ~/ 2,
+          reason: 'volley_release must map to the configured release frame');
       for (final clip in [attack, skill]) {
         for (final event in clip.events) {
           expect(event.frame, lessThan(clip.frames.length), reason: clip.name);
@@ -105,4 +110,43 @@ void main() {
           reason: entry.image);
     }
   });
+  test('the real Ranger bundle decodes every atlas and covers every frame', () async {
+    final hero = heroById('ranger');
+    final manifestLoader = BundleHeroAssetLoader(hero);
+    late final HeroManifest loaded;
+    try {
+      loaded = await manifestLoader.loadManifest();
+    } finally {
+      manifestLoader.dispose();
+    }
+
+    expect(loaded.heroId, 'ranger');
+    expect(loaded.atlases.length, 64);
+    expect(loaded.clips.length, 64);
+
+    // Decode one atlas at a time so all production images are verified without
+    // retaining every decoded bitmap in memory simultaneously.
+    for (final entry in loaded.atlases) {
+      final loader = BundleHeroAssetLoader(hero);
+      try {
+        final sheet = await loader.loadSheet(loaded, entry.animation);
+        final clip = loaded.clips[entry.animation]!;
+        expect(sheet.width, greaterThan(0), reason: entry.animation);
+        expect(sheet.height, greaterThan(0), reason: entry.animation);
+        for (final frameId in clip.frames) {
+          final rect = sheet.rectFor(frameId);
+          expect(rect, isNotNull, reason: '${entry.animation}: $frameId');
+          expect(rect!.width, loaded.frameWidth.toDouble(), reason: frameId);
+          expect(rect.height, loaded.frameHeight.toDouble(), reason: frameId);
+          expect(rect.left, greaterThanOrEqualTo(0), reason: frameId);
+          expect(rect.top, greaterThanOrEqualTo(0), reason: frameId);
+          expect(rect.right, lessThanOrEqualTo(sheet.width.toDouble()), reason: frameId);
+          expect(rect.bottom, lessThanOrEqualTo(sheet.height.toDouble()), reason: frameId);
+        }
+      } finally {
+        loader.dispose();
+      }
+    }
+  });
+
 }

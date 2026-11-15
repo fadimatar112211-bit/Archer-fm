@@ -10,7 +10,7 @@ armour over a green tunic, green bracers and boots, a glowing green energy
 recurve bow with green energy effects, a quiver of arrows, and a brass cloak
 clasp. Nothing is downloaded or traced; every mesh is generated here.
 
-The rig is a rigid-part rig: each visible mesh is parented to exactly one bone.
+The rig is a rigid-skinning rig: every visible mesh remains unparented and is bound to exactly one deform bone by a single 1.0-weight vertex group and one Armature modifier.
 Cloth secondary motion uses three overlapping cloak sections so the cloak can
 flow without vertex-weight deformation.
 """
@@ -217,11 +217,30 @@ def clear_scene():
 
 
 def attach(obj, bone):
+    """Bind one rigid mesh part to a single deform bone without object parenting."""
+    if ARM is None or ARM.type != "ARMATURE":
+        raise RuntimeError(f"{obj.name}: the hero armature must exist before binding")
+    if bone not in ARM.data.bones:
+        raise RuntimeError(f"{obj.name}: rig bone {bone!r} does not exist")
+    if obj.vertex_groups or any(mod.type == "ARMATURE" for mod in obj.modifiers):
+        raise RuntimeError(f"{obj.name}: refusing to add a duplicate skin binding")
+
+    # Preserve the part's authored world transform while leaving it unparented.
     world = obj.matrix_world.copy()
-    obj.parent = ARM
-    obj.parent_type = "BONE"
-    obj.parent_bone = bone
+    obj.parent = None
     obj.matrix_world = world
+
+    vertex_indices = [vertex.index for vertex in obj.data.vertices]
+    if not vertex_indices:
+        raise RuntimeError(f"{obj.name}: cannot bind an empty mesh")
+    group = obj.vertex_groups.new(name=bone)
+    group.add(vertex_indices, 1.0, "REPLACE")
+
+    modifier = obj.modifiers.new(name="Hero Armature", type="ARMATURE")
+    modifier.object = ARM
+    modifier.use_vertex_groups = True
+    modifier.use_bone_envelopes = False
+    obj["rig_bone"] = bone
 
 
 def finish_mesh(mesh, recalc=True):

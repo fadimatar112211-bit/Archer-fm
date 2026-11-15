@@ -10,6 +10,7 @@ wrong character under a green build.
 from __future__ import annotations
 import argparse
 import base64
+import hashlib
 import json
 from pathlib import Path
 from PIL import Image
@@ -53,10 +54,31 @@ def frame_errors(path, image, state, resolution):
     if bbox is None:
         return [f"{path}: fully transparent render"], None
     width, height = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    occupied = sum(1 for value in alpha.getdata() if value > 8)
-    metrics = {"bbox": bbox, "width": width, "height": height, "occupied": occupied}
+    alpha_histogram = alpha.histogram()
+    occupied = sum(alpha_histogram[9:])
+    transparent_ratio = alpha_histogram[0] / float(resolution * resolution)
+    metrics = {
+        "bbox": bbox,
+        "width": width,
+        "height": height,
+        "occupied": occupied,
+        "transparent_ratio": transparent_ratio,
+    }
     if occupied < 350:
         errors.append(f"{path}: too few visible pixels ({occupied})")
+    corners = (
+        alpha.getpixel((0, 0)),
+        alpha.getpixel((resolution - 1, 0)),
+        alpha.getpixel((0, resolution - 1)),
+        alpha.getpixel((resolution - 1, resolution - 1)),
+    )
+    if any(value != 0 for value in corners):
+        errors.append(f"{path}: background corners are not fully transparent ({corners})")
+    if transparent_ratio < 0.60:
+        errors.append(f"{path}: background is insufficiently transparent ({transparent_ratio:.1%})")
+    min_width = max(20, round(resolution * 0.12))
+    if width < min_width:
+        errors.append(f"{path}: silhouette is too narrow ({width}px)")
     # EEVEE renders a material whose Surface input is a colour (not a shader)
     # as flat magenta. Alpha/layout gates cannot see that, so sample the pixels.
     # `getdata()` yields RGBA tuples (not a flat channel list).
@@ -98,6 +120,69 @@ def frame_errors(path, image, state, resolution):
     return errors, metrics
 
 
+def pixel_change_ratio(first, second, threshold=16):
+    """Fraction of pixels whose RGBA value changes meaningfully between frames."""
+    left, right = first.tobytes(), second.tobytes()
+    changed = 0
+    total = len(left) // 4
+    for offset in range(0, len(left), 4):
+        if max(abs(left[offset + channel] - right[offset + channel])
+               for channel in range(4)) > threshold:
+            changed += 1
+    return changed / max(1, total)
+
+
+def sequence_errors(paths, state, animation_name):
+    """Reject static or nearly static clips even when their PNGs are non-empty."""
+    errors = []
+    images = []
+    signatures = []
+    for path in paths:
+        with Image.open(path) as source:
+            image = source.convert("RGBA")
+        images.append(image)
+        signatures.append(hashlib.sha1(image.tobytes()).digest())
+    unique_count = len(set(signatures))
+    minimum_unique = 2 if state == "idle" else 3
+    if unique_count < minimum_unique:
+        errors.append(
+            f"{animation_name}: only {unique_count} unique frames; expected at least {minimum_unique}")
+    motion = max(
+        (pixel_change_ratio(first, second) for first, second in zip(images, images[1:])),
+        default=0.0,
+    )
+    minimum_motion = 0.003 if state == "idle" else 0.01
+    if motion < minimum_motion:
+        errors.append(
+            f"{animation_name}: animation motion is too small ({motion:.2%} changed pixels)")
+    return errors
+
+
+def configured_event_frame(hero, state, event_name):
+    """Map a configured Blender source frame to the exact rendered frame index."""
+    config_path = Path(__file__).resolve().parents[2] / "assets/heroes/ranger/source/render_config.json"
+    if not config_path.is_file():
+        return None
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    config = dict(raw.get("defaults", {}))
+    config.update(raw.get("heroes", {}).get(hero, {}))
+    event = next(
+        (item for item in config.get("events", {}).get(state, [])
+         if item.get("name") == event_name),
+        None,
+    )
+    if event is None:
+        return None
+    start, end = map(int, config["action_ranges"][state])
+    count = int(config["frame_counts"][state])
+    if count < 2:
+        return None
+    sampled = [round(start + (end - start) * index / (count - 1))
+               for index in range(count)]
+    source_frame = int(event["frame"])
+    return min(range(len(sampled)), key=lambda index: abs(sampled[index] - source_frame))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -109,6 +194,7 @@ def main() -> int:
     first_failing = None
     hero, manifest = active_hero(args.root)
     expected_by = {}
+    animations_by = {}
     if manifest is None:
         errors.append(f"no ranger_manifest.json in {args.root}; the render pass "
                       f"did not complete")
@@ -125,6 +211,25 @@ def main() -> int:
                     errors.append(f"manifest is missing animation {name}")
                     continue
                 expected_by[(state, direction)] = set(animation.get("frames", []))
+                animations_by[(state, direction)] = animation
+    if hero == "ranger" and manifest is not None:
+        expected_release = configured_event_frame(hero, "attack", "projectile_release")
+        if expected_release is None:
+            errors.append("render_config.json does not define Ranger projectile_release")
+        else:
+            for direction in DIRECTIONS:
+                animation = animations_by.get(("attack", direction), {})
+                releases = [
+                    event for event in animation.get("events", [])
+                    if event.get("name") == "projectile_release"
+                ]
+                if len(releases) != 1:
+                    errors.append(
+                        f"attack_{direction}: expected exactly one projectile_release event")
+                elif releases[0].get("frame") != expected_release:
+                    errors.append(
+                        f"attack_{direction}: projectile_release is at frame "
+                        f"{releases[0].get('frame')}, expected configured frame {expected_release}")
     for state in STATES:
         for direction in DIRECTIONS:
             frames = sorted((args.root / state / direction).glob("*.png"))
@@ -146,6 +251,15 @@ def main() -> int:
                                   f"older frame count)")
                 if missing or extra:
                     continue
+                animation = animations_by.get((state, direction))
+                if animation is not None:
+                    ordered_paths = [
+                        args.root / state / direction / f"{frame_id}.png"
+                        for frame_id in animation.get("frames", [])
+                    ]
+                    if all(path.is_file() for path in ordered_paths):
+                        errors.extend(sequence_errors(
+                            ordered_paths, state, f"{state}_{direction}"))
             for path in frames:
                 checked += 1
                 try:
@@ -157,6 +271,23 @@ def main() -> int:
                     errors.extend(found)
                 except Exception as exc:
                     errors.append(f"{path}: cannot inspect PNG: {exc}")
+    # The eight view angles must remain distinguishable; this catches a
+    # renderer that accidentally reuses one camera pose for every direction.
+    for state in STATES:
+        signatures = []
+        for direction in DIRECTIONS:
+            animation = animations_by.get((state, direction))
+            if not animation or not animation.get("frames"):
+                continue
+            first_path = args.root / state / direction / f"{animation['frames'][0]}.png"
+            if not first_path.is_file():
+                continue
+            with Image.open(first_path) as source:
+                signatures.append(hashlib.sha1(source.convert("RGBA").tobytes()).digest())
+        if len(signatures) == len(DIRECTIONS) and len(set(signatures)) < 6:
+            errors.append(
+                f"{state}: only {len(set(signatures))}/8 distinct direction silhouettes")
+
     if errors:
         for error in errors[:80]:
             print("VISUAL_ERROR: " + error)
