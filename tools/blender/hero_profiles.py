@@ -42,67 +42,70 @@ import math
 # Shadow dark violet with a mask, Storm blue/gold with lightning.
 
 FLAME_PALETTE = {
-    "green": "#A93620",
-    "green_light": "#C8502B",
-    "green_deep": "#6E1E15",
+    "green": "#A32A1B",
+    "green_light": "#D04224",
+    "green_deep": "#57120F",
     "green_bright": "#FF7A2A",
-    "trouser": "#34241F",
-    "leather": "#6B3424",
-    "leather_dark": "#2F1A14",
-    "bronze": "#B46A32",
-    "bronze_light": "#F0B268",
-    "gold": "#E8B23A",
-    "hair_dark": "#3A1B12",
-    "hair_mid": "#6B2E1B",
-    "hair_light": "#A34A26",
-    "hair_shine": "#D07A3E",
-    "eye_blue": "#FFA638",
-    "eye_light": "#FFE0A0",
+    "trouser": "#2A1B1B",
+    "leather": "#5E2A22",
+    "leather_dark": "#24100F",
+    "bronze": "#B97832",
+    "bronze_light": "#F2C06A",
+    "gold": "#EFC24E",
+    "boot": "#2B1512",
+    "hair_dark": "#7A1508",
+    "hair_mid": "#D8320F",
+    "hair_light": "#FF6A28",
+    "hair_shine": "#FFB347",
+    "eye_blue": "#FFB020",
+    "eye_light": "#FFE08A",
     "energy": "#FF4A18",
     "bow_glow": "#FF8A24",
-    "bow_core": "#FFE6B0",
+    "bow_core": "#FFC24A",
 }
 
 SHADOW_PALETTE = {
-    "green": "#5B2E96",
-    "green_light": "#7B44BC",
-    "green_deep": "#2A1442",
-    "green_bright": "#A87BE8",
-    "trouser": "#241733",
-    "leather": "#3A2450",
-    "leather_dark": "#1A0F27",
-    "bronze": "#8A6FBF",
-    "bronze_light": "#D6C4F2",
-    "gold": "#B99CE8",
-    "hair_dark": "#120B1A",
-    "hair_mid": "#241430",
-    "hair_light": "#3B2450",
-    "hair_shine": "#6B4A8A",
+    "green": "#241540",
+    "green_light": "#33205A",
+    "green_deep": "#070410",
+    "green_bright": "#8A5AD0",
+    "trouser": "#050308",
+    "leather": "#150C24",
+    "leather_dark": "#020104",
+    "bronze": "#3E2F5A",
+    "bronze_light": "#8E7DB0",
+    "gold": "#7A5FA8",
+    "boot": "#161022",
+    "hair_dark": "#05030A",
+    "hair_mid": "#120A1E",
+    "hair_light": "#2A1B3D",
+    "hair_shine": "#5A3E82",
     "eye_blue": "#B06BFF",
     "eye_light": "#E4C6FF",
-    "energy": "#7A3CFF",
+    "energy": "#8A3CFF",
     "bow_glow": "#6B2BD9",
     "bow_core": "#E0C8FF",
 }
 
 STORM_PALETTE = {
-    "green": "#15516B",
-    "green_light": "#22708F",
-    "green_deep": "#0B2E3D",
-    "green_bright": "#7FDCFF",
-    "trouser": "#12303B",
-    "leather": "#1F4A57",
-    "leather_dark": "#0C2530",
-    "bronze": "#A9C2CC",
-    "bronze_light": "#EAF7FA",
+    "green": "#1B5FD6",
+    "green_light": "#3E86EE",
+    "green_deep": "#0B2E6E",
+    "green_bright": "#8FD4FF",
+    "trouser": "#122B57",
+    "leather": "#1E4FA8",
+    "leather_dark": "#0A1B3D",
+    "bronze": "#C9D8EA",
+    "bronze_light": "#F2F7FF",
     "gold": "#E8C25A",
-    "hair_dark": "#3E6A7C",
-    "hair_mid": "#7FA8B8",
-    "hair_light": "#C7E4EE",
-    "hair_shine": "#F2FBFF",
-    "eye_blue": "#6FE8FF",
-    "eye_light": "#C8FAFF",
-    "energy": "#48C8FF",
+    "boot": "#C7D2E6",
+    "hair_dark": "#9EA9BC",
+    "hair_mid": "#DCE3EE",
+    "hair_light": "#F6FAFF",
+    "hair_shine": "#FFFFFF",
+    "eye_blue": "#50C2F0",
+    "eye_light": "#B8F0FF",
+    "energy": "#4FB8FF",
     "bow_glow": "#2E7BFF",
     "bow_core": "#EAFBFF",
 }
@@ -236,7 +239,7 @@ def short_cape(m):
                     z += 0.085 * (1.0 - abs(u)) * (i - 9) / 2.0
                 row.append(m.Vector((x, y, z)))
             rows.append(row)
-        m.grid_sheet(f"Cloak_{index}", rows, ["green", "green_deep"], bone,
+        m.grid_sheet(f"Cloak_{index}", rows, ["green_deep", "green"], bone,
                      solidify=(0.024, 1), recalc=False)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.grid_sheet(f"Shoulder_Mantle_{side}",
@@ -298,8 +301,8 @@ def shadow_hood(m):
     def line(az):
         a = abs(((az + 180.0) % 360.0) - 180.0)
         if a < 58.0:
-            return 31.0 - 5.0 * (a / 58.0) ** 2
-        return 31.0 - 58.0 * ((a - 58.0) / 122.0) ** 0.85
+            return 21.0 - 4.0 * (a / 58.0) ** 2
+        return 21.0 - 48.0 * ((a - 58.0) / 122.0) ** 0.85
 
     verts, faces, face_materials = [], [], []
     for r in range(rows):
@@ -308,7 +311,7 @@ def shadow_hood(m):
             az = -180.0 + 360.0 * j / (columns - 1)
             start = line(az)
             el = start + t * (88.0 - start)
-            inflate = 0.086 + 0.026 * (1.0 - t)
+            inflate = 0.175 + 0.030 * (1.0 - t)
             verts.append(m.head_point(az, el, inflate))
     for r in range(rows - 1):
         for j in range(columns - 1):
@@ -316,7 +319,7 @@ def shadow_hood(m):
             faces.append((a, a + 1, a + columns + 1, a + columns))
             face_materials.append(0 if r < rows - 3 else 1)
     pole = len(verts)
-    verts.append(m.head_point(0.0, 90.0, 0.090))
+    verts.append(m.head_point(0.0, 90.0, 0.185))
     base = (rows - 1) * columns
     for j in range(columns - 1):
         faces.append((base + j, base + j + 1, pole))
@@ -327,8 +330,8 @@ def shadow_hood(m):
 
     # Sewn brim around the face opening.
     brim = [(az, line(az) + 2.0) for az in range(-57, 58, 6)]
-    m.surface_strip("Shadow_Hood_Brim", brim, [0.036] * len(brim),
-                    "gold", 0.098, thickness=0.008)
+    m.surface_strip("Shadow_Hood_Brim", brim, [0.040] * len(brim),
+                    "gold", 0.188, thickness=0.008)
 
     # Cowl drape: cloth falling from the hood onto both shoulders. Without it
     # the hood reads as a tight cap instead of a hooded cloak.
@@ -362,13 +365,7 @@ def shadow_hood(m):
         [0.170, 0.140, 0.080, 0.012], "green_deep", "head", sides=8,
         thickness=[0.130, 0.105, 0.060, 0.010], tip=True)
 
-    # Face mask: covers nose and mouth, leaves the violet eyes exposed.
-    m.surface_patch("Shadow_Mask", 0.0, -17.0, 42.0, 9.5,
-                    "leather_dark", 0.013)
-    edge = [(-40 + 80.0 * t / 10.0, -8.2 + 0.9 * math.sin(math.pi * t / 10.0))
-            for t in range(11)]
-    m.surface_strip("Shadow_Mask_Edge", edge, [0.016] * 11,
-                    "bronze_light", 0.016, thickness=0.004)
+    # The reference Shadow has no mask: the face is fully visible.
 
 
 def circlet(m, gem_material="energy_core", crest=False):
@@ -391,10 +388,26 @@ def circlet(m, gem_material="energy_core", crest=False):
 # -------------------------------------------------------------- armour ------
 
 def flame_armour(m):
-    m.sphere("Chest_Emblem", (0.0, -0.268, 1.86), (0.085, 0.030, 0.125),
+    # Blackened breastplate under the red tabard, gold-edged.
+    m.front_band("Flame_Breastplate", 1.50, 2.00, 0.358, 0.256,
+                 -44, 44, "leather_dark", "chest", columns=18,
+                 thickness=0.018, bulge=0.014)
+    m.front_band("Flame_Breastplate_Trim", 1.985, 2.015, 0.362, 0.260,
+                 -44, 44, "gold", "chest", columns=18, thickness=0.010)
+    m.sphere("Chest_Emblem", (0.0, -0.286, 1.86), (0.095, 0.032, 0.135),
              "gold", "chest", 20, 12)
-    m.sphere("Chest_Emblem_Core", (0.0, -0.286, 1.86), (0.048, 0.020, 0.082),
-             "energy_core", "chest", 16, 10)
+    m.sphere("Chest_Emblem_Core", (0.0, -0.304, 1.86), (0.055, 0.022, 0.092),
+             "green_bright", "chest", 16, 10)
+    # Red scarf wrapped around the neck, one long tail down the chest.
+    m.torus("Flame_Scarf", (0.0, 0.0, 2.125), 0.272, 0.078, "green",
+            "chest", scale=(1.14, 1.0, 0.70), major_segments=40)
+    m.sweep("Flame_Scarf_Tail", [
+        m.Vector((0.130, -0.250, 2.090)),
+        m.Vector((0.195, -0.300, 1.860)),
+        m.Vector((0.225, -0.300, 1.660)),
+        m.Vector((0.200, -0.280, 1.505))],
+        [0.115, 0.092, 0.062, 0.018], "green", "chest", sides=6,
+        thickness=[0.030, 0.026, 0.020, 0.008], tip=True)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sweep(f"Pauldron_Spike_{side}", [
             m.Vector((0.395 * sign, -0.02, 2.135)),
@@ -408,6 +421,13 @@ def flame_armour(m):
 
 
 def shadow_armour(m):
+    m.front_band("Shadow_Breastplate", 1.50, 1.98, 0.356, 0.254,
+                 -42, 42, "leather_dark", "chest", columns=18,
+                 thickness=0.018, bulge=0.014)
+    m.front_band("Shadow_Breastplate_Trim", 1.965, 1.995, 0.360, 0.258,
+                 -42, 42, "bronze", "chest", columns=18, thickness=0.010)
+    m.sphere("Shadow_Chest_Gem", (0.0, -0.294, 1.850),
+             (0.055, 0.024, 0.078), "energy", "chest", 16, 10)
     for index, tilt in enumerate((34.0, -34.0)):
         m.box(f"Chest_Strap_{index}", (0.0, -0.268, 1.845),
               (0.520, 0.030, 0.062), "leather", "chest",
@@ -469,6 +489,114 @@ def storm_armour(m):
         thickness=[0.012, 0.012, 0.010, 0.008], tip=True)
 
 
+def storm_cape(m):
+    """Long royal-blue cape behind the coat, silver-edged at the hem."""
+    for index, (bone, v0, v1) in enumerate((
+            ("cloak_a", 0.0, 0.42), ("cloak_b", 0.32, 0.74),
+            ("cloak_c", 0.64, 1.0))):
+        m.grid_sheet(f"Storm_Cape_{index}", m.cloak_rows(v0, v1),
+                     ["green", "green_deep"], bone,
+                     solidify=(0.024, 1), recalc=False)
+    m.torus("Storm_Cape_Clasp", (0.0, -0.265, 1.995), 0.060, 0.016,
+            "bronze_light", "chest", rotation=(math.radians(90), 0, 0),
+            major_segments=24)
+
+
+def storm_robe(m):
+    """Royal-blue long coat over a white inner robe, with silver trim.
+
+    The reference Storm is a robed electromancer, not an armoured lancer: the
+    silhouette is a wide flared coat, a white V panel on the chest and a blue
+    gem at the belt. The coat is split into four rigid panels so the legs can
+    still walk without stretching the cloth.
+    """
+    storm_armour(m)
+    # White inner robe visible through the front split.
+    rows = []
+    for i in range(9):
+        v = i / 8.0
+        z = 1.46 - 0.82 * v
+        half = 0.165 + 0.050 * v
+        y = -0.205 - 0.030 * v
+        rows.append([m.Vector((-half + 2.0 * half * j / 6.0, y, z))
+                     for j in range(7)])
+    m.grid_sheet("Storm_Robe_Inner", rows, ["white", "bronze_light"], "hips",
+                 solidify=(0.018, 0), recalc=False)
+
+    # Flared blue coat panels, left and right of the split.
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        rows = []
+        for i in range(9):
+            v = i / 8.0
+            z = 1.46 - 0.86 * v
+            inner = 0.120 + 0.070 * v
+            outer = 0.300 + 0.240 * v
+            y0 = -0.235 - 0.035 * v
+            y1 = -0.185 - 0.020 * v
+            rows.append([
+                m.Vector((sign * inner, y0, z)),
+                m.Vector((sign * (inner + (outer - inner) * 0.45),
+                          y0 - 0.020, z - 0.012 * v)),
+                m.Vector((sign * outer, y1, z - 0.020 * v)),
+            ])
+        m.grid_sheet(f"Storm_Coat_Front_{side}", rows,
+                     ["green", "green_light"], "hips",
+                     solidify=(0.022, 0), recalc=False)
+        # Silver hem and front-edge piping.
+        edge = [m.Vector((sign * (0.030 + 0.055 * (i / 8.0)),
+                          -0.238 - 0.036 * (i / 8.0),
+                          1.46 - 0.86 * (i / 8.0))) for i in range(9)]
+        m.sweep(f"Storm_Coat_Piping_{side}", edge, [0.014] * 9,
+                "bronze_light", "hips", sides=4, thickness=[0.010] * 9)
+
+    # Back panel bound to the cape bone so it trails during movement.
+    rows = []
+    for i in range(10):
+        v = i / 9.0
+        z = 1.48 - 0.98 * v
+        half = 0.300 + 0.180 * v
+        y = 0.205 + 0.090 * v + 0.020 * math.sin(v * 5.0)
+        rows.append([m.Vector((-half + 2.0 * half * j / 8.0, y, z))
+                     for j in range(9)])
+    m.grid_sheet("Storm_Coat_Back", rows, ["green_deep", "green"], "cloak_a",
+                 solidify=(0.024, 0), recalc=False)
+    m.sweep("Storm_Coat_Hem", [m.Vector((-0.49 + 0.98 * j / 8.0,
+                                        0.300, 0.505)) for j in range(9)],
+            [0.018] * 9, "bronze_light", "cloak_a", sides=4,
+            thickness=[0.012] * 9)
+
+    # White V chest panel with blue edging; the reference's focal point.
+    m.front_band("Storm_Robe_Chest", 1.44, 1.98, 0.330, 0.246,
+                 -21, 21, "white", "chest", columns=14, thickness=0.014)
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        m.sweep(f"Storm_Robe_V_{side}", [
+            m.Vector((0.004 * sign, -0.286, 1.46)),
+            m.Vector((0.090 * sign, -0.296, 1.63)),
+            m.Vector((0.160 * sign, -0.286, 1.82)),
+            m.Vector((0.190 * sign, -0.255, 1.96))],
+            [0.020, 0.022, 0.024, 0.022], "green", "chest", sides=4,
+            thickness=[0.012, 0.012, 0.012, 0.010])
+        m.sphere(f"Storm_Chest_Rivet_{side}", (0.175 * sign, -0.255, 1.95),
+                 (0.026, 0.016, 0.026), "bronze_light", "chest", 14, 8)
+    m.torus("Storm_Chest_Gem_Rim", (0.0, -0.272, 1.855), 0.070, 0.014,
+            "bronze_light", "chest", rotation=(math.radians(90), 0, 0),
+            major_segments=28)
+    m.sphere("Storm_Chest_Gem", (0.0, -0.286, 1.855),
+             (0.052, 0.022, 0.066), "energy_core", "chest", 18, 10)
+
+    # Short blue shoulder mantle over the silver plates.
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        m.grid_sheet(f"Storm_Mantle_{side}",
+                     _mantle_rows(m, sign, reach=0.420, length=1.05),
+                     ["green", "green_deep"], "chest",
+                     solidify=(0.020, 0), recalc=False)
+    m.torus("Storm_Collar", (0.0, 0.0, 2.135), 0.300, 0.070, "green_deep",
+            "chest", scale=(1.10, 1.0, 0.62), major_segments=40)
+    m.torus("Storm_Collar_Trim", (0.0, 0.0, 2.183), 0.312, 0.018,
+            "bronze_light", "chest", scale=(1.10, 1.0, 0.55),
+            major_segments=40)
+
+
 # -------------------------------------------------------------- weapons -----
 
 def flame_sword(m):
@@ -479,20 +607,38 @@ def flame_sword(m):
             thickness=[0.072, 0.066])
     m.sphere("Sword_Pommel", (cx, cy, 1.255), (0.058, 0.052, 0.048),
              "gold", "bow", 20, 12)
-    m.box("Sword_Guard", (cx, cy, 1.500), (0.330, 0.100, 0.058),
+    m.box("Sword_Guard", (cx, cy, 1.500), (0.430, 0.110, 0.064),
           "gold", "bow", bevel=0.018)
     for side, sign in (("L", 1.0), ("R", -1.0)):
-        m.sphere(f"Sword_Quillon_{side}", (cx + 0.160 * sign, cy, 1.505),
+        m.sphere(f"Sword_Quillon_{side}", (cx + 0.205 * sign, cy, 1.505),
                  (0.038, 0.048, 0.038), "bronze_light", "bow", 16, 10)
-    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 2.330,
-                  [0.088, 0.082, 0.062, 0.004],
-                  [0.026, 0.022, 0.015, 0.002], "energy_core", "bow")
+    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 2.760,
+                  [0.170, 0.156, 0.108, 0.005],
+                  [0.040, 0.034, 0.022, 0.003], "energy", "bow")
+    diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 2.700,
+                  [0.096, 0.088, 0.060, 0.004],
+                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow")
+    m.sweep("Sword_Flame_Aura", [
+        m.Vector((cx, cy + 0.010, 1.56)),
+        m.Vector((cx, cy + 0.014, 1.95)),
+        m.Vector((cx, cy + 0.010, 2.38)),
+        m.Vector((cx, cy + 0.004, 2.72))],
+        [0.230, 0.200, 0.135, 0.014], "energy_soft", "bow", sides=8,
+        thickness=[0.085, 0.072, 0.048, 0.008], tip=True)
+    for index, (z, side) in enumerate(((1.88, 1.0), (2.14, -1.0),
+                                       (2.38, 1.0), (2.56, -1.0))):
+        m.sweep(f"Sword_Flame_Tongue_{index}", [
+            m.Vector((cx + 0.070 * side, cy, z)),
+            m.Vector((cx + 0.135 * side, cy - 0.020, z + 0.080)),
+            m.Vector((cx + 0.100 * side, cy - 0.010, z + 0.230))],
+            [0.048, 0.030, 0.005], "energy", "bow", sides=5,
+            thickness=[0.026, 0.016, 0.004], tip=True)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sweep(f"Sword_Edge_{side}", [
-            (cx + 0.086 * sign, cy, 1.545),
-            (cx + 0.079 * sign, cy, 2.020),
-            (cx + 0.058 * sign, cy, 2.270),
-            (cx + 0.008 * sign, cy, 2.318)],
+            (cx + 0.124 * sign, cy, 1.545),
+            (cx + 0.114 * sign, cy, 2.200),
+            (cx + 0.080 * sign, cy, 2.560),
+            (cx + 0.008 * sign, cy, 2.665)],
             [0.022, 0.020, 0.013, 0.004], "energy", "bow", sides=5,
             thickness=[0.017, 0.015, 0.010, 0.003], tip=True)
     m.sphere("Sword_Gem", (cx, cy - 0.062, 1.500),
@@ -504,61 +650,65 @@ def shadow_daggers(m):
     for side, cx, cy, bone, mirror in (
             ("L", 0.610, -0.150, "hand.L", 1.0),
             ("R", -0.610, -0.150, "hand.R", -1.0)):
-        m.sweep(f"Dagger_Grip_{side}", [(cx, cy, 1.275), (cx, cy, 1.455)],
+        m.sweep(f"Dagger_Grip_{side}", [(cx, cy, 1.455), (cx, cy, 1.345)],
                 [0.060, 0.055], "leather_dark", bone, sides=10,
                 thickness=[0.056, 0.052])
-        m.sphere(f"Dagger_Pommel_{side}", (cx, cy, 1.250),
+        m.sphere(f"Dagger_Pommel_{side}", (cx, cy, 1.475),
                  (0.042, 0.038, 0.036), "bronze_light", bone, 16, 10)
-        m.box(f"Dagger_Guard_{side}", (cx, cy, 1.470),
+        m.box(f"Dagger_Guard_{side}", (cx, cy, 1.345),
               (0.160, 0.070, 0.034), "bronze_light", bone, bevel=0.010)
         m.sweep(f"Dagger_Blade_{side}", [
-            (cx, cy, 1.485),
-            (cx + 0.035 * mirror, cy, 1.640),
-            (cx + 0.085 * mirror, cy, 1.830),
-            (cx + 0.140 * mirror, cy, 2.020)],
-            [0.086, 0.074, 0.046, 0.005], "bronze_light", bone, sides=6,
-            thickness=[0.024, 0.020, 0.012, 0.003], tip=True,
-            material_stops=[(0.0, "bronze_light"), (0.50, "energy_core")])
+            (cx, cy, 1.325),
+            (cx + 0.110 * mirror, cy, 1.120),
+            (cx + 0.235 * mirror, cy, 0.940),
+            (cx + 0.330 * mirror, cy, 0.730)],
+            [0.120, 0.100, 0.062, 0.005], "bronze_light", bone, sides=8,
+            thickness=[0.030, 0.025, 0.015, 0.003], tip=True,
+            material_stops=[(0.0, "bronze_light"), (0.45, "energy_core")])
+        m.sweep(f"Dagger_Glow_{side}", [
+            (cx + 0.030 * mirror, cy + 0.010, 1.250),
+            (cx + 0.170 * mirror, cy + 0.010, 1.030),
+            (cx + 0.300 * mirror, cy + 0.010, 0.780)],
+            [0.070, 0.050, 0.004], "energy_soft", bone, sides=5,
+            thickness=[0.020, 0.014, 0.003], tip=True)
         m.sweep(f"Dagger_Edge_{side}", [
-            (cx + 0.038 * mirror, cy, 1.505),
-            (cx + 0.092 * mirror, cy, 1.860),
-            (cx + 0.148 * mirror, cy, 2.010)],
+            (cx + 0.038 * mirror, cy, 1.300),
+            (cx + 0.112 * mirror, cy, 1.100),
+            (cx + 0.228 * mirror, cy, 0.775)],
             [0.026, 0.019, 0.004], "energy_core", bone, sides=5,
             thickness=[0.016, 0.012, 0.003], tip=True)
 
 
-def storm_spear(m):
-    """Long spear with a diamond head and lightning crossguard."""
-    cx, cy = 0.56, -0.06
-    m.sweep("Spear_Shaft", [(cx, cy, 0.700), (cx, cy, 2.520)],
-            [0.034, 0.029], "leather_dark", "bow", sides=10,
-            thickness=[0.034, 0.029])
-    for index, z in enumerate((1.050, 1.430, 1.810, 2.190)):
-        m.torus(f"Spear_Grip_Ring_{index}", (cx, cy, z), 0.038, 0.012,
-                "gold", "bow", major_segments=24)
-    m.sphere("Spear_Butt", (cx, cy, 0.680), (0.048, 0.048, 0.062),
-             "gold", "bow", 16, 10)
-    m.box("Spear_Collar", (cx, cy, 2.535), (0.105, 0.085, 0.070),
-          "gold", "bow", bevel=0.016)
-    diamond_blade(m, "Spear_Head", cx, cy, 2.560, 2.960,
-                  [0.078, 0.066, 0.040, 0.003],
-                  [0.030, 0.024, 0.014, 0.002], "bronze_light", "bow")
-    for side, sign in (("L", 1.0), ("R", -1.0)):
-        m.sweep(f"Spear_Edge_{side}", [
-            (cx + 0.074 * sign, cy, 2.575),
-            (cx + 0.058 * sign, cy, 2.760),
-            (cx + 0.010 * sign, cy, 2.930)],
-            [0.016, 0.012, 0.004], "energy", "bow", sides=4,
-            thickness=[0.010, 0.008, 0.003], tip=True)
-    for side, sign in (("L", 1.0), ("R", -1.0)):
-        m.sweep(f"Spear_Wing_{side}", [
-            (cx + 0.030 * sign, cy, 2.505),
-            (cx + 0.155 * sign, cy, 2.575),
-            (cx + 0.215 * sign, cy, 2.700),
-            (cx + 0.170 * sign, cy, 2.640)],
-            [0.030, 0.026, 0.010, 0.004], "gold", "bow", sides=4,
-            thickness=[0.012, 0.010, 0.006, 0.003], tip=True)
+def storm_orb(m):
+    """Crackling lightning orb held in the left hand (reference weapon).
 
+    The orb is bound to the hand weapon bone, so the existing cast/swing
+    choreography carries it correctly without a spear shaft.
+    """
+    cx, cy, cz = 0.605, -0.175, 1.435
+    m.sphere("Storm_Orb_Core", (cx, cy, cz), (0.115, 0.115, 0.115),
+             "energy_core", "bow", 24, 16)
+    m.sphere("Storm_Orb_Halo", (cx, cy, cz), (0.175, 0.175, 0.175),
+             "energy_soft", "bow", 24, 16)
+    for index, tilt in enumerate((0.0, 62.0, 118.0)):
+        m.torus(f"Storm_Orb_Ring_{index}", (cx, cy, cz), 0.205, 0.010,
+                "energy", "bow",
+                rotation=(math.radians(90), math.radians(tilt), 0.0),
+                major_segments=28)
+    arcs = (
+        [(cx - 0.02, cy - 0.04, cz + 0.16), (cx + 0.10, cy - 0.10, cz + 0.24),
+         (cx + 0.04, cy - 0.06, cz + 0.30), (cx + 0.18, cy - 0.12, cz + 0.38)],
+        [(cx + 0.16, cy - 0.02, cz + 0.02), (cx + 0.27, cy - 0.10, cz + 0.12),
+         (cx + 0.22, cy - 0.06, cz + 0.20), (cx + 0.34, cy - 0.14, cz + 0.26)],
+        [(cx - 0.16, cy - 0.06, cz - 0.02), (cx - 0.26, cy - 0.12, cz + 0.08),
+         (cx - 0.21, cy - 0.08, cz + 0.16), (cx - 0.32, cy - 0.16, cz + 0.22)],
+    )
+    for index, points in enumerate(arcs):
+        m.sweep(f"Storm_Orb_Arc_{index}", [m.Vector(p) for p in points],
+                [0.030, 0.024, 0.018, 0.004], "energy", "bow", sides=4,
+                thickness=[0.016, 0.013, 0.010, 0.003], tip=True)
+    m.sphere("Storm_Orb_Gem", (cx, cy - 0.02, cz), (0.045, 0.030, 0.045),
+             "white", "bow", 16, 10)
 
 # ------------------------------------------------------------------ fx ------
 
@@ -627,21 +777,21 @@ def shadow_fx(m):
 def storm_fx(m):
     _ground_aura(m, (0, 72, 144, 216, 288), height=0.80, radius=0.48)
     bolts = (
-        [(0.56, -0.18, 2.30), (0.68, -0.22, 2.55), (0.60, -0.20, 2.62),
-         (0.82, -0.26, 2.92)],
-        [(0.56, -0.18, 2.05), (0.40, -0.24, 2.30), (0.48, -0.22, 2.38),
-         (0.28, -0.28, 2.62)],
-        [(0.50, -0.20, 1.70), (0.36, -0.26, 1.92), (0.44, -0.24, 1.98),
-         (0.30, -0.30, 2.20)],
+        [(0.62, -0.20, 1.56), (0.74, -0.24, 1.72), (0.66, -0.22, 1.78),
+         (0.88, -0.28, 1.95)],
+        [(0.60, -0.20, 1.36), (0.44, -0.26, 1.52), (0.52, -0.24, 1.58),
+         (0.32, -0.30, 1.74)],
+        [(0.54, -0.22, 1.20), (0.40, -0.28, 1.34), (0.48, -0.26, 1.40),
+         (0.30, -0.32, 1.56)],
     )
     for index, points in enumerate(bolts):
         m.sweep(f"Storm_Bolt_{index}", [m.Vector(p) for p in points],
                 [0.038, 0.030, 0.024, 0.006], "energy", "fx", sides=4,
                 thickness=[0.020, 0.016, 0.012, 0.004], tip=True)
-    m.torus("Storm_Ring", (0.56, -0.16, 1.44), 0.30, 0.012,
+    m.torus("Storm_Ring", (0.605, -0.175, 1.435), 0.235, 0.012,
             "energy_soft", "fx", rotation=(math.radians(90), 0, 0),
             major_segments=36)
-    m.sphere("Storm_Core", (0.56, -0.16, 1.44), (0.080, 0.070, 0.080),
+    m.sphere("Storm_Core", (0.605, -0.175, 1.435), (0.070, 0.062, 0.070),
              "energy_core", "fx", 16, 10)
 
 
@@ -925,6 +1075,8 @@ PROFILES = {
         "armature": "Ranger_Armature",
         "palette": {},
         "hair": "spiky",
+        "hair_style": "ranger",
+        "front_mantle": True,
         "build_cape": long_cape,
         "build_armour": None,
         "build_headgear": None,
@@ -940,10 +1092,11 @@ PROFILES = {
         "rig": "Flame_Rig",
         "armature": "Flame_Armature",
         "palette": FLAME_PALETTE,
-        "hair": "short",
+        "hair": "spiky",
+        "hair_style": "flame",
         "build_cape": short_cape,
         "build_armour": flame_armour,
-        "build_headgear": lambda m: circlet(m, "energy_core", crest=False),
+        "build_headgear": None,
         "build_weapon": flame_sword,
         "build_fx": flame_fx,
         "attack": flame_attack,
@@ -956,7 +1109,8 @@ PROFILES = {
         "rig": "Shadow_Rig",
         "armature": "Shadow_Armature",
         "palette": SHADOW_PALETTE,
-        "hair": "none",
+        "hair": "spiky",
+        "hair_style": "shadow",
         "build_cape": tattered_cape,
         "build_armour": shadow_armour,
         "build_headgear": shadow_hood,
@@ -964,8 +1118,8 @@ PROFILES = {
         "build_fx": shadow_fx,
         "attack": shadow_attack,
         "skill": shadow_skill,
-        "required_parts": ("Shadow_Hood", "Shadow_Mask", "Dagger_Blade_L",
-                           "Dagger_Blade_R"),
+        "required_parts": ("Shadow_Hood", "Shadow_Hood_Peak",
+                           "Dagger_Blade_L", "Dagger_Blade_R"),
     },
     "storm": {
         "display_name": "Storm",
@@ -973,15 +1127,17 @@ PROFILES = {
         "rig": "Storm_Rig",
         "armature": "Storm_Armature",
         "palette": STORM_PALETTE,
-        "hair": "short",
-        "build_cape": long_cape,
-        "build_armour": storm_armour,
-        "build_headgear": lambda m: circlet(m, "energy_core", crest=True),
-        "build_weapon": storm_spear,
+        "hair": "spiky",
+        "hair_style": "storm",
+        "build_cape": storm_cape,
+        "build_armour": storm_robe,
+        "build_headgear": None,
+        "build_weapon": storm_orb,
         "build_fx": storm_fx,
         "attack": storm_attack,
         "skill": storm_skill,
-        "required_parts": ("Spear_Head", "Spear_Collar"),
+        "required_parts": ("Storm_Orb_Core", "Storm_Robe_Chest",
+                           "Storm_Coat_Front_L", "Storm_Coat_Front_R"),
     },
 }
 
