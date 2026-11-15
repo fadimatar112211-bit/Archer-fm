@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 from array import array
 import json
+import shutil
 import sys
 from pathlib import Path
 import zlib
@@ -445,6 +446,44 @@ def verify_packed(manifest: dict, base: Path) -> None:
           f"strip reproduces its rendered frame")
 
 
+def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
+    """Copy a non-Ranger hero into the directory the fixed CI upload collects.
+
+    The workflow can only be edited with a token that has `workflow` scope,
+    which this project does not have, so it still uploads the Ranger render
+    directory. Non-Ranger heroes are rendered into that directory for the fixed
+    validation/packing steps and then copied here as
+    `_bundle/<hero>/renders/`; the committing machine moves them to
+    `assets/heroes/<hero>/renders/`. `_bundle` is gitignored and never shipped.
+    """
+    hero_id = manifest["hero_id"]
+    if hero_id == "ranger":
+        print("BUNDLE_SKIP ranger already lives in the uploaded directory")
+        return None
+    root = manifest_path.resolve().parents[4]
+    bundle = (root / "assets/heroes/ranger/renders/_bundle" / hero_id
+              / "renders")
+    if bundle.exists():
+        shutil.rmtree(bundle)
+    bundle.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(manifest_path.parent, bundle,
+                    ignore=shutil.ignore_patterns("_bundle"))
+    fixed_manifest = bundle / "ranger_manifest.json"
+    if fixed_manifest.is_file():
+        fixed_manifest.replace(bundle / f"{hero_id}_manifest.json")
+    shipped = bundle / f"{hero_id}_manifest.json"
+    data = json.loads(shipped.read_text(encoding="utf-8"))
+    data["source"]["blend_file"] = (
+        f"assets/heroes/{hero_id}/source/{hero_id}_source.blend")
+    shipped.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                       encoding="utf-8")
+    source = bundle.parent / "source" / f"{hero_id}_source.blend"
+    if not source.is_file():
+        print(f"BUNDLE_WARNING: {source} is missing; rebuild the source first")
+    print(f"BUNDLE_PUBLISHED hero={hero_id} path={bundle}")
+    return bundle
+
+
 def parse_args():
     # `blender -b file.blend --python this.py -- --manifest ...` puts the script
     # arguments after a bare `--`; a plain `python3 this.py --manifest ...`
@@ -467,6 +506,7 @@ def main():
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                              encoding="utf-8")
     verify_packed(manifest, manifest_path.parent)
+    publish_bundle(manifest_path, manifest)
     print(f"Packed {len(manifest['atlases'])} atlases into {manifest_path.parent / 'atlases'}")
 
 

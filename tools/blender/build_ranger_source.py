@@ -108,9 +108,9 @@ PALETTE = {
     "bronze": "#B07C3F",
     "bronze_light": "#F0CE8A",
     "gold": "#E0B23A",
-    "skin": "#F8D9BA",
-    "skin_shadow": "#E3B08A",
-    "skin_light": "#FFEDD8",
+    "skin": "#F0C49E",
+    "skin_shadow": "#CE9970",
+    "skin_light": "#FBDDBE",
     "hair_dark": "#3E1E0E",
     "hair_mid": "#6B3418",
     "hair_light": "#9C5A2C",
@@ -575,28 +575,31 @@ def surface_strip(name, path, half_widths, material, inflate, bone="head",
 def build_face():
     for side, sign in (("L", 1.0), ("R", -1.0)):
         az = 27.0 * sign
-        surface_patch(f"Eye_White_{side}", az, 1.4, 14.4, 10.4, "white", 0.006)
-        surface_patch(f"Eye_Iris_{side}", az - 0.7 * sign, 0.3, 8.8, 9.1,
+        surface_patch(f"Eye_White_{side}", az, 0.9, 13.0, 10.6, "white", 0.006)
+        surface_patch(f"Eye_Iris_{side}", az - 0.7 * sign, -0.2, 8.2, 9.3,
                       "eye_blue", 0.009)
-        surface_patch(f"Eye_Iris_Low_{side}", az - 0.7 * sign, -2.3, 6.5, 5.3,
+        surface_patch(f"Eye_Iris_Low_{side}", az - 0.7 * sign, -2.6, 6.0, 5.0,
                       "eye_light", 0.0095)
-        surface_patch(f"Eye_Pupil_{side}", az - 0.7 * sign, 0.5, 3.9, 4.4,
+        surface_patch(f"Eye_Pupil_{side}", az - 0.7 * sign, -0.1, 3.7, 4.5,
                       "eye_dark", 0.011)
         surface_patch(f"Eye_Glint_{side}", az - 3.6 * sign, 3.9, 2.6, 2.3,
                       "white", 0.013)
         surface_patch(f"Eye_Glint_Small_{side}", az + 2.7 * sign, -2.2, 1.2,
                       1.1, "white", 0.013)
-        lash = [(az - 13.6 * sign + 13.6 * sign * (t / 10.0),
-                 1.4 + 10.2 * math.sin(math.pi * 0.08 + math.pi * 0.84 * t / 10.0))
+        lash = [(az - 13.8 * sign + 13.8 * sign * (t / 10.0),
+                 0.9 + 9.2 * math.sin(math.pi * 0.08 + math.pi * 0.84 * t / 10.0))
                 for t in range(11)]
-        surface_strip(f"Eye_Lash_{side}", lash, [1.55] * 11, "hair_dark",
-                      0.012, thickness=0.003)
-        brow = [(az - 13.5 * sign + 27.0 * sign * (t / 6.0),
-                 15.2 + 2.2 * math.sin(math.pi * t / 6.0))
+        surface_strip(f"Eye_Lash_{side}", lash, [1.75] * 11, "hair_dark",
+                      0.012, thickness=0.0032)
+        # Stern brows: the inner end sits low over the nose and the outer end
+        # lifts, which is the reference's determined, adult read instead of the
+        # wide-eyed surprise of the first pass.
+        brow = [(az - 14.0 * sign + 28.0 * sign * (t / 6.0),
+                 13.8 + 4.4 * (t / 6.0) ** 1.15)
                 for t in range(7)]
         surface_strip(f"Brow_{side}", brow,
-                      [1.85, 2.0, 1.9, 1.7, 1.45, 1.15, 0.62],
-                      "hair_dark", 0.011, thickness=0.0032)
+                      [2.3, 2.2, 1.95, 1.6, 1.25, 0.95, 0.55],
+                      "hair_dark", 0.012, thickness=0.0034)
         ear = sphere(f"Ear_{side}", head_point(82.0 * sign, -4.0, 0.005),
                      (0.048, 0.080, 0.112), "skin", "head", 20, 12)
         sphere(f"Ear_Inner_{side}",
@@ -604,11 +607,11 @@ def build_face():
                (0.022, 0.040, 0.064), "skin_shadow", "head", 16, 10)
     sphere("Nose", head_point(0.0, -10.0, 0.020),
            (0.034, 0.043, 0.030), "skin_shadow", "head", 16, 10)
-    mouth = [(-5.2 + 10.4 * t / 8.0,
-              -26.6 + 1.7 * (abs(-5.2 + 10.4 * t / 8.0) / 5.2) ** 1.4)
+    mouth = [(-5.4 + 10.8 * t / 8.0,
+              -26.2 - 1.5 * (abs(-5.4 + 10.8 * t / 8.0) / 5.4) ** 1.3)
              for t in range(9)]
-    surface_strip("Mouth", mouth, [0.62] * 9, "leather_dark", 0.010,
-                  thickness=0.0025)
+    surface_strip("Mouth", mouth, [0.78] * 9, "leather_dark", 0.010,
+                  thickness=0.0026)
 
 
 def hairline(az_deg):
@@ -635,7 +638,7 @@ def build_hair():
             az = -180.0 + 360.0 * j / (columns - 1)
             line = hairline(az)
             el = line + t * (88.0 - line)
-            inflate = 0.048 + 0.014 * (1.0 - t)
+            inflate = 0.058 + 0.018 * (1.0 - t)
             verts.append(head_point(az, el, inflate))
     faces = []
     face_materials = []
@@ -715,9 +718,17 @@ def make_locks():
     ]
     for index, (az, width) in enumerate(spikes):
         lock(f"Hair_Crown_{index}", [
-            (az, 82, .04), (az + 6, 72, .12),
-            (az + 14, 60, .20), (az + 18, 52, .24)],
-            [width, width * .85, width * .45, .012])
+            (az, 79, .06), (az + 6, 70, .14),
+            (az + 16, 62, .20), (az + 22, 57, .27)],
+            [width * 2.0, width * 1.5, width * .9, .014])
+    # Short forward crest above the bangs: the reference's hair is a thick
+    # spiky mass, not a smooth cap with a few fins at the back.
+    for index, (az, el, lean) in enumerate((
+            (-26, 68, 34), (2, 69, 38), (30, 66, 30), (-50, 62, 32))):
+        lock(f"Hair_Crest_{index}", [
+            (az, el, .07), (az + lean * 0.25, el + 9, .14),
+            (az + lean * 0.6, el + 14, .20), (az + lean, el + 17, .23)],
+            [.165, .140, .088, .012])
     for index, az in enumerate((120, 145, 165, 195, 215, 240)):
         lock(f"Hair_Back_{index}", [
             (az, 70, .05), (az, 40, .06), (az, 10, .07),
@@ -836,9 +847,9 @@ def build_torso():
         (1.66, 0, 0, 0.282, 0.212),
     ]
     upper = [
-        (1.58, 0, 0, 0.276, 0.208), (1.72, 0, 0, 0.292, 0.218),
-        (1.86, 0, 0, 0.320, 0.232), (1.98, 0, 0, 0.342, 0.242),
-        (2.06, 0, 0, 0.276, 0.216), (2.10, 0, 0, 0.190, 0.170),
+        (1.58, 0, 0, 0.284, 0.212), (1.72, 0, 0, 0.306, 0.226),
+        (1.86, 0, 0, 0.344, 0.242), (1.98, 0, 0, 0.368, 0.252),
+        (2.06, 0, 0, 0.296, 0.226), (2.10, 0, 0, 0.202, 0.176),
     ]
     loft("Torso_Lower", lower, "green_deep", "spine")
     loft("Torso_Upper", upper, "green_deep", "chest")
@@ -849,11 +860,11 @@ def build_torso():
     for index, (z0, z1, broad) in enumerate((
             (1.57, 1.68, 0.0), (1.69, 1.80, 0.012),
             (1.81, 1.92, 0.020), (1.93, 2.01, 0.018))):
-        front_band(f"Chest_Band_{index}", z0, z1, 0.335 + broad,
-                   0.240 + broad * 0.65, -78, 78, "leather", "chest",
+        front_band(f"Chest_Band_{index}", z0, z1, 0.356 + broad,
+                   0.250 + broad * 0.65, -78, 78, "leather", "chest",
                    thickness=0.014, bulge=0.010)
         front_band(f"Chest_Trim_{index}", z1 - 0.012, z1 + 0.004,
-                   0.342 + broad, 0.246 + broad * 0.65, -78, 78,
+                   0.363 + broad, 0.256 + broad * 0.65, -78, 78,
                    "bronze", "chest", thickness=0.008, bulge=0.008)
     front_band("Chest_Center_Plate", 1.62, 2.01, 0.352, 0.252, -15, 15,
                "leather_dark", "chest", columns=8, thickness=0.020,
@@ -1014,13 +1025,13 @@ def build_bow():
     # The reference bow is nearly body-height and dominates the silhouette, so
     # the limbs run from above the head to below the knee with a thick luminous
     # core and a wider halo.
-    up = [Vector((0.56, -0.08, 1.42)), Vector((0.56, -0.30, 1.72)),
-          Vector((0.56, -0.43, 2.05)), Vector((0.56, -0.37, 2.38)),
-          Vector((0.56, -0.19, 2.58))]
-    down = [Vector((0.56, -0.08, 1.42)), Vector((0.56, -0.30, 1.12)),
-            Vector((0.56, -0.43, 0.79)), Vector((0.56, -0.37, 0.46)),
-            Vector((0.56, -0.19, 0.26))]
-    widths = [0.070, 0.056, 0.048, 0.036, 0.018]
+    up = [Vector((0.60, -0.10, 1.42)), Vector((0.64, -0.36, 1.82)),
+          Vector((0.68, -0.54, 2.24)), Vector((0.64, -0.46, 2.62)),
+          Vector((0.55, -0.22, 2.82))]
+    down = [Vector((0.60, -0.10, 1.42)), Vector((0.64, -0.36, 1.02)),
+            Vector((0.68, -0.54, 0.62)), Vector((0.64, -0.46, 0.24)),
+            Vector((0.55, -0.22, 0.04))]
+    widths = [0.090, 0.072, 0.060, 0.046, 0.022]
     for index, limb in enumerate((up, down)):
         sweep(f"Bow_Limb_{index}", limb, widths, "energy_core", "bow",
               sides=8, thickness=widths, tip=True)
@@ -1032,55 +1043,55 @@ def build_bow():
     # along the limbs that keep the weapon readable even at 96 px.
     for index, sign in ((0, 1.0), (1, -1.0)):
         sweep(f"Bow_Blade_{index}", [
-            Vector((0.545, -0.40, 2.10)),
-            Vector((0.505, -0.46, 2.28)),
-            Vector((0.470, -0.43, 2.46)),
-            Vector((0.500, -0.36, 2.55))],
-            [0.050, 0.038, 0.020, 0.005], "energy", "bow", sides=5,
-            thickness=[0.022, 0.016, 0.010, 0.003], tip=True)
+            Vector((0.675, -0.50, 2.26)),
+            Vector((0.655, -0.56, 2.46)),
+            Vector((0.625, -0.52, 2.64)),
+            Vector((0.590, -0.36, 2.76))],
+            [0.058, 0.044, 0.024, 0.005], "energy", "bow", sides=5,
+            thickness=[0.026, 0.018, 0.011, 0.003], tip=True)
         sweep(f"Bow_Blade_Low_{index}", [
-            Vector((0.545, -0.40, 0.74)),
-            Vector((0.505, -0.46, 0.56)),
-            Vector((0.470, -0.43, 0.38)),
-            Vector((0.500, -0.36, 0.29))],
-            [0.050, 0.038, 0.020, 0.005], "energy", "bow", sides=5,
-            thickness=[0.022, 0.016, 0.010, 0.003], tip=True)
-    sweep("Bow_Grip", [Vector((0.56, -0.08, 1.30)),
-                       Vector((0.56, -0.08, 1.54))],
-          [0.085, 0.085], "leather_dark", "bow", sides=12,
-          thickness=[0.085, 0.085])
-    ring_at("Bow_Grip_Ring_0", Vector((0.56, -0.08, 1.30)),
-            Vector((0.56, -0.08, 1.54)), 0.10, 0.049, 0.011,
+            Vector((0.675, -0.50, 0.58)),
+            Vector((0.655, -0.56, 0.38)),
+            Vector((0.625, -0.52, 0.20)),
+            Vector((0.590, -0.36, 0.08))],
+            [0.058, 0.044, 0.024, 0.005], "energy", "bow", sides=5,
+            thickness=[0.026, 0.018, 0.011, 0.003], tip=True)
+    sweep("Bow_Grip", [Vector((0.60, -0.10, 1.28)),
+                       Vector((0.60, -0.10, 1.56))],
+          [0.098, 0.098], "leather_dark", "bow", sides=12,
+          thickness=[0.098, 0.098])
+    ring_at("Bow_Grip_Ring_0", Vector((0.60, -0.10, 1.28)),
+            Vector((0.60, -0.10, 1.56)), 0.10, 0.058, 0.013,
             "gold", "bow")
-    ring_at("Bow_Grip_Ring_1", Vector((0.56, -0.08, 1.30)),
-            Vector((0.56, -0.08, 1.54)), 0.90, 0.049, 0.011,
+    ring_at("Bow_Grip_Ring_1", Vector((0.60, -0.10, 1.28)),
+            Vector((0.60, -0.10, 1.56)), 0.90, 0.058, 0.013,
             "gold", "bow")
-    sphere("Bow_Gem", (0.56, -0.125, 1.42), (0.038, 0.034, 0.062),
+    sphere("Bow_Gem", (0.60, -0.15, 1.42), (0.044, 0.040, 0.070),
            "green_bright", "bow", 16, 10)
-    sweep("String_Rest", [Vector((0.56, -0.19, 2.585)),
-                          Vector((0.56, -0.19, 0.255))],
-          [0.008, 0.008], "string_glow", "string_rest", sides=4,
-          thickness=[0.008, 0.008])
-    nock = Vector((0.56, 0.30, 1.42))
-    sweep("String_Drawn", [Vector((0.56, -0.19, 2.585)), nock,
-                           Vector((0.56, -0.19, 0.255))],
-          [0.008, 0.008, 0.008], "string_glow", "string_drawn",
-          sides=4, thickness=[0.008, 0.008, 0.008])
+    sweep("String_Rest", [Vector((0.54, -0.21, 2.83)),
+                          Vector((0.54, -0.21, 0.03))],
+          [0.010, 0.010], "string_glow", "string_rest", sides=4,
+          thickness=[0.010, 0.010])
+    nock = Vector((0.60, 0.30, 1.42))
+    sweep("String_Drawn", [Vector((0.54, -0.21, 2.83)), nock,
+                           Vector((0.54, -0.21, 0.03))],
+          [0.010, 0.010, 0.010], "string_glow", "string_drawn",
+          sides=4, thickness=[0.010, 0.010, 0.010])
     # Nocked energy arrow: from the drawn nock towards the bow.
-    sweep("Nocked_Arrow", [Vector((0.56, 0.38, 1.42)),
-                           Vector((0.56, -0.32, 1.42))],
-          [0.024, 0.017], "energy_core", "fx_draw", sides=6,
-          thickness=[0.024, 0.017])
-    cone = bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.052,
+    sweep("Nocked_Arrow", [Vector((0.60, 0.38, 1.42)),
+                           Vector((0.60, -0.34, 1.42))],
+          [0.026, 0.019], "energy_core", "fx_draw", sides=6,
+          thickness=[0.026, 0.019])
+    cone = bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.056,
                                            radius2=0.0, depth=0.15,
-                                           location=(0.56, -0.395, 1.42),
+                                           location=(0.60, -0.415, 1.42),
                                            rotation=(math.radians(90), 0, 0))
     arrow_tip = bpy.context.object
     arrow_tip.name = "Arrow_Head"
     arrow_tip.data.materials.append(MATS["energy_core"])
     smooth(arrow_tip)
     attach(arrow_tip, "fx_draw")
-    sphere("Draw_Glow", (0.56, 0.30, 1.42), (0.085, 0.075, 0.085),
+    sphere("Draw_Glow", (0.60, 0.30, 1.42), (0.090, 0.080, 0.090),
            "energy_soft", "fx_draw", 16, 10)
 
 
@@ -1424,66 +1435,76 @@ def build_actions():
         (9, *P(BASE)),
     ]
     final = merged(BASE, {
-        "root": (-14, 0, 0),
-        "thigh.L": (-94, 0, 0), "thigh.R": (-86, 0, 0),
-        "shin.L": (150, 0, 0), "shin.R": (144, 0, 0),
-        "foot.L": (-36, 0, 0), "foot.R": (-30, 0, 0),
-        "chest": (58, 0, 0), "head": (44, 0, 0),
-        "upper_arm.L": (24, 0, 18), "upper_arm.R": (24, 0, -18),
-        "forearm.L": (30, 0, 0), "forearm.R": (30, 0, 0),
-        "cloak_a": (24, 0, 0), "cloak_b": (34, 0, 0), "cloak_c": (44, 0, 0),
+        "root": (-4, 0, 0),
+        "thigh.L": (-8, 0, 0), "thigh.R": (-4, 0, 0),
+        "shin.L": (140, 0, 0), "shin.R": (136, 0, 0),
+        "foot.L": (-28, 0, 0), "foot.R": (-26, 0, 0),
+        "chest": (12, 0, 0), "head": (22, 0, 0),
+        "upper_arm.L": (8, 0, 10), "upper_arm.R": (8, 0, -10),
+        "forearm.L": (6, 0, 0), "forearm.R": (6, 0, 0),
+        "cloak_a": (28, 0, 0), "cloak_b": (38, 0, 0), "cloak_c": (48, 0, 0),
     })
     # Death is a compact forward collapse instead of a full-length fall. A
     # prone body is ~2.6 units wide in profile, and the shared sprite scale must
     # fit every state and direction, so one prone pose shrank the whole set by
-    # 45%. Kneeling over the knees keeps the same weight and finality while the
-    # character stays readable at gameplay size.
+    # 45%. Kneeling keeps the same weight and finality while the character stays
+    # readable at gameplay size: the thighs stay near vertical, the shins fold
+    # back under the hips, and the torso/head sag forward.
     death = [
         (1, *P(BASE)),
         (5, *P(merged(BASE, {
-            "chest": (-10, 0, 0), "head": (-13, 0, 0),
-            "upper_arm.L": (-14, 0, 22), "upper_arm.R": (-14, 0, -22),
-            "cloak_a": (-8, 0, 0), "cloak_b": (-12, 0, 0), "cloak_c": (-16, 0, 0),
-        }), loc={"root": (0, 0.03, 0)})),
+            "chest": (-14, 0, 0), "head": (-18, 0, 0),
+            "upper_arm.L": (-18, 0, 26), "upper_arm.R": (-18, 0, -26),
+            "forearm.L": (-12, 0, 0), "forearm.R": (-12, 0, 0),
+            "cloak_a": (-10, 0, 0), "cloak_b": (-14, 0, 0), "cloak_c": (-18, 0, 0),
+        }), loc={"root": (0, 0.02, 0)})),
         (9, *P(merged(BASE, {
-            "thigh.L": (-42, 0, 0), "thigh.R": (-40, 0, 0),
-            "shin.L": (82, 0, 0), "shin.R": (80, 0, 0),
-            "foot.L": (-18, 0, 0), "foot.R": (-18, 0, 0),
-            "chest": (16, 0, 0), "head": (12, 0, 0),
-            "upper_arm.L": (-6, 0, 26), "upper_arm.R": (-6, 0, -26),
-            "forearm.L": (8, 0, 0), "forearm.R": (8, 0, 0),
-            "cloak_a": (2, 0, 0), "cloak_b": (6, 0, 0), "cloak_c": (10, 0, 0),
-        }), loc={"root": (0, -0.18, 0)})),
+            "thigh.L": (-30, 0, 0), "thigh.R": (-26, 0, 0),
+            "shin.L": (62, 0, 0), "shin.R": (58, 0, 0),
+            "foot.L": (-14, 0, 0), "foot.R": (-12, 0, 0),
+            "chest": (16, 0, 0), "head": (6, 0, 0),
+            "upper_arm.L": (-22, 0, 22), "upper_arm.R": (-22, 0, -22),
+            "forearm.L": (10, 0, 0), "forearm.R": (10, 0, 0),
+            "cloak_a": (4, 0, 0), "cloak_b": (8, 0, 0), "cloak_c": (12, 0, 0),
+        }), loc={"root": (0, -0.20, 0)})),
         (13, *P(merged(BASE, {
-            "root": (-8, 0, 0),
-            "thigh.L": (-78, 0, 0), "thigh.R": (-74, 0, 0),
-            "shin.L": (130, 0, 0), "shin.R": (126, 0, 0),
-            "foot.L": (-30, 0, 0), "foot.R": (-28, 0, 0),
-            "chest": (36, 0, 0), "head": (28, 0, 0),
-            "upper_arm.L": (12, 0, 22), "upper_arm.R": (12, 0, -22),
-            "forearm.L": (18, 0, 0), "forearm.R": (18, 0, 0),
-            "cloak_a": (12, 0, 0), "cloak_b": (20, 0, 0), "cloak_c": (28, 0, 0),
-        }), loc={"root": (0, -0.46, 0)})),
-        (17, *P(merged(BASE, {
-            "root": (-12, 0, 0),
-            "thigh.L": (-90, 0, 0), "thigh.R": (-82, 0, 0),
-            "shin.L": (146, 0, 0), "shin.R": (140, 0, 0),
-            "foot.L": (-34, 0, 0), "foot.R": (-29, 0, 0),
-            "chest": (52, 0, 0), "head": (40, 0, 0),
-            "upper_arm.L": (20, 0, 20), "upper_arm.R": (20, 0, -20),
-            "forearm.L": (26, 0, 0), "forearm.R": (26, 0, 0),
-            "cloak_a": (20, 0, 0), "cloak_b": (30, 0, 0), "cloak_c": (40, 0, 0),
-        }), loc={"root": (0, -0.64, 0)})),
-        (21, *P(final, loc={"root": (0, -0.70, 0)},
-                scale={"bow": (0.0, 0.0, 0.0)})),
-        (25, *P(merged(final, {"head": (46, 0, 2)}),
-                loc={"root": (0, -0.705, 0)},
-                scale={"bow": (0.0, 0.0, 0.0)})),
-        (29, *P(merged(final, {"head": (45, 0, -2)}),
-                loc={"root": (0, -0.70, 0)},
-                scale={"bow": (0.0, 0.0, 0.0)})),
-        (33, *P(final, loc={"root": (0, -0.70, 0)},
-                scale={"bow": (0.0, 0.0, 0.0)})),
+            "root": (-3, 0, 0),
+            "thigh.L": (-10, 0, 0), "thigh.R": (-6, 0, 0),
+            "shin.L": (126, 0, 0), "shin.R": (122, 0, 0),
+            "foot.L": (-24, 0, 0), "foot.R": (-22, 0, 0),
+            "chest": (8, 0, 0), "head": (10, 0, 0),
+            "upper_arm.L": (2, 0, 14), "upper_arm.R": (2, 0, -14),
+            "forearm.L": (8, 0, 0), "forearm.R": (8, 0, 0),
+            "cloak_a": (18, 0, 0), "cloak_b": (24, 0, 0), "cloak_c": (30, 0, 0),
+        }), loc={"root": (0, -0.60, 0)})),
+        (17, *P(merged(final, {"head": (18, 0, 0)}),
+                loc={"root": (0, -0.78, 0)},
+                scale={"bow": (0.0, 0.0, 0.0),
+                       "cloak_a": (1.0, 0.86, 1.0),
+                       "cloak_b": (1.0, 0.86, 1.0),
+                       "cloak_c": (1.0, 0.86, 1.0)})),
+        (21, *P(final, loc={"root": (0, -0.78, 0)},
+                scale={"bow": (0.0, 0.0, 0.0),
+                       "cloak_a": (1.0, 0.86, 1.0),
+                       "cloak_b": (1.0, 0.86, 1.0),
+                       "cloak_c": (1.0, 0.86, 1.0)})),
+        (25, *P(merged(final, {"head": (24, 0, 2)}),
+                loc={"root": (0, -0.785, 0)},
+                scale={"bow": (0.0, 0.0, 0.0),
+                       "cloak_a": (1.0, 0.86, 1.0),
+                       "cloak_b": (1.0, 0.86, 1.0),
+                       "cloak_c": (1.0, 0.86, 1.0)})),
+        (29, *P(merged(final, {"head": (23, 0, -2)}),
+                loc={"root": (0, -0.78, 0)},
+                scale={"bow": (0.0, 0.0, 0.0),
+                       "cloak_a": (1.0, 0.86, 1.0),
+                       "cloak_b": (1.0, 0.86, 1.0),
+                       "cloak_c": (1.0, 0.86, 1.0)})),
+        (33, *P(final, loc={"root": (0, -0.78, 0)},
+                scale={"bow": (0.0, 0.0, 0.0),
+                       "cloak_a": (1.0, 0.86, 1.0),
+                       "cloak_b": (1.0, 0.86, 1.0),
+                       "cloak_c": (1.0, 0.86, 1.0)})),
     ]
     prefix = PROFILE["prefix"]
     actions = {
@@ -1550,8 +1571,18 @@ def scene_mesh_bounds():
             continue
         evaluated = obj.evaluated_get(depsgraph)
         matrix = evaluated.matrix_world
-        for corner in evaluated.bound_box:
-            point = matrix @ Vector(corner)
+        points = [matrix @ Vector(corner) for corner in evaluated.bound_box]
+        # FX parts are collapsed to a point by scaling their bone to zero when
+        # they are not active. A collapsed aura still inherits the root bone,
+        # so its degenerate bounds would otherwise be mistaken for the lowest
+        # point of the character and lift a kneeling death pose off the ground.
+        extent = max(
+            max(point[i] for point in points) - min(point[i] for point in points)
+            for i in range(3)
+        )
+        if extent < 1e-4:
+            continue
+        for point in points:
             low = Vector((min(low.x, point.x), min(low.y, point.y), min(low.z, point.z)))
             high = Vector((max(high.x, point.x), max(high.y, point.y), max(high.z, point.z)))
     return low, high

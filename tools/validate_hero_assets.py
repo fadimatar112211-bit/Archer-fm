@@ -145,10 +145,14 @@ def validate(manifest_path: Path) -> list[str]:
                         f"{name}: event name is required")
             for state in ("attack",):
                 if name.startswith(state + "_"):
-                    release_events = [e for e in events
-                                      if isinstance(e, dict) and e.get("name") == "projectile_release"]
-                    require(len(release_events) == 1,
-                            f"{name}: attack must have exactly one projectile_release event")
+                    if hero_id == "ranger":
+                        release_events = [e for e in events
+                                          if isinstance(e, dict) and e.get("name") == "projectile_release"]
+                        require(len(release_events) == 1,
+                                f"{name}: attack must have exactly one projectile_release event")
+                    else:
+                        require(len(events) >= 1,
+                                f"{name}: melee attack must declare at least one gameplay event")
         # Cross-atlas checks
         for i in range(len(frame_rects)):
             for j in range(i + 1, len(frame_rects)):
@@ -173,17 +177,37 @@ def validate(manifest_path: Path) -> list[str]:
     return errors
 
 
+def discover_manifests(primary: Path) -> list[Path]:
+    """Every hero manifest in the repo, starting with the requested one.
+
+    The CI step passes the ranger manifest because the workflow is fixed, but
+    the pipeline renders one hero per run. Validating all siblings means a hero
+    can never reach an artifact unvalidated just because it is not the Ranger.
+    """
+    paths = [primary]
+    if len(primary.parents) >= 5:
+        heroes = primary.parents[4] / "assets" / "heroes"
+        for candidate in sorted(heroes.glob("*/renders/*_manifest.json")):
+            if candidate.resolve() == primary.resolve():
+                continue
+            paths.append(candidate)
+    return paths
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path, help="path to hero manifest JSON")
     args = parser.parse_args()
-    errors = validate(args.manifest)
-    if errors:
-        for error in errors:
-            print(f"ERROR: {error}", file=sys.stderr)
-        return 1
-    print(f"OK: {args.manifest} passed structural asset validation")
-    return 0
+    failed = False
+    for manifest in discover_manifests(args.manifest):
+        errors = validate(manifest)
+        if errors:
+            failed = True
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+        else:
+            print(f"OK: {manifest} passed structural asset validation")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

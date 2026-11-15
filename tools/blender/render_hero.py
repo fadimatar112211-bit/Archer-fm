@@ -145,8 +145,18 @@ def union_bounds():
             continue
         evaluated = obj.evaluated_get(depsgraph)
         matrix = evaluated.matrix_world
-        for corner in evaluated.bound_box:
-            point = matrix @ Vector(corner)
+        points = [matrix @ Vector(corner) for corner in evaluated.bound_box]
+        # Inactive FX parts are scaled to zero by their bone, but a zero-scale
+        # object still reports a degenerate AABB at the bone position. That
+        # phantom point follows the root bone below the floor during Death and
+        # used to force a much wider orthographic scale for the whole set.
+        extent = max(
+            max(point[i] for point in points) - min(point[i] for point in points)
+            for i in range(3)
+        )
+        if extent < 1e-4:
+            continue
+        for point in points:
             low = Vector((min(low.x, point.x), min(low.y, point.y), min(low.z, point.z)))
             high = Vector((max(high.x, point.x), max(high.y, point.y), max(high.z, point.z)))
             found = True
