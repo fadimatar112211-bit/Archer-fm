@@ -18,8 +18,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/heroes/
-    - assets/heroes/ranger/renders/
+    # Runtime needs only manifests and packed atlases. Raw per-frame PNGs,
+    # source renders and reference images stay in the repository, not the APK.
+    - assets/heroes/ranger/renders/ranger_manifest.json
     - assets/heroes/ranger/renders/atlases/
-    - assets/heroes/flame/renders/
+    - assets/heroes/flame/renders/flame_manifest.json
     - assets/heroes/flame/renders/atlases/

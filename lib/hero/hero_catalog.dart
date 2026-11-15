@@ -55,7 +55,7 @@ class HeroDefinition {
   final IconData icon;
   final HeroTheme theme;
 
-  /// Bundled folder for the manifest, frames and atlases.
+  /// Bundled folder for the runtime manifest and packed atlases.
   String get assetRoot => 'assets/heroes/$id/renders';
 
   String get manifestPath => '$assetRoot/${id}_manifest.json';
