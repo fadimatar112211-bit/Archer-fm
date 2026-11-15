@@ -19,3 +19,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/heroes/
+    - assets/heroes/ranger/renders/
+    - assets/heroes/ranger/renders/atlases/
