@@ -79,12 +79,15 @@ def main():
     for required in REQUIRED_MATERIALS:
         if required not in material_names:
             fail("Required material missing: " + required)
+    # `node.type` is the RNA enum id (BSDF_PRINCIPLED), not the Python class
+    # name (ShaderNodeBsdfPrincipled). A colour socket wired straight into
+    # Surface has type RGB/VALTORGB/MIX_RGB and is rejected here.
     shader_node_types = {
-        "ShaderNodeBsdfPrincipled", "ShaderNodeEmission", "ShaderNodeBsdfDiffuse",
-        "ShaderNodeBsdfGlossy", "ShaderNodeBsdfTransparent", "ShaderNodeAddShader",
-        "ShaderNodeMixShader", "ShaderNodeBsdfToon", "ShaderNodeBsdfAnisotropic",
-        "ShaderNodeBsdfGlass", "ShaderNodeBsdfRefraction", "ShaderNodeBsdfTranslucent",
-        "ShaderNodeSubsurfaceScattering", "ShaderNodeHairBsdf", "ShaderNodeBsdfSheen",
+        "BSDF_PRINCIPLED", "EMISSION", "BSDF_DIFFUSE", "BSDF_GLOSSY",
+        "BSDF_TRANSPARENT", "ADD_SHADER", "MIX_SHADER", "BSDF_TOON",
+        "BSDF_ANISOTROPIC", "BSDF_GLASS", "BSDF_REFRACTION", "BSDF_TRANSLUCENT",
+        "SUBSURFACE_SCATTERING", "HAIR_BSDF", "BSDF_SHEEN", "BSDF_VELVET",
+        "BSDF_HOLOGRAM", "BSDF_HAIR_PRINCIPLED",
     }
     broken_materials = []
     for mat in bpy.data.materials:
