@@ -1,87 +1,52 @@
-"""Pack rendered Ranger PNG frames into deterministic grid atlases.
+"""Run the Ranger atlas packer from inside Blender.
+
+The actual packing lives in `tools/pack_hero_atlases.py`, which uses only the
+Python standard library and is covered by `tools/tests/test_pack_hero_atlases.py`.
+This module exists so the CI pipeline can keep invoking the documented
+`blender -b ... --python tools/blender/pack_hero_atlases.py` command without a
+second, untested implementation drifting from the tested one.
+
+The original Blender copy of the packer relied on `bpy.data.images` pixel
+buffers, which are stored bottom-up while atlas metadata uses top-left
+coordinates; every tile was written to the mirrored rows at the far end of the
+atlas. Decoding and encoding the PNGs directly avoids that class of bug, avoids
+a colour-management round-trip through the scene-linear space, and keeps the
+atlas byte-identical to the rendered frames.
 
 Run:
-  blender -b ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
+  blender -b ranger_source.blend --python tools/blender/pack_hero_atlases.py -- \
+    --manifest assets/heroes/ranger/renders/ranger_manifest.json
 """
 from __future__ import annotations
-import argparse
-from array import array
-import json
+
+import importlib.util
 import sys
 from pathlib import Path
-import bpy
 
-def parse_args():
-    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", required=True, type=Path)
-    parser.add_argument("--columns", type=int, default=4)
-    return parser.parse_args(argv)
 
-def main():
-    opt = parse_args()
-    manifest_path = opt.manifest.resolve()
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    base = manifest_path.parent
-    fw = int(manifest["frame_size"]["width"])
-    fh = int(manifest["frame_size"]["height"])
-    if opt.columns < 1:
-        raise RuntimeError("--columns must be positive")
-    atlas_entries = []
-    for animation_name, animation in sorted(manifest["animations"].items()):
-        frame_ids = animation["frames"]
-        cols = min(opt.columns, len(frame_ids))
-        rows = (len(frame_ids) + cols - 1) // cols
-        atlas_w, atlas_h = cols * fw, rows * fh
-        image = bpy.data.images.new("atlas_" + animation_name,
-                                    width=atlas_w, height=atlas_h,
-                                    alpha=True, float_buffer=False)
-        pixels = array("f", [0.0]) * (atlas_w * atlas_h * 4)
-        state, direction = animation_name.rsplit("_", 1)
-        frame_meta = {}
-        for index, frame_id in enumerate(frame_ids):
-            source_path = base / state / direction / (frame_id + ".png")
-            if not source_path.is_file():
-                raise RuntimeError("Missing rendered frame: " + str(source_path))
-            source = bpy.data.images.load(str(source_path), check_existing=False)
-            if tuple(source.size) != (fw, fh):
-                raise RuntimeError("Unexpected frame dimensions: " + str(source_path))
-            src = array("f", source.pixels[:])
-            col, row = index % cols, index // cols
-            for y in range(fh):
-                src_start = y * fw * 4
-                dst_start = ((row * fh + y) * atlas_w + col * fw) * 4
-                pixels[dst_start:dst_start + fw * 4] = src[src_start:src_start + fw * 4]
-            frame_meta[frame_id] = {
-                "frame": {"x": col * fw, "y": row * fh, "w": fw, "h": fh},
-                "rotated": False, "trimmed": False,
-                "spriteSourceSize": {"x": 0, "y": 0, "w": fw, "h": fh},
-                "sourceSize": {"w": fw, "h": fh}
-            }
-            bpy.data.images.remove(source)
-        image.pixels[:] = pixels
-        image.file_format = "PNG"
-        atlas_dir = base / "atlases"
-        atlas_dir.mkdir(parents=True, exist_ok=True)
-        image.filepath_raw = str(atlas_dir / (animation_name + ".png"))
-        image.save()
-        meta_path = atlas_dir / (animation_name + ".json")
-        meta_path.write_text(json.dumps({
-            "frames": frame_meta,
-            "meta": {"app": "Archer FM Blender Atlas Packer",
-                     "image": animation_name + ".png",
-                     "size": {"w": atlas_w, "h": atlas_h}, "scale": "1"}
-        }, indent=2) + "\n", encoding="utf-8")
-        atlas_entries.append({
-            "animation": animation_name,
-            "image": "atlases/" + animation_name + ".png",
-            "meta": "atlases/" + animation_name + ".json"
-        })
-        bpy.data.images.remove(image)
-    manifest["atlases"] = atlas_entries
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-                             encoding="utf-8")
-    print("Packed " + str(len(atlas_entries)) + " atlases into " + str(base / "atlases"))
+def load_packer():
+    """Load `tools/pack_hero_atlases.py` by path (both modules share a filename)."""
+    path = Path(__file__).resolve().parents[1] / "pack_hero_atlases.py"
+    if not path.is_file():
+        raise SystemExit(f"ATLAS_ERROR: missing packer module {path}")
+    spec = importlib.util.spec_from_file_location("ranger_atlas_packer", path)
+    if spec is None or spec.loader is None:
+        raise SystemExit(f"ATLAS_ERROR: cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 if __name__ == "__main__":
-    main()
+    try:
+        load_packer().main()
+    except Exception:
+        # Blender exits 0 even when a --python script raises, so report the
+        # traceback and force a failing step instead of a green run with no
+        # atlases.
+        import os
+        import traceback
+        traceback.print_exc()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(1)

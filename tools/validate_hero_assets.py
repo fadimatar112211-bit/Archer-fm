@@ -73,6 +73,7 @@ def validate(manifest_path: Path) -> list[str]:
         atlases = manifest.get("atlases")
         require(isinstance(atlases, list) and len(atlases) > 0, "atlases must be a non-empty array")
         frame_map: dict[str, dict[str, Any]] = {}
+        frame_rects: list[tuple[str, int, int, int, int, Path, int | None]] = []
         for atlas in atlases:
             require(isinstance(atlas, dict), "each atlas entry must be an object")
             image_rel, meta_rel = atlas.get("image"), atlas.get("meta")
@@ -104,7 +105,15 @@ def validate(manifest_path: Path) -> list[str]:
                 if isinstance(source, dict):
                     require(source.get("w") == fw and source.get("h") == fh,
                             f"{meta_path}: {frame_id} sourceSize differs from frame_size")
+                require(entry.get("trimmed") is not True,
+                        f"{meta_path}: trimmed frame {frame_id} is unsupported")
+                meta_info = meta.get("meta", {})
+                declared_padding = meta_info.get("padding") if isinstance(meta_info, dict) else None
+                if declared_padding is not None:
+                    require(type(declared_padding) is int and declared_padding >= 0,
+                            f"{meta_path}: padding must be a non-negative integer")
                 frame_map[frame_id] = entry
+                frame_rects.append((frame_id, x, y, w, h, meta_path, declared_padding))
 
         animations = manifest.get("animations")
         require(isinstance(animations, dict) and len(animations) > 0,
@@ -123,6 +132,10 @@ def validate(manifest_path: Path) -> list[str]:
                         f"{name}: missing atlas frame {frame_id}")
             events = animation.get("events", [])
             require(isinstance(events, list), f"{name}: events must be an array")
+            event_names = [e.get("name") for e in events if isinstance(e, dict)]
+            for event_name in event_names:
+                require(isinstance(event_name, str) and bool(event_name.strip()),
+                        f"{name}: event name is required")
             for event in events:
                 require(isinstance(event, dict), f"{name}: event must be an object")
                 index, event_name = event.get("frame"), event.get("name")
@@ -130,6 +143,30 @@ def validate(manifest_path: Path) -> list[str]:
                         f"{name}: event frame index is out of range")
                 require(isinstance(event_name, str) and bool(event_name.strip()),
                         f"{name}: event name is required")
+            for state in ("attack",):
+                if name.startswith(state + "_"):
+                    release_events = [e for e in events
+                                      if isinstance(e, dict) and e.get("name") == "projectile_release"]
+                    require(len(release_events) == 1,
+                            f"{name}: attack must have exactly one projectile_release event")
+        # Cross-atlas checks
+        for i in range(len(frame_rects)):
+            for j in range(i + 1, len(frame_rects)):
+                fid_a, ax, ay, aw, ah, meta_a, pad_a = frame_rects[i]
+                fid_b, bx, by, bw, bh, meta_b, pad_b = frame_rects[j]
+                if meta_a == meta_b:
+                    overlap = (ax < bx + bw and bx < ax + aw and
+                               ay < by + bh and by < ay + ah)
+                    require(not overlap,
+                            f"{meta_a}: frames {fid_a} and {fid_b} overlap")
+                    gap_x = max(0, max(ax - (bx + bw), bx - (ax + aw)))
+                    gap_y = max(0, max(ay - (by + bh), by - (ay + ah)))
+                    min_gap = min(gap_x, gap_y) if (gap_x > 0 or gap_y > 0) else 0
+                    if min_gap > 0:
+                        effective_pad = pad_a if pad_a is not None else 0
+                        require(min_gap >= effective_pad,
+                                f"{meta_a}: frames {fid_a} and {fid_b} have gap {min_gap}px "
+                                f"< declared padding {effective_pad}px")
     except ValidationError as exc:
         errors.append(str(exc))
 

@@ -51,9 +51,42 @@ The builder script is the reproducible source generator. The binary `.blend` is 
 4. Run structural validation:
    `python tools/validate_hero_assets.py assets/heroes/ranger/renders/ranger_manifest.json`
 
-The renderer maps the configured source-timeline projectile release frame to the nearest rendered frame index, so the manifest event index refers to the sampled animation array. The atlas packer writes unrotated, untrimmed frame rectangles with full source dimensions and uses compact float arrays to limit peak memory.
+The renderer maps the configured source-timeline projectile release frame to the nearest rendered frame index, so the manifest event index refers to the sampled animation array. The atlas packer writes unrotated, untrimmed frame rectangles with full source dimensions.
+
+### Atlas packing
+
+`tools/pack_hero_atlases.py` is the single packer implementation. It uses only the Python standard library, is covered by `tools/tests/test_pack_hero_atlases.py`, and `tools/blender/pack_hero_atlases.py` is a thin launcher so the pipeline command above keeps working without a second implementation drifting from the tested one. Invoking the pure script directly is equivalent:
+
+`python3 tools/pack_hero_atlases.py --manifest assets/heroes/ranger/renders/ranger_manifest.json`
+
+The packer decodes and re-encodes the rendered PNGs as bytes. It does not copy `bpy.data.images` pixels: Blender stores image buffers bottom-up while atlas metadata uses top-left PNG coordinates, and an earlier packer that copied those buffers wrote every tile to the mirrored rows at the other end of the atlas. Writing byte buffers also avoids a colour-management round trip, so each atlas tile is byte-identical to its rendered frame.
+
+Every frame gets `padding` (default 2) extruded pixels on all four sides, so neighbouring frames are `2 * padding` apart and one frame's extrusion can never overwrite another's. Padding strips repeat the adjacent frame edge instead of being transparent.
+
+After writing each atlas, `verify_packed()` re-reads the atlas and the source frames and fails the build when a tile differs from its frame by even one byte, when metadata rectangles point at the wrong rows, when padding strips are not the frame edges, or when rectangles overlap. The structural validator in `tools/validate_hero_assets.py` checks the manifest contract; this pass proves the pixels.
 
 
 ## Automated Blender build
 
-A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks all scripts, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
+A GitHub Actions workflow is available at `.github/workflows/ranger-assets.yml`. Run it manually from Actions (or let relevant pipeline changes trigger it). It installs Blender, syntax-checks the Blender scripts, builds the editable scene, validates rig/actions/mesh parenting/materials, renders the complete 8-direction × 4-state set, packs and verifies atlases, validates the final manifest and uploads the generated `.blend`, PNG and JSON files as a 14-day workflow artifact. The packer and asset-validator unit tests run with `python3 -m unittest discover -s tools/tests -p 'test_*.py'`. A successful workflow is the first reproducible machine validation gate; it does not replace visual review or Android integration tests.
+
+A failed validation stops the job before the artifact upload, so red runs are diagnosed from the failing step's log and the renderer's per-frame diagnostics, then reproduced locally with the commands above. Uploading the frames even on failure needs a workflow change, which is prepared but cannot be pushed without GitHub's `workflow` token scope.
+
+## Action completeness and pose isolation
+
+Every Action keys every pose bone at every key time. Blender only evaluates the F-curves that exist in the active Action, so a channel that exists only in one Action (for example the `root` rotation that tips the Ranger over in `Ranger_Death`) would otherwise survive an Action switch and deform every later state. `render_hero.py` additionally clears all pose channels before each Action is evaluated. This is what keeps idle/walk/attack upright; a renderer that assigns Actions without resetting the pose will silently produce a toppled character.
+
+## Measured framing and pivot
+
+`orthographic_scale` in `render_config.json` is a **minimum**: the renderer evaluates every sampled pose, projects the union bounds through all eight orbit directions, and widens the scale if any pose would cross the configured margins. `pivot_margin` (default `0.02`) is the normalized clearance kept on every edge.
+
+The `ground_anchor` world point (default `[0, 0, 0]`, the ground under the rig) is pinned to the manifest `pivot` for every direction, and the renderer fails if the projected anchor is more than 0.5% of a frame away from the configured pivot. The stored pivot therefore describes where the feet actually land, for all eight directions and all four states. Do not hand-tune `orthographic_scale` to fix clipping: clipping means a pose exceeds the canvas, and the measured fit is the gate that proves it does not.
+
+The camera orbits around `camera_target` by moving to `target + offset`, so it keeps the authored distance and elevation for every direction, then its rotation and its projected ground anchor are pinned as described below. Rotating the camera in place instead of orbiting it is a silent trapping: the camera keeps its authored position while turning to face east, so it looks *across* the character and the flattened view plane slices through the model. That produced a 56×80 sprite for `s` and a thin sliver for `w`.
+
+After orbiting, the camera is slid parallel to the image plane (never along the view axis) by measuring where the ground anchor actually projects and moving it until the anchor lands on the pivot. Sliding along the view axis would leave the projection unchanged on paper but push the rig behind the orthographic view plane, where Blender clips it. The renderer therefore also fails when any pose corner is less than 0.5 units in front of the camera.
+
+## Death pose and ground clamp
+
+`Ranger_Death` is a forward topple with a short settle. Because the rig rotates around the feet, a falling pose can drive the hood, a shoulder or the quiver below `z = 0`; that would force the measured fit to reserve most of the frame for geometry under the floor and shrink every other state. `build_ranger_source.py` therefore measures the evaluated mesh bounds at every sampled death frame and keys a root-bone translation along world +Z so the lowest point rests exactly on the ground, then re-measures and reports the result (`GROUND_CLAMP ...`).
+

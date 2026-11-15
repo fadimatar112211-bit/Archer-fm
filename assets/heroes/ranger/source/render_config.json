@@ -3,7 +3,7 @@
   "resolution": 192,
   "fps": 12,
   "render_engine": "BLENDER_EEVEE",
-  "orthographic_scale": 3.2,
+  "orthographic_scale": 5.0,
   "armature_object": "Ranger_Rig",
   "actions": {
     "idle": "Ranger_Idle",
@@ -12,22 +12,10 @@
     "death": "Ranger_Death"
   },
   "action_ranges": {
-    "idle": [
-      1,
-      24
-    ],
-    "walk": [
-      1,
-      16
-    ],
-    "attack": [
-      1,
-      18
-    ],
-    "death": [
-      1,
-      24
-    ]
+    "idle": [1, 24],
+    "walk": [1, 16],
+    "attack": [1, 18],
+    "death": [1, 24]
   },
   "frame_counts": {
     "idle": 4,
@@ -40,5 +28,7 @@
     "x": 0.5,
     "y": 0.86
   },
+  "pivot_margin": 0.02,
+  "ground_anchor": [0.0, 0.0, 0.0],
   "output_directory": "assets/heroes/ranger/renders"
 }
