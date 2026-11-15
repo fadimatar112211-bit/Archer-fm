@@ -98,6 +98,7 @@ def toon(name, base, shadow=None, light=None, rim=None):
         srgb(PALETTE[light]) if isinstance(light, str) else light)
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
+    mat.use_fake_user = True
     mat.diffuse_color = (*color, 1.0)
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -146,6 +147,7 @@ def glow(name, base, strength, alpha=1.0):
     color = srgb(PALETTE[base]) if isinstance(base, str) else base
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
+    mat.use_fake_user = True
     mat.diffuse_color = (*color, 1.0)
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = (0.0, 0.0, 0.0, 1.0)
