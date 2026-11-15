@@ -1,0 +1,1583 @@
+{
+  "schema_version": 1,
+  "hero_id": "flame",
+  "frame_size": {
+    "width": 192,
+    "height": 192
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 0.86
+  },
+  "output_directory": "assets/heroes/flame/renders",
+  "atlases": [
+    {
+      "animation": "attack_e",
+      "image": "atlases/attack_e.png",
+      "meta": "atlases/attack_e.json"
+    },
+    {
+      "animation": "attack_n",
+      "image": "atlases/attack_n.png",
+      "meta": "atlases/attack_n.json"
+    },
+    {
+      "animation": "attack_ne",
+      "image": "atlases/attack_ne.png",
+      "meta": "atlases/attack_ne.json"
+    },
+    {
+      "animation": "attack_nw",
+      "image": "atlases/attack_nw.png",
+      "meta": "atlases/attack_nw.json"
+    },
+    {
+      "animation": "attack_s",
+      "image": "atlases/attack_s.png",
+      "meta": "atlases/attack_s.json"
+    },
+    {
+      "animation": "attack_se",
+      "image": "atlases/attack_se.png",
+      "meta": "atlases/attack_se.json"
+    },
+    {
+      "animation": "attack_sw",
+      "image": "atlases/attack_sw.png",
+      "meta": "atlases/attack_sw.json"
+    },
+    {
+      "animation": "attack_w",
+      "image": "atlases/attack_w.png",
+      "meta": "atlases/attack_w.json"
+    },
+    {
+      "animation": "death_e",
+      "image": "atlases/death_e.png",
+      "meta": "atlases/death_e.json"
+    },
+    {
+      "animation": "death_n",
+      "image": "atlases/death_n.png",
+      "meta": "atlases/death_n.json"
+    },
+    {
+      "animation": "death_ne",
+      "image": "atlases/death_ne.png",
+      "meta": "atlases/death_ne.json"
+    },
+    {
+      "animation": "death_nw",
+      "image": "atlases/death_nw.png",
+      "meta": "atlases/death_nw.json"
+    },
+    {
+      "animation": "death_s",
+      "image": "atlases/death_s.png",
+      "meta": "atlases/death_s.json"
+    },
+    {
+      "animation": "death_se",
+      "image": "atlases/death_se.png",
+      "meta": "atlases/death_se.json"
+    },
+    {
+      "animation": "death_sw",
+      "image": "atlases/death_sw.png",
+      "meta": "atlases/death_sw.json"
+    },
+    {
+      "animation": "death_w",
+      "image": "atlases/death_w.png",
+      "meta": "atlases/death_w.json"
+    },
+    {
+      "animation": "dodge_e",
+      "image": "atlases/dodge_e.png",
+      "meta": "atlases/dodge_e.json"
+    },
+    {
+      "animation": "dodge_n",
+      "image": "atlases/dodge_n.png",
+      "meta": "atlases/dodge_n.json"
+    },
+    {
+      "animation": "dodge_ne",
+      "image": "atlases/dodge_ne.png",
+      "meta": "atlases/dodge_ne.json"
+    },
+    {
+      "animation": "dodge_nw",
+      "image": "atlases/dodge_nw.png",
+      "meta": "atlases/dodge_nw.json"
+    },
+    {
+      "animation": "dodge_s",
+      "image": "atlases/dodge_s.png",
+      "meta": "atlases/dodge_s.json"
+    },
+    {
+      "animation": "dodge_se",
+      "image": "atlases/dodge_se.png",
+      "meta": "atlases/dodge_se.json"
+    },
+    {
+      "animation": "dodge_sw",
+      "image": "atlases/dodge_sw.png",
+      "meta": "atlases/dodge_sw.json"
+    },
+    {
+      "animation": "dodge_w",
+      "image": "atlases/dodge_w.png",
+      "meta": "atlases/dodge_w.json"
+    },
+    {
+      "animation": "hit_e",
+      "image": "atlases/hit_e.png",
+      "meta": "atlases/hit_e.json"
+    },
+    {
+      "animation": "hit_n",
+      "image": "atlases/hit_n.png",
+      "meta": "atlases/hit_n.json"
+    },
+    {
+      "animation": "hit_ne",
+      "image": "atlases/hit_ne.png",
+      "meta": "atlases/hit_ne.json"
+    },
+    {
+      "animation": "hit_nw",
+      "image": "atlases/hit_nw.png",
+      "meta": "atlases/hit_nw.json"
+    },
+    {
+      "animation": "hit_s",
+      "image": "atlases/hit_s.png",
+      "meta": "atlases/hit_s.json"
+    },
+    {
+      "animation": "hit_se",
+      "image": "atlases/hit_se.png",
+      "meta": "atlases/hit_se.json"
+    },
+    {
+      "animation": "hit_sw",
+      "image": "atlases/hit_sw.png",
+      "meta": "atlases/hit_sw.json"
+    },
+    {
+      "animation": "hit_w",
+      "image": "atlases/hit_w.png",
+      "meta": "atlases/hit_w.json"
+    },
+    {
+      "animation": "idle_e",
+      "image": "atlases/idle_e.png",
+      "meta": "atlases/idle_e.json"
+    },
+    {
+      "animation": "idle_n",
+      "image": "atlases/idle_n.png",
+      "meta": "atlases/idle_n.json"
+    },
+    {
+      "animation": "idle_ne",
+      "image": "atlases/idle_ne.png",
+      "meta": "atlases/idle_ne.json"
+    },
+    {
+      "animation": "idle_nw",
+      "image": "atlases/idle_nw.png",
+      "meta": "atlases/idle_nw.json"
+    },
+    {
+      "animation": "idle_s",
+      "image": "atlases/idle_s.png",
+      "meta": "atlases/idle_s.json"
+    },
+    {
+      "animation": "idle_se",
+      "image": "atlases/idle_se.png",
+      "meta": "atlases/idle_se.json"
+    },
+    {
+      "animation": "idle_sw",
+      "image": "atlases/idle_sw.png",
+      "meta": "atlases/idle_sw.json"
+    },
+    {
+      "animation": "idle_w",
+      "image": "atlases/idle_w.png",
+      "meta": "atlases/idle_w.json"
+    },
+    {
+      "animation": "run_e",
+      "image": "atlases/run_e.png",
+      "meta": "atlases/run_e.json"
+    },
+    {
+      "animation": "run_n",
+      "image": "atlases/run_n.png",
+      "meta": "atlases/run_n.json"
+    },
+    {
+      "animation": "run_ne",
+      "image": "atlases/run_ne.png",
+      "meta": "atlases/run_ne.json"
+    },
+    {
+      "animation": "run_nw",
+      "image": "atlases/run_nw.png",
+      "meta": "atlases/run_nw.json"
+    },
+    {
+      "animation": "run_s",
+      "image": "atlases/run_s.png",
+      "meta": "atlases/run_s.json"
+    },
+    {
+      "animation": "run_se",
+      "image": "atlases/run_se.png",
+      "meta": "atlases/run_se.json"
+    },
+    {
+      "animation": "run_sw",
+      "image": "atlases/run_sw.png",
+      "meta": "atlases/run_sw.json"
+    },
+    {
+      "animation": "run_w",
+      "image": "atlases/run_w.png",
+      "meta": "atlases/run_w.json"
+    },
+    {
+      "animation": "skill_e",
+      "image": "atlases/skill_e.png",
+      "meta": "atlases/skill_e.json"
+    },
+    {
+      "animation": "skill_n",
+      "image": "atlases/skill_n.png",
+      "meta": "atlases/skill_n.json"
+    },
+    {
+      "animation": "skill_ne",
+      "image": "atlases/skill_ne.png",
+      "meta": "atlases/skill_ne.json"
+    },
+    {
+      "animation": "skill_nw",
+      "image": "atlases/skill_nw.png",
+      "meta": "atlases/skill_nw.json"
+    },
+    {
+      "animation": "skill_s",
+      "image": "atlases/skill_s.png",
+      "meta": "atlases/skill_s.json"
+    },
+    {
+      "animation": "skill_se",
+      "image": "atlases/skill_se.png",
+      "meta": "atlases/skill_se.json"
+    },
+    {
+      "animation": "skill_sw",
+      "image": "atlases/skill_sw.png",
+      "meta": "atlases/skill_sw.json"
+    },
+    {
+      "animation": "skill_w",
+      "image": "atlases/skill_w.png",
+      "meta": "atlases/skill_w.json"
+    },
+    {
+      "animation": "walk_e",
+      "image": "atlases/walk_e.png",
+      "meta": "atlases/walk_e.json"
+    },
+    {
+      "animation": "walk_n",
+      "image": "atlases/walk_n.png",
+      "meta": "atlases/walk_n.json"
+    },
+    {
+      "animation": "walk_ne",
+      "image": "atlases/walk_ne.png",
+      "meta": "atlases/walk_ne.json"
+    },
+    {
+      "animation": "walk_nw",
+      "image": "atlases/walk_nw.png",
+      "meta": "atlases/walk_nw.json"
+    },
+    {
+      "animation": "walk_s",
+      "image": "atlases/walk_s.png",
+      "meta": "atlases/walk_s.json"
+    },
+    {
+      "animation": "walk_se",
+      "image": "atlases/walk_se.png",
+      "meta": "atlases/walk_se.json"
+    },
+    {
+      "animation": "walk_sw",
+      "image": "atlases/walk_sw.png",
+      "meta": "atlases/walk_sw.json"
+    },
+    {
+      "animation": "walk_w",
+      "image": "atlases/walk_w.png",
+      "meta": "atlases/walk_w.json"
+    }
+  ],
+  "animations": {
+    "idle_s": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_s_000",
+        "flame_idle_s_001",
+        "flame_idle_s_002",
+        "flame_idle_s_003",
+        "flame_idle_s_004"
+      ],
+      "events": []
+    },
+    "walk_s": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_s_000",
+        "flame_walk_s_001",
+        "flame_walk_s_002",
+        "flame_walk_s_003",
+        "flame_walk_s_004",
+        "flame_walk_s_005",
+        "flame_walk_s_006",
+        "flame_walk_s_007",
+        "flame_walk_s_008"
+      ],
+      "events": []
+    },
+    "run_s": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_s_000",
+        "flame_run_s_001",
+        "flame_run_s_002",
+        "flame_run_s_003",
+        "flame_run_s_004",
+        "flame_run_s_005",
+        "flame_run_s_006",
+        "flame_run_s_007",
+        "flame_run_s_008"
+      ],
+      "events": []
+    },
+    "attack_s": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_s_000",
+        "flame_attack_s_001",
+        "flame_attack_s_002",
+        "flame_attack_s_003",
+        "flame_attack_s_004",
+        "flame_attack_s_005",
+        "flame_attack_s_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_s": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_s_000",
+        "flame_skill_s_001",
+        "flame_skill_s_002",
+        "flame_skill_s_003",
+        "flame_skill_s_004",
+        "flame_skill_s_005",
+        "flame_skill_s_006",
+        "flame_skill_s_007",
+        "flame_skill_s_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_s": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_s_000",
+        "flame_dodge_s_001",
+        "flame_dodge_s_002",
+        "flame_dodge_s_003",
+        "flame_dodge_s_004",
+        "flame_dodge_s_005",
+        "flame_dodge_s_006",
+        "flame_dodge_s_007",
+        "flame_dodge_s_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_s": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_s_000",
+        "flame_hit_s_001",
+        "flame_hit_s_002",
+        "flame_hit_s_003",
+        "flame_hit_s_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_s": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_s_000",
+        "flame_death_s_001",
+        "flame_death_s_002",
+        "flame_death_s_003",
+        "flame_death_s_004",
+        "flame_death_s_005",
+        "flame_death_s_006",
+        "flame_death_s_007",
+        "flame_death_s_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_sw": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_sw_000",
+        "flame_idle_sw_001",
+        "flame_idle_sw_002",
+        "flame_idle_sw_003",
+        "flame_idle_sw_004"
+      ],
+      "events": []
+    },
+    "walk_sw": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_sw_000",
+        "flame_walk_sw_001",
+        "flame_walk_sw_002",
+        "flame_walk_sw_003",
+        "flame_walk_sw_004",
+        "flame_walk_sw_005",
+        "flame_walk_sw_006",
+        "flame_walk_sw_007",
+        "flame_walk_sw_008"
+      ],
+      "events": []
+    },
+    "run_sw": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_sw_000",
+        "flame_run_sw_001",
+        "flame_run_sw_002",
+        "flame_run_sw_003",
+        "flame_run_sw_004",
+        "flame_run_sw_005",
+        "flame_run_sw_006",
+        "flame_run_sw_007",
+        "flame_run_sw_008"
+      ],
+      "events": []
+    },
+    "attack_sw": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_sw_000",
+        "flame_attack_sw_001",
+        "flame_attack_sw_002",
+        "flame_attack_sw_003",
+        "flame_attack_sw_004",
+        "flame_attack_sw_005",
+        "flame_attack_sw_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_sw": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_sw_000",
+        "flame_skill_sw_001",
+        "flame_skill_sw_002",
+        "flame_skill_sw_003",
+        "flame_skill_sw_004",
+        "flame_skill_sw_005",
+        "flame_skill_sw_006",
+        "flame_skill_sw_007",
+        "flame_skill_sw_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_sw": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_sw_000",
+        "flame_dodge_sw_001",
+        "flame_dodge_sw_002",
+        "flame_dodge_sw_003",
+        "flame_dodge_sw_004",
+        "flame_dodge_sw_005",
+        "flame_dodge_sw_006",
+        "flame_dodge_sw_007",
+        "flame_dodge_sw_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_sw": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_sw_000",
+        "flame_hit_sw_001",
+        "flame_hit_sw_002",
+        "flame_hit_sw_003",
+        "flame_hit_sw_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_sw": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_sw_000",
+        "flame_death_sw_001",
+        "flame_death_sw_002",
+        "flame_death_sw_003",
+        "flame_death_sw_004",
+        "flame_death_sw_005",
+        "flame_death_sw_006",
+        "flame_death_sw_007",
+        "flame_death_sw_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_w": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_w_000",
+        "flame_idle_w_001",
+        "flame_idle_w_002",
+        "flame_idle_w_003",
+        "flame_idle_w_004"
+      ],
+      "events": []
+    },
+    "walk_w": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_w_000",
+        "flame_walk_w_001",
+        "flame_walk_w_002",
+        "flame_walk_w_003",
+        "flame_walk_w_004",
+        "flame_walk_w_005",
+        "flame_walk_w_006",
+        "flame_walk_w_007",
+        "flame_walk_w_008"
+      ],
+      "events": []
+    },
+    "run_w": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_w_000",
+        "flame_run_w_001",
+        "flame_run_w_002",
+        "flame_run_w_003",
+        "flame_run_w_004",
+        "flame_run_w_005",
+        "flame_run_w_006",
+        "flame_run_w_007",
+        "flame_run_w_008"
+      ],
+      "events": []
+    },
+    "attack_w": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_w_000",
+        "flame_attack_w_001",
+        "flame_attack_w_002",
+        "flame_attack_w_003",
+        "flame_attack_w_004",
+        "flame_attack_w_005",
+        "flame_attack_w_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_w": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_w_000",
+        "flame_skill_w_001",
+        "flame_skill_w_002",
+        "flame_skill_w_003",
+        "flame_skill_w_004",
+        "flame_skill_w_005",
+        "flame_skill_w_006",
+        "flame_skill_w_007",
+        "flame_skill_w_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_w": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_w_000",
+        "flame_dodge_w_001",
+        "flame_dodge_w_002",
+        "flame_dodge_w_003",
+        "flame_dodge_w_004",
+        "flame_dodge_w_005",
+        "flame_dodge_w_006",
+        "flame_dodge_w_007",
+        "flame_dodge_w_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_w": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_w_000",
+        "flame_hit_w_001",
+        "flame_hit_w_002",
+        "flame_hit_w_003",
+        "flame_hit_w_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_w": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_w_000",
+        "flame_death_w_001",
+        "flame_death_w_002",
+        "flame_death_w_003",
+        "flame_death_w_004",
+        "flame_death_w_005",
+        "flame_death_w_006",
+        "flame_death_w_007",
+        "flame_death_w_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_nw": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_nw_000",
+        "flame_idle_nw_001",
+        "flame_idle_nw_002",
+        "flame_idle_nw_003",
+        "flame_idle_nw_004"
+      ],
+      "events": []
+    },
+    "walk_nw": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_nw_000",
+        "flame_walk_nw_001",
+        "flame_walk_nw_002",
+        "flame_walk_nw_003",
+        "flame_walk_nw_004",
+        "flame_walk_nw_005",
+        "flame_walk_nw_006",
+        "flame_walk_nw_007",
+        "flame_walk_nw_008"
+      ],
+      "events": []
+    },
+    "run_nw": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_nw_000",
+        "flame_run_nw_001",
+        "flame_run_nw_002",
+        "flame_run_nw_003",
+        "flame_run_nw_004",
+        "flame_run_nw_005",
+        "flame_run_nw_006",
+        "flame_run_nw_007",
+        "flame_run_nw_008"
+      ],
+      "events": []
+    },
+    "attack_nw": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_nw_000",
+        "flame_attack_nw_001",
+        "flame_attack_nw_002",
+        "flame_attack_nw_003",
+        "flame_attack_nw_004",
+        "flame_attack_nw_005",
+        "flame_attack_nw_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_nw": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_nw_000",
+        "flame_skill_nw_001",
+        "flame_skill_nw_002",
+        "flame_skill_nw_003",
+        "flame_skill_nw_004",
+        "flame_skill_nw_005",
+        "flame_skill_nw_006",
+        "flame_skill_nw_007",
+        "flame_skill_nw_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_nw": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_nw_000",
+        "flame_dodge_nw_001",
+        "flame_dodge_nw_002",
+        "flame_dodge_nw_003",
+        "flame_dodge_nw_004",
+        "flame_dodge_nw_005",
+        "flame_dodge_nw_006",
+        "flame_dodge_nw_007",
+        "flame_dodge_nw_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_nw": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_nw_000",
+        "flame_hit_nw_001",
+        "flame_hit_nw_002",
+        "flame_hit_nw_003",
+        "flame_hit_nw_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_nw": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_nw_000",
+        "flame_death_nw_001",
+        "flame_death_nw_002",
+        "flame_death_nw_003",
+        "flame_death_nw_004",
+        "flame_death_nw_005",
+        "flame_death_nw_006",
+        "flame_death_nw_007",
+        "flame_death_nw_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_n": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_n_000",
+        "flame_idle_n_001",
+        "flame_idle_n_002",
+        "flame_idle_n_003",
+        "flame_idle_n_004"
+      ],
+      "events": []
+    },
+    "walk_n": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_n_000",
+        "flame_walk_n_001",
+        "flame_walk_n_002",
+        "flame_walk_n_003",
+        "flame_walk_n_004",
+        "flame_walk_n_005",
+        "flame_walk_n_006",
+        "flame_walk_n_007",
+        "flame_walk_n_008"
+      ],
+      "events": []
+    },
+    "run_n": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_n_000",
+        "flame_run_n_001",
+        "flame_run_n_002",
+        "flame_run_n_003",
+        "flame_run_n_004",
+        "flame_run_n_005",
+        "flame_run_n_006",
+        "flame_run_n_007",
+        "flame_run_n_008"
+      ],
+      "events": []
+    },
+    "attack_n": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_n_000",
+        "flame_attack_n_001",
+        "flame_attack_n_002",
+        "flame_attack_n_003",
+        "flame_attack_n_004",
+        "flame_attack_n_005",
+        "flame_attack_n_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_n": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_n_000",
+        "flame_skill_n_001",
+        "flame_skill_n_002",
+        "flame_skill_n_003",
+        "flame_skill_n_004",
+        "flame_skill_n_005",
+        "flame_skill_n_006",
+        "flame_skill_n_007",
+        "flame_skill_n_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_n": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_n_000",
+        "flame_dodge_n_001",
+        "flame_dodge_n_002",
+        "flame_dodge_n_003",
+        "flame_dodge_n_004",
+        "flame_dodge_n_005",
+        "flame_dodge_n_006",
+        "flame_dodge_n_007",
+        "flame_dodge_n_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_n": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_n_000",
+        "flame_hit_n_001",
+        "flame_hit_n_002",
+        "flame_hit_n_003",
+        "flame_hit_n_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_n": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_n_000",
+        "flame_death_n_001",
+        "flame_death_n_002",
+        "flame_death_n_003",
+        "flame_death_n_004",
+        "flame_death_n_005",
+        "flame_death_n_006",
+        "flame_death_n_007",
+        "flame_death_n_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_ne": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_ne_000",
+        "flame_idle_ne_001",
+        "flame_idle_ne_002",
+        "flame_idle_ne_003",
+        "flame_idle_ne_004"
+      ],
+      "events": []
+    },
+    "walk_ne": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_ne_000",
+        "flame_walk_ne_001",
+        "flame_walk_ne_002",
+        "flame_walk_ne_003",
+        "flame_walk_ne_004",
+        "flame_walk_ne_005",
+        "flame_walk_ne_006",
+        "flame_walk_ne_007",
+        "flame_walk_ne_008"
+      ],
+      "events": []
+    },
+    "run_ne": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_ne_000",
+        "flame_run_ne_001",
+        "flame_run_ne_002",
+        "flame_run_ne_003",
+        "flame_run_ne_004",
+        "flame_run_ne_005",
+        "flame_run_ne_006",
+        "flame_run_ne_007",
+        "flame_run_ne_008"
+      ],
+      "events": []
+    },
+    "attack_ne": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_ne_000",
+        "flame_attack_ne_001",
+        "flame_attack_ne_002",
+        "flame_attack_ne_003",
+        "flame_attack_ne_004",
+        "flame_attack_ne_005",
+        "flame_attack_ne_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_ne": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_ne_000",
+        "flame_skill_ne_001",
+        "flame_skill_ne_002",
+        "flame_skill_ne_003",
+        "flame_skill_ne_004",
+        "flame_skill_ne_005",
+        "flame_skill_ne_006",
+        "flame_skill_ne_007",
+        "flame_skill_ne_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_ne": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_ne_000",
+        "flame_dodge_ne_001",
+        "flame_dodge_ne_002",
+        "flame_dodge_ne_003",
+        "flame_dodge_ne_004",
+        "flame_dodge_ne_005",
+        "flame_dodge_ne_006",
+        "flame_dodge_ne_007",
+        "flame_dodge_ne_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_ne": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_ne_000",
+        "flame_hit_ne_001",
+        "flame_hit_ne_002",
+        "flame_hit_ne_003",
+        "flame_hit_ne_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_ne": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_ne_000",
+        "flame_death_ne_001",
+        "flame_death_ne_002",
+        "flame_death_ne_003",
+        "flame_death_ne_004",
+        "flame_death_ne_005",
+        "flame_death_ne_006",
+        "flame_death_ne_007",
+        "flame_death_ne_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_e": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_e_000",
+        "flame_idle_e_001",
+        "flame_idle_e_002",
+        "flame_idle_e_003",
+        "flame_idle_e_004"
+      ],
+      "events": []
+    },
+    "walk_e": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_e_000",
+        "flame_walk_e_001",
+        "flame_walk_e_002",
+        "flame_walk_e_003",
+        "flame_walk_e_004",
+        "flame_walk_e_005",
+        "flame_walk_e_006",
+        "flame_walk_e_007",
+        "flame_walk_e_008"
+      ],
+      "events": []
+    },
+    "run_e": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_e_000",
+        "flame_run_e_001",
+        "flame_run_e_002",
+        "flame_run_e_003",
+        "flame_run_e_004",
+        "flame_run_e_005",
+        "flame_run_e_006",
+        "flame_run_e_007",
+        "flame_run_e_008"
+      ],
+      "events": []
+    },
+    "attack_e": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_e_000",
+        "flame_attack_e_001",
+        "flame_attack_e_002",
+        "flame_attack_e_003",
+        "flame_attack_e_004",
+        "flame_attack_e_005",
+        "flame_attack_e_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_e": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_e_000",
+        "flame_skill_e_001",
+        "flame_skill_e_002",
+        "flame_skill_e_003",
+        "flame_skill_e_004",
+        "flame_skill_e_005",
+        "flame_skill_e_006",
+        "flame_skill_e_007",
+        "flame_skill_e_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_e": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_e_000",
+        "flame_dodge_e_001",
+        "flame_dodge_e_002",
+        "flame_dodge_e_003",
+        "flame_dodge_e_004",
+        "flame_dodge_e_005",
+        "flame_dodge_e_006",
+        "flame_dodge_e_007",
+        "flame_dodge_e_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_e": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_e_000",
+        "flame_hit_e_001",
+        "flame_hit_e_002",
+        "flame_hit_e_003",
+        "flame_hit_e_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_e": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_e_000",
+        "flame_death_e_001",
+        "flame_death_e_002",
+        "flame_death_e_003",
+        "flame_death_e_004",
+        "flame_death_e_005",
+        "flame_death_e_006",
+        "flame_death_e_007",
+        "flame_death_e_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    },
+    "idle_se": {
+      "loop": true,
+      "frame_duration_ms": 140,
+      "frames": [
+        "flame_idle_se_000",
+        "flame_idle_se_001",
+        "flame_idle_se_002",
+        "flame_idle_se_003",
+        "flame_idle_se_004"
+      ],
+      "events": []
+    },
+    "walk_se": {
+      "loop": true,
+      "frame_duration_ms": 83,
+      "frames": [
+        "flame_walk_se_000",
+        "flame_walk_se_001",
+        "flame_walk_se_002",
+        "flame_walk_se_003",
+        "flame_walk_se_004",
+        "flame_walk_se_005",
+        "flame_walk_se_006",
+        "flame_walk_se_007",
+        "flame_walk_se_008"
+      ],
+      "events": []
+    },
+    "run_se": {
+      "loop": true,
+      "frame_duration_ms": 66,
+      "frames": [
+        "flame_run_se_000",
+        "flame_run_se_001",
+        "flame_run_se_002",
+        "flame_run_se_003",
+        "flame_run_se_004",
+        "flame_run_se_005",
+        "flame_run_se_006",
+        "flame_run_se_007",
+        "flame_run_se_008"
+      ],
+      "events": []
+    },
+    "attack_se": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_attack_se_000",
+        "flame_attack_se_001",
+        "flame_attack_se_002",
+        "flame_attack_se_003",
+        "flame_attack_se_004",
+        "flame_attack_se_005",
+        "flame_attack_se_006"
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "weapon_windup"
+        },
+        {
+          "frame": 3,
+          "name": "melee_impact"
+        }
+      ]
+    },
+    "skill_se": {
+      "loop": false,
+      "frame_duration_ms": 90,
+      "frames": [
+        "flame_skill_se_000",
+        "flame_skill_se_001",
+        "flame_skill_se_002",
+        "flame_skill_se_003",
+        "flame_skill_se_004",
+        "flame_skill_se_005",
+        "flame_skill_se_006",
+        "flame_skill_se_007",
+        "flame_skill_se_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "inferno_charge"
+        },
+        {
+          "frame": 4,
+          "name": "inferno_burst"
+        }
+      ]
+    },
+    "dodge_se": {
+      "loop": false,
+      "frame_duration_ms": 60,
+      "frames": [
+        "flame_dodge_se_000",
+        "flame_dodge_se_001",
+        "flame_dodge_se_002",
+        "flame_dodge_se_003",
+        "flame_dodge_se_004",
+        "flame_dodge_se_005",
+        "flame_dodge_se_006",
+        "flame_dodge_se_007",
+        "flame_dodge_se_008"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 8,
+          "name": "dodge_end"
+        }
+      ]
+    },
+    "hit_se": {
+      "loop": false,
+      "frame_duration_ms": 70,
+      "frames": [
+        "flame_hit_se_000",
+        "flame_hit_se_001",
+        "flame_hit_se_002",
+        "flame_hit_se_003",
+        "flame_hit_se_004"
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "hit_react"
+        }
+      ]
+    },
+    "death_se": {
+      "loop": false,
+      "frame_duration_ms": 120,
+      "frames": [
+        "flame_death_se_000",
+        "flame_death_se_001",
+        "flame_death_se_002",
+        "flame_death_se_003",
+        "flame_death_se_004",
+        "flame_death_se_005",
+        "flame_death_se_006",
+        "flame_death_se_007",
+        "flame_death_se_008"
+      ],
+      "events": [
+        {
+          "frame": 8,
+          "name": "death_complete"
+        }
+      ]
+    }
+  },
+  "source": {
+    "blend_file": "assets/heroes/flame/source/flame_source.blend",
+    "fps": 12,
+    "render_engine": "BLENDER_EEVEE",
+    "orthographic_scale": 4.675253
+  }
+}

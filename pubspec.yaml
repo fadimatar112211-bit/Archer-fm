@@ -21,3 +21,5 @@ flutter:
     - assets/heroes/
     - assets/heroes/ranger/renders/
     - assets/heroes/ranger/renders/atlases/
+    - assets/heroes/flame/renders/
+    - assets/heroes/flame/renders/atlases/
