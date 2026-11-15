@@ -1,11 +1,22 @@
-"""Validate generated Ranger Blender source scene before full rendering.
+"""Validate a generated hero .blend before the expensive render pass.
 
 Run:
   blender -b assets/heroes/ranger/source/ranger_source.blend --python tools/blender/validate_ranger_source.py
+
+The builder writes `hero_id`, `hero_prefix` and `rig_object` into the scene, so
+one validator covers every hero in the shared pipeline. It checks the rig, the
+rigid-part parenting contract, the shaded material network, and the eight
+authored Actions with their expected frame ranges.
 """
 from __future__ import annotations
+
 import sys
+from pathlib import Path
+
 import bpy
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hero_profiles  # noqa: E402
 
 REQUIRED_BONES = {
     "root", "hips", "spine", "chest", "neck", "head",
@@ -15,66 +26,93 @@ REQUIRED_BONES = {
     "cloak_a", "cloak_b", "cloak_c", "bow", "string_rest", "string_drawn",
     "fx", "fx_draw", "aura", "quiver",
 }
-REQUIRED_ACTIONS = {
-    "Ranger_Idle": (1, 25),
-    "Ranger_Walk": (1, 25),
-    "Ranger_Run": (1, 25),
-    "Ranger_Attack": (1, 25),
-    "Ranger_Skill": (1, 33),
-    "Ranger_Dodge": (1, 17),
-    "Ranger_Hit": (1, 9),
-    "Ranger_Death": (1, 33),
+ACTION_RANGES = {
+    "Idle": (1, 25),
+    "Walk": (1, 25),
+    "Run": (1, 25),
+    "Attack": (1, 25),
+    "Skill": (1, 33),
+    "Dodge": (1, 17),
+    "Hit": (1, 9),
+    "Death": (1, 33),
 }
 REQUIRED_MATERIALS = (
-    "Forest Green Cloth",
-    "Lit Green Cloth",
-    "Aged Bronze Plate",
-    "Chestnut Leather",
-    "Brass Buckle",
+    "Cloth Primary",
+    "Cloth Lit",
+    "Metal Plate",
+    "Leather Gear",
+    "Brass Accent",
     "Warm Skin",
     "Hair Body",
-    "Sapphire Iris",
+    "Iris",
     "Energy Core",
     "Energy Glow",
 )
 
+
 def fail(message):
-    print("RANGER_SOURCE_ERROR: " + message, file=sys.stderr)
+    print("HERO_SOURCE_ERROR: " + message, file=sys.stderr)
     raise SystemExit(1)
 
+
 def main():
-    rig = bpy.data.objects.get("Ranger_Rig")
+    scene = bpy.context.scene
+    hero_id = scene.get("hero_id", "ranger")
+    marker = Path(__file__).resolve().parent / "active_hero.txt"
+    expected_hero = ((marker.read_text(encoding="utf-8").strip().lower()
+                      if marker.is_file() else "ranger") or "ranger")
+    if hero_id != expected_hero:
+        fail(f"Scene builds {hero_id!r} but active_hero.txt asks for "
+             f"{expected_hero!r}; the .blend is stale")
+    if hero_id not in hero_profiles.PROFILES:
+        fail(f"Scene declares unknown hero_id: {hero_id}")
+    profile = hero_profiles.PROFILES[hero_id]
+    prefix = scene.get("hero_prefix", profile["prefix"])
+    if prefix != profile["prefix"]:
+        fail(f"Scene action prefix {prefix!r} does not match profile "
+             f"{profile['prefix']!r}")
+
+    rig = bpy.data.objects.get(profile["rig"])
     if rig is None or rig.type != "ARMATURE":
-        fail("Ranger_Rig armature is missing")
+        fail(profile["rig"] + " armature is missing")
     missing = REQUIRED_BONES - set(rig.data.bones.keys())
     if missing:
         fail("Missing rig bones: " + ", ".join(sorted(missing)))
     if bpy.context.scene.camera is None:
         fail("Active camera is missing")
-    if bpy.context.scene.render.resolution_x != 256 or bpy.context.scene.render.resolution_y != 256:
+    if (bpy.context.scene.render.resolution_x != 256
+            or bpy.context.scene.render.resolution_y != 256):
         fail("Source scene render resolution must be 256x256")
     if not bpy.context.scene.render.film_transparent:
         fail("Transparent film output must be enabled")
 
     meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
-    if len(meshes) < 100:
-        fail("Expected detailed character mesh parts; found only " + str(len(meshes)))
+    if len(meshes) < hero_profiles.MIN_MESH_PARTS:
+        fail(f"{hero_id}: expected detailed character mesh parts; found only "
+             f"{len(meshes)} (minimum {hero_profiles.MIN_MESH_PARTS})")
     incorrectly_parented = [
         obj.name for obj in meshes
         if obj.parent != rig or obj.parent_type != "BONE"
         or obj.parent_bone not in REQUIRED_BONES
     ]
     if incorrectly_parented:
-        fail("Every rigid mesh part must be parented directly to its intended rig bone: " +
-             ", ".join(incorrectly_parented[:12]))
+        fail("Every rigid mesh part must be parented directly to its intended "
+             "rig bone: " + ", ".join(incorrectly_parented[:12]))
     double_deformed = [
         obj.name for obj in meshes
         if any(mod.type == "ARMATURE" for mod in obj.modifiers)
         or len(obj.vertex_groups) > 0
     ]
     if double_deformed:
-        fail("Bone-parented mesh parts must not also use vertex weights or Armature modifiers: " +
-             ", ".join(double_deformed[:12]))
+        fail("Bone-parented mesh parts must not also use vertex weights or "
+             "Armature modifiers: " + ", ".join(double_deformed[:12]))
+    for part in profile["required_parts"]:
+        obj = bpy.data.objects.get(part)
+        if obj is None or obj.type != "MESH":
+            fail(f"{hero_id}: signature mesh part missing: {part}")
+        if obj.parent != rig:
+            fail(f"{hero_id}: signature part {part} is not parented to the rig")
+
     material_names = {mat.name for mat in bpy.data.materials}
     for required in REQUIRED_MATERIALS:
         if required not in material_names:
@@ -111,7 +149,9 @@ def main():
         fail("Materials whose Surface input is not a shader: " +
              ", ".join(sorted(broken_materials)))
 
-    for action_name, expected_range in REQUIRED_ACTIONS.items():
+    actions = set()
+    for state, expected_range in ACTION_RANGES.items():
+        action_name = f"{prefix}_{state}"
         action = bpy.data.actions.get(action_name)
         if action is None:
             fail("Animation action missing: " + action_name)
@@ -124,12 +164,15 @@ def main():
         if actual_start < expected_range[0] or actual_end > expected_range[1]:
             fail("Unexpected frame range for " + action_name + ": " +
                  str((actual_start, actual_end)))
+        actions.add(action.name)
 
-    print("RANGER_SOURCE_OK")
+    print("HERO_SOURCE_OK")
+    print("hero_id=" + hero_id)
     print("mesh_parts=" + str(len(meshes)))
     print("bones=" + str(len(rig.data.bones)))
-    print("actions=" + str(len(REQUIRED_ACTIONS)))
+    print("actions=" + str(len(actions)))
     print("materials=" + str(len(material_names)))
+
 
 if __name__ == "__main__":
     main()

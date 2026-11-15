@@ -17,6 +17,7 @@ flow without vertex-weight deformation.
 from __future__ import annotations
 
 import math
+import shutil
 import sys
 from pathlib import Path
 
@@ -25,10 +26,46 @@ import bpy
 from mathutils import Matrix, Vector
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "assets/heroes/ranger/source/ranger_source.blend"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hero_profiles  # noqa: E402  (needs the path insert above)
 
-HEAD_CENTER = Vector((0.0, 0.0, 2.60))
-HRX, HRY, HRZ = 0.44, 0.40, 0.45
+
+def builder():
+    """The module object passed to profile hooks (they reuse our helpers)."""
+    return sys.modules[__name__]
+
+
+def active_hero_id():
+    """Which hero this run builds, chosen by a checked-in one-line marker.
+
+    The CI workflow cannot be edited (the push token has no `workflow` scope),
+    so it always invokes this filename and the ranger output paths. The marker
+    lets one hero at a time flow through that fixed pipeline while sharing the
+    entire builder; the outputs are bundled back under the ranger path.
+    """
+    marker = Path(__file__).resolve().parent / "active_hero.txt"
+    if not marker.is_file():
+        return "ranger"
+    value = marker.read_text(encoding="utf-8").strip().lower()
+    return value or "ranger"
+
+
+ACTIVE_HERO = active_hero_id()
+if ACTIVE_HERO not in hero_profiles.PROFILES:
+    raise SystemExit(f"Unknown active hero in active_hero.txt: {ACTIVE_HERO}")
+PROFILE = hero_profiles.PROFILES[ACTIVE_HERO]
+
+# The workflow renders whatever this fixed path holds, and the artifact upload
+# only collects the ranger paths. Each hero is therefore written to the fixed
+# CI path, to its own repo path, and into the bundle directory the artifact
+# picks up so the downloaded hero survives the read-only CI checkout.
+OUT = ROOT / "assets/heroes/ranger/source/ranger_source.blend"
+HERO_OUT = ROOT / f"assets/heroes/{ACTIVE_HERO}/source/{ACTIVE_HERO}_source.blend"
+BUNDLE = ROOT / f"assets/heroes/ranger/renders/_bundle/{ACTIVE_HERO}"
+
+
+HEAD_CENTER = Vector((0.0, 0.0, 2.63))
+HRX, HRY, HRZ = 0.485, 0.440, 0.495
 
 BONES = (
     "root", "hips", "spine", "chest", "neck", "head",
@@ -61,40 +98,42 @@ def tint(color, factor):
 
 
 PALETTE = {
-    "green": "#2E7D32",
-    "green_light": "#4F9E2E",
-    "green_deep": "#1A5A1E",
-    "green_bright": "#7CC33A",
-    "trouser": "#39442A",
-    "leather": "#714E42",
-    "leather_dark": "#3E2723",
-    "bronze": "#A9844E",
-    "bronze_light": "#D9BE86",
-    "gold": "#C9A227",
-    "skin": "#F6D5B4",
-    "skin_shadow": "#DFA983",
-    "skin_light": "#FFE8CF",
-    "hair_dark": "#4C2411",
-    "hair_mid": "#713B20",
-    "hair_light": "#955733",
-    "hair_shine": "#C08552",
-    "eye_blue": "#3C8FBF",
-    "eye_light": "#7CC7EC",
+    "green": "#2E8B3A",
+    "green_light": "#5BAA33",
+    "green_deep": "#17551F",
+    "green_bright": "#8ADB3C",
+    "trouser": "#3A4426",
+    "leather": "#7A4B33",
+    "leather_dark": "#3B2119",
+    "bronze": "#B07C3F",
+    "bronze_light": "#F0CE8A",
+    "gold": "#E0B23A",
+    "skin": "#F8D9BA",
+    "skin_shadow": "#E3B08A",
+    "skin_light": "#FFEDD8",
+    "hair_dark": "#3E1E0E",
+    "hair_mid": "#6B3418",
+    "hair_light": "#9C5A2C",
+    "hair_shine": "#D08A4A",
+    "eye_blue": "#3FA6D8",
+    "eye_light": "#9CD9F2",
     "eye_dark": "#16232E",
-    "white": "#F2F5F2",
-    "bow_glow": "#7CFF3A",
-    "bow_core": "#E6FFB0",
-    "energy": "#55F02A",
+    "white": "#F7FAF7",
+    "bow_glow": "#86FF46",
+    "bow_core": "#F2FFC8",
+    "energy": "#6BFF32",
 }
+
+PALETTE.update(PROFILE["palette"])
 
 MATS: dict[str, bpy.types.Material] = {}
 
 
 def toon(name, base, shadow=None, light=None, rim=None):
     color = srgb(PALETTE[base]) if isinstance(base, str) else base
-    shade = tint(color, 0.48) if shadow is None else (
+    shade = tint(color, 0.55) if shadow is None else (
         srgb(PALETTE[shadow]) if isinstance(shadow, str) else shadow)
-    highlight = tint(color, 1.42) if light is None else (
+    highlight = tint(color, 1.50) if light is None else (
         srgb(PALETTE[light]) if isinstance(light, str) else light)
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
@@ -136,7 +175,7 @@ def toon(name, base, shadow=None, light=None, rim=None):
         # renders that material as flat magenta. The rim has to stay a shader,
         # so route the ramp through its own emission and add the two shaders.
         rim_emission = nodes.new("ShaderNodeEmission")
-        rim_emission.inputs["Strength"].default_value = 0.85
+        rim_emission.inputs["Strength"].default_value = 1.10
         links.new(layer.outputs["Facing"], rim_ramp.inputs["Fac"])
         links.new(rim_ramp.outputs["Color"], rim_emission.inputs["Color"])
         add = nodes.new("ShaderNodeAddShader")
@@ -535,39 +574,40 @@ def surface_strip(name, path, half_widths, material, inflate, bone="head",
 
 def build_face():
     for side, sign in (("L", 1.0), ("R", -1.0)):
-        az = 25.0 * sign
-        surface_patch(f"Eye_White_{side}", az, 1.4, 12.6, 9.2, "white", 0.006)
-        surface_patch(f"Eye_Iris_{side}", az - 0.6 * sign, 0.4, 7.6, 8.0,
+        az = 27.0 * sign
+        surface_patch(f"Eye_White_{side}", az, 1.4, 14.4, 10.4, "white", 0.006)
+        surface_patch(f"Eye_Iris_{side}", az - 0.7 * sign, 0.3, 8.8, 9.1,
                       "eye_blue", 0.009)
-        surface_patch(f"Eye_Iris_Low_{side}", az - 0.6 * sign, -2.0, 5.6, 4.6,
+        surface_patch(f"Eye_Iris_Low_{side}", az - 0.7 * sign, -2.3, 6.5, 5.3,
                       "eye_light", 0.0095)
-        surface_patch(f"Eye_Pupil_{side}", az - 0.6 * sign, 0.6, 3.3, 3.8,
+        surface_patch(f"Eye_Pupil_{side}", az - 0.7 * sign, 0.5, 3.9, 4.4,
                       "eye_dark", 0.011)
-        surface_patch(f"Eye_Glint_{side}", az - 3.2 * sign, 3.6, 2.2, 2.0,
+        surface_patch(f"Eye_Glint_{side}", az - 3.6 * sign, 3.9, 2.6, 2.3,
                       "white", 0.013)
-        surface_patch(f"Eye_Glint_Small_{side}", az + 2.4 * sign, -2.0, 1.0,
-                      0.9, "white", 0.013)
-        lash = [(az - 12.0 * sign + 12.0 * sign * (t / 10.0),
-                 1.4 + 9.0 * math.sin(math.pi * 0.08 + math.pi * 0.84 * t / 10.0))
+        surface_patch(f"Eye_Glint_Small_{side}", az + 2.7 * sign, -2.2, 1.2,
+                      1.1, "white", 0.013)
+        lash = [(az - 13.6 * sign + 13.6 * sign * (t / 10.0),
+                 1.4 + 10.2 * math.sin(math.pi * 0.08 + math.pi * 0.84 * t / 10.0))
                 for t in range(11)]
-        surface_strip(f"Eye_Lash_{side}", lash, [1.35] * 11, "hair_dark",
+        surface_strip(f"Eye_Lash_{side}", lash, [1.55] * 11, "hair_dark",
                       0.012, thickness=0.003)
-        brow = [(az - 12.0 * sign + 24.0 * sign * (t / 6.0),
-                 15.0 - 2.0 * sign * (t / 6.0) * 0.0 + 2.2 * (t / 6.0) - 1.1)
+        brow = [(az - 13.5 * sign + 27.0 * sign * (t / 6.0),
+                 15.2 + 2.2 * math.sin(math.pi * t / 6.0))
                 for t in range(7)]
-        surface_strip(f"Brow_{side}", brow, [1.55, 1.65, 1.55, 1.4, 1.2, 0.95, 0.5],
-                      "hair_dark", 0.011, thickness=0.003)
+        surface_strip(f"Brow_{side}", brow,
+                      [1.85, 2.0, 1.9, 1.7, 1.45, 1.15, 0.62],
+                      "hair_dark", 0.011, thickness=0.0032)
         ear = sphere(f"Ear_{side}", head_point(82.0 * sign, -4.0, 0.005),
-                     (0.045, 0.075, 0.105), "skin", "head", 20, 12)
+                     (0.048, 0.080, 0.112), "skin", "head", 20, 12)
         sphere(f"Ear_Inner_{side}",
                head_point(86.0 * sign, -4.0, 0.012),
-               (0.020, 0.038, 0.060), "skin_shadow", "head", 16, 10)
+               (0.022, 0.040, 0.064), "skin_shadow", "head", 16, 10)
     sphere("Nose", head_point(0.0, -10.0, 0.020),
-           (0.032, 0.040, 0.028), "skin_shadow", "head", 16, 10)
-    mouth = [(-4.6 + 9.2 * t / 8.0,
-              -26.2 + 1.5 * (abs(-4.6 + 9.2 * t / 8.0) / 4.6) ** 1.4)
+           (0.034, 0.043, 0.030), "skin_shadow", "head", 16, 10)
+    mouth = [(-5.2 + 10.4 * t / 8.0,
+              -26.6 + 1.7 * (abs(-5.2 + 10.4 * t / 8.0) / 5.2) ** 1.4)
              for t in range(9)]
-    surface_strip("Mouth", mouth, [0.55] * 9, "leather_dark", 0.010,
+    surface_strip("Mouth", mouth, [0.62] * 9, "leather_dark", 0.010,
                   thickness=0.0025)
 
 
@@ -584,6 +624,8 @@ def hairline(az_deg):
 
 
 def build_hair():
+    if PROFILE["hair"] == "none":
+        return
     columns = 49
     rows = 16
     verts = []
@@ -620,7 +662,10 @@ def build_hair():
              ["hair_dark", "hair_mid", "hair_light"], "head",
              face_materials=face_materials, recalc=False,
              solidify=(0.012, 0))
-    make_locks()
+    if PROFILE["hair"] == "short":
+        hero_profiles.short_locks(builder())
+    else:
+        make_locks()
 
 
 def lock(name, path, widths, thickness=None, stops=None):
@@ -693,8 +738,8 @@ def make_locks():
 
 def make_armature():
     global ARM
-    data = bpy.data.armatures.new("Ranger_Armature")
-    ARM = bpy.data.objects.new("Ranger_Rig", data)
+    data = bpy.data.armatures.new(PROFILE["armature"])
+    ARM = bpy.data.objects.new(PROFILE["rig"], data)
     bpy.context.collection.objects.link(ARM)
     bpy.context.view_layer.objects.active = ARM
     ARM.select_set(True)
@@ -929,8 +974,8 @@ def cloak_rows(v0, v1, rows=10, columns=33):
         row = []
         for j in range(columns):
             u = -1.0 + 2.0 * j / (columns - 1)
-            x = u * (0.40 + 0.31 * v)
-            y = 0.155 + 0.275 * v + 0.045 * math.sin(u * 9.0 + 0.7) * (0.25 + 0.75 * v)
+            x = u * (0.42 + 0.34 * v)
+            y = 0.155 + 0.285 * v + 0.045 * math.sin(u * 9.0 + 0.7) * (0.25 + 0.75 * v)
             z = 2.075 - 1.70 * v + 0.055 * math.cos(u * 6.0) * v ** 5
             row.append(Vector((x, y, z)))
         out.append(row)
@@ -938,35 +983,17 @@ def cloak_rows(v0, v1, rows=10, columns=33):
 
 
 def build_cloak():
-    for index, (bone, v0, v1) in enumerate((
-            ("cloak_a", 0.0, 0.42), ("cloak_b", 0.32, 0.74),
-            ("cloak_c", 0.64, 1.0))):
-        grid_sheet(f"Cloak_{index}", cloak_rows(v0, v1),
-                   ["green", "green_deep"], bone,
-                   solidify=(0.028, 1), recalc=False)
-    for side, sign in (("L", 1.0), ("R", -1.0)):
-        rows = []
-        for i in range(5):
-            u = i / 4.0
-            row = []
-            for j in range(9):
-                step = j if sign < 0 else 8 - j
-                v = step / 8.0
-                x = sign * (0.065 + 0.355 * u)
-                y = -0.225 + 0.48 * v
-                z = 2.090 - 0.085 * math.sin(math.pi * v) - 0.105 * u
-                z += 0.018 * math.sin(u * 7.0 + v * 3.0)
-                row.append(Vector((x, y, z)))
-            rows.append(row)
-        grid_sheet(f"Shoulder_Mantle_{side}", rows, ["green"],
-                   "chest", solidify=(0.020, 1), recalc=False)
+    PROFILE["build_cape"](builder())
 
 
 # ---------------------------------------------------------------- gear -----
 
 def build_quiver():
-    start = Vector((-0.20, 0.255, 1.52))
-    end = Vector((-0.335, 0.330, 2.10))
+    # Sit the quiver on the outside of the shoulder so the fletching clears the
+    # cloak: the reference reads as an archer partly because the arrows are
+    # visible over the shoulder from the back and three-quarter views.
+    start = Vector((-0.30, 0.115, 1.50))
+    end = Vector((-0.475, 0.155, 2.10))
     sweep("Quiver", [start, end], [0.150, 0.135], "leather_dark",
           "quiver", sides=16, thickness=[0.145, 0.130])
     ring_at("Quiver_Rim", start, end, 0.97, 0.072, 0.016, "bronze", "quiver")
@@ -984,56 +1011,76 @@ def build_quiver():
 
 
 def build_bow():
-    up = [Vector((0.56, -0.06, 1.40)), Vector((0.56, -0.20, 1.58)),
-          Vector((0.56, -0.30, 1.78)), Vector((0.56, -0.26, 1.96)),
-          Vector((0.56, -0.13, 2.10))]
-    down = [Vector((0.56, -0.06, 1.40)), Vector((0.56, -0.20, 1.22)),
-            Vector((0.56, -0.30, 1.02)), Vector((0.56, -0.26, 0.84)),
-            Vector((0.56, -0.13, 0.70))]
-    widths = [0.045, 0.036, 0.031, 0.024, 0.014]
+    # The reference bow is nearly body-height and dominates the silhouette, so
+    # the limbs run from above the head to below the knee with a thick luminous
+    # core and a wider halo.
+    up = [Vector((0.56, -0.08, 1.42)), Vector((0.56, -0.30, 1.72)),
+          Vector((0.56, -0.43, 2.05)), Vector((0.56, -0.37, 2.38)),
+          Vector((0.56, -0.19, 2.58))]
+    down = [Vector((0.56, -0.08, 1.42)), Vector((0.56, -0.30, 1.12)),
+            Vector((0.56, -0.43, 0.79)), Vector((0.56, -0.37, 0.46)),
+            Vector((0.56, -0.19, 0.26))]
+    widths = [0.070, 0.056, 0.048, 0.036, 0.018]
     for index, limb in enumerate((up, down)):
         sweep(f"Bow_Limb_{index}", limb, widths, "energy_core", "bow",
               sides=8, thickness=widths, tip=True)
     for index, limb in enumerate((up, down)):
-        sweep(f"Bow_Glow_{index}", limb, [w * 2.35 for w in widths],
+        sweep(f"Bow_Glow_{index}", limb, [w * 2.45 for w in widths],
               "energy_soft", "bow", sides=8,
-              thickness=[w * 2.35 for w in widths], tip=True)
-    sweep("Bow_Grip", [Vector((0.56, -0.06, 1.31)),
-                       Vector((0.56, -0.06, 1.49))],
-          [0.075, 0.075], "leather_dark", "bow", sides=12,
-          thickness=[0.075, 0.075])
-    ring_at("Bow_Grip_Ring_0", Vector((0.56, -0.06, 1.31)),
-            Vector((0.56, -0.06, 1.49)), 0.10, 0.043, 0.010,
+              thickness=[w * 2.45 for w in widths], tip=True)
+    # Inner energy blades: the reference's bow has bright leaf-shaped flares
+    # along the limbs that keep the weapon readable even at 96 px.
+    for index, sign in ((0, 1.0), (1, -1.0)):
+        sweep(f"Bow_Blade_{index}", [
+            Vector((0.545, -0.40, 2.10)),
+            Vector((0.505, -0.46, 2.28)),
+            Vector((0.470, -0.43, 2.46)),
+            Vector((0.500, -0.36, 2.55))],
+            [0.050, 0.038, 0.020, 0.005], "energy", "bow", sides=5,
+            thickness=[0.022, 0.016, 0.010, 0.003], tip=True)
+        sweep(f"Bow_Blade_Low_{index}", [
+            Vector((0.545, -0.40, 0.74)),
+            Vector((0.505, -0.46, 0.56)),
+            Vector((0.470, -0.43, 0.38)),
+            Vector((0.500, -0.36, 0.29))],
+            [0.050, 0.038, 0.020, 0.005], "energy", "bow", sides=5,
+            thickness=[0.022, 0.016, 0.010, 0.003], tip=True)
+    sweep("Bow_Grip", [Vector((0.56, -0.08, 1.30)),
+                       Vector((0.56, -0.08, 1.54))],
+          [0.085, 0.085], "leather_dark", "bow", sides=12,
+          thickness=[0.085, 0.085])
+    ring_at("Bow_Grip_Ring_0", Vector((0.56, -0.08, 1.30)),
+            Vector((0.56, -0.08, 1.54)), 0.10, 0.049, 0.011,
             "gold", "bow")
-    ring_at("Bow_Grip_Ring_1", Vector((0.56, -0.06, 1.31)),
-            Vector((0.56, -0.06, 1.49)), 0.90, 0.043, 0.010,
+    ring_at("Bow_Grip_Ring_1", Vector((0.56, -0.08, 1.30)),
+            Vector((0.56, -0.08, 1.54)), 0.90, 0.049, 0.011,
             "gold", "bow")
-    sphere("Bow_Gem", (0.56, -0.105, 1.40), (0.030, 0.028, 0.050),
+    sphere("Bow_Gem", (0.56, -0.125, 1.42), (0.038, 0.034, 0.062),
            "green_bright", "bow", 16, 10)
-    sweep("String_Rest", [Vector((0.56, -0.13, 2.105)),
-                          Vector((0.56, -0.13, 0.695))],
-          [0.007, 0.007], "string_glow", "string_rest", sides=4,
-          thickness=[0.007, 0.007])
-    nock = Vector((0.56, 0.185, 1.40))
-    sweep("String_Drawn", [Vector((0.56, -0.13, 2.105)), nock,
-                           Vector((0.56, -0.13, 0.695))],
-          [0.007, 0.007, 0.007], "string_glow", "string_drawn",
-          sides=4, thickness=[0.007, 0.007, 0.007])
+    sweep("String_Rest", [Vector((0.56, -0.19, 2.585)),
+                          Vector((0.56, -0.19, 0.255))],
+          [0.008, 0.008], "string_glow", "string_rest", sides=4,
+          thickness=[0.008, 0.008])
+    nock = Vector((0.56, 0.30, 1.42))
+    sweep("String_Drawn", [Vector((0.56, -0.19, 2.585)), nock,
+                           Vector((0.56, -0.19, 0.255))],
+          [0.008, 0.008, 0.008], "string_glow", "string_drawn",
+          sides=4, thickness=[0.008, 0.008, 0.008])
     # Nocked energy arrow: from the drawn nock towards the bow.
-    sweep("Nocked_Arrow", [Vector((0.56, 0.30, 1.40)),
-                           Vector((0.56, -0.20, 1.40))],
-          [0.020, 0.014], "energy_core", "fx_draw", sides=6,
-          thickness=[0.020, 0.014])
-    cone = bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.045,
-                                           radius2=0.0, depth=0.13,
-                                           location=(0.56, -0.255, 1.40),
+    sweep("Nocked_Arrow", [Vector((0.56, 0.38, 1.42)),
+                           Vector((0.56, -0.32, 1.42))],
+          [0.024, 0.017], "energy_core", "fx_draw", sides=6,
+          thickness=[0.024, 0.017])
+    cone = bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.052,
+                                           radius2=0.0, depth=0.15,
+                                           location=(0.56, -0.395, 1.42),
                                            rotation=(math.radians(90), 0, 0))
     arrow_tip = bpy.context.object
     arrow_tip.name = "Arrow_Head"
     arrow_tip.data.materials.append(MATS["energy_core"])
     smooth(arrow_tip)
     attach(arrow_tip, "fx_draw")
-    sphere("Draw_Glow", (0.56, 0.185, 1.40), (0.070, 0.060, 0.070),
+    sphere("Draw_Glow", (0.56, 0.30, 1.42), (0.085, 0.075, 0.085),
            "energy_soft", "fx_draw", 16, 10)
 
 
@@ -1068,30 +1115,30 @@ def build_fx():
 
 def build_materials():
     MATS.update({
-        "green": toon("Forest Green Cloth", "green", rim="green_bright"),
-        "green_light": toon("Lit Green Cloth", "green_light"),
-        "green_deep": toon("Deep Green Cloth", "green_deep"),
-        "green_bright": toon("Bright Green Accent", "green_bright"),
-        "trouser": toon("Olive Trousers", "trouser"),
-        "leather": toon("Chestnut Leather", "leather", rim="bronze_light"),
-        "leather_dark": toon("Dark Leather", "leather_dark"),
-        "bronze": toon("Aged Bronze Plate", "bronze", rim="bronze_light"),
-        "bronze_light": toon("Bronze Edge", "bronze_light"),
-        "gold": toon("Brass Buckle", "gold", rim="bronze_light"),
+        "green": toon("Cloth Primary", "green", rim="green_bright"),
+        "green_light": toon("Cloth Lit", "green_light"),
+        "green_deep": toon("Cloth Deep", "green_deep"),
+        "green_bright": toon("Cloth Accent", "green_bright"),
+        "trouser": toon("Cloth Trousers", "trouser"),
+        "leather": toon("Leather Gear", "leather", rim="bronze_light"),
+        "leather_dark": toon("Leather Dark", "leather_dark"),
+        "bronze": toon("Metal Plate", "bronze", rim="bronze_light"),
+        "bronze_light": toon("Metal Edge", "bronze_light"),
+        "gold": toon("Brass Accent", "gold", rim="bronze_light"),
         "skin": toon("Warm Skin", "skin", rim="skin_light"),
         "skin_shadow": toon("Skin Shadow", "skin_shadow"),
         "hair_dark": toon("Hair Roots", "hair_dark"),
         "hair_mid": toon("Hair Body", "hair_mid", rim="hair_shine"),
         "hair_light": toon("Hair Tips", "hair_light"),
         "hair_shine": toon("Hair Highlight", "hair_shine"),
-        "eye_blue": toon("Sapphire Iris", "eye_blue"),
+        "eye_blue": toon("Iris", "eye_blue"),
         "eye_light": toon("Iris Glow", "eye_light"),
         "eye_dark": toon("Pupil", "eye_dark"),
         "white": toon("Eye White", "white"),
-        "energy_core": glow("Energy Core", "bow_core", 7.0),
-        "energy": glow("Energy Streak", "energy", 5.0),
-        "energy_soft": glow("Energy Glow", "bow_glow", 2.6, 0.34),
-        "string_glow": glow("Bow String", "bow_core", 4.0),
+        "energy_core": glow("Energy Core", "bow_core", 8.0),
+        "energy": glow("Energy Streak", "energy", 6.0),
+        "energy_soft": glow("Energy Glow", "bow_glow", 3.2, 0.45),
+        "string_glow": glow("Energy String", "bow_core", 5.0),
     })
 
 
@@ -1219,19 +1266,19 @@ def build_actions():
         "upper_arm.L": (-55, 0, 12), "forearm.L": (-18, 0, 0),
         "upper_arm.R": (-40, 0, -25), "forearm.R": (-70, 0, 0),
         "chest": (0, 8, 0), "head": (0, -6, 0),
-        "bow": (55, 0, -8), "cloak_a": (5, 0, 0),
+        "bow": (16, 0, -8), "cloak_a": (5, 0, 0),
     })
     drawn = merged(BASE, {
         "upper_arm.L": (-78, 0, 10), "forearm.L": (-10, 0, 0),
         "upper_arm.R": (-58, 0, -38), "forearm.R": (-112, 0, 0),
         "chest": (-2, 14, 0), "head": (2, -10, 0),
-        "bow": (78, 0, -10), "cloak_a": (8, 0, 0),
+        "bow": (24, 0, -10), "cloak_a": (8, 0, 0),
     })
     release = merged(BASE, {
         "upper_arm.L": (-74, 0, 8), "forearm.L": (-14, 0, 0),
         "upper_arm.R": (-28, 0, -18), "forearm.R": (-55, 0, 0),
         "chest": (-4, 8, 0), "head": (3, -6, 0),
-        "bow": (74, 0, -8), "cloak_a": (12, 0, 0),
+        "bow": (22, 0, -8), "cloak_a": (12, 0, 0),
     })
     attack = [
         (1, *P(BASE, scale={"string_rest": (1, 1, 1)})),
@@ -1244,12 +1291,12 @@ def build_actions():
         (13, *P(release, scale={"fx": (1.25, 1.25, 1.25)})),
         (17, *P(merged(BASE, {
             "upper_arm.L": (-46, 0, 6), "upper_arm.R": (-8, 0, -8),
-            "forearm.R": (-22, 0, 0), "bow": (46, 0, -6),
+            "forearm.R": (-22, 0, 0), "bow": (12, 0, -6),
             "cloak_a": (7, 0, 0),
         }))),
         (21, *P(merged(BASE, {
             "upper_arm.L": (-18, 0, 5), "upper_arm.R": (0, 0, -5),
-            "bow": (18, 0, -3),
+            "bow": (6, 0, -3),
         }))),
         (25, *P(BASE)),
     ]
@@ -1259,7 +1306,7 @@ def build_actions():
         "chest": (-8, 0, 0), "head": (-10, 0, 0),
         "thigh.L": (-14, 0, 0), "thigh.R": (-14, 0, 0),
         "shin.L": (28, 0, 0), "shin.R": (28, 0, 0),
-        "bow": (96, 0, 0), "cloak_a": (16, 0, 0),
+        "bow": (26, 0, 0), "cloak_a": (16, 0, 0),
         "cloak_b": (22, 0, 0), "cloak_c": (28, 0, 0),
     })
     leap = merged(charge, {
@@ -1271,7 +1318,7 @@ def build_actions():
         "upper_arm.L": (-60, 0, 6), "forearm.L": (-12, 0, 0),
         "upper_arm.R": (-18, 0, -10), "forearm.R": (-40, 0, 0),
         "chest": (10, 0, 0), "head": (4, 0, 0),
-        "bow": (60, 0, -4), "cloak_a": (22, 0, 0),
+        "bow": (18, 0, -4), "cloak_a": (22, 0, 0),
         "cloak_b": (30, 0, 0), "cloak_c": (38, 0, 0),
     })
     skill = [
@@ -1292,7 +1339,7 @@ def build_actions():
                 scale={"fx": (1.7, 1.7, 1.7)})),
         (21, *P(merged(BASE, {
             "upper_arm.L": (-24, 0, 5), "upper_arm.R": (-4, 0, -5),
-            "bow": (24, 0, -3), "thigh.L": (-12, 0, 0),
+            "bow": (10, 0, -3), "thigh.L": (-12, 0, 0),
             "thigh.R": (-12, 0, 0), "shin.L": (24, 0, 0),
             "shin.R": (24, 0, 0),
         }), loc={"root": (0, -0.02, 0)}, scale={"fx": (0.5, 0.5, 0.5)})),
@@ -1303,6 +1350,12 @@ def build_actions():
         (29, *P(BASE)),
         (33, *P(BASE)),
     ]
+    # Melee heroes share the body mechanics but replace the archery attack and
+    # skill with their own weapon choreography.
+    if PROFILE.get("attack") is not None:
+        attack = PROFILE["attack"](builder())
+    if PROFILE.get("skill") is not None:
+        skill = PROFILE["skill"](builder())
     dodge = [
         (1, *P(BASE)),
         (3, *P(merged(BASE, {
@@ -1370,84 +1423,84 @@ def build_actions():
         }))),
         (9, *P(BASE)),
     ]
+    final = merged(BASE, {
+        "root": (-14, 0, 0),
+        "thigh.L": (-94, 0, 0), "thigh.R": (-86, 0, 0),
+        "shin.L": (150, 0, 0), "shin.R": (144, 0, 0),
+        "foot.L": (-36, 0, 0), "foot.R": (-30, 0, 0),
+        "chest": (58, 0, 0), "head": (44, 0, 0),
+        "upper_arm.L": (24, 0, 18), "upper_arm.R": (24, 0, -18),
+        "forearm.L": (30, 0, 0), "forearm.R": (30, 0, 0),
+        "cloak_a": (24, 0, 0), "cloak_b": (34, 0, 0), "cloak_c": (44, 0, 0),
+    })
+    # Death is a compact forward collapse instead of a full-length fall. A
+    # prone body is ~2.6 units wide in profile, and the shared sprite scale must
+    # fit every state and direction, so one prone pose shrank the whole set by
+    # 45%. Kneeling over the knees keeps the same weight and finality while the
+    # character stays readable at gameplay size.
     death = [
         (1, *P(BASE)),
         (5, *P(merged(BASE, {
-            "chest": (-12, 0, 0), "head": (-16, 0, 0),
-            "upper_arm.L": (-16, 0, 24), "upper_arm.R": (-16, 0, -24),
-            "cloak_a": (-10, 0, 0), "cloak_b": (-14, 0, 0), "cloak_c": (-18, 0, 0),
-        }), loc={"root": (0, 0.0, 0.04)})),
+            "chest": (-10, 0, 0), "head": (-13, 0, 0),
+            "upper_arm.L": (-14, 0, 22), "upper_arm.R": (-14, 0, -22),
+            "cloak_a": (-8, 0, 0), "cloak_b": (-12, 0, 0), "cloak_c": (-16, 0, 0),
+        }), loc={"root": (0, 0.03, 0)})),
         (9, *P(merged(BASE, {
-            "thigh.L": (-38, 0, 0), "thigh.R": (-38, 0, 0),
-            "shin.L": (76, 0, 0), "shin.R": (76, 0, 0),
-            "chest": (-8, 0, 0), "head": (-12, 0, 0),
-            "upper_arm.L": (-24, 0, 18), "upper_arm.R": (-24, 0, -18),
-            "cloak_a": (4, 0, 0), "cloak_b": (8, 0, 0), "cloak_c": (12, 0, 0),
-        }), loc={"root": (0, -0.28, 0.02)})),
+            "thigh.L": (-42, 0, 0), "thigh.R": (-40, 0, 0),
+            "shin.L": (82, 0, 0), "shin.R": (80, 0, 0),
+            "foot.L": (-18, 0, 0), "foot.R": (-18, 0, 0),
+            "chest": (16, 0, 0), "head": (12, 0, 0),
+            "upper_arm.L": (-6, 0, 26), "upper_arm.R": (-6, 0, -26),
+            "forearm.L": (8, 0, 0), "forearm.R": (8, 0, 0),
+            "cloak_a": (2, 0, 0), "cloak_b": (6, 0, 0), "cloak_c": (10, 0, 0),
+        }), loc={"root": (0, -0.18, 0)})),
         (13, *P(merged(BASE, {
-            "root": (-38, 0, 0),
-            "thigh.L": (-16, 0, 0), "thigh.R": (12, 0, 0),
-            "shin.L": (44, 0, 0), "shin.R": (20, 0, 0),
-            "upper_arm.L": (-30, 0, 30), "upper_arm.R": (-30, 0, -30),
-            "chest": (6, 0, 0), "head": (10, 0, 0),
-            "cloak_a": (10, 0, 0), "cloak_b": (16, 0, 0), "cloak_c": (22, 0, 0),
-        }), loc={"root": (0, -0.22, 0.35)})),
+            "root": (-8, 0, 0),
+            "thigh.L": (-78, 0, 0), "thigh.R": (-74, 0, 0),
+            "shin.L": (130, 0, 0), "shin.R": (126, 0, 0),
+            "foot.L": (-30, 0, 0), "foot.R": (-28, 0, 0),
+            "chest": (36, 0, 0), "head": (28, 0, 0),
+            "upper_arm.L": (12, 0, 22), "upper_arm.R": (12, 0, -22),
+            "forearm.L": (18, 0, 0), "forearm.R": (18, 0, 0),
+            "cloak_a": (12, 0, 0), "cloak_b": (20, 0, 0), "cloak_c": (28, 0, 0),
+        }), loc={"root": (0, -0.46, 0)})),
         (17, *P(merged(BASE, {
-            "root": (-74, 0, 0),
-            "thigh.L": (-8, 0, 0), "thigh.R": (22, 0, 0),
-            "shin.L": (34, 0, 0), "shin.R": (10, 0, 0),
-            "upper_arm.L": (-10, 0, 46), "upper_arm.R": (-10, 0, -46),
-            "chest": (10, 0, 0), "head": (16, 0, 0),
-            "cloak_a": (16, 0, 0), "cloak_b": (24, 0, 0), "cloak_c": (30, 0, 0),
-        }), loc={"root": (0, -0.10, 0.55)})),
-        (21, *P(merged(BASE, {
-            "root": (-90, 0, 0),
-            "thigh.L": (-4, 0, 0), "thigh.R": (16, 0, 0),
-            "shin.L": (22, 0, 0), "shin.R": (4, 0, 0),
-            "upper_arm.L": (0, 0, 54), "upper_arm.R": (0, 0, -54),
-            "chest": (12, 0, 0), "head": (20, 0, 0),
-            "cloak_a": (20, 0, 0), "cloak_b": (28, 0, 0), "cloak_c": (34, 0, 0),
-        }), loc={"root": (0, 0.0, 0.58)})),
-        (25, *P(merged(BASE, {
-            "root": (-92, 0, 0),
-            "thigh.L": (-2, 0, 0), "thigh.R": (12, 0, 0),
-            "shin.L": (16, 0, 0), "shin.R": (2, 0, 0),
-            "upper_arm.L": (0, 0, 58), "upper_arm.R": (0, 0, -58),
-            "chest": (10, 0, 0), "head": (18, 0, 0),
-            "cloak_a": (18, 0, 0), "cloak_b": (26, 0, 0), "cloak_c": (32, 0, 0),
-        }), loc={"root": (0, 0.0, 0.56)})),
-        (29, *P(merged(BASE, {
-            "root": (-92, 0, 0),
-            "thigh.L": (-2, 0, 0), "thigh.R": (12, 0, 0),
-            "shin.L": (16, 0, 0), "shin.R": (2, 0, 0),
-            "upper_arm.L": (0, 0, 58), "upper_arm.R": (0, 0, -58),
-            "chest": (10, 0, 0), "head": (18, 0, 0),
-            "cloak_a": (18, 0, 0), "cloak_b": (26, 0, 0), "cloak_c": (32, 0, 0),
-        }), loc={"root": (0, 0.0, 0.56)})),
-        (33, *P(merged(BASE, {
-            "root": (-92, 0, 0),
-            "thigh.L": (-2, 0, 0), "thigh.R": (12, 0, 0),
-            "shin.L": (16, 0, 0), "shin.R": (2, 0, 0),
-            "upper_arm.L": (0, 0, 58), "upper_arm.R": (0, 0, -58),
-            "chest": (10, 0, 0), "head": (18, 0, 0),
-            "cloak_a": (18, 0, 0), "cloak_b": (26, 0, 0), "cloak_c": (32, 0, 0),
-        }), loc={"root": (0, 0.0, 0.56)})),
+            "root": (-12, 0, 0),
+            "thigh.L": (-90, 0, 0), "thigh.R": (-82, 0, 0),
+            "shin.L": (146, 0, 0), "shin.R": (140, 0, 0),
+            "foot.L": (-34, 0, 0), "foot.R": (-29, 0, 0),
+            "chest": (52, 0, 0), "head": (40, 0, 0),
+            "upper_arm.L": (20, 0, 20), "upper_arm.R": (20, 0, -20),
+            "forearm.L": (26, 0, 0), "forearm.R": (26, 0, 0),
+            "cloak_a": (20, 0, 0), "cloak_b": (30, 0, 0), "cloak_c": (40, 0, 0),
+        }), loc={"root": (0, -0.64, 0)})),
+        (21, *P(final, loc={"root": (0, -0.70, 0)},
+                scale={"bow": (0.0, 0.0, 0.0)})),
+        (25, *P(merged(final, {"head": (46, 0, 2)}),
+                loc={"root": (0, -0.705, 0)},
+                scale={"bow": (0.0, 0.0, 0.0)})),
+        (29, *P(merged(final, {"head": (45, 0, -2)}),
+                loc={"root": (0, -0.70, 0)},
+                scale={"bow": (0.0, 0.0, 0.0)})),
+        (33, *P(final, loc={"root": (0, -0.70, 0)},
+                scale={"bow": (0.0, 0.0, 0.0)})),
     ]
+    prefix = PROFILE["prefix"]
     actions = {
-        "Ranger_Idle": idle,
-        "Ranger_Walk": walk,
-        "Ranger_Run": run,
-        "Ranger_Attack": attack,
-        "Ranger_Skill": skill,
-        "Ranger_Dodge": dodge,
-        "Ranger_Hit": hit,
-        "Ranger_Death": death,
+        f"{prefix}_Idle": idle,
+        f"{prefix}_Walk": walk,
+        f"{prefix}_Run": run,
+        f"{prefix}_Attack": attack,
+        f"{prefix}_Skill": skill,
+        f"{prefix}_Dodge": dodge,
+        f"{prefix}_Hit": hit,
+        f"{prefix}_Death": death,
     }
     for name, keys in actions.items():
         write_action(name, keys)
-    clamp_action_to_ground("Ranger_Death", list(range(1, 34)))
+    clamp_action_to_ground(f"{prefix}_Death", list(range(1, 34)))
     reset_pose()
-    ARM.animation_data.action = bpy.data.actions["Ranger_Idle"]
+    ARM.animation_data.action = bpy.data.actions[f"{prefix}_Idle"]
     scene = bpy.context.scene
     scene.frame_start, scene.frame_end = 1, 33
     scene.frame_set(1)
@@ -1550,16 +1603,16 @@ def setup_scene():
     scene.view_settings.exposure = 0.0
     if hasattr(scene.eevee, "use_bloom"):
         scene.eevee.use_bloom = True
-        scene.eevee.bloom_threshold = 0.85
-        scene.eevee.bloom_intensity = 0.08
-        scene.eevee.bloom_radius = 4.5
-        scene.eevee.bloom_color = (0.62, 1.0, 0.55)
+        scene.eevee.bloom_threshold = 0.90
+        scene.eevee.bloom_intensity = 0.30
+        scene.eevee.bloom_radius = 6.0
+        scene.eevee.bloom_color = srgb(PALETTE["energy"])
     if hasattr(scene.eevee, "use_gtao"):
         scene.eevee.use_gtao = True
 
     bpy.ops.object.camera_add(location=(0, -8.0, 2.85))
     camera = bpy.context.object
-    camera.name = "Ranger_Orthographic_Camera"
+    camera.name = "Hero_Orthographic_Camera"
     target = Vector((0, 0, 1.62))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     camera.data.type = "ORTHO"
@@ -1567,9 +1620,9 @@ def setup_scene():
     scene.camera = camera
 
     lights = (
-        ("Key_Softbox", (-4.0, -5.0, 6.0), 4.2, (1.0, 0.96, 0.88)),
-        ("Fill_Softbox", (4.5, -3.0, 3.0), 1.5, (0.72, 0.84, 1.0)),
-        ("Rim_Softbox", (0.0, 4.5, 5.0), 3.0, (0.86, 1.0, 0.82)),
+        ("Key_Softbox", (-4.0, -5.0, 6.0), 5.2, (1.0, 0.96, 0.88)),
+        ("Fill_Softbox", (4.5, -3.0, 3.0), 2.1, (0.72, 0.84, 1.0)),
+        ("Rim_Softbox", (0.0, 4.5, 5.0), 3.8, (0.86, 1.0, 0.82)),
     )
     for name, location, energy, color in lights:
         bpy.ops.object.light_add(type="SUN", location=location)
@@ -1589,22 +1642,59 @@ def main():
     build_head()
     build_face()
     build_hair()
+    if PROFILE.get("build_headgear") is not None:
+        PROFILE["build_headgear"](builder())
     build_torso()
+    if PROFILE.get("build_armour") is not None:
+        PROFILE["build_armour"](builder())
     build_limbs()
     build_cloak()
-    build_quiver()
-    build_bow()
-    build_fx()
+    if PROFILE.get("build_weapon") is not None:
+        PROFILE["build_weapon"](builder())
+    else:
+        build_quiver()
+        build_bow()
+    if PROFILE.get("build_fx") is not None:
+        PROFILE["build_fx"](builder())
+    else:
+        build_fx()
     build_actions()
     setup_scene()
+    scene = bpy.context.scene
+    # Persist the identity so the validator (a separate Blender process) knows
+    # which rig, action prefix and parts this .blend is expected to contain.
+    scene["hero_id"] = ACTIVE_HERO
+    scene["hero_prefix"] = PROFILE["prefix"]
+    scene["rig_object"] = PROFILE["rig"]
     for name in ("root", "head", "upper_arm.L", "thigh.L", "bow", "cloak_a"):
         matrix = ARM.data.bones[name].matrix_local.to_3x3()
         print("BONE_AXES", name,
               [tuple(round(value, 3) for value in matrix.col[i]) for i in range(3)])
-    print("MESH_PARTS", len([obj for obj in bpy.data.objects if obj.type == "MESH"]))
+    meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
+    print("MESH_PARTS", len(meshes))
+    missing = [name for name in PROFILE["required_parts"]
+               if bpy.data.objects.get(name) is None]
+    if missing:
+        raise SystemExit(
+            f"{ACTIVE_HERO}: required signature parts are missing: "
+            + ", ".join(missing))
+    if len(meshes) < hero_profiles.MIN_MESH_PARTS:
+        raise SystemExit(
+            f"{ACTIVE_HERO}: only {len(meshes)} mesh parts, expected at least "
+            f"{hero_profiles.MIN_MESH_PARTS}")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT))
-    print(f"Saved reference-matched Ranger source: {OUT}")
+    HERO_OUT.parent.mkdir(parents=True, exist_ok=True)
+    if HERO_OUT != OUT:
+        shutil.copyfile(OUT, HERO_OUT)
+    # Bundle the editor source next to the renders so the read-only CI
+    # artifact carries it to the machine that commits the results.
+    bundle_source = BUNDLE / "source" / f"{ACTIVE_HERO}_source.blend"
+    bundle_source.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(OUT, bundle_source)
+    print(f"Saved {ACTIVE_HERO} source: {OUT}")
+    print(f"Hero source copy: {HERO_OUT}")
+    print(f"Bundled source: {bundle_source}")
 
 
 if __name__ == "__main__":

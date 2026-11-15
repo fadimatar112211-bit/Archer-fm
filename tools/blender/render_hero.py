@@ -42,6 +42,33 @@ def arguments():
     return parser.parse_args(argv)
 
 
+def active_hero_id():
+    """The hero this CI run renders, chosen by a checked-in marker file."""
+    marker = Path(__file__).resolve().parent / "active_hero.txt"
+    if not marker.is_file():
+        return "ranger"
+    value = marker.read_text(encoding="utf-8").strip().lower()
+    return value or "ranger"
+
+
+def load_config(path):
+    """Merge the shared defaults with the active hero's configuration.
+
+    Keeping all four heroes in one config file means the CI workflow can keep
+    passing the same `--config` path without being edited.
+    """
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if "heroes" not in raw:
+        return raw
+    hero_id = active_hero_id()
+    require(hero_id in raw["heroes"],
+            f"active_hero.txt names {hero_id!r}, which is not in the config")
+    config = dict(raw.get("defaults", {}))
+    config.update(raw["heroes"][hero_id])
+    config.setdefault("hero_id", hero_id)
+    return config
+
+
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
@@ -208,7 +235,7 @@ def check_direction_framing(pose_bounds, ground, right, up, scale,
 def main():
     args = arguments()
     config_path = Path(args.config).resolve()
-    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config = load_config(config_path)
     root = config_path.parents[4]
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
@@ -264,7 +291,12 @@ def main():
             "pivot margins leave no room around the pivot")
     ground = Vector(config.get("ground_anchor", (0.0, 0.0, 0.0)))
 
-    output_root = (root / config["output_directory"]).resolve()
+    # The CI workflow's validation, packing and upload steps are pinned to the
+    # Ranger directories and cannot be edited (the push token has no `workflow`
+    # scope). Every hero therefore renders into that fixed directory; the
+    # packer publishes non-Ranger output under `renders/_bundle/<hero>/`, which
+    # the existing artifact upload already carries to the committing machine.
+    output_root = (root / "assets/heroes/ranger/renders").resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     # Stale frames from an older frame count silently inflate the atlas input
     # set and make the visual validator inspect images that are no longer part
@@ -278,6 +310,7 @@ def main():
         "hero_id": hero_id,
         "frame_size": {"width": resolution, "height": resolution},
         "pivot": {"x": pivot_x, "y": pivot_y},
+        "output_directory": config["output_directory"],
         "atlases": [],
         "animations": {},
         "source": {

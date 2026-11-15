@@ -1,3 +1,5 @@
+import 'dart:ui' show Size;
+
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:archer_fm/hero/hero_viewer_screen.dart';
