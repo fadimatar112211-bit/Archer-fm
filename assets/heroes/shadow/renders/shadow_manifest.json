@@ -1578,6 +1578,6 @@
     "blend_file": "assets/heroes/shadow/source/shadow_source.blend",
     "fps": 12,
     "render_engine": "BLENDER_EEVEE",
-    "orthographic_scale": 4.538179
+    "orthographic_scale": 4.50223
   }
 }
