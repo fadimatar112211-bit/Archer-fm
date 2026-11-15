@@ -65,7 +65,7 @@ BUNDLE = ROOT / f"assets/heroes/ranger/renders/_bundle/{ACTIVE_HERO}"
 
 
 HEAD_CENTER = Vector((0.0, 0.0, 2.545))
-HRX, HRY, HRZ = 0.548, 0.516, 0.606
+HRX, HRY, HRZ = 0.662, 0.622, 0.732
 
 BONES = (
     "root", "hips", "spine", "chest", "neck", "head",
@@ -98,32 +98,32 @@ def tint(color, factor):
 
 
 PALETTE = {
-    "green": "#2E8B3A",
-    "green_light": "#5BAA33",
-    "green_deep": "#17551F",
-    "green_bright": "#8ADB3C",
-    "trouser": "#3A4426",
-    "boot": "#6B4126",
-    "leather": "#7A4B33",
-    "leather_dark": "#3B2119",
-    "bronze": "#B07C3F",
-    "bronze_light": "#F0CE8A",
-    "gold": "#E0B23A",
-    "skin": "#EBAF84",
-    "skin_shadow": "#BE8154",
-    "skin_light": "#F8CFA6",
-    "hair_dark": "#3E1E0E",
-    "hair_mid": "#6B3418",
-    "hair_light": "#A9652F",
-    "hair_shine": "#D08A4A",
-    "eye_blue": "#39BC58",
-    "eye_light": "#8FE86A",
-    "eye_dark": "#16232E",
-    "eye_rim": "#14501F",
-    "white": "#F7FAF7",
-    "bow_glow": "#86FF46",
-    "bow_core": "#C8FF6A",
-    "energy": "#6BFF32",
+    "green": "#3FA347",
+    "green_light": "#6FC53F",
+    "green_deep": "#1B6426",
+    "green_bright": "#9FE84A",
+    "trouser": "#42502A",
+    "boot": "#7A4A2B",
+    "leather": "#8A5738",
+    "leather_dark": "#46261C",
+    "bronze": "#C28840",
+    "bronze_light": "#F7D78E",
+    "gold": "#F0C245",
+    "skin": "#EFB183",
+    "skin_shadow": "#C68457",
+    "skin_light": "#FFD9AE",
+    "hair_dark": "#452210",
+    "hair_mid": "#7A3C1B",
+    "hair_light": "#B47135",
+    "hair_shine": "#DA9A55",
+    "eye_blue": "#41C863",
+    "eye_light": "#9BF07A",
+    "eye_dark": "#14232E",
+    "eye_rim": "#155A21",
+    "white": "#FAFCF8",
+    "bow_glow": "#93FF4C",
+    "bow_core": "#D2FF70",
+    "energy": "#78FF36",
 }
 
 PALETTE.update(PROFILE["palette"])
@@ -133,9 +133,9 @@ MATS: dict[str, bpy.types.Material] = {}
 
 def toon(name, base, shadow=None, light=None, rim=None):
     color = srgb(PALETTE[base]) if isinstance(base, str) else base
-    shade = tint(color, 0.44) if shadow is None else (
+    shade = tint(color, 0.40) if shadow is None else (
         srgb(PALETTE[shadow]) if isinstance(shadow, str) else shadow)
-    highlight = tint(color, 1.32) if light is None else (
+    highlight = tint(color, 1.42) if light is None else (
         srgb(PALETTE[light]) if isinstance(light, str) else light)
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
@@ -607,35 +607,39 @@ def build_face():
     up at the outer corner, and thick brows sit low over the inner corners.
     """
     for side, sign in (("L", 1.0), ("R", -1.0)):
-        az = 22.5 * sign
-        tilt = 7.0 * sign
-        surface_patch(f"Eye_Outline_{side}", az, 1.4, 14.2, 11.0,
+        az = 23.0 * sign
+        tilt = 8.0 * sign
+        surface_patch(f"Eye_Outline_{side}", az, 2.0, 16.6, 12.8,
                       "eye_rim", 0.0055, tilt_deg=tilt)
-        surface_patch(f"Eye_White_{side}", az, 1.4, 13.5, 10.3, "white",
+        surface_patch(f"Eye_White_{side}", az, 2.0, 15.9, 12.1, "white",
                       0.0062, tilt_deg=tilt)
-        surface_patch(f"Eye_Iris_{side}", az - 0.3 * sign, 0.9, 11.5, 8.5,
+        surface_patch(f"Eye_Iris_{side}", az - 0.4 * sign, 1.4, 15.0, 11.2,
                       "eye_blue", 0.0086, tilt_deg=tilt)
-        surface_patch(f"Eye_Iris_Low_{side}", az - 0.6 * sign, -1.8, 9.0, 5.2,
+        surface_patch(f"Eye_Iris_Low_{side}", az - 0.8 * sign, -2.2, 11.6, 6.6,
                       "eye_light", 0.0092, tilt_deg=tilt)
-        surface_patch(f"Eye_Pupil_{side}", az - 0.5 * sign, 1.1, 4.2, 5.6,
+        surface_patch(f"Eye_Pupil_{side}", az - 0.6 * sign, 1.2, 5.4, 7.4,
                       "eye_dark", 0.0104, tilt_deg=tilt)
-        surface_patch(f"Eye_Glint_{side}", az - 4.2 * sign, 5.6, 2.3, 2.0,
-                      "white", 0.0124)
-        surface_patch(f"Eye_Glint_Small_{side}", az + 4.0 * sign, -2.8, 1.3,
-                      1.3, "white", 0.0124)
+        surface_patch(f"Eye_Glint_{side}", az - 5.0 * sign, 6.4, 2.9, 2.5,
+                      "eye_glint", 0.0126, tilt_deg=tilt)
+        surface_patch(f"Eye_Glint_Small_{side}", az + 4.6 * sign, -3.2, 1.7,
+                      1.6, "eye_glint", 0.0126, tilt_deg=tilt)
+        # Anime under-eye arc: a soft light band under the iris that lifts the
+        # whole expression, as in the reference sheet's faces.
+        surface_patch(f"Eye_Iris_Glow_{side}", az - 0.5 * sign, 5.6, 7.0, 2.6,
+                      "eye_light", 0.0094, tilt_deg=tilt)
 
         # Heavy upper lash: thick across the iris, rising into an outer flick.
         lash = []
         for t in range(13):
             u = t / 12.0
-            la = az + (u - 0.5) * 29.0 * sign
-            le = 2.0 + 7.2 * math.sin(math.pi * (0.04 + 0.90 * u))
-            le += 2.6 * max(0.0, u - 0.80) / 0.20
+            la = az + (u - 0.5) * 33.0 * sign
+            le = 2.0 + 8.4 * math.sin(math.pi * (0.04 + 0.90 * u))
+            le += 3.0 * max(0.0, u - 0.80) / 0.20
             lash.append((la, le))
-        widths = [1.10, 1.55, 1.90, 2.15, 2.30, 2.35, 2.30, 2.15,
-                  1.90, 1.60, 1.25, 0.85, 0.35]
+        widths = [1.35, 1.90, 2.35, 2.65, 2.85, 2.90, 2.85, 2.65,
+                  2.35, 1.95, 1.50, 1.00, 0.40]
         surface_strip(f"Eye_Lash_{side}", lash, widths, "hair_dark",
-                      0.0115, thickness=0.0038)
+                      0.0115, thickness=0.0046)
 
         # Lower lid: thin dark line, slightly brighter skin below it.
         lower = [(az + (t / 12.0 - 0.5) * 26.0 * sign,
@@ -651,9 +655,9 @@ def build_face():
         surface_strip(f"Brow_{side}", brow,
                       [2.4, 2.8, 2.9, 2.6, 2.1, 1.5, 0.7],
                       "hair_dark", 0.0120, thickness=0.0042)
-        ear = sphere(f"Ear_{side}", head_point(90.0 * sign, -8.0, 0.004),
+        ear = sphere(f"Ear_{side}", head_point(96.0 * sign, -8.0, 0.004),
                      (0.020, 0.036, 0.058), "skin_shadow", "head", 20, 12)
-        sphere(f"Ear_Inner_{side}", head_point(93.0 * sign, -8.0, 0.012),
+        sphere(f"Ear_Inner_{side}", head_point(99.0 * sign, -8.0, 0.012),
                (0.010, 0.022, 0.038), "leather_dark", "head", 16, 10)
 
     sphere("Nose", head_point(0.0, -13.0, 0.016),
@@ -720,7 +724,7 @@ def build_hair():
              solidify=(0.014, 0))
     if style != "shadow":
         hair_shell("Hair_Mass", PROFILE.get("hair_spikes", RANGER_HAIR_SPIKES),
-                   (0.0, 0.030, 2.940), (0.480, 0.460, 0.300), amp=0.22)
+                   (0.0, 0.034, 3.075), (0.582, 0.548, 0.358), amp=0.28)
     add_hair_locks(style)
 
 
@@ -757,21 +761,29 @@ BANGS = (
 # length, width, extra curve) so the silhouette reads as swept anime hair
 # instead of separate cones. Every lock starts inside the skull.
 RANGER_HAIR_SPIKES = (
-    (-10, 0.42, 32), (46, 0.34, 28), (-56, 0.38, 30),
-    (108, 0.28, 28), (-118, 0.30, 28), (172, 0.24, 30),
+    (-10, 0.52, 32), (46, 0.42, 28), (-56, 0.48, 30),
+    (108, 0.36, 28), (-118, 0.38, 28), (172, 0.30, 30),
 )
 
 RANGER_BLADES = (
-    (6, 72, -0.20, 0.45, 0.90, 0.52, 0.560, 0.050),
-    (38, 66, 0.42, 0.50, 0.85, 0.46, 0.520, 0.040),
-    (-34, 68, -0.46, 0.50, 0.88, 0.50, 0.540, 0.040),
-    (72, 58, 0.55, 0.18, 0.80, 0.36, 0.470, 0.010),
-    (-64, 60, -0.55, 0.18, 0.80, 0.40, 0.480, 0.010),
-    (108, 62, 0.30, 0.75, 0.85, 0.42, 0.500, 0.000),
-    (-124, 58, -0.30, 0.75, 0.85, 0.34, 0.470, 0.000),
-    (16, 84, -0.08, 0.50, 0.88, 0.34, 0.420, 0.020),
-    (56, 76, 0.24, 0.62, 0.80, 0.28, 0.380, 0.000),
-    (-50, 78, -0.26, 0.64, 0.82, 0.32, 0.400, 0.000),
+    (6, 72, -0.20, 0.45, 0.90, 0.62, 0.660, 0.050),
+    (38, 66, 0.42, 0.50, 0.85, 0.56, 0.620, 0.040),
+    (-34, 68, -0.46, 0.50, 0.88, 0.60, 0.640, 0.040),
+    (72, 58, 0.55, 0.18, 0.80, 0.36, 0.520, 0.010),
+    (-64, 60, -0.55, 0.18, 0.80, 0.40, 0.540, 0.010),
+    (108, 62, 0.30, 0.75, 0.85, 0.42, 0.560, 0.000),
+    (-124, 58, -0.30, 0.75, 0.85, 0.34, 0.520, 0.000),
+    (16, 84, -0.08, 0.50, 0.88, 0.34, 0.470, 0.020),
+    (56, 76, 0.24, 0.62, 0.80, 0.28, 0.420, 0.000),
+    (-50, 78, -0.26, 0.64, 0.82, 0.32, 0.450, 0.000),
+    # Second overlapping layer: shorter locks between the primaries so the
+    # silhouette reads as layered anime hair instead of a single spike ring.
+    (22, 78, -0.10, 0.40, 0.95, 0.30, 0.380, 0.060),
+    (-14, 76, 0.16, 0.44, 0.92, 0.32, 0.400, 0.060),
+    (48, 72, 0.36, 0.55, 0.86, 0.26, 0.340, 0.020),
+    (-52, 70, -0.36, 0.55, 0.86, 0.28, 0.360, 0.020),
+    (86, 66, 0.42, 0.45, 0.78, 0.24, 0.320, 0.000),
+    (-96, 64, -0.42, 0.45, 0.78, 0.26, 0.330, 0.000),
 )
 
 # Side hair falls down in front of the ears, past the jaw.
@@ -1276,17 +1288,17 @@ def build_bow():
     # the limbs run from above the head to below the knee with a thick luminous
     # core and a wider halo.
     # Bow curves away from the body in the X-Z plane so the C shape reads.
-    up = [Vector((0.585, -0.060, 1.380)), Vector((0.700, -0.180, 1.700)),
-          Vector((0.760, -0.260, 2.060)), Vector((0.700, -0.220, 2.420)),
-          Vector((0.560, -0.120, 2.640))]
-    down = [Vector((0.585, -0.060, 1.380)), Vector((0.700, -0.180, 1.060)),
-            Vector((0.760, -0.260, 0.700)), Vector((0.700, -0.220, 0.360)),
-            Vector((0.560, -0.120, 0.140))]
-    widths = [0.078, 0.064, 0.052, 0.038, 0.020]
+    up = [Vector((0.665, -0.068, 1.300)), Vector((0.805, -0.205, 1.660)),
+          Vector((0.875, -0.295, 2.120)), Vector((0.805, -0.250, 2.520)),
+          Vector((0.640, -0.135, 2.780))]
+    down = [Vector((0.665, -0.068, 1.300)), Vector((0.805, -0.205, 0.980)),
+            Vector((0.875, -0.295, 0.590)), Vector((0.805, -0.250, 0.210)),
+            Vector((0.640, -0.135, -0.040))]
+    widths = [0.092, 0.076, 0.062, 0.046, 0.024]
     for index, limb in enumerate((up, down)):
         sweep(f"Bow_Frame_{index}", limb, widths, "gold", "bow",
               sides=8, thickness=[w * 1.05 for w in widths], tip=True)
-        inner = [point + Vector((-0.055, 0.035, 0.0)) for point in limb]
+        inner = [point + Vector((-0.062, 0.040, 0.0)) for point in limb]
         sweep(f"Bow_Limb_{index}", inner, [w * 0.62 for w in widths],
               "energy_core", "bow", sides=6,
               thickness=[w * 0.55 for w in widths], tip=True)
@@ -1297,19 +1309,19 @@ def build_bow():
     # along the limbs that keep the weapon readable even at 96 px.
     for index, sign in ((0, 1.0), (1, -1.0)):
         sweep(f"Bow_Blade_{index}", [
-            Vector((0.675, -0.50, 2.26)),
-            Vector((0.655, -0.56, 2.46)),
-            Vector((0.625, -0.52, 2.64)),
-            Vector((0.590, -0.36, 2.76))],
-            [0.058, 0.044, 0.024, 0.005], "energy", "bow", sides=5,
-            thickness=[0.026, 0.018, 0.011, 0.003], tip=True)
+            Vector((0.775, -0.58, 2.40)),
+            Vector((0.750, -0.64, 2.62)),
+            Vector((0.715, -0.59, 2.82)),
+            Vector((0.675, -0.41, 2.96))],
+            [0.066, 0.050, 0.027, 0.006], "energy", "bow", sides=5,
+            thickness=[0.030, 0.020, 0.012, 0.004], tip=True)
         sweep(f"Bow_Blade_Low_{index}", [
-            Vector((0.675, -0.50, 0.58)),
-            Vector((0.655, -0.56, 0.38)),
-            Vector((0.625, -0.52, 0.20)),
-            Vector((0.590, -0.36, 0.08))],
-            [0.058, 0.044, 0.024, 0.005], "energy", "bow", sides=5,
-            thickness=[0.026, 0.018, 0.011, 0.003], tip=True)
+            Vector((0.775, -0.58, 0.52)),
+            Vector((0.750, -0.64, 0.30)),
+            Vector((0.715, -0.59, 0.10)),
+            Vector((0.675, -0.41, -0.04))],
+            [0.066, 0.050, 0.027, 0.006], "energy", "bow", sides=5,
+            thickness=[0.030, 0.020, 0.012, 0.004], tip=True)
     sweep("Bow_Grip", [Vector((0.60, -0.10, 1.28)),
                        Vector((0.60, -0.10, 1.56))],
           [0.098, 0.098], "leather_dark", "bow", sides=12,
@@ -1322,13 +1334,13 @@ def build_bow():
             "gold", "bow")
     sphere("Bow_Gem", (0.60, -0.15, 1.42), (0.044, 0.040, 0.070),
            "green_bright", "bow", 16, 10)
-    sweep("String_Rest", [Vector((0.548, -0.110, 2.650)),
-                          Vector((0.548, -0.110, 0.130))],
+    sweep("String_Rest", [Vector((0.632, -0.120, 2.780)),
+                          Vector((0.632, -0.120, -0.040))],
           [0.010, 0.010], "string_glow", "string_rest", sides=4,
           thickness=[0.010, 0.010])
     nock = Vector((0.60, 0.30, 1.42))
-    sweep("String_Drawn", [Vector((0.548, -0.110, 2.650)), nock,
-                           Vector((0.548, -0.110, 0.130))],
+    sweep("String_Drawn", [Vector((0.632, -0.120, 2.780)), nock,
+                           Vector((0.632, -0.120, -0.040))],
           [0.010, 0.010, 0.010], "string_glow", "string_drawn",
           sides=4, thickness=[0.010, 0.010, 0.010])
     # Nocked energy arrow: from the drawn nock towards the bow.
@@ -1392,7 +1404,7 @@ def build_materials():
         "bronze_light": toon("Metal Edge", "bronze_light"),
         "gold": toon("Brass Accent", "gold", rim="bronze_light"),
         "skin": toon("Warm Skin", "skin", shadow="skin_shadow",
-                     rim="skin_light"),
+                     light="skin_light", rim="skin_light"),
         "skin_shadow": toon("Skin Shadow", "skin_shadow"),
         "hair_dark": toon("Hair Roots", "hair_dark"),
         "hair_mid": toon("Hair Body", "hair_mid", rim="hair_shine"),
@@ -1402,6 +1414,7 @@ def build_materials():
         "eye_light": toon("Iris Glow", "eye_light"),
         "eye_dark": toon("Pupil", "eye_dark"),
         "eye_rim": toon("Iris Rim", "eye_rim"),
+        "eye_glint": glow("Eye Sparkle", "white", 2.2),
         "white": toon("Eye White", "white"),
         "energy_core": glow("Energy Core", "bow_core", 3.2),
         "energy": glow("Energy Streak", "energy", 3.4),
