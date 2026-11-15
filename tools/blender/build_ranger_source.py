@@ -132,12 +132,16 @@ def toon(name, base, shadow=None, light=None, rim=None):
         rim_ramp.color_ramp.elements[0].color = (0.0, 0.0, 0.0, 1.0)
         rim_ramp.color_ramp.elements[1].position = 0.97
         rim_ramp.color_ramp.elements[1].color = (*rim_color, 1.0)
-        add = nodes.new("ShaderNodeMixRGB")
-        add.blend_type = "ADD"
-        add.inputs["Fac"].default_value = 0.42
+        # A colour node cannot drive the Material Output surface input: EEVEE
+        # renders that material as flat magenta. The rim has to stay a shader,
+        # so route the ramp through its own emission and add the two shaders.
+        rim_emission = nodes.new("ShaderNodeEmission")
+        rim_emission.inputs["Strength"].default_value = 0.85
         links.new(layer.outputs["Facing"], rim_ramp.inputs["Fac"])
-        links.new(emission.outputs[0], add.inputs[1])
-        links.new(rim_ramp.outputs["Color"], add.inputs[2])
+        links.new(rim_ramp.outputs["Color"], rim_emission.inputs["Color"])
+        add = nodes.new("ShaderNodeAddShader")
+        links.new(emission.outputs[0], add.inputs[0])
+        links.new(rim_emission.outputs[0], add.inputs[1])
         surface = add.outputs[0]
     links.new(surface, output.inputs["Surface"])
     return mat

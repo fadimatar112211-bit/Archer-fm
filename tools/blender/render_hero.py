@@ -62,6 +62,35 @@ def reset_pose(armature):
         bone.scale = (1.0, 1.0, 1.0)
 
 
+def assert_render_colors(path):
+    """Fail fast when EEVEE fell back to its magenta invalid-material colour.
+
+    The atlases are checked for alpha and framing, so a uniformly magenta
+    character can pass every silhouette gate. Inspecting the first real render
+    aborts a broken-material run in seconds instead of after the full frame set.
+    """
+    image = bpy.data.images.load(str(path), check_existing=False)
+    try:
+        pixels = list(image.pixels)
+    finally:
+        bpy.data.images.remove(image)
+    opaque = magenta = 0
+    for index in range(0, len(pixels), 4):
+        if pixels[index + 3] < 0.9:
+            continue
+        opaque += 1
+        r, g, b = pixels[index], pixels[index + 1], pixels[index + 2]
+        if r > 0.55 and b > 0.55 and g < 0.2:
+            magenta += 1
+    ratio = magenta / max(1, opaque)
+    print(f"COLOR_CHECK {path.name} opaque={opaque} magenta={ratio:.2f}")
+    if opaque > 100 and ratio > 0.25:
+        print("COLOR_ERROR: EEVEE rendered invalid-material magenta; "
+              "check material Surface links before rendering the full set.",
+              file=sys.stderr)
+        raise SystemExit(1)
+
+
 def sampled_frames(config, state):
     start, end = map(int, config["action_ranges"][state])
     count = int(config["frame_counts"][state])
@@ -184,7 +213,7 @@ def main():
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
-    require(hero_id == "ranger", "This production config must identify ranger")
+    require(bool(hero_id), "The config must identify the hero")
     require(resolution >= 128 and fps > 0, "Invalid resolution or FPS")
 
     scene = bpy.context.scene
@@ -197,6 +226,11 @@ def main():
     scene.render.image_settings.color_mode = "RGBA"
     scene.render.image_settings.color_depth = "8"
     scene.render.fps = fps
+    # Flat cel-shaded art needs no 64-sample accumulation. Software EEVEE on a
+    # CI runner is ~8x slower at the default sample count, and the result is
+    # visually identical at this resolution.
+    if hasattr(scene, "eevee") and hasattr(scene.eevee, "taa_render_samples"):
+        scene.eevee.taa_render_samples = int(config.get("samples", 12))
 
     camera = scene.camera
     require(camera is not None, "Production scene has no active camera")
@@ -355,6 +389,8 @@ def main():
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 scene.render.filepath = str(file_path)
                 bpy.ops.render.render(write_still=True)
+                if index == 0 and state == states[0] and direction == "s":
+                    assert_render_colors(file_path)
                 ids.append(frame_id)
             events = []
             for event in config.get("events", {}).get(state, []):

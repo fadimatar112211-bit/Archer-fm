@@ -5,8 +5,21 @@
   "render_engine": "BLENDER_EEVEE",
   "orthographic_scale": 5.0,
   "armature_object": "Ranger_Rig",
-  "states": ["idle", "walk", "run", "attack", "skill", "dodge", "hit", "death"],
-  "loop_states": ["idle", "walk", "run"],
+  "states": [
+    "idle",
+    "walk",
+    "run",
+    "attack",
+    "skill",
+    "dodge",
+    "hit",
+    "death"
+  ],
+  "loop_states": [
+    "idle",
+    "walk",
+    "run"
+  ],
   "actions": {
     "idle": "Ranger_Idle",
     "walk": "Ranger_Walk",
@@ -18,14 +31,38 @@
     "death": "Ranger_Death"
   },
   "action_ranges": {
-    "idle": [1, 25],
-    "walk": [1, 25],
-    "run": [1, 25],
-    "attack": [1, 25],
-    "skill": [1, 33],
-    "dodge": [1, 17],
-    "hit": [1, 9],
-    "death": [1, 33]
+    "idle": [
+      1,
+      25
+    ],
+    "walk": [
+      1,
+      25
+    ],
+    "run": [
+      1,
+      25
+    ],
+    "attack": [
+      1,
+      25
+    ],
+    "skill": [
+      1,
+      33
+    ],
+    "dodge": [
+      1,
+      17
+    ],
+    "hit": [
+      1,
+      9
+    ],
+    "death": [
+      1,
+      33
+    ]
   },
   "frame_counts": {
     "idle": 5,
@@ -49,22 +86,46 @@
   },
   "events": {
     "attack": [
-      {"frame": 9, "name": "bow_draw"},
-      {"frame": 13, "name": "projectile_release"}
+      {
+        "frame": 9,
+        "name": "bow_draw"
+      },
+      {
+        "frame": 13,
+        "name": "projectile_release"
+      }
     ],
     "skill": [
-      {"frame": 9, "name": "volley_charge"},
-      {"frame": 17, "name": "volley_release"}
+      {
+        "frame": 9,
+        "name": "volley_charge"
+      },
+      {
+        "frame": 17,
+        "name": "volley_release"
+      }
     ],
     "dodge": [
-      {"frame": 5, "name": "dodge_start"},
-      {"frame": 17, "name": "dodge_end"}
+      {
+        "frame": 5,
+        "name": "dodge_start"
+      },
+      {
+        "frame": 17,
+        "name": "dodge_end"
+      }
     ],
     "hit": [
-      {"frame": 5, "name": "hit_react"}
+      {
+        "frame": 5,
+        "name": "hit_react"
+      }
     ],
     "death": [
-      {"frame": 33, "name": "death_complete"}
+      {
+        "frame": 33,
+        "name": "death_complete"
+      }
     ]
   },
   "pivot": {
@@ -72,6 +133,11 @@
     "y": 0.86
   },
   "pivot_margin": 0.02,
-  "ground_anchor": [0.0, 0.0, 0.0],
-  "output_directory": "assets/heroes/ranger/renders"
+  "ground_anchor": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "output_directory": "assets/heroes/ranger/renders",
+  "samples": 12
 }

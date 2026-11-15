@@ -38,6 +38,20 @@ def frame_errors(path, image, state, resolution):
     metrics = {"bbox": bbox, "width": width, "height": height, "occupied": occupied}
     if occupied < 350:
         errors.append(f"{path}: too few visible pixels ({occupied})")
+    # EEVEE renders a material whose Surface input is a colour (not a shader)
+    # as flat magenta. Alpha/layout gates cannot see that, so sample the pixels.
+    rgba = list(image.getdata())
+    magenta = 0
+    sampled = 0
+    for index in range(0, len(rgba), 4):
+        if rgba[index + 3] < 200:
+            continue
+        sampled += 1
+        r, g, b = rgba[index], rgba[index + 1], rgba[index + 2]
+        if r > 140 and b > 140 and g < 60:
+            magenta += 1
+    if sampled and magenta / sampled > 0.3:
+        errors.append(f"{path}: mostly magenta pixels; material surface is not a shader")
     margin = max(2, round(resolution * 0.01))
     if (bbox[0] <= margin or bbox[1] <= margin
             or bbox[2] >= resolution - margin

@@ -79,6 +79,34 @@ def main():
     for required in REQUIRED_MATERIALS:
         if required not in material_names:
             fail("Required material missing: " + required)
+    shader_node_types = {
+        "ShaderNodeBsdfPrincipled", "ShaderNodeEmission", "ShaderNodeBsdfDiffuse",
+        "ShaderNodeBsdfGlossy", "ShaderNodeBsdfTransparent", "ShaderNodeAddShader",
+        "ShaderNodeMixShader", "ShaderNodeBsdfToon", "ShaderNodeBsdfAnisotropic",
+        "ShaderNodeBsdfGlass", "ShaderNodeBsdfRefraction", "ShaderNodeBsdfTranslucent",
+        "ShaderNodeSubsurfaceScattering", "ShaderNodeHairBsdf", "ShaderNodeBsdfSheen",
+    }
+    broken_materials = []
+    for mat in bpy.data.materials:
+        if not mat.use_nodes or mat.node_tree is None:
+            continue
+        outputs = [n for n in mat.node_tree.nodes
+                   if n.type == "OUTPUT_MATERIAL" and n.is_active_output]
+        if not outputs:
+            broken_materials.append(mat.name + " (no active output)")
+            continue
+        surface = outputs[0].inputs["Surface"]
+        if not surface.is_linked:
+            broken_materials.append(mat.name + " (unconnected surface)")
+            continue
+        source = surface.links[0].from_node
+        if source.type not in shader_node_types:
+            # EEVEE renders a colour jacked into Surface as flat magenta, which
+            # silently ships an unrecognisable hero. Fail here instead.
+            broken_materials.append(mat.name + " (" + source.type + ")")
+    if broken_materials:
+        fail("Materials whose Surface input is not a shader: " +
+             ", ".join(sorted(broken_materials)))
 
     for action_name, expected_range in REQUIRED_ACTIONS.items():
         action = bpy.data.actions.get(action_name)
