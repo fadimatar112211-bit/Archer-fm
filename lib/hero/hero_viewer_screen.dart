@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'hero_assets.dart';
+import 'hero_catalog.dart';
 import 'hero_manifest.dart';
 import 'hero_stage.dart';
 import 'sprite_player.dart';
@@ -53,13 +54,26 @@ const Map<String, IconData> directionIcons = {
 };
 
 const Map<String, String> eventLabels = {
+  // Ranger, ranged.
   'projectile_release': 'إطلاق سهم',
   'bow_draw': 'شد القوس',
   'volley_charge': 'تجميع طاقة',
   'volley_release': 'وابل سهام',
+  // Shared melee choreography.
+  'weapon_windup': 'رفع السلاح',
+  'melee_impact': 'ضربة قريبة',
+  'hit_react': 'ارتداد الإصابة',
   'dodge_start': 'بداية التفادي',
   'dodge_end': 'نهاية التفادي',
-  'hit_react': 'ارتداد الإصابة',
+  // Flame.
+  'inferno_charge': 'تجميع اللهب',
+  'inferno_burst': 'انفجار الجحيم',
+  // Shadow.
+  'shadow_charge': 'تجميع الظل',
+  'shadow_burst': 'اندفاع الظل',
+  // Storm.
+  'storm_charge': 'تجميع الصاعقة',
+  'thunder_strike': 'ضربة الرعد',
   'death_complete': 'السقوط',
 };
 
@@ -71,7 +85,18 @@ String _effectForEvent(String name) {
       return 'volley';
     case 'bow_draw':
     case 'volley_charge':
+    case 'weapon_windup':
+    case 'inferno_charge':
+    case 'shadow_charge':
+    case 'storm_charge':
       return 'charge';
+    case 'melee_impact':
+      return 'impact';
+    case 'inferno_burst':
+    case 'shadow_burst':
+      return 'burst';
+    case 'thunder_strike':
+      return 'thunder';
     case 'hit_react':
       return 'hit';
     case 'dodge_start':
@@ -83,9 +108,16 @@ String _effectForEvent(String name) {
 }
 
 class HeroViewerScreen extends StatefulWidget {
-  const HeroViewerScreen({super.key, required this.loader});
+  const HeroViewerScreen({
+    super.key,
+    required this.loaderFactory,
+    this.initialHero,
+  });
 
-  final HeroAssetLoader loader;
+  /// Builds a loader per hero. Tests inject a factory returning fake loaders.
+  final HeroLoaderFactory loaderFactory;
+
+  final HeroDefinition? initialHero;
 
   @override
   State<HeroViewerScreen> createState() => _HeroViewerScreenState();
@@ -93,12 +125,14 @@ class HeroViewerScreen extends StatefulWidget {
 
 class _HeroViewerScreenState extends State<HeroViewerScreen>
     with SingleTickerProviderStateMixin {
-  late final HeroAssetLoader _loader;
+  late HeroDefinition _hero;
+  late HeroAssetLoader _loader;
   late final Ticker _ticker;
 
   final ValueNotifier<int> _clock = ValueNotifier<int>(0);
   final ValueNotifier<List<String>> _log = ValueNotifier<List<String>>([]);
   final List<StageEffect> _effects = [];
+  final Set<String> _unavailable = <String>{};
 
   HeroManifest? _manifest;
   AtlasSheet? _sheet;
@@ -106,16 +140,20 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   String _state = 'idle';
   String _direction = 's';
   String? _error;
+  String? _errorDetail;
   String? _sheetError;
   bool _loadingSheet = false;
   double _speed = 1.0;
   Duration _lastTick = Duration.zero;
   int _loadToken = 0;
 
+  HeroTheme get _theme => _hero.theme;
+
   @override
   void initState() {
     super.initState();
-    _loader = widget.loader;
+    _hero = widget.initialHero ?? heroCatalog.first;
+    _loader = widget.loaderFactory(_hero);
     _ticker = createTicker(_onTick)..start();
     _loadManifest();
   }
@@ -142,20 +180,52 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   }
 
   Future<void> _loadManifest() async {
+    final loader = _loader;
+    final hero = _hero;
+    final token = ++_loadToken;
     try {
-      final manifest = await _loader.loadManifest();
-      if (!mounted) return;
+      final manifest = await loader.loadManifest();
+      if (!mounted || token != _loadToken) return;
       setState(() {
         _manifest = manifest;
         _error = null;
+        _errorDetail = null;
+        _unavailable.remove(hero.id);
       });
       await _select('idle', 's');
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || token != _loadToken) return;
       setState(() {
-        _error = 'تعذّر تحميل بيانات البطل: $error';
+        _unavailable.add(hero.id);
+        _error = 'لم تُضمَّن أصول «${hero.nameAr}» في هذه النسخة بعد. '
+            'بقية الأبطال يعملون بشكل كامل.';
+        _errorDetail = '$error';
       });
     }
+  }
+
+  Future<void> _switchHero(HeroDefinition hero) async {
+    if (hero.id == _hero.id) return;
+    final previous = _loader;
+    _loadToken++;
+    setState(() {
+      _hero = hero;
+      _loader = widget.loaderFactory(hero);
+      _manifest = null;
+      _sheet = null;
+      _player?.dispose();
+      _player = null;
+      _state = 'idle';
+      _direction = 's';
+      _error = null;
+      _errorDetail = null;
+      _sheetError = null;
+      _loadingSheet = false;
+      _effects.clear();
+      _log.value = const <String>[];
+    });
+    previous.dispose();
+    await _loadManifest();
   }
 
   Future<void> _select(String state, String direction) async {
@@ -171,17 +241,19 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
       return;
     }
     final token = ++_loadToken;
+    final loader = _loader;
     setState(() {
       _state = state;
       _direction = direction;
       _loadingSheet = true;
       _sheetError = null;
       _error = null;
+      _errorDetail = null;
     });
     AtlasSheet? sheet;
     String? sheetError;
     try {
-      sheet = await _loader.loadSheet(manifest, name);
+      sheet = await loader.loadSheet(manifest, name);
     } catch (error) {
       sheetError = 'تعذّر تحميل صورة الحركة: $error';
     }
@@ -211,12 +283,13 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   @override
   Widget build(BuildContext context) {
     final manifest = _manifest;
+    final theme = _theme;
     return Scaffold(
-      backgroundColor: const Color(0xFF07110C),
+      backgroundColor: theme.stageBottom,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1A12),
+        backgroundColor: theme.stageTop,
         foregroundColor: const Color(0xFFE4F2E7),
-        title: const Text('Archer FM · Ranger'),
+        title: Text('Archer FM · ${_hero.nameEn}'),
         actions: [
           if (manifest != null)
             Padding(
@@ -237,14 +310,18 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildHeroPicker(),
+                const SizedBox(height: 12),
                 _buildStage(manifest),
                 const SizedBox(height: 14),
-                if (_error != null) _errorCard(_error!),
+                if (_error != null) _errorCard(_error!, _errorDetail),
                 if (manifest == null && _error == null)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
                     child: LinearProgressIndicator(minHeight: 3),
                   ),
+                _buildHeroCard(),
+                const SizedBox(height: 12),
                 _buildStatePicker(),
                 const SizedBox(height: 12),
                 _buildControls(),
@@ -262,7 +339,46 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     );
   }
 
+  Widget _buildHeroPicker() {
+    final theme = _theme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle('البطل'),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 112,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: heroCatalog.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final hero = heroCatalog[index];
+              return _HeroPickerCard(
+                hero: hero,
+                selected: hero.id == _hero.id,
+                unavailable: _unavailable.contains(hero.id),
+                onTap: () => _switchHero(hero),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'اختر بطلاً ثم استعرض حركاته الثماني في ثمانية اتجاهات. '
+          'كل بطل يملك سلاحه ومهارته وتأثيراته الخاصة.',
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.5,
+            color: theme.accent.withAlpha(150),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStage(HeroManifest? manifest) {
+    final theme = _theme;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 430),
       child: AspectRatio(
@@ -278,10 +394,13 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
               pivotY: manifest?.pivotY ?? 0.86,
               effects: _effects,
               timeMs: _clock.value,
+              theme: theme,
               placeholder: _sheetError ??
                   (_loadingSheet
                       ? 'جارٍ تحميل الرسوم…'
-                      : 'اختر حركة واتجاهاً لعرض البطل'),
+                      : _error != null
+                          ? 'أصول هذا البطل قيد الإنتاج'
+                          : 'اختر حركة واتجاهاً لعرض البطل'),
             );
           },
         ),
@@ -289,7 +408,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     );
   }
 
-  Widget _errorCard(String message) {
+  Widget _errorCard(String message, String? detail) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -304,9 +423,84 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
           const Icon(Icons.error_outline, color: Color(0xFFFF9D9D), size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: Color(0xFFFFC9C9), fontSize: 13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: const TextStyle(
+                    color: Color(0xFFFFC9C9),
+                    fontSize: 13,
+                  ),
+                ),
+                if (detail != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    detail,
+                    style: const TextStyle(
+                      color: Color(0xFFD99A9A),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroCard() {
+    final theme = _theme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.stageTop,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.accent.withAlpha(70)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: theme.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.accent.withAlpha(110)),
+            ),
+            child: Icon(_hero.icon, color: theme.accent, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${_hero.nameAr} · ${_hero.roleAr}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFE4F2E7),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_hero.weaponAr} · ${_hero.skillAr}',
+                  style: TextStyle(fontSize: 12, color: theme.accent),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _hero.descriptionAr,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    height: 1.55,
+                    color: Color(0xFFAFC8B6),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -315,6 +509,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   }
 
   Widget _buildStatePicker() {
+    final theme = _theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -329,15 +524,15 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                 label: Text(stateLabels[state]!),
                 selected: _state == state,
                 onSelected: (_) => _select(state, _direction),
-                selectedColor: const Color(0xFF9BE845),
+                selectedColor: theme.accent,
                 labelStyle: TextStyle(
                   color: _state == state
-                      ? const Color(0xFF07110C)
+                      ? theme.stageBottom
                       : const Color(0xFFD7E8DB),
                   fontWeight: FontWeight.w600,
                 ),
-                backgroundColor: const Color(0xFF14261B),
-                side: const BorderSide(color: Color(0xFF2B4634)),
+                backgroundColor: theme.stageTop,
+                side: BorderSide(color: theme.accent.withAlpha(60)),
                 showCheckmark: false,
               ),
           ],
@@ -348,12 +543,13 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
 
   Widget _buildControls() {
     final player = _player;
+    final theme = _theme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F2016),
+        color: theme.stageTop,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF24402E)),
+        border: Border.all(color: theme.accent.withAlpha(60)),
       ),
       child: Row(
         children: [
@@ -395,10 +591,15 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                 label: Text('${speed}x'),
                 selected: _speed == speed,
                 onSelected: (_) => setState(() => _speed = speed),
-                selectedColor: const Color(0xFF3F6B4C),
-                labelStyle: const TextStyle(fontSize: 11),
-                backgroundColor: const Color(0xFF14261B),
-                side: const BorderSide(color: Color(0xFF2B4634)),
+                selectedColor: theme.accent,
+                labelStyle: TextStyle(
+                  fontSize: 11,
+                  color: _speed == speed
+                      ? theme.stageBottom
+                      : const Color(0xFFD7E8DB),
+                ),
+                backgroundColor: theme.stageTop,
+                side: BorderSide(color: theme.accent.withAlpha(60)),
                 showCheckmark: false,
                 visualDensity: VisualDensity.compact,
               ),
@@ -409,6 +610,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   }
 
   Widget _buildDirectionPicker() {
+    final theme = _theme;
     Widget cell(String direction) {
       final selected = _direction == direction;
       return Padding(
@@ -416,9 +618,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         child: Tooltip(
           message: directionLabels[direction]!,
           child: Material(
-            color: selected
-                ? const Color(0xFF9BE845)
-                : const Color(0xFF14261B),
+            color: selected ? theme.accent : theme.stageTop,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
@@ -430,7 +630,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                   directionIcons[direction],
                   size: 20,
                   color: selected
-                      ? const Color(0xFF07110C)
+                      ? theme.stageBottom
                       : const Color(0xFFBFD7C5),
                 ),
               ),
@@ -486,6 +686,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
 
   Widget _buildDetails() {
     final player = _player;
+    final theme = _theme;
     if (player == null) {
       return const SizedBox.shrink();
     }
@@ -496,9 +697,9 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F2016),
+            color: theme.stageTop,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF24402E)),
+            border: Border.all(color: theme.accent.withAlpha(60)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,10 +711,10 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                       textDirection: TextDirection.ltr,
                       child: Text(
                         clip.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 13,
-                          color: Color(0xFF9BE845),
+                          color: theme.accent,
                         ),
                       ),
                     ),
@@ -555,6 +756,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   }
 
   Widget _buildLog() {
+    final theme = _theme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -577,11 +779,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.bolt,
-                          size: 14,
-                          color: Color(0xFF9BE845),
-                        ),
+                        Icon(Icons.bolt, size: 14, color: theme.accent),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -600,6 +798,99 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
           },
         ),
       ],
+    );
+  }
+}
+
+class _HeroPickerCard extends StatelessWidget {
+  const _HeroPickerCard({
+    required this.hero,
+    required this.selected,
+    required this.unavailable,
+    required this.onTap,
+  });
+
+  final HeroDefinition hero;
+  final bool selected;
+  final bool unavailable;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = hero.theme;
+    return Material(
+      color: selected ? theme.accentSoft : theme.stageTop,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          width: 168,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? theme.accent
+                  : theme.accent.withAlpha(unavailable ? 35 : 70),
+              width: selected ? 1.6 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    hero.icon,
+                    size: 20,
+                    color: unavailable
+                        ? theme.accent.withAlpha(110)
+                        : theme.accent,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      hero.nameEn,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: unavailable
+                            ? const Color(0xFF8DA396)
+                            : const Color(0xFFE4F2E7),
+                      ),
+                    ),
+                  ),
+                  if (selected)
+                    Icon(Icons.check_circle, size: 16, color: theme.accent),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                hero.nameAr,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFFCFE4D5),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                unavailable ? 'الأصول قيد الإنتاج' : hero.roleAr,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: unavailable
+                      ? const Color(0xFF8DA396)
+                      : theme.accent.withAlpha(200),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

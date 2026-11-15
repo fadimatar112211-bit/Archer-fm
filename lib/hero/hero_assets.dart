@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'hero_catalog.dart';
 import 'hero_manifest.dart';
 
 /// A decoded atlas image plus the source rectangle of every frame in it.
@@ -28,6 +29,9 @@ class AtlasSheet {
 
 /// Indirection so widget tests can supply a manifest without touching assets.
 abstract class HeroAssetLoader {
+  /// Hero this loader serves, so the UI can label failures correctly.
+  String get heroId;
+
   Future<HeroManifest> loadManifest();
 
   Future<AtlasSheet> loadSheet(HeroManifest manifest, String animation);
@@ -35,18 +39,38 @@ abstract class HeroAssetLoader {
   void dispose() {}
 }
 
+/// Builds one loader per hero. The app swaps loaders when the player changes
+/// hero so decoded atlases from the previous hero can be released immediately.
+typedef HeroLoaderFactory = HeroAssetLoader Function(HeroDefinition hero);
+
+HeroAssetLoader defaultHeroLoaderFactory(HeroDefinition hero) =>
+    BundleHeroAssetLoader(hero);
+
+/// Loads the manifest, atlas metadata and atlas bitmaps bundled under
+/// `assets/heroes/<hero>/renders` by the Blender pipeline.
+///
+/// Every hero uses the same folder contract and the same frame geometry, so
+/// only the root path differs between them.
 class BundleHeroAssetLoader implements HeroAssetLoader {
-  static const String assetRoot = 'assets/heroes/ranger/renders';
-  static const String manifestPath = '$assetRoot/ranger_manifest.json';
+  BundleHeroAssetLoader(this.hero);
+
+  final HeroDefinition hero;
 
   final Map<String, AtlasSheet> _cache = {};
+
+  @override
+  String get heroId => hero.id;
+
+  String get assetRoot => hero.assetRoot;
+
+  String get manifestPath => hero.manifestPath;
 
   @override
   Future<HeroManifest> loadManifest() async {
     final text = await rootBundle.loadString(manifestPath);
     final decoded = jsonDecode(text);
     if (decoded is! Map<String, dynamic>) {
-      throw const FormatException('Ranger manifest root must be an object');
+      throw FormatException('${hero.id} manifest root must be an object');
     }
     return HeroManifest.fromJson(decoded);
   }

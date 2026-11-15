@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'hero/hero_assets.dart';
+import 'hero/hero_catalog.dart';
 import 'hero/hero_viewer_screen.dart';
-
-/// One loader for the app lifetime so decoded atlases are not thrown away when
-/// MaterialApp rebuilds.
-final HeroAssetLoader _defaultLoader = BundleHeroAssetLoader();
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,27 +10,30 @@ void main() {
 }
 
 class ArcherFmApp extends StatelessWidget {
-  const ArcherFmApp({super.key, this.loader});
+  const ArcherFmApp({super.key, this.loaderFactory});
 
-  /// Tests can inject a loader; the running game uses the bundled Ranger atlas.
-  final HeroAssetLoader? loader;
+  /// Tests inject fake loaders; the running game decodes the bundled atlases.
+  final HeroLoaderFactory? loaderFactory;
 
   @override
   Widget build(BuildContext context) {
+    final hero = heroCatalog.first;
     return MaterialApp(
       title: 'Archer FM',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff247b51),
+          seedColor: hero.theme.accent,
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF07110C),
+        scaffoldBackgroundColor: hero.theme.stageBottom,
         useMaterial3: true,
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: HeroViewerScreen(loader: loader ?? _defaultLoader),
+        child: HeroViewerScreen(
+          loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+        ),
       ),
     );
   }

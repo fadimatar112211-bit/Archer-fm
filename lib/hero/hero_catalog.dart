@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+
+/// Visual identity of one playable hero.
+///
+/// The catalogue is the single place that knows a hero's folder layout, Arabic
+/// label, weapon/skill copy and UI accent. The viewer, stage painter and effect
+/// layer read from it, so adding a fifth hero is a data change plus a rendered
+/// asset folder instead of a new screen.
+@immutable
+class HeroTheme {
+  const HeroTheme({
+    required this.accent,
+    required this.accentSoft,
+    required this.effect,
+    required this.stageTop,
+    required this.stageMid,
+    required this.stageBottom,
+  });
+
+  /// Selection/UI accent (chips, headers, focus rings).
+  final Color accent;
+
+  /// Translucent accent used for the stage glow.
+  final Color accentSoft;
+
+  /// Colour of event flashes, projectile rings and weapon trails.
+  final Color effect;
+
+  final Color stageTop;
+  final Color stageMid;
+  final Color stageBottom;
+}
+
+@immutable
+class HeroDefinition {
+  const HeroDefinition({
+    required this.id,
+    required this.nameAr,
+    required this.nameEn,
+    required this.roleAr,
+    required this.weaponAr,
+    required this.skillAr,
+    required this.descriptionAr,
+    required this.icon,
+    required this.theme,
+  });
+
+  final String id;
+  final String nameAr;
+  final String nameEn;
+  final String roleAr;
+  final String weaponAr;
+  final String skillAr;
+  final String descriptionAr;
+  final IconData icon;
+  final HeroTheme theme;
+
+  /// Bundled folder for the manifest, frames and atlases.
+  String get assetRoot => 'assets/heroes/$id/renders';
+
+  String get manifestPath => '$assetRoot/${id}_manifest.json';
+}
+
+const HeroTheme rangerTheme = HeroTheme(
+  accent: Color(0xFF9BE845),
+  accentSoft: Color(0x269BE845),
+  effect: Color(0xFF9BE845),
+  stageTop: Color(0xFF0B1A12),
+  stageMid: Color(0xFF123024),
+  stageBottom: Color(0xFF07110C),
+);
+
+const HeroTheme flameTheme = HeroTheme(
+  accent: Color(0xFFFF9A3C),
+  accentSoft: Color(0x26FF8A24),
+  effect: Color(0xFFFF8A24),
+  stageTop: Color(0xFF1C0D0A),
+  stageMid: Color(0xFF3A1A12),
+  stageBottom: Color(0xFF120706),
+);
+
+const HeroTheme shadowTheme = HeroTheme(
+  accent: Color(0xFFB98CF0),
+  accentSoft: Color(0x26A87BE8),
+  effect: Color(0xFFA87BE8),
+  stageTop: Color(0xFF130C1D),
+  stageMid: Color(0xFF241636),
+  stageBottom: Color(0xFF0A0611),
+);
+
+const HeroTheme stormTheme = HeroTheme(
+  accent: Color(0xFF6FE8FF),
+  accentSoft: Color(0x266FE8FF),
+  effect: Color(0xFF48C8FF),
+  stageTop: Color(0xFF071A22),
+  stageMid: Color(0xFF103642),
+  stageBottom: Color(0xFF041017),
+);
+
+/// The four heroes of the current roster.
+///
+/// Order is the in-game selection order: the balanced archer first, then the
+/// three melee identities. Names, weapons and skills mirror the production
+/// brief so the viewer and the future combat code describe the same character.
+const List<HeroDefinition> heroCatalog = [
+  HeroDefinition(
+    id: 'ranger',
+    nameAr: 'الرامي المتوازن',
+    nameEn: 'Ranger',
+    roleAr: 'بعيد المدى · توازن',
+    weaponAr: 'قوس الطاقة الخضراء',
+    skillAr: 'وابل السهام',
+    descriptionAr:
+        'رامٍ رشيق يعتمد على المسافة والحركة. يسحب قوساً من الطاقة الخضراء '
+        'ويطلق سهماً واحداً دقيقاً، أو وابلاً يغطي منطقة أمامه.',
+    icon: Icons.gps_fixed,
+    theme: rangerTheme,
+  ),
+  HeroDefinition(
+    id: 'flame',
+    nameAr: 'فارس اللهب',
+    nameEn: 'Flame',
+    roleAr: 'قريب المدى · إلحاق ضرر',
+    weaponAr: 'سيف اللهب العظيم',
+    skillAr: 'انفجار الجحيم',
+    descriptionAr:
+        'فارس مدرّع يقاتل من مسافة قريبة. يرفع سيفه المشتعل ثم يهبط بضربة '
+        'أرضية تصنع موجة نار حوله.',
+    icon: Icons.local_fire_department,
+    theme: flameTheme,
+  ),
+  HeroDefinition(
+    id: 'shadow',
+    nameAr: 'ظل الليل',
+    nameEn: 'Shadow',
+    roleAr: 'قريب المدى · اغتيال',
+    weaponAr: 'خنجران توأمان',
+    skillAr: 'اندفاع الظل',
+    descriptionAr:
+        'صيّاد مقنّع يختفي خلف عباءته الممزقة. يضرب بخنجرين بالتتابع، ثم '
+        'يندفع عبر الأعداء في دائرة ظلام.',
+    icon: Icons.dark_mode,
+    theme: shadowTheme,
+  ),
+  HeroDefinition(
+    id: 'storm',
+    nameAr: 'حامل العاصفة',
+    nameEn: 'Storm',
+    roleAr: 'متوسط المدى · تحكم',
+    weaponAr: 'رمح الصاعقة',
+    skillAr: 'ضربة الرعد',
+    descriptionAr:
+        'محارب يحمل رمحاً كهربائياً. يضرب من مسافة أطول من السيف، وتستدعي '
+        'مهارته صاعقة تنزل على الأرض أمامه.',
+    icon: Icons.bolt,
+    theme: stormTheme,
+  ),
+];
+
+HeroDefinition heroById(String id) =>
+    heroCatalog.firstWhere((hero) => hero.id == id, orElse: () => heroCatalog.first);

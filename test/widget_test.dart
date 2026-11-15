@@ -1,12 +1,13 @@
 import 'dart:ui' show Size;
 
 import 'package:archer_fm/hero/hero_assets.dart';
+import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:archer_fm/hero/hero_viewer_screen.dart';
 import 'package:archer_fm/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Map<String, dynamic> _fakeManifest() {
+Map<String, dynamic> _fakeManifest(String heroId) {
   final animations = <String, dynamic>{};
   for (final state in heroStates) {
     for (final direction in heroDirections) {
@@ -20,7 +21,7 @@ Map<String, dynamic> _fakeManifest() {
     }
   }
   return {
-    'hero_id': 'ranger',
+    'hero_id': heroId,
     'frame_size': {'width': 192, 'height': 192},
     'pivot': {'x': 0.5, 'y': 0.86},
     'source': {'fps': 12},
@@ -36,9 +37,16 @@ Map<String, dynamic> _fakeManifest() {
 }
 
 class _FakeLoader extends HeroAssetLoader {
+  _FakeLoader(this.hero);
+
+  final HeroDefinition hero;
+
+  @override
+  String get heroId => hero.id;
+
   @override
   Future<HeroManifest> loadManifest() async =>
-      HeroManifest.fromJson(_fakeManifest());
+      HeroManifest.fromJson(_fakeManifest(hero.id));
 
   @override
   Future<AtlasSheet> loadSheet(HeroManifest manifest, String animation) async {
@@ -47,18 +55,18 @@ class _FakeLoader extends HeroAssetLoader {
 }
 
 Future<void> _pumpLoaded(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(1200, 2200);
+  tester.view.physicalSize = const Size(1200, 2600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ArcherFmApp(loader: _FakeLoader()));
+  await tester.pumpWidget(ArcherFmApp(loaderFactory: _FakeLoader.new));
   for (var i = 0; i < 4; i++) {
     await tester.pump(const Duration(milliseconds: 20));
   }
 }
 
 void main() {
-  testWidgets('app starts on the idle animation with all controls', (
+  testWidgets('app starts on the Ranger idle animation with all controls', (
     tester,
   ) async {
     await _pumpLoaded(tester);
@@ -68,6 +76,7 @@ void main() {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.textContaining('idle_s'), findsOneWidget);
+    expect(find.text('الرامي المتوازن'), findsWidgets);
   });
 
   testWidgets('switching state and direction swaps the active clip', (
@@ -87,5 +96,23 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 20));
     expect(find.textContaining('attack_e'), findsOneWidget);
+  });
+
+  testWidgets('the hero picker switches to another hero and reloads it', (
+    tester,
+  ) async {
+    await _pumpLoaded(tester);
+    expect(find.text('Archer FM · Ranger'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Flame'));
+    await tester.pump();
+    await tester.tap(find.text('Flame'));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+
+    expect(find.text('Archer FM · Flame'), findsOneWidget);
+    expect(find.textContaining('idle_s'), findsOneWidget);
+    expect(find.text('فارس اللهب · قريب المدى · إلحاق ضرر'), findsOneWidget);
   });
 }
