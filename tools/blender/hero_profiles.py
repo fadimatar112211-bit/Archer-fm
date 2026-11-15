@@ -64,16 +64,16 @@ FLAME_PALETTE = {
 }
 
 SHADOW_PALETTE = {
-    "green": "#4C2678",
-    "green_light": "#653694",
-    "green_deep": "#28133F",
+    "green": "#5B2E96",
+    "green_light": "#7B44BC",
+    "green_deep": "#2A1442",
     "green_bright": "#A87BE8",
     "trouser": "#241733",
-    "leather": "#2E1E3A",
-    "leather_dark": "#150C1F",
-    "bronze": "#6E5E86",
-    "bronze_light": "#B9A9D6",
-    "gold": "#9C86C9",
+    "leather": "#3A2450",
+    "leather_dark": "#1A0F27",
+    "bronze": "#8A6FBF",
+    "bronze_light": "#D6C4F2",
+    "gold": "#B99CE8",
     "hair_dark": "#120B1A",
     "hair_mid": "#241430",
     "hair_light": "#3B2450",
@@ -256,19 +256,19 @@ def tattered_cape(m):
             row = []
             for j in range(27):
                 u = -1.0 + 2.0 * j / 26.0
-                x = u * (0.40 + 0.24 * v)
-                y = 0.155 + 0.235 * v + 0.035 * math.sin(u * 7.0 + 1.3) * v
-                z = 2.075 - 1.28 * v
-                if i >= 8:
-                    z -= 0.10 * (0.5 + 0.5 * math.sin(u * 11.0 + 2.0)) * (i - 7)
+                x = u * (0.40 + 0.30 * v)
+                y = 0.155 + 0.255 * v + 0.040 * math.sin(u * 7.0 + 1.3) * v
+                z = 2.075 - 1.62 * v
+                if i >= 7:
+                    z -= 0.16 * (0.5 + 0.5 * math.sin(u * 11.0 + 2.0)) * (i - 6)
                 row.append(m.Vector((x, y, z)))
             rows.append(row)
-        m.grid_sheet(f"Cloak_{index}", rows, ["green", "green_deep"], bone,
+        m.grid_sheet(f"Cloak_{index}", rows, ["green_light", "green"], bone,
                      solidify=(0.022, 1), recalc=False)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.grid_sheet(f"Shoulder_Mantle_{side}",
-                     _mantle_rows(m, sign, reach=0.28, length=0.75),
-                     ["green", "green_deep"], "chest",
+                     _mantle_rows(m, sign, reach=0.30, length=0.82),
+                     ["green_light", "green"], "chest",
                      solidify=(0.018, 1), recalc=False)
 
 
@@ -308,7 +308,7 @@ def shadow_hood(m):
             az = -180.0 + 360.0 * j / (columns - 1)
             start = line(az)
             el = start + t * (88.0 - start)
-            inflate = 0.072 + 0.020 * (1.0 - t)
+            inflate = 0.086 + 0.026 * (1.0 - t)
             verts.append(m.head_point(az, el, inflate))
     for r in range(rows - 1):
         for j in range(columns - 1):
@@ -327,8 +327,31 @@ def shadow_hood(m):
 
     # Sewn brim around the face opening.
     brim = [(az, line(az) + 2.0) for az in range(-57, 58, 6)]
-    m.surface_strip("Shadow_Hood_Brim", brim, [0.030] * len(brim),
-                    "green_deep", 0.096, thickness=0.006)
+    m.surface_strip("Shadow_Hood_Brim", brim, [0.036] * len(brim),
+                    "gold", 0.098, thickness=0.008)
+
+    # Cowl drape: cloth falling from the hood onto both shoulders. Without it
+    # the hood reads as a tight cap instead of a hooded cloak.
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        rows = []
+        for i in range(4):
+            u = i / 3.0
+            rows.append([m.Vector((
+                0.16 * sign + 0.17 * sign * u,
+                -0.20 + 0.42 * v,
+                2.28 - 0.30 * u + 0.05 * math.sin(u * 6.0 + v * 4.0)))
+                for v in (q / 6.0 for q in range(7))])
+        m.grid_sheet(f"Shadow_Cowl_{side}", rows, ["green", "green_deep"],
+                     "head", solidify=(0.018, 1), recalc=False)
+
+    # Crown peak, matching the folded point behind the head.
+    m.sweep("Shadow_Hood_Peak", [
+        m.head_point(0.0, 82.0, 0.07),
+        m.Vector((0.0, 0.12, 3.22)),
+        m.Vector((0.0, 0.28, 3.18)),
+        m.Vector((0.0, 0.38, 3.04))],
+        [0.130, 0.105, 0.062, 0.010], "green_deep", "head", sides=7,
+        thickness=[0.095, 0.078, 0.046, 0.008], tip=True)
 
     # Folded point hanging behind the head.
     m.sweep("Shadow_Hood_Point", [
@@ -396,6 +419,23 @@ def shadow_armour(m):
               (0.130, 0.080, 0.145), "leather_dark", "hips", bevel=0.012)
         m.box(f"Hip_Pouch_Flap_{side}", (0.245 * sign, -0.160, 1.205),
               (0.136, 0.024, 0.060), "leather", "hips", bevel=0.008)
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        elbow = m.Vector((0.470 * sign, 0.0, 1.730))
+        wrist = m.Vector((0.545 * sign, -0.02, 1.450))
+        m.ring_at(f"Shadow_Vambrace_{side}", elbow, wrist, 0.16,
+                  0.052, 0.026, "bronze_light", f"forearm.{side}")
+        m.ring_at(f"Shadow_Vambrace_{side}_2", elbow, wrist, 0.62,
+                  0.048, 0.022, "gold", f"forearm.{side}")
+        m.grid_sheet(f"Shadow_Pauldron_{side}", [
+            [m.Vector((x * sign, y, z)) for x, y, z in row] for row in (
+                [(0.155, -0.235, 2.115), (0.300, -0.185, 2.120),
+                 (0.430, -0.100, 2.090)],
+                [(0.165, -0.175, 2.030), (0.315, -0.130, 2.035),
+                 (0.445, -0.055, 2.000)],
+                [(0.175, -0.120, 1.950), (0.320, -0.080, 1.955),
+                 (0.450, -0.010, 1.915)])],
+            ["bronze", "green_deep"], "chest", solidify=(0.016, 0),
+            recalc=False)
     m.sweep("Back_Scabbard", [
         m.Vector((-0.30, 0.245, 1.10)),
         m.Vector((-0.10, 0.300, 1.72)),
@@ -462,8 +502,8 @@ def flame_sword(m):
 def shadow_daggers(m):
     """Twin curved daggers: one in each hand, glowing violet edges."""
     for side, cx, cy, bone, mirror in (
-            ("L", 0.559, -0.045, "hand.L", 1.0),
-            ("R", -0.559, -0.045, "hand.R", -1.0)):
+            ("L", 0.610, -0.150, "hand.L", 1.0),
+            ("R", -0.610, -0.150, "hand.R", -1.0)):
         m.sweep(f"Dagger_Grip_{side}", [(cx, cy, 1.275), (cx, cy, 1.455)],
                 [0.060, 0.055], "leather_dark", bone, sides=10,
                 thickness=[0.056, 0.052])
@@ -473,18 +513,18 @@ def shadow_daggers(m):
               (0.160, 0.070, 0.034), "bronze_light", bone, bevel=0.010)
         m.sweep(f"Dagger_Blade_{side}", [
             (cx, cy, 1.485),
-            (cx + 0.022 * mirror, cy, 1.610),
-            (cx + 0.052 * mirror, cy, 1.760),
-            (cx + 0.086 * mirror, cy, 1.905)],
-            [0.074, 0.064, 0.040, 0.005], "bronze_light", bone, sides=6,
-            thickness=[0.022, 0.018, 0.011, 0.003], tip=True,
-            material_stops=[(0.0, "bronze_light"), (0.55, "energy_core")])
+            (cx + 0.035 * mirror, cy, 1.640),
+            (cx + 0.085 * mirror, cy, 1.830),
+            (cx + 0.140 * mirror, cy, 2.020)],
+            [0.086, 0.074, 0.046, 0.005], "bronze_light", bone, sides=6,
+            thickness=[0.024, 0.020, 0.012, 0.003], tip=True,
+            material_stops=[(0.0, "bronze_light"), (0.50, "energy_core")])
         m.sweep(f"Dagger_Edge_{side}", [
-            (cx + 0.024 * mirror, cy, 1.505),
-            (cx + 0.060 * mirror, cy, 1.780),
-            (cx + 0.092 * mirror, cy, 1.892)],
-            [0.018, 0.013, 0.004], "energy", bone, sides=4,
-            thickness=[0.011, 0.008, 0.003], tip=True)
+            (cx + 0.038 * mirror, cy, 1.505),
+            (cx + 0.092 * mirror, cy, 1.860),
+            (cx + 0.148 * mirror, cy, 2.010)],
+            [0.026, 0.019, 0.004], "energy_core", bone, sides=5,
+            thickness=[0.016, 0.012, 0.003], tip=True)
 
 
 def storm_spear(m):
