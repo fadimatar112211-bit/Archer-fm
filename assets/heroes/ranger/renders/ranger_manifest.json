@@ -9,6 +9,7 @@
     "x": 0.5,
     "y": 0.86
   },
+  "output_directory": "assets/heroes/ranger/renders",
   "atlases": [
     {
       "animation": "attack_e",
@@ -1574,9 +1575,9 @@
     }
   },
   "source": {
-    "blend_file": "assets/heroes/ranger/source/ranger_source.blend",
+    "blend_file": "/home/runner/work/Archer-fm/Archer-fm/assets/heroes/ranger/source/ranger_source.blend",
     "fps": 12,
     "render_engine": "BLENDER_EEVEE",
-    "orthographic_scale": 5.593288
+    "orthographic_scale": 4.598487
   }
 }
