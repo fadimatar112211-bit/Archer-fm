@@ -29,6 +29,7 @@ const List<String> _directions = [
 ];
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final manifestFile = File('$_renderRoot/ranger_manifest.json');
   if (!manifestFile.existsSync()) {
     test(

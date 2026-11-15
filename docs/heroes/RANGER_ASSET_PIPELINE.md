@@ -17,7 +17,7 @@ Create `assets/heroes/ranger/source/ranger_source.blend` with:
 - Death action must settle and hold; idle/walk must loop cleanly.
 
 ## Full render
-Use Blender's background mode with `tools/blender/render_hero.py` and `assets/heroes/ranger/source/render_config.json`. The configuration defines all 8 directions and all 4 states. It outputs every configured frame and a manifest. The default frame counts and timing in the config are production starting values and must be reviewed against the final authored Actions before a release build; do not alter them by creating disposable preview exports.
+Use Blender's background mode with `tools/blender/render_hero.py` and `assets/heroes/ranger/source/render_config.json`. The configuration defines all 8 directions and all 8 states. It outputs every configured frame and a manifest. The default frame counts and timing in the config are production starting values and must be reviewed against the final authored Actions before a release build; do not alter them by creating disposable preview exports.
 
 Blender supports PNG RGBA rendering and glTF animation export; see the official [Blender pipeline](https://www.blender.org/features/pipeline/) and [glTF manual](https://docs.blender.org/manual/en/latest/addons/scene_gltf2.html).
 
@@ -44,7 +44,7 @@ The builder script is the reproducible source generator. The binary `.blend` is 
 
 1. Generate the editable scene:
    `blender -b --python tools/blender/build_ranger_source.py`
-2. Render all 8 directions × 4 states:
+2. Render all 8 directions × 8 states:
    `blender -b assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json`
 3. Pack every state/direction into its own deterministic grid atlas:
    `blender -b assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json`
