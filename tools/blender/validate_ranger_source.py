@@ -8,15 +8,35 @@ import sys
 import bpy
 
 REQUIRED_BONES = {
-    "root", "torso", "head", "arm.L", "arm.R", "leg.L", "leg.R",
-    "bow", "quiver", "cloak"
+    "root", "hips", "spine", "chest", "neck", "head",
+    "shoulder.L", "shoulder.R", "upper_arm.L", "upper_arm.R",
+    "forearm.L", "forearm.R", "hand.L", "hand.R",
+    "thigh.L", "thigh.R", "shin.L", "shin.R", "foot.L", "foot.R",
+    "cloak_a", "cloak_b", "cloak_c", "bow", "string_rest", "string_drawn",
+    "fx", "fx_draw", "aura", "quiver",
 }
 REQUIRED_ACTIONS = {
     "Ranger_Idle": (1, 25),
-    "Ranger_Walk": (1, 9),
-    "Ranger_Attack": (1, 18),
-    "Ranger_Death": (1, 24),
+    "Ranger_Walk": (1, 25),
+    "Ranger_Run": (1, 25),
+    "Ranger_Attack": (1, 25),
+    "Ranger_Skill": (1, 33),
+    "Ranger_Dodge": (1, 17),
+    "Ranger_Hit": (1, 9),
+    "Ranger_Death": (1, 33),
 }
+REQUIRED_MATERIALS = (
+    "Forest Green Cloth",
+    "Lit Green Cloth",
+    "Aged Bronze Plate",
+    "Chestnut Leather",
+    "Brass Buckle",
+    "Warm Skin",
+    "Hair Body",
+    "Sapphire Iris",
+    "Energy Core",
+    "Energy Glow",
+)
 
 def fail(message):
     print("RANGER_SOURCE_ERROR: " + message, file=sys.stderr)
@@ -37,7 +57,7 @@ def main():
         fail("Transparent film output must be enabled")
 
     meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
-    if len(meshes) < 35:
+    if len(meshes) < 100:
         fail("Expected detailed character mesh parts; found only " + str(len(meshes)))
     incorrectly_parented = [
         obj.name for obj in meshes
@@ -56,8 +76,7 @@ def main():
         fail("Bone-parented mesh parts must not also use vertex weights or Armature modifiers: " +
              ", ".join(double_deformed[:12]))
     material_names = {mat.name for mat in bpy.data.materials}
-    for required in ("Forest Green Enamel", "Warm Gold Trim", "Chestnut Leather",
-                     "Silver White Hair", "Sapphire Blue Eyes", "Emerald Bow Energy"):
+    for required in REQUIRED_MATERIALS:
         if required not in material_names:
             fail("Required material missing: " + required)
 

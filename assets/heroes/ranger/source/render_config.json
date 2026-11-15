@@ -5,25 +5,68 @@
   "render_engine": "BLENDER_EEVEE",
   "orthographic_scale": 5.0,
   "armature_object": "Ranger_Rig",
+  "states": ["idle", "walk", "run", "attack", "skill", "dodge", "hit", "death"],
+  "loop_states": ["idle", "walk", "run"],
   "actions": {
     "idle": "Ranger_Idle",
     "walk": "Ranger_Walk",
+    "run": "Ranger_Run",
     "attack": "Ranger_Attack",
+    "skill": "Ranger_Skill",
+    "dodge": "Ranger_Dodge",
+    "hit": "Ranger_Hit",
     "death": "Ranger_Death"
   },
   "action_ranges": {
-    "idle": [1, 24],
-    "walk": [1, 16],
-    "attack": [1, 18],
-    "death": [1, 24]
+    "idle": [1, 25],
+    "walk": [1, 25],
+    "run": [1, 25],
+    "attack": [1, 25],
+    "skill": [1, 33],
+    "dodge": [1, 17],
+    "hit": [1, 9],
+    "death": [1, 33]
   },
   "frame_counts": {
-    "idle": 4,
-    "walk": 4,
-    "attack": 5,
-    "death": 4
+    "idle": 5,
+    "walk": 9,
+    "run": 9,
+    "attack": 7,
+    "skill": 9,
+    "dodge": 9,
+    "hit": 5,
+    "death": 9
   },
-  "projectile_release_frame": 5,
+  "frame_durations_ms": {
+    "idle": 140,
+    "walk": 83,
+    "run": 66,
+    "attack": 70,
+    "skill": 90,
+    "dodge": 60,
+    "hit": 70,
+    "death": 120
+  },
+  "events": {
+    "attack": [
+      {"frame": 9, "name": "bow_draw"},
+      {"frame": 13, "name": "projectile_release"}
+    ],
+    "skill": [
+      {"frame": 9, "name": "volley_charge"},
+      {"frame": 17, "name": "volley_release"}
+    ],
+    "dodge": [
+      {"frame": 5, "name": "dodge_start"},
+      {"frame": 17, "name": "dodge_end"}
+    ],
+    "hit": [
+      {"frame": 5, "name": "hit_react"}
+    ],
+    "death": [
+      {"frame": 33, "name": "death_complete"}
+    ]
+  },
   "pivot": {
     "x": 0.5,
     "y": 0.86

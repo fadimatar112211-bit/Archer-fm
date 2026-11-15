@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import shutil
 import sys
 from pathlib import Path
 
@@ -31,7 +32,6 @@ DIRECTIONS = {
     "s": 0.0, "sw": 45.0, "w": 90.0, "nw": 135.0,
     "n": 180.0, "ne": 225.0, "e": 270.0, "se": 315.0,
 }
-STATES = ("idle", "walk", "attack", "death")
 PIVOT_TOLERANCE = 0.005
 
 
@@ -207,14 +207,18 @@ def main():
     require(armature is not None and armature.type == "ARMATURE",
             f"Missing rigged armature object: {armature_name}")
     actions = config["actions"]
-    for state in STATES:
+    states = tuple(config["states"])
+    require(states and all(state in actions for state in states),
+            "The config must declare at least one state and an action for each")
+    for state in states:
         require(state in actions, f"Missing configured action: {state}")
         require(actions[state] in bpy.data.actions,
                 f"Missing Blender Action: {actions[state]}")
 
     frame_counts = config["frame_counts"]
-    require(all(state in frame_counts and int(frame_counts[state]) > 1 for state in STATES),
+    require(all(state in frame_counts and int(frame_counts[state]) > 1 for state in states),
             "frame_counts must define at least two frames for every state")
+    loop_states = set(config.get("loop_states", ()))
     pivot = config["pivot"]
     pivot_x, pivot_y = float(pivot["x"]), float(pivot["y"])
     require(0 <= pivot_x <= 1 and 0 <= pivot_y <= 1,
@@ -228,6 +232,13 @@ def main():
 
     output_root = (root / config["output_directory"]).resolve()
     output_root.mkdir(parents=True, exist_ok=True)
+    # Stale frames from an older frame count silently inflate the atlas input
+    # set and make the visual validator inspect images that are no longer part
+    # of the manifest. Rebuild each configured state directory from scratch.
+    for state in states:
+        state_dir = output_root / state
+        if state_dir.exists():
+            shutil.rmtree(state_dir)
     manifest = {
         "schema_version": 1,
         "hero_id": hero_id,
@@ -245,7 +256,7 @@ def main():
     # Measure every sampled pose once. Bounds are independent of the orbit
     # direction, so one evaluation per state/frame is enough for all directions.
     pose_bounds = {}
-    for state in STATES:
+    for state in states:
         action = bpy.data.actions[actions[state]]
         for frame in sampled_frames(config, state):
             evaluate_pose(armature, action, frame)
@@ -322,7 +333,7 @@ def main():
                 f"{direction}: camera view plane intersects the character "
                 f"(nearest corner is {nearest_depth:.3f} units in front)")
 
-        low, high = pose_bounds[(STATES[0], sampled_frames(config, STATES[0])[0])]
+        low, high = pose_bounds[(states[0], sampled_frames(config, states[0])[0])]
         predicted = [world_to_camera_view(scene, camera, Vector(corner))
                      for corner in bounds_corners(low, high)]
         xs = [point.x * resolution for point in predicted]
@@ -333,7 +344,7 @@ def main():
               f"predicted_idle_px=x{min(xs):.1f}..{max(xs):.1f} "
               f"y{min(ys):.1f}..{max(ys):.1f}")
 
-        for state in STATES:
+        for state in states:
             action = bpy.data.actions[actions[state]]
             frame_numbers = sampled_frames(config, state)
             ids = []
@@ -346,14 +357,16 @@ def main():
                 bpy.ops.render.render(write_still=True)
                 ids.append(frame_id)
             events = []
-            if state == "attack":
-                release_frame = int(config["projectile_release_frame"])
-                release_index = min(range(len(frame_numbers)),
-                                    key=lambda i: abs(frame_numbers[i] - release_frame))
-                events.append({"frame": release_index, "name": "projectile_release"})
+            for event in config.get("events", {}).get(state, []):
+                source_frame = int(event["frame"])
+                source_index = min(range(len(frame_numbers)),
+                                   key=lambda i: abs(frame_numbers[i] - source_frame))
+                events.append({"frame": source_index, "name": event["name"]})
+            duration = int(config.get("frame_durations_ms", {}).get(
+                state, round(1000 / fps)))
             manifest["animations"][f"{state}_{direction}"] = {
-                "loop": state in ("idle", "walk"),
-                "frame_duration_ms": round(1000 / fps),
+                "loop": state in loop_states,
+                "frame_duration_ms": duration,
                 "frames": ids,
                 "events": events
             }
@@ -365,7 +378,7 @@ def main():
     manifest_path = output_root / "ranger_manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                               encoding="utf-8")
-    print(f"Rendered {render_count} frames across {len(STATES)} states and "
+    print(f"Rendered {render_count} frames across {len(states)} states and "
           f"{len(DIRECTIONS)} directions. Manifest: {manifest_path}")
     print("Next: run pack_hero_atlases.py in Blender to create atlas PNGs and metadata.")
 

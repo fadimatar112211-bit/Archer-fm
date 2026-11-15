@@ -6,7 +6,7 @@ import base64
 from pathlib import Path
 from PIL import Image
 
-STATES = ("idle", "walk", "attack", "death")
+STATES = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
 DIRECTIONS = ("s", "sw", "w", "nw", "n", "ne", "e", "se")
 
 
