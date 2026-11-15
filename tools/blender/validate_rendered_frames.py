@@ -1,13 +1,32 @@
 #!/usr/bin/env python3
-"""Reject empty, clipped, or collapsed Ranger renders before atlas packing."""
+"""Reject empty, clipped, collapsed or stale hero renders before atlas packing.
+
+The CI workflow always passes the Ranger render root because it cannot be
+edited. Every hero renders there, and this gate additionally proves the frames
+on disk belong to the hero named in `active_hero.txt`: a failed render pass
+would otherwise leave the previous hero's frames in place and quietly ship the
+wrong character under a green build.
+"""
 from __future__ import annotations
 import argparse
 import base64
+import json
 from pathlib import Path
 from PIL import Image
 
 STATES = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
 DIRECTIONS = ("s", "sw", "w", "nw", "n", "ne", "e", "se")
+
+
+def active_hero(root: Path) -> tuple[str, dict | None]:
+    """The hero this run must produce, plus its manifest when one exists."""
+    marker = Path(__file__).resolve().parent / "active_hero.txt"
+    hero = (marker.read_text(encoding="utf-8").strip().lower()
+            if marker.is_file() else "ranger") or "ranger"
+    path = root / "ranger_manifest.json"
+    if not path.is_file():
+        return hero, None
+    return hero, json.loads(path.read_text(encoding="utf-8"))
 
 
 def ascii_preview(image, bbox, columns=40):
@@ -40,14 +59,13 @@ def frame_errors(path, image, state, resolution):
         errors.append(f"{path}: too few visible pixels ({occupied})")
     # EEVEE renders a material whose Surface input is a colour (not a shader)
     # as flat magenta. Alpha/layout gates cannot see that, so sample the pixels.
-    rgba = list(image.getdata())
+    # `getdata()` yields RGBA tuples (not a flat channel list).
     magenta = 0
     sampled = 0
-    for index in range(0, len(rgba), 4):
-        if rgba[index + 3] < 200:
+    for r, g, b, a in image.getdata():
+        if a < 200:
             continue
         sampled += 1
-        r, g, b = rgba[index], rgba[index + 1], rgba[index + 2]
         if r > 140 and b > 140 and g < 60:
             magenta += 1
     if sampled and magenta / sampled > 0.3:
@@ -89,6 +107,24 @@ def main() -> int:
     checked = 0
     frames_by = {}
     first_failing = None
+    hero, manifest = active_hero(args.root)
+    expected_by = {}
+    if manifest is None:
+        errors.append(f"no ranger_manifest.json in {args.root}; the render pass "
+                      f"did not complete")
+    else:
+        if manifest.get("hero_id") != hero:
+            errors.append(f"manifest hero_id is {manifest.get('hero_id')!r} but "
+                          f"active_hero.txt asks for {hero!r}; refusing to "
+                          f"validate a stale render set")
+        for state in STATES:
+            for direction in DIRECTIONS:
+                name = f"{state}_{direction}"
+                animation = manifest.get("animations", {}).get(name)
+                if not isinstance(animation, dict):
+                    errors.append(f"manifest is missing animation {name}")
+                    continue
+                expected_by[(state, direction)] = set(animation.get("frames", []))
     for state in STATES:
         for direction in DIRECTIONS:
             frames = sorted((args.root / state / direction).glob("*.png"))
@@ -96,6 +132,20 @@ def main() -> int:
             if len(frames) < 2:
                 errors.append(f"{state}/{direction}: expected multiple frames, found {len(frames)}")
                 continue
+            expected = expected_by.get((state, direction))
+            if expected is not None:
+                actual = {path.stem for path in frames}
+                missing = expected - actual
+                extra = actual - expected
+                if missing:
+                    errors.append(f"{state}/{direction}: {len(missing)} manifest "
+                                  f"frames were not rendered on disk")
+                if extra:
+                    errors.append(f"{state}/{direction}: {len(extra)} stale frames "
+                                  f"are not in the manifest (previous hero or "
+                                  f"older frame count)")
+                if missing or extra:
+                    continue
             for path in frames:
                 checked += 1
                 try:
@@ -135,9 +185,11 @@ def main() -> int:
             path, _ = first_failing
             print("VISUAL_FRAME " + str(path.relative_to(args.root)))
             print("VISUAL_B64 " + base64.b64encode(path.read_bytes()).decode("ascii"))
-        print(f"RANGER_VISUAL_CHECK_FAILED checked={checked} errors={len(errors)}")
+        print(f"HERO_VISUAL_CHECK_FAILED hero={hero} checked={checked} "
+              f"errors={len(errors)}")
         return 1
-    print(f"RANGER_VISUAL_CHECK_OK checked={checked} frames across {len(STATES)} states and {len(DIRECTIONS)} directions")
+    print(f"HERO_VISUAL_CHECK_OK hero={hero} checked={checked} frames across "
+          f"{len(STATES)} states and {len(DIRECTIONS)} directions")
     return 0
 
 
