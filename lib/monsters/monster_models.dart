@@ -16,7 +16,7 @@ class MonsterStats {
        assert(damage > 0),
        assert(moveSpeed > 0),
        assert(attackRange >= 0),
-       assert(attackCooldown.inMicroseconds > 0),
+       assert(attackCooldown != Duration.zero),
        assert(purchaseCost >= 0);
 
   final double maxHealth;
