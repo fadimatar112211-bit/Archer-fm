@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: ranger-assets-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-render:
     runs-on: ubuntu-24.04
@@ -80,6 +84,8 @@ jobs:
             echo "Validated Ranger runtime atlases are already current."
           else
             git commit -m "Update validated Ranger sprite atlases"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
 
