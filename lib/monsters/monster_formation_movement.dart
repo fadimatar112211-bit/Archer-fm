@@ -8,7 +8,7 @@ class MonsterMovementObstacle {
     required this.x,
     required this.y,
     required this.radius,
-  }) : assert(radius > 0);
+  });
 
   final double x;
   final double y;
