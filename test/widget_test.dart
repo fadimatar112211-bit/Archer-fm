@@ -181,6 +181,6 @@ void main() {
     expect(painter.sheet!.rectFor(painter.frameId!), isNotNull);
     expect(painter.sheet!.width, greaterThan(0));
     expect(painter.sheet!.height, greaterThan(0));
-  });;
+  });
 
 }
