@@ -106,6 +106,18 @@ void main() {
       expect(animation.frameIndex, inInclusiveRange(0, 3));
     });
 
+    test('rejects invalid sprite-sheet metadata', () {
+      expect(() => MonsterAnimationController(
+        type: MonsterType.runner,
+        walkSheet: const MonsterSpriteSheet(
+          asset: '',
+          frameWidth: 96,
+          frameHeight: 96,
+          frameCount: 4,
+        ),
+      ), throwsArgumentError);
+    });
+
     test('negative elapsed time is rejected', () {
       final animation = MonsterAnimationController(
         type: MonsterType.runner,
