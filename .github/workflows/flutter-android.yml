@@ -40,10 +40,12 @@ jobs:
           api-level: 30
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           disable-animations: true
           script: |
-            adb wait-for-device
+            adb devices
+            adb get-state
             adb install build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
