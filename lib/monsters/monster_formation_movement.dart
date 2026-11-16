@@ -61,8 +61,8 @@ class MonsterFormationMovement {
       final unit = living[i];
       final x = snapshots[i].$1;
       final y = snapshots[i].$2;
-      final gx = targetX + (x - center.$1) * 0.35;
-      final gy = targetY + (y - center.$2) * 0.35;
+      final gx = targetX + (x - center.$1) * cohesionWeight;
+      final gy = targetY + (y - center.$2) * cohesionWeight;
       final steer = _steering(
         x, y, gx, gy, i, snapshots, obstacles,
       );
@@ -133,9 +133,10 @@ class MonsterFormationMovement {
       final dx = x - units[i].$1;
       final dy = y - units[i].$2;
       final d2 = dx * dx + dy * dy;
-      if (d2 > 0 && d2 < separationRadius * separationRadius) {
+      final radius = math.max(separationRadius, desiredSpacing);
+      if (d2 > 0 && d2 < radius * radius) {
         final d = math.sqrt(d2);
-        final strength = (separationRadius - d) / separationRadius;
+        final strength = (radius - d) / radius;
         vx += dx / d * strength * separationWeight;
         vy += dy / d * strength * separationWeight;
       } else if (d2 == 0) {
