@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:archero_fm/monsters/monster_formation_movement.dart';
-import 'package:archero_fm/monsters/monster_models.dart';
-import 'package:archero_fm/monsters/monster_combat.dart';
+import 'package:archer_fm/monsters/monster_formation_movement.dart';
+import 'package:archer_fm/monsters/monster_models.dart';
+import 'package:archer_fm/monsters/monster_combat.dart';
 
 MonsterUnit _unit(String id, double x, double y) => MonsterUnit(
   id: id,
