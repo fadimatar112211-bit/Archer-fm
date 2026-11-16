@@ -998,13 +998,13 @@ def make_armature():
         "cloak_a": ((0, 0.17, 2.03), (0, 0.25, 1.53), "chest"),
         "cloak_b": ((0, 0.25, 1.53), (0, 0.32, 0.98), "cloak_a"),
         "cloak_c": ((0, 0.32, 0.98), (0, 0.40, 0.38), "cloak_b"),
-        "bow": ((0.56, -0.06, 1.40), (0.56, -0.06, 1.85), "hand.L"),
-        "string_rest": ((0.56, -0.13, 1.40), (0.56, -0.13, 1.85), "bow"),
-        "string_drawn": ((0.56, 0.18, 1.40), (0.56, 0.18, 1.85), "bow"),
-        "fx": ((0.56, -0.15, 1.40), (0.56, -0.15, 1.85), "bow"),
-        "fx_draw": ((0.56, 0.18, 1.40), (0.56, -0.10, 1.40), "bow"),
+        "bow": ((-0.56, -0.06, 1.40), (-0.56, -0.06, 1.85), "hand.R"),
+        "string_rest": ((-0.56, -0.13, 1.40), (-0.56, -0.13, 1.85), "bow"),
+        "string_drawn": ((-0.56, 0.18, 1.40), (-0.56, 0.18, 1.85), "bow"),
+        "fx": ((-0.56, -0.15, 1.40), (-0.56, -0.15, 1.85), "bow"),
+        "fx_draw": ((-0.56, 0.18, 1.40), (-0.56, -0.10, 1.40), "bow"),
         "aura": ((0, 0, 0.10), (0, 0, 1.30), "hips"),
-        "quiver": ((-0.20, 0.26, 1.55), (-0.33, 0.33, 2.10), "chest"),
+        "quiver": ((0.20, 0.26, 1.55), (0.33, 0.33, 2.10), "chest"),
     }
     for name, (head, tail, parent) in bones.items():
         bone = data.edit_bones.new(name)
@@ -1262,17 +1262,15 @@ def build_cloak():
 # ---------------------------------------------------------------- gear -----
 
 def build_quiver():
-    # Sit the quiver on the outside of the shoulder so the fletching clears the
-    # cloak: the reference reads as an archer partly because the arrows are
-    # visible over the shoulder from the back and three-quarter views.
-    start = Vector((-0.315, 0.130, 1.520))
-    end = Vector((-0.520, 0.175, 2.060))
+    # Keep the arrow bundle on the character's back-right, opposite the bow.
+    start = Vector((0.315, 0.130, 1.520))
+    end = Vector((0.520, 0.175, 2.060))
     sweep("Quiver", [start, end], [0.150, 0.135], "leather_dark",
           "quiver", sides=16, thickness=[0.145, 0.130])
     ring_at("Quiver_Rim", start, end, 0.97, 0.072, 0.016, "bronze", "quiver")
     axis = (end - start).normalized()
     for index in range(5):
-        offset = Vector((0.030 * math.cos(index * 1.7),
+        offset = Vector((-0.030 * math.cos(index * 1.7),
                          0.020 * math.sin(index * 1.3), 0.0))
         base = end - axis * 0.10 + offset
         tip = end + axis * (0.34 + 0.022 * index) + offset
@@ -1284,95 +1282,90 @@ def build_quiver():
 
 
 def build_bow():
-    # The reference bow is nearly body-height and dominates the silhouette, so
-    # the limbs run from above the head to below the knee with a thick luminous
-    # core and a wider halo.
-    # Bow curves away from the body in the X-Z plane so the C shape reads.
-    up = [Vector((0.665, -0.068, 1.300)), Vector((0.965, -0.205, 1.660)),
-          Vector((1.280, -0.295, 2.120)), Vector((1.140, -0.250, 2.520)),
-          Vector((0.640, -0.135, 2.780))]
-    down = [Vector((0.665, -0.068, 1.300)), Vector((0.965, -0.205, 0.980)),
-            Vector((1.280, -0.295, 0.590)), Vector((1.140, -0.250, 0.210)),
-            Vector((0.640, -0.135, -0.040))]
-    # Wider limbs and a deeper C curve keep the energy bow readable at 192px.
+    # The reference holds the large green energy bow on screen-left. The
+    # mirrored grip is bound to hand.R; the opposite hand draws the string.
+    up = [Vector((-0.665, -0.068, 1.300)), Vector((-0.965, -0.205, 1.660)),
+          Vector((-1.280, -0.295, 2.120)), Vector((-1.140, -0.250, 2.520)),
+          Vector((-0.640, -0.135, 2.780))]
+    down = [Vector((-0.665, -0.068, 1.300)), Vector((-0.965, -0.205, 0.980)),
+            Vector((-1.280, -0.295, 0.590)), Vector((-1.140, -0.250, 0.210)),
+            Vector((-0.640, -0.135, -0.040))]
     widths = [0.132, 0.112, 0.088, 0.062, 0.032]
     for index, limb in enumerate((up, down)):
         sweep(f"Bow_Frame_{index}", limb, widths, "gold", "bow",
               sides=8, thickness=[w * 1.05 for w in widths], tip=True)
-        inner = [point + Vector((-0.062, 0.040, 0.0)) for point in limb]
+        inner = [point + Vector((0.062, 0.040, 0.0)) for point in limb]
         sweep(f"Bow_Limb_{index}", inner, [w * 0.62 for w in widths],
               "energy_core", "bow", sides=6,
               thickness=[w * 0.55 for w in widths], tip=True)
         sweep(f"Bow_Glow_{index}", inner, [w * 1.08 for w in widths],
               "energy_soft", "bow", sides=6,
               thickness=[w * 0.95 for w in widths], tip=True)
-    # Inner energy blades: the reference's bow has bright leaf-shaped flares
-    # along the limbs that keep the weapon readable even at 96 px.
+    # Leaf-shaped energy flares keep the weapon readable at mobile resolution.
     for index, sign in ((0, 1.0), (1, -1.0)):
         sweep(f"Bow_Blade_{index}", [
-            Vector((1.105, -0.58, 2.40)),
-            Vector((1.310, -0.64, 2.62)),
-            Vector((1.345, -0.59, 2.82)),
-            Vector((1.155, -0.41, 2.96))],
+            Vector((-1.105, -0.58, 2.40)),
+            Vector((-1.310, -0.64, 2.62)),
+            Vector((-1.345, -0.59, 2.82)),
+            Vector((-1.155, -0.41, 2.96))],
             [0.112, 0.086, 0.050, 0.006], "energy", "bow", sides=5,
             thickness=[0.052, 0.038, 0.020, 0.004], tip=True)
         sweep(f"Bow_Blade_Low_{index}", [
-            Vector((1.105, -0.58, 0.52)),
-            Vector((1.310, -0.64, 0.30)),
-            Vector((1.345, -0.59, 0.10)),
-            Vector((1.155, -0.41, -0.04))],
+            Vector((-1.105, -0.58, 0.52)),
+            Vector((-1.310, -0.64, 0.30)),
+            Vector((-1.345, -0.59, 0.10)),
+            Vector((-1.155, -0.41, -0.04))],
             [0.112, 0.086, 0.050, 0.006], "energy", "bow", sides=5,
             thickness=[0.052, 0.038, 0.020, 0.004], tip=True)
-    sweep("Bow_Grip", [Vector((0.60, -0.10, 1.28)),
-                       Vector((0.60, -0.10, 1.56))],
+    sweep("Bow_Grip", [Vector((-0.60, -0.10, 1.28)),
+                       Vector((-0.60, -0.10, 1.56))],
           [0.098, 0.098], "leather_dark", "bow", sides=12,
           thickness=[0.098, 0.098])
-    ring_at("Bow_Grip_Ring_0", Vector((0.60, -0.10, 1.28)),
-            Vector((0.60, -0.10, 1.56)), 0.10, 0.058, 0.013,
+    ring_at("Bow_Grip_Ring_0", Vector((-0.60, -0.10, 1.28)),
+            Vector((-0.60, -0.10, 1.56)), 0.10, 0.058, 0.013,
             "gold", "bow")
-    ring_at("Bow_Grip_Ring_1", Vector((0.60, -0.10, 1.28)),
-            Vector((0.60, -0.10, 1.56)), 0.90, 0.058, 0.013,
+    ring_at("Bow_Grip_Ring_1", Vector((-0.60, -0.10, 1.28)),
+            Vector((-0.60, -0.10, 1.56)), 0.90, 0.058, 0.013,
             "gold", "bow")
-    sphere("Bow_Gem", (0.60, -0.15, 1.42), (0.044, 0.040, 0.070),
+    sphere("Bow_Gem", (-0.60, -0.15, 1.42), (0.060, 0.050, 0.085),
            "green_bright", "bow", 16, 10)
-    sweep("String_Rest", [Vector((0.632, -0.120, 2.780)),
-                          Vector((0.632, -0.120, -0.040))],
+    sweep("String_Rest", [Vector((-0.632, -0.120, 2.780)),
+                          Vector((-0.632, -0.120, -0.040))],
           [0.010, 0.010], "string_glow", "string_rest", sides=4,
           thickness=[0.010, 0.010])
-    nock = Vector((0.60, 0.30, 1.42))
-    sweep("String_Drawn", [Vector((0.632, -0.120, 2.780)), nock,
-                           Vector((0.632, -0.120, -0.040))],
+    nock = Vector((-0.60, 0.30, 1.42))
+    sweep("String_Drawn", [Vector((-0.632, -0.120, 2.780)), nock,
+                           Vector((-0.632, -0.120, -0.040))],
           [0.010, 0.010, 0.010], "string_glow", "string_drawn",
           sides=4, thickness=[0.010, 0.010, 0.010])
-    # Nocked energy arrow: from the drawn nock towards the bow.
-    sweep("Nocked_Arrow", [Vector((0.60, 0.38, 1.42)),
-                           Vector((0.60, -0.34, 1.42))],
+    sweep("Nocked_Arrow", [Vector((-0.60, 0.38, 1.42)),
+                           Vector((-0.60, -0.34, 1.42))],
           [0.026, 0.019], "energy_core", "fx_draw", sides=6,
           thickness=[0.026, 0.019])
     cone = bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=0.056,
                                            radius2=0.0, depth=0.15,
-                                           location=(0.60, -0.415, 1.42),
+                                           location=(-0.60, -0.415, 1.42),
                                            rotation=(math.radians(90), 0, 0))
     arrow_tip = bpy.context.object
     arrow_tip.name = "Arrow_Head"
     arrow_tip.data.materials.append(MATS["energy_core"])
     smooth(arrow_tip)
     attach(arrow_tip, "fx_draw")
-    sphere("Draw_Glow", (0.60, 0.30, 1.42), (0.090, 0.080, 0.090),
+    sphere("Draw_Glow", (-0.60, 0.30, 1.42), (0.090, 0.080, 0.090),
            "energy_soft", "fx_draw", 16, 10)
 
 
 def build_fx():
-    torus("Release_Ring", (0.56, -0.12, 1.40), 0.27, 0.014,
+    torus("Release_Ring", (-0.56, -0.12, 1.40), 0.27, 0.014,
           "energy_soft", "fx", rotation=(0, math.radians(90), 0),
           major_segments=36)
     for index, angle in enumerate((15, 70, 125, 200, 255, 310)):
         rad = math.radians(angle)
-        start = Vector((0.56 + 0.10 * math.cos(rad), -0.16,
+        start = Vector((-0.56 - 0.10 * math.cos(rad), -0.16,
                         1.40 + 0.10 * math.sin(rad)))
-        mid = Vector((0.56 + 0.28 * math.cos(rad), -0.20,
+        mid = Vector((-0.56 - 0.28 * math.cos(rad), -0.20,
                       1.40 + 0.28 * math.sin(rad)))
-        end = Vector((0.56 + 0.44 * math.cos(rad), -0.28,
+        end = Vector((-0.56 - 0.44 * math.cos(rad), -0.28,
                       1.40 + 0.44 * math.sin(rad)))
         sweep(f"Release_Streak_{index}", [start, mid, end],
               [0.035, 0.022, 0.006], "energy", "fx", sides=5,
@@ -1387,8 +1380,9 @@ def build_fx():
         sweep(f"Aura_Flame_{index}", [base, mid, top],
               [0.075, 0.045, 0.006], "energy", "aura", sides=5,
               thickness=[0.030, 0.020, 0.004], tip=True)
-    sphere("Draw_Spark", (0.56, 0.185, 1.40), (0.050, 0.045, 0.050),
+    sphere("Draw_Spark", (-0.56, 0.185, 1.40), (0.050, 0.045, 0.050),
            "energy_core", "fx_draw", 14, 8)
+
 # ----------------------------------------------------------- materials -----
 
 def build_materials():
@@ -1545,20 +1539,20 @@ def build_actions():
         (25, *P(run_left, loc={"root": (0, 0.02, 0)})),
     ]
     raised = merged(BASE, {
-        "upper_arm.L": (-55, 0, 12), "forearm.L": (-18, 0, 0),
-        "upper_arm.R": (-40, 0, -25), "forearm.R": (-70, 0, 0),
+        "upper_arm.R": (-55, 0, 12), "forearm.R": (-18, 0, 0),
+        "upper_arm.L": (-40, 0, -25), "forearm.L": (-70, 0, 0),
         "chest": (0, 8, 0), "head": (0, -6, 0),
         "bow": (16, 0, -8), "cloak_a": (5, 0, 0),
     })
     drawn = merged(BASE, {
-        "upper_arm.L": (-78, 0, 10), "forearm.L": (-10, 0, 0),
-        "upper_arm.R": (-58, 0, -38), "forearm.R": (-112, 0, 0),
+        "upper_arm.R": (-78, 0, 10), "forearm.R": (-10, 0, 0),
+        "upper_arm.L": (-58, 0, -38), "forearm.L": (-112, 0, 0),
         "chest": (-2, 14, 0), "head": (2, -10, 0),
         "bow": (24, 0, -10), "cloak_a": (8, 0, 0),
     })
     release = merged(BASE, {
-        "upper_arm.L": (-74, 0, 8), "forearm.L": (-14, 0, 0),
-        "upper_arm.R": (-28, 0, -18), "forearm.R": (-55, 0, 0),
+        "upper_arm.R": (-74, 0, 8), "forearm.R": (-14, 0, 0),
+        "upper_arm.L": (-28, 0, -18), "forearm.L": (-55, 0, 0),
         "chest": (-4, 8, 0), "head": (3, -6, 0),
         "bow": (22, 0, -8), "cloak_a": (12, 0, 0),
     })
@@ -1572,12 +1566,12 @@ def build_actions():
                              "fx_draw": (1, 1, 1)})),
         (13, *P(release, scale={"fx": (1.25, 1.25, 1.25)})),
         (17, *P(merged(BASE, {
-            "upper_arm.L": (-46, 0, 6), "upper_arm.R": (-8, 0, -8),
-            "forearm.R": (-22, 0, 0), "bow": (12, 0, -6),
+            "upper_arm.R": (-46, 0, 6), "upper_arm.L": (-8, 0, -8),
+            "forearm.L": (-22, 0, 0), "bow": (12, 0, -6),
             "cloak_a": (7, 0, 0),
         }))),
         (21, *P(merged(BASE, {
-            "upper_arm.L": (-18, 0, 5), "upper_arm.R": (0, 0, -5),
+            "upper_arm.R": (-18, 0, 5), "upper_arm.L": (0, 0, -5),
             "bow": (6, 0, -3),
         }))),
         (25, *P(BASE)),
@@ -1597,8 +1591,8 @@ def build_actions():
         "chest": (-12, 0, 0),
     })
     volley = merged(BASE, {
-        "upper_arm.L": (-60, 0, 6), "forearm.L": (-12, 0, 0),
-        "upper_arm.R": (-18, 0, -10), "forearm.R": (-40, 0, 0),
+        "upper_arm.R": (-60, 0, 6), "forearm.R": (-12, 0, 0),
+        "upper_arm.L": (-18, 0, -10), "forearm.L": (-40, 0, 0),
         "chest": (10, 0, 0), "head": (4, 0, 0),
         "bow": (18, 0, -4), "cloak_a": (22, 0, 0),
         "cloak_b": (30, 0, 0), "cloak_c": (38, 0, 0),
@@ -1620,7 +1614,7 @@ def build_actions():
         (17, *P(volley, loc={"root": (0, 0.08, 0)},
                 scale={"fx": (1.7, 1.7, 1.7)})),
         (21, *P(merged(BASE, {
-            "upper_arm.L": (-24, 0, 5), "upper_arm.R": (-4, 0, -5),
+            "upper_arm.R": (-24, 0, 5), "upper_arm.L": (-4, 0, -5),
             "bow": (10, 0, -3), "thigh.L": (-12, 0, 0),
             "thigh.R": (-12, 0, 0), "shin.L": (24, 0, 0),
             "shin.R": (24, 0, 0),
