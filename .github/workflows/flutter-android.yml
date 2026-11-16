@@ -7,6 +7,7 @@ on:
     paths:
       - 'lib/**'
       - 'test/**'
+      - 'assets/heroes/ranger/renders/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/flutter-android.yml'
