@@ -16,7 +16,7 @@ class MonsterStats {
        assert(damage > 0),
        assert(moveSpeed > 0),
        assert(attackRange >= 0),
-       assert(attackCooldown > 0),
+       assert(attackCooldown > Duration.zero),
        assert(purchaseCost >= 0);
 
   final double maxHealth;
@@ -49,45 +49,6 @@ class MonsterStats {
       attackCooldown: attackCooldown,
       purchaseCost: purchaseCost,
     );
-  }m MonsterType { runner, tank, stalker, ranged }
-
-enum MonsterTargetKind { hero, monster, crystal }
-
-enum MonsterOrder { advance, defend }
-
-class MonsterStats {
-  const MonsterStats({
-    required this.maxHealth,
-    required this.damage,
-    required this.moveSpeed,
-    required this.attackRange,
-    required this.attackCooldown,
-    required this.purchaseCost,
-  }) : assert(maxHealth > 0),
-       assert(damage > 0),
-       assert(moveSpeed > 0),
-       assert(attackRange >= 0),
-       assert(attackCooldown > 0),
-       assert(purchaseCost >= 0);
-
-  final double maxHealth;
-  final double damage;
-  final double moveSpeed;
-  final double attackRange;
-  final Duration attackCooldown;
-  final int purchaseCost;
-
-  MonsterStats scaledForLevel(int level) {
-    final safeLevel = level.clamp(1, 40);
-    final multiplier = 1 + (safeLevel - 1) * 0.025;
-    return MonsterStats(
-      maxHealth: maxHealth * multiplier,
-      damage: damage * multiplier,
-      moveSpeed: moveSpeed * (1 + (safeLevel - 1) * 0.008),
-      attackRange: attackRange,
-      attackCooldown: attackCooldown,
-      purchaseCost: purchaseCost,
-    );
   }
 }
 
@@ -104,10 +65,14 @@ class MonsterCatalog {
         MonsterType.values.any((type) => !_definitions.containsKey(type))) {
       throw ArgumentError('Catalog must define exactly the four launch monsters.');
     }
+    for (final type in MonsterType.values) {
+      if (_definitions[type]!.type != type) {
+        throw ArgumentError('Catalog key and monster definition type must match.');
+      }
+    }
   }
 
   final Map<MonsterType, MonsterDefinition> _definitions;
-
   MonsterDefinition operator [](MonsterType type) => _definitions[type]!;
   Iterable<MonsterDefinition> get all => _definitions.values;
 }
@@ -128,6 +93,9 @@ class MonsterUnit {
     if (!this.health.isFinite || this.health <= 0 || this.health > stats.maxHealth) {
       throw ArgumentError.value(health, 'health');
     }
+    if (!positionX.isFinite || !positionY.isFinite) {
+      throw ArgumentError('Monster position must be finite.');
+    }
   }
 
   final String id;
@@ -139,6 +107,7 @@ class MonsterUnit {
   double health;
   String? targetId;
   MonsterTargetKind? targetKind;
+  DateTime? lastAttackAt;
   bool get isAlive => health > 0;
 
   bool applyDamage(double amount) {
@@ -148,6 +117,19 @@ class MonsterUnit {
     if (!isAlive) return true;
     health = (health - amount).clamp(0, stats.maxHealth).toDouble();
     return !isAlive;
+  }
+
+  bool canAttackAt(DateTime now) {
+    final previous = lastAttackAt;
+    return previous == null ||
+        !now.isBefore(previous.add(stats.attackCooldown));
+  }
+
+  void recordAttack(DateTime now) {
+    if (!canAttackAt(now)) {
+      throw StateError('Monster attack is still on cooldown.');
+    }
+    lastAttackAt = now;
   }
 }
 
@@ -179,10 +161,15 @@ class MonsterTargeting {
     required Iterable<MonsterTarget> candidates,
     double maxDistance = double.infinity,
   }) {
+    if (maxDistance < 0 || maxDistance.isNaN) {
+      throw ArgumentError.value(maxDistance, 'maxDistance');
+    }
     MonsterTarget? best;
     var bestDistanceSquared = maxDistance * maxDistance;
     for (final candidate in candidates) {
       if (!candidate.isAlive || candidate.ownerId == ownerId) continue;
+      if (!candidate.x.isFinite || !candidate.y.isFinite) continue;
+      // Castles are deliberately not a target kind: crystals gate castle damage.
       final dx = candidate.x - fromX;
       final dy = candidate.y - fromY;
       final distanceSquared = dx * dx + dy * dy;
@@ -200,22 +187,20 @@ class MonsterTargeting {
     required double fromY,
     required Iterable<MonsterTarget> candidates,
   }) {
-    final threats = candidates.where(
-      (target) => target.kind == MonsterTargetKind.crystal &&
-          target.ownerId == ownerId &&
-          target.isAlive,
-    );
-    MonsterTarget? nearestThreat;
+    MonsterTarget? nearest;
     var nearestDistance = double.infinity;
-    for (final threat in threats) {
-      final dx = threat.x - fromX;
-      final dy = threat.y - fromY;
+    for (final target in candidates) {
+      if (target.kind != MonsterTargetKind.crystal ||
+          target.ownerId != ownerId ||
+          !target.isAlive) continue;
+      final dx = target.x - fromX;
+      final dy = target.y - fromY;
       final distance = dx * dx + dy * dy;
       if (distance < nearestDistance) {
         nearestDistance = distance;
-        nearestThreat = threat;
+        nearest = target;
       }
     }
-    return nearestThreat;
+    return nearest;
   }
 }
