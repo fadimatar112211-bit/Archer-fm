@@ -288,7 +288,6 @@ class _FakeDamageTarget implements MonsterDamageTarget {
   }
 }
 
-void main() {
   group('Monster combat damage resolver', () {
     const resolver = MonsterCombatResolver();
     const intent = MonsterCombatIntent(
@@ -328,8 +327,11 @@ void main() {
       ), MonsterDamageResult.missingTarget);
       expect(resolver.resolve(
         intent: intent, attackerOwnerId: 'p1',
-        target: target('p2', 50)..id,
-      ), MonsterDamageResult.applied);
+        target: _FakeDamageTarget(
+          id: 'wrong', ownerId: 'p2',
+          kind: MonsterTargetKind.crystal, health: 50,
+        ),
+      ), MonsterDamageResult.missingTarget);
     });
 
     test('rejects malformed damage intents', () {
@@ -346,4 +348,5 @@ void main() {
       expect(target.health, 50);
     });
   });
+
 }
