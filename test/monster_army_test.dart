@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/monsters/monster_army.dart';
 import 'package:archero_fm/monsters/monster_combat.dart';
+import 'package:archero_fm/monsters/monster_combat_resolver.dart';
 import 'package:archero_fm/monsters/monster_models.dart';
 
 MonsterCatalog catalog() => MonsterCatalog({
@@ -256,6 +257,93 @@ void main() {
         ],
       );
       expect(target?.id, 'near');
+    });
+  });
+}
+
+
+class _FakeDamageTarget implements MonsterDamageTarget {
+  _FakeDamageTarget({
+    required this.id,
+    required this.ownerId,
+    required this.kind,
+    required this.health,
+  });
+
+  @override
+  final String id;
+  @override
+  final String ownerId;
+  @override
+  final MonsterTargetKind kind;
+  double health;
+
+  @override
+  bool get isAlive => health > 0;
+
+  @override
+  bool applyDamage(double amount) {
+    health = (health - amount).clamp(0, double.infinity).toDouble();
+    return !isAlive;
+  }
+}
+
+void main() {
+  group('Monster combat damage resolver', () {
+    const resolver = MonsterCombatResolver();
+    const intent = MonsterCombatIntent(
+      monsterId: 'attacker',
+      targetId: 'target',
+      damage: 25,
+    );
+
+    test('applies intent to a fresh enemy target adapter', () {
+      final target = _FakeDamageTarget(
+        id: 'target', ownerId: 'p2',
+        kind: MonsterTargetKind.hero, health: 60,
+      );
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1', target: target,
+      ), MonsterDamageResult.applied);
+      expect(target.health, 35);
+    });
+
+    test('rejects friendly, dead, missing and mismatched targets', () {
+      _FakeDamageTarget target(String owner, double health) =>
+          _FakeDamageTarget(
+            id: 'target', ownerId: owner,
+            kind: MonsterTargetKind.crystal, health: health,
+          );
+
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p2',
+        target: target('p2', 50),
+      ), MonsterDamageResult.friendlyTarget);
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1',
+        target: target('p2', 0),
+      ), MonsterDamageResult.deadTarget);
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1', target: null,
+      ), MonsterDamageResult.missingTarget);
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1',
+        target: target('p2', 50)..id,
+      ), MonsterDamageResult.applied);
+    });
+
+    test('rejects malformed damage intents', () {
+      final target = _FakeDamageTarget(
+        id: 'target', ownerId: 'p2',
+        kind: MonsterTargetKind.hero, health: 50,
+      );
+      expect(resolver.resolve(
+        intent: const MonsterCombatIntent(
+          monsterId: 'attacker', targetId: 'target', damage: double.nan,
+        ),
+        attackerOwnerId: 'p1', target: target,
+      ), MonsterDamageResult.invalidIntent);
+      expect(target.health, 50);
     });
   });
 }
