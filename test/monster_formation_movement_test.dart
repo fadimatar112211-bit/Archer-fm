@@ -169,6 +169,26 @@ void main() {
       }
     });
 
+    test('rejects non-finite movement tuning and corrupted unit positions', () {
+      final invalidTuning = MonsterFormationMovement(
+        separationWeight: double.nan,
+      );
+      expect(() => invalidTuning.moveGroup(
+        units: [_unit('a', 0, 0)],
+        targetX: 10,
+        targetY: 0,
+        elapsed: const Duration(seconds: 1),
+      ), throwsArgumentError);
+
+      final corrupted = _unit('bad', 0, 0)..positionX = double.infinity;
+      expect(() => movement.moveGroup(
+        units: [corrupted],
+        targetX: 10,
+        targetY: 0,
+        elapsed: const Duration(seconds: 1),
+      ), throwsArgumentError);
+    });
+
     test('rejects non-finite destination coordinates', () {
       expect(() => movement.moveGroup(
         units: [_unit('a', 0, 0)],
