@@ -15,7 +15,6 @@ class MonsterSpriteSheet {
   })  : assert(frameWidth > 0),
         assert(frameHeight > 0),
         assert(frameCount > 0),
-        assert(frameDuration != Duration.zero);
 
   final String asset;
   final int frameWidth;
