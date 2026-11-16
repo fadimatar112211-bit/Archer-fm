@@ -279,6 +279,23 @@ void main() {
       ), throwsArgumentError);
     });
 
+    test('ignores malformed enemy identities', () {
+      final target = targeting.nearestEnemy(
+        ownerId: 'p1', fromX: 0, fromY: 0,
+        candidates: [
+          const MonsterTarget(
+            id: '', ownerId: 'p2', kind: MonsterTargetKind.hero,
+            x: 1, y: 0, isAlive: true,
+          ),
+          const MonsterTarget(
+            id: 'missing-owner', ownerId: '', kind: MonsterTargetKind.hero,
+            x: 2, y: 0, isAlive: true,
+          ),
+        ],
+      );
+      expect(target, isNull);
+    });
+
     test('respects maximum target distance', () {
       expect(targeting.nearestEnemy(
         ownerId: 'p1', fromX: 0, fromY: 0,
