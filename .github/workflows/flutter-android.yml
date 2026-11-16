@@ -14,6 +14,7 @@ on:
 jobs:
   flutter-test-and-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -25,6 +26,14 @@ jobs:
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
       - run: flutter build apk --debug
+      - name: Free runner disk space for the Android emulator
+        run: |
+          echo "Disk space before cleanup:"
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          docker system prune --all --force || true
+          echo "Disk space after cleanup:"
+          df -h /
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -33,10 +42,13 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
           script: |
+            adb wait-for-device
             adb install build/app/outputs/flutter-apk/app-debug.apk
+            adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
             sleep 5
             adb shell pidof com.archerfm.archer_fm
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
