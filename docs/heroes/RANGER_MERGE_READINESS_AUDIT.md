@@ -45,3 +45,16 @@ The existing `build_ranger_source.py` is explicitly a procedural geometry builde
 ## Scope limitation
 
 GitHub repository content was inspected. The GLB binary payloads were not available through the connected file reader for local Blender inspection, and no Blender execution was performed during this audit. Therefore this report deliberately does not claim a successful merge or a Blender render/test pass.
+
+## Additional direct inspection of the original GLB
+
+A local copy of the original upload (`archer boy 3d model.glb`, 22,390,620 bytes) was available for binary inspection. Its glTF 2.0 JSON and mesh geometry were parsed directly:
+
+- 1 scene node, 1 mesh, 270,033 vertices and 501,170 faces.
+- 0 skins, 0 animations, and no joint/skin binding on the mesh.
+- Mesh bounds are approximately 0.485 × 1.000 × 0.563 in the file's local units.
+- The mesh is not watertight (not automatically a defect for an animated character, but relevant if downstream processing assumes a closed solid).
+
+This independently confirms the original GLB is a static, unskinned mesh. It cannot animate by itself. It must receive valid vertex weights and an Armature modifier from the developed rig before it can be exported as an animated character.
+
+The developed GLB's binary could not be fetched into the local runtime through the connected GitHub reader, so its armature, action names, transforms, and vertex-group layout have not yet been independently inspected here. No mesh transfer or Blender export was performed.
