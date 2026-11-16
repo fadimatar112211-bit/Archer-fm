@@ -103,6 +103,22 @@ void main() {
       ), MonsterProjectileResult.friendlyTarget);
     });
 
+    test('cancels a projectile when target identity is malformed', () {
+      final projectile = MonsterProjectile(
+        id: 'bolt-invalid-target',
+        source: _ranged(),
+        targetId: 'enemy',
+        projectileSpeed: 10,
+        positionX: 0,
+        positionY: 0,
+      );
+      expect(projectile.update(
+        elapsed: Duration.zero,
+        target: _Target('', '', 10, 0),
+      ), MonsterProjectileResult.targetMissing);
+      expect(projectile.isResolved, isTrue);
+    });
+
     test('rejects negative elapsed and requires a ranged living source', () {
       final projectile = MonsterProjectile(
         id: 'bolt', source: _ranged(), targetId: 'enemy', projectileSpeed: 10,
