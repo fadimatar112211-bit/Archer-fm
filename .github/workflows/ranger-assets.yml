@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - "tools/blender/**"
+      - "tools/validate_hero_assets.py"
       - "assets/heroes/ranger/source/render_config.json"
       - ".github/workflows/ranger-assets.yml"
 
