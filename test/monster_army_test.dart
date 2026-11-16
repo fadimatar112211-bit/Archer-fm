@@ -70,6 +70,21 @@ void main() {
       expect(army.units.map((unit) => unit.id).toSet(), hasLength(20));
     });
 
+    test('catalog rejects non-finite or invalid monster statistics', () {
+      final invalid = MonsterStats(
+        maxHealth: double.infinity,
+        damage: 10,
+        moveSpeed: 2,
+        attackRange: 20,
+        attackCooldown: const Duration(seconds: 1),
+        purchaseCost: 1,
+      );
+      expect(() => MonsterCatalog({
+        for (final type in MonsterType.values)
+          type: MonsterDefinition(type: type, baseStats: invalid),
+      }), throwsArgumentError);
+    });
+
     test('rejects invalid starting compositions', () {
       expect(() => InitialArmySelection({MonsterType.runner: 19}), throwsArgumentError);
       expect(() => InitialArmySelection({MonsterType.runner: -1}), throwsArgumentError);
@@ -257,11 +272,35 @@ void main() {
       )?.id, 'enemy-near');
     });
 
+    test('rejects invalid origin coordinates', () {
+      expect(() => targeting.nearestEnemy(
+        ownerId: 'p1', fromX: double.nan, fromY: 0,
+        candidates: targets,
+      ), throwsArgumentError);
+    });
+
     test('respects maximum target distance', () {
       expect(targeting.nearestEnemy(
         ownerId: 'p1', fromX: 0, fromY: 0,
         candidates: targets, maxDistance: 2,
       ), isNull);
+    });
+
+    test('defensive targeting ignores non-finite crystal positions', () {
+      final target = targeting.defensiveTarget(
+        ownerId: 'p1', fromX: 0, fromY: 0,
+        candidates: [
+          const MonsterTarget(
+            id: 'invalid', ownerId: 'p1', kind: MonsterTargetKind.crystal,
+            x: double.nan, y: 0, isAlive: true,
+          ),
+          const MonsterTarget(
+            id: 'valid', ownerId: 'p1', kind: MonsterTargetKind.crystal,
+            x: 4, y: 0, isAlive: true,
+          ),
+        ],
+      );
+      expect(target?.id, 'valid');
     });
 
     test('defensive target is nearest living owned crystal', () {
