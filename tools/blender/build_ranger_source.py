@@ -1288,13 +1288,14 @@ def build_bow():
     # the limbs run from above the head to below the knee with a thick luminous
     # core and a wider halo.
     # Bow curves away from the body in the X-Z plane so the C shape reads.
-    up = [Vector((0.665, -0.068, 1.300)), Vector((0.805, -0.205, 1.660)),
-          Vector((0.875, -0.295, 2.120)), Vector((0.805, -0.250, 2.520)),
+    up = [Vector((0.665, -0.068, 1.300)), Vector((0.965, -0.205, 1.660)),
+          Vector((1.280, -0.295, 2.120)), Vector((1.140, -0.250, 2.520)),
           Vector((0.640, -0.135, 2.780))]
-    down = [Vector((0.665, -0.068, 1.300)), Vector((0.805, -0.205, 0.980)),
-            Vector((0.875, -0.295, 0.590)), Vector((0.805, -0.250, 0.210)),
+    down = [Vector((0.665, -0.068, 1.300)), Vector((0.965, -0.205, 0.980)),
+            Vector((1.280, -0.295, 0.590)), Vector((1.140, -0.250, 0.210)),
             Vector((0.640, -0.135, -0.040))]
-    widths = [0.092, 0.076, 0.062, 0.046, 0.024]
+    # Wider limbs and a deeper C curve keep the energy bow readable at 192px.
+    widths = [0.132, 0.112, 0.088, 0.062, 0.032]
     for index, limb in enumerate((up, down)):
         sweep(f"Bow_Frame_{index}", limb, widths, "gold", "bow",
               sides=8, thickness=[w * 1.05 for w in widths], tip=True)
@@ -1309,19 +1310,19 @@ def build_bow():
     # along the limbs that keep the weapon readable even at 96 px.
     for index, sign in ((0, 1.0), (1, -1.0)):
         sweep(f"Bow_Blade_{index}", [
-            Vector((0.775, -0.58, 2.40)),
-            Vector((0.750, -0.64, 2.62)),
-            Vector((0.715, -0.59, 2.82)),
-            Vector((0.675, -0.41, 2.96))],
-            [0.066, 0.050, 0.027, 0.006], "energy", "bow", sides=5,
-            thickness=[0.030, 0.020, 0.012, 0.004], tip=True)
+            Vector((1.105, -0.58, 2.40)),
+            Vector((1.310, -0.64, 2.62)),
+            Vector((1.345, -0.59, 2.82)),
+            Vector((1.155, -0.41, 2.96))],
+            [0.112, 0.086, 0.050, 0.006], "energy", "bow", sides=5,
+            thickness=[0.052, 0.038, 0.020, 0.004], tip=True)
         sweep(f"Bow_Blade_Low_{index}", [
-            Vector((0.775, -0.58, 0.52)),
-            Vector((0.750, -0.64, 0.30)),
-            Vector((0.715, -0.59, 0.10)),
-            Vector((0.675, -0.41, -0.04))],
-            [0.066, 0.050, 0.027, 0.006], "energy", "bow", sides=5,
-            thickness=[0.030, 0.020, 0.012, 0.004], tip=True)
+            Vector((1.105, -0.58, 0.52)),
+            Vector((1.310, -0.64, 0.30)),
+            Vector((1.345, -0.59, 0.10)),
+            Vector((1.155, -0.41, -0.04))],
+            [0.112, 0.086, 0.050, 0.006], "energy", "bow", sides=5,
+            thickness=[0.052, 0.038, 0.020, 0.004], tip=True)
     sweep("Bow_Grip", [Vector((0.60, -0.10, 1.28)),
                        Vector((0.60, -0.10, 1.56))],
           [0.098, 0.098], "leather_dark", "bow", sides=12,
