@@ -46,6 +46,7 @@ class MonsterArmy {
         _units.add(_createUnit(type, _nextId));
       }
     }
+    _spawnCursor = _nextId;
   }
 
   final String ownerId;
@@ -63,8 +64,8 @@ class MonsterArmy {
       _units.where((unit) => unit.type == type && unit.isAlive).length;
 
   MonsterUnit _createUnit(MonsterType type, int index) {
-    final slot = index % 20;
-    final ring = slot ~/ 8;
+    final slot = index % 8;
+    final ring = index ~/ 8;
     final angle = slot * (math.pi / 4);
     final radius = 34.0 + ring * 24.0;
     final stats = catalog[type].baseStats;
