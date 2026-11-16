@@ -428,3 +428,18 @@ Still to decide or test:
 - Added deterministic circular attack-slot assignment around a target. Slot assignment is currently an explicit API and is not automatically consumed by combat pursuit yet.
 - Expanded movement tests for slot uniqueness/order, invalid geometry, combat pursuit integration, and deterministic repeatability. Corrected the test package import to match the actual package name `archer_fm`.
 - Full global pathfinding, terrain collision resolution, automatic slot reservation/reassignment, and runtime-provided obstacle geometry remain outstanding. No claim of passing Flutter checks until the latest Actions run completes.
+
+
+## 27. Monster subsystem hardening — 2026-11-17
+
+- Corrected the monster combat math import and the external target adapter interface dependency.
+- Corrected stale test package imports to the actual `archer_fm` package name.
+- Hardened combat resolution against self-targeting and malformed target identities.
+- Added runtime catalog validation for finite, positive monster health/damage/speed, valid range/cooldown, and non-negative purchase cost.
+- Hardened enemy and defensive target selection against malformed identities and non-finite coordinates.
+- Hardened formation steering against invalid tuning values, invalid live-unit positions, and invalid obstacle geometry.
+- Hardened ranged projectile creation/update against empty target owners and non-finite target positions.
+- Added animation sheet metadata validation and negative frame-duration coverage.
+- Expanded unit tests for the above rejection and fallback cases.
+- GitHub Actions runs are being triggered by the commits; the latest observed runs were still in progress. Do not mark Flutter analyze/tests as passed until a completed successful run is observed.
+- Visual monster rendering and integration into the actual match screen remain outstanding. No hero files, assets, Blender tools, or hero render paths were modified.
