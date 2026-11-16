@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
+import 'package:archer_fm/hero/sprite_player.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const String _renderRoot = 'assets/heroes/ranger/renders';
@@ -88,6 +89,29 @@ void main() {
           expect(event.frame, lessThan(clip.frames.length), reason: clip.name);
         }
       }
+    }
+  });
+
+  test('the runtime player emits projectile_release on the configured frame', () {
+    for (final direction in _directions) {
+      final clip = manifest.clipFor('attack', direction)!;
+      final emitted = <AnimationEvent>[];
+      final releaseIndex = clip.events
+          .singleWhere((event) => event.name == 'projectile_release')
+          .frame;
+      final player = SpritePlayer(
+        clip: clip,
+        onEvent: emitted.add,
+      );
+
+      player.advance(clip.frameDurationMs * releaseIndex);
+
+      expect(player.frameIndex, releaseIndex, reason: 'attack_$direction');
+      expect(
+        emitted.where((event) => event.name == 'projectile_release'),
+        hasLength(1),
+        reason: 'attack_$direction',
+      );
     }
   });
 
