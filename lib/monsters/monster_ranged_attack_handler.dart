@@ -29,6 +29,7 @@ class MonsterRangedAttackHandler {
         projectileSpeed <= 0 ||
         target == null ||
         target.id != intent.targetId ||
+        target.ownerId.isEmpty ||
         !target.isAlive ||
         target.ownerId == source.ownerId ||
         !target.positionX.isFinite ||
