@@ -59,9 +59,6 @@ class MonsterCombatController {
     }
 
     if (elapsed == Duration.zero || distance == 0) return null;
-    if (!cohesion.isFinite || cohesion < 0 || cohesion > 1) {
-      throw ArgumentError.value(cohesion, 'cohesion');
-    }
     final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
     final step = math.min(unit.stats.moveSpeed * seconds, distance - unit.stats.attackRange);
     unit.positionX += dx / distance * step;
