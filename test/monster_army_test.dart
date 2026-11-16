@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:archero_fm/monsters/monster_army.dart';
-import 'package:archero_fm/monsters/monster_combat.dart';
-import 'package:archero_fm/monsters/monster_combat_resolver.dart';
-import 'package:archero_fm/monsters/monster_models.dart';
+import 'package:archer_fm/monsters/monster_army.dart';
+import 'package:archer_fm/monsters/monster_combat.dart';
+import 'package:archer_fm/monsters/monster_combat_resolver.dart';
+import 'package:archer_fm/monsters/monster_models.dart';
 
 MonsterCatalog catalog() => MonsterCatalog({
   for (final type in MonsterType.values)
