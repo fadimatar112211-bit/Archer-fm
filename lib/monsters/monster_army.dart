@@ -97,6 +97,32 @@ class MonsterArmy {
     return MonsterPurchase(unit: unit, cost: cost);
   }
 
+  /// Debits authoritative resources before spawning and refunds on any failure.
+  /// [tryDebit] must be an atomic compare-and-debit operation on match state.
+  MonsterPurchase? purchaseAtomically({
+    required MonsterType type,
+    required int currentResources,
+    required bool Function(int amount) tryDebit,
+    required void Function(int amount) refund,
+  }) {
+    if (currentResources < 0) {
+      throw ArgumentError.value(currentResources, 'currentResources');
+    }
+    final cost = catalog[type].baseStats.purchaseCost;
+    if (currentResources < cost || !tryDebit(cost)) return null;
+    try {
+      final purchase = purchase(type: type, currentResources: currentResources);
+      if (purchase == null) {
+        refund(cost);
+        return null;
+      }
+      return purchase;
+    } catch (_) {
+      refund(cost);
+      rethrow;
+    }
+  }
+
   /// Moves the army toward a shared destination while retaining local spacing.
   /// Individual units retain independent positions and target decisions.
   void moveGroupToward({
