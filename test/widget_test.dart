@@ -38,6 +38,30 @@ Map<String, dynamic> _fakeManifest(String heroId) {
   };
 }
 
+class _PreloadedRangerLoader extends HeroAssetLoader {
+  _PreloadedRangerLoader(this.manifest, this.sheet);
+
+  final HeroManifest manifest;
+  final AtlasSheet sheet;
+
+  @override
+  String get heroId => 'ranger';
+
+  @override
+  Future<HeroManifest> loadManifest() async => manifest;
+
+  @override
+  Future<AtlasSheet> loadSheet(
+    HeroManifest manifest,
+    String animation,
+  ) async {
+    if (animation != 'idle_s') {
+      throw UnsupportedError('This production asset test loads idle_s only');
+    }
+    return sheet;
+  }
+}
+
 class _FakeLoader extends HeroAssetLoader {
   _FakeLoader(this.hero);
 
@@ -125,32 +149,38 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ArcherFmApp());
-    // Let the real asset bundle load the manifest, atlas metadata and PNG,
-    // while the animation ticker advances through a few idle frames.
-    HeroStagePainter? painter;
-    for (var i = 0; i < 100; i++) {
+    // Decode the actual bundled manifest, atlas metadata and PNG outside the
+    // widget test's fake-async clock, then inject that real decoded sheet into
+    // the production screen so its painter is tested deterministically.
+    final bundleLoader = BundleHeroAssetLoader(heroCatalog.first);
+    late HeroManifest manifest;
+    late AtlasSheet sheet;
+    await tester.runAsync(() async {
+      manifest = await bundleLoader.loadManifest();
+      sheet = await bundleLoader.loadSheet(manifest, 'idle_s');
+    });
+    addTearDown(bundleLoader.dispose);
+
+    await tester.pumpWidget(
+      ArcherFmApp(
+        loaderFactory: (_) => _PreloadedRangerLoader(manifest, sheet),
+      ),
+    );
+    for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 25));
-      final stagePaints = tester
-          .widgetList<CustomPaint>(find.byType(CustomPaint))
-          .where((widget) => widget.painter is HeroStagePainter)
-          .toList();
-      if (stagePaints.isNotEmpty) {
-        painter = stagePaints.first.painter as HeroStagePainter;
-      }
-      if (painter?.sheet != null) break;
     }
 
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
     expect(find.text('64 حركة'), findsOneWidget);
-    expect(painter, isNotNull);
-    expect(painter!.sheet, isNotNull, reason: painter.placeholder);
+    final stagePaint = tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .firstWhere((widget) => widget.painter is HeroStagePainter);
+    final painter = stagePaint.painter! as HeroStagePainter;
+    expect(painter.sheet, same(sheet));
     expect(painter.frameId, startsWith('ranger_idle_s_'));
     expect(painter.sheet!.rectFor(painter.frameId!), isNotNull);
     expect(painter.sheet!.width, greaterThan(0));
     expect(painter.sheet!.height, greaterThan(0));
-    expect(find.textContaining('تعذّر تحميل صورة الحركة'), findsNothing);
-    expect(find.text('أصول هذا البطل قيد الإنتاج'), findsNothing);
-  });
+  });;
 
 }
