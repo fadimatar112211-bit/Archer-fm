@@ -278,6 +278,21 @@ def main() -> int:
                     with Image.open(path) as source:
                         image = source.convert("RGBA")
                     found, metrics = frame_errors(path, image, state, args.resolution)
+                    if hero == "ranger" and state == "idle" and direction == "s" and metrics:
+                        # The Ranger's signature energy bow must be visible beside
+                        # the front-facing body, not collapsed into a thin hidden line.
+                        bow_pixels = 0
+                        bow_region_start = round(args.resolution * 0.72)
+                        for y in range(args.resolution):
+                            for x in range(bow_region_start, args.resolution):
+                                red, green, blue, alpha = image.getpixel((x, y))
+                                if (alpha > 48 and green > 110
+                                        and green > red * 1.12 and green > blue * 1.08):
+                                    bow_pixels += 1
+                        if metrics["bbox"][2] < round(args.resolution * 0.72) or bow_pixels < 24:
+                            found.append(
+                                f"{path}: front idle energy bow is too narrow or hidden "
+                                f"(right edge={metrics['bbox'][2]}, green pixels={bow_pixels})")
                     if found and first_failing is None:
                         first_failing = (path, image)
                     errors.extend(found)
