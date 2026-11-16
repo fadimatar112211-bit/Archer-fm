@@ -114,7 +114,7 @@ void main() {
       );
       expect(projectile.update(
         elapsed: Duration.zero,
-        target: _Target('', '', 10, 0),
+        target: _Target('enemy', '', 10, 0),
       ), MonsterProjectileResult.targetMissing);
       expect(projectile.isResolved, isTrue);
     });
