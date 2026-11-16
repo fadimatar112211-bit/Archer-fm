@@ -59,6 +59,7 @@ class MonsterAnimationController {
   bool _dead = false;
 
   MonsterAnimationState get state => _state;
+  MonsterSpriteSheet get currentSheet => _activeSheet;
   int get frameIndex => _frameIndex;
   Duration get elapsedInFrame => _elapsed;
   bool get isComplete => _state == MonsterAnimationState.death &&
