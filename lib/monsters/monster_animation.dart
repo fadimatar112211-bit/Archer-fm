@@ -58,7 +58,7 @@ class MonsterAnimationController {
   int get frameIndex => _frameIndex;
   Duration get elapsedInFrame => _elapsed;
   bool get isComplete => _state == MonsterAnimationState.death &&
-      !_activeSheet.loop && _frameIndex == _activeSheet.frameCount - 1;
+      _frameIndex == _activeSheet.frameCount - 1;
 
   MonsterSpriteSheet get _activeSheet {
     switch (_state) {
@@ -92,7 +92,8 @@ class MonsterAnimationController {
   /// Large frame deltas are reduced arithmetically to avoid unbounded loops.
   void advance(Duration delta) {
     if (delta.isNegative) throw ArgumentError.value(delta, 'delta');
-    if (delta == Duration.zero || isComplete) return;
+    if (delta == Duration.zero || isComplete ||
+        _state == MonsterAnimationState.idle) return;
     final sheet = _activeSheet;
     final frameUs = sheet.frameDuration.inMicroseconds;
     final totalUs = _elapsed.inMicroseconds + delta.inMicroseconds;
@@ -101,7 +102,7 @@ class MonsterAnimationController {
     if (steps == 0) return;
 
     final next = _frameIndex + steps;
-    if (sheet.loop) {
+    if (sheet.loop && _state != MonsterAnimationState.death) {
       _frameIndex = next % sheet.frameCount;
     } else {
       _frameIndex = next.clamp(0, sheet.frameCount - 1);
