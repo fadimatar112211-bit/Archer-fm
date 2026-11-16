@@ -37,7 +37,8 @@ jobs:
             tools/blender/render_hero.py \
             tools/blender/pack_hero_atlases.py \
             tools/blender/validate_ranger_source.py \
-            tools/blender/validate_rendered_frames.py
+            tools/blender/validate_rendered_frames.py \
+            tools/validate_hero_assets.py
 
       - name: Build editable Ranger source
         run: blender -b --python tools/blender/build_ranger_source.py
@@ -72,7 +73,7 @@ jobs:
       - name: Commit validated Ranger runtime atlases
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          if [ "$(tr -d '\\r\\n' < tools/blender/active_hero.txt)" != "ranger" ]; then
+          if [ "$(cat tools/blender/active_hero.txt)" != "ranger" ]; then
             echo "Active hero is not Ranger; runtime atlas commit is skipped."
             exit 0
           fi
