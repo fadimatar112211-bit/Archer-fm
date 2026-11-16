@@ -230,6 +230,18 @@ def main() -> int:
                     errors.append(
                         f"attack_{direction}: projectile_release is at frame "
                         f"{releases[0].get('frame')}, expected configured frame {expected_release}")
+
+                death = animations_by.get(("death", direction), {})
+                death_events = [
+                    event for event in death.get("events", [])
+                    if event.get("name") == "death_complete"
+                ]
+                if len(death_events) != 1:
+                    errors.append(
+                        f"death_{direction}: expected exactly one death_complete event")
+                elif death.get("frames") and death_events[0].get("frame") != len(death["frames"]) - 1:
+                    errors.append(
+                        f"death_{direction}: death_complete must be on the final frame")
     for state in STATES:
         for direction in DIRECTIONS:
             frames = sorted((args.root / state / direction).glob("*.png"))
@@ -271,6 +283,52 @@ def main() -> int:
                     errors.extend(found)
                 except Exception as exc:
                     errors.append(f"{path}: cannot inspect PNG: {exc}")
+    # Death must visibly progress from the standing pose into a collapsed
+    # final pose. Merely declaring a death Action or producing nine non-empty
+    # frames is not enough: a stale idle clip can otherwise pass the silhouette
+    # checks. Compare the first and final alpha bounds against the matching
+    # idle direction so this remains camera-independent.
+    if manifest is not None:
+        for direction in DIRECTIONS:
+            idle = animations_by.get(("idle", direction), {})
+            death = animations_by.get(("death", direction), {})
+            idle_ids = idle.get("frames", [])
+            death_ids = death.get("frames", [])
+            if not idle_ids or not death_ids:
+                continue
+            idle_path = args.root / "idle" / direction / f"{idle_ids[0]}.png"
+            death_start_path = args.root / "death" / direction / f"{death_ids[0]}.png"
+            death_end_path = args.root / "death" / direction / f"{death_ids[-1]}.png"
+            if not all(path.is_file() for path in (idle_path, death_start_path, death_end_path)):
+                continue
+            with Image.open(idle_path) as source:
+                idle_box = source.convert("RGBA").getchannel("A").getbbox()
+            with Image.open(death_start_path) as source:
+                start_box = source.convert("RGBA").getchannel("A").getbbox()
+            with Image.open(death_end_path) as source:
+                end_box = source.convert("RGBA").getchannel("A").getbbox()
+            if not idle_box or not start_box or not end_box:
+                continue
+            idle_height = idle_box[3] - idle_box[1]
+            start_height = start_box[3] - start_box[1]
+            end_height = end_box[3] - end_box[1]
+            idle_center_y = (idle_box[1] + idle_box[3]) / 2
+            end_center_y = (end_box[1] + end_box[3]) / 2
+            if start_height < idle_height * 0.90:
+                errors.append(
+                    f"death_{direction}: animation does not begin from the standing pose")
+            if end_height > idle_height * 0.85:
+                errors.append(
+                    f"death_{direction}: final frame does not show a clear collapse "
+                    f"({end_height}px vs standing {idle_height}px)")
+            if end_center_y < idle_center_y + 8:
+                errors.append(
+                    f"death_{direction}: final body centre did not fall visibly "
+                    f"({end_center_y:.1f} vs {idle_center_y:.1f})")
+            if end_height < 90:
+                errors.append(
+                    f"death_{direction}: final pose is too small to read ({end_height}px)")
+
     # The eight view angles must remain distinguishable; this catches a
     # renderer that accidentally reuses one camera pose for every direction.
     for state in STATES:
