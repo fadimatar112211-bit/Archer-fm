@@ -47,6 +47,10 @@ class MonsterCombatResolver {
     if (target == null || target.id != intent.targetId) {
       return MonsterDamageResult.missingTarget;
     }
+    if (target.id == intent.monsterId) return MonsterDamageResult.selfTarget;
+    if (target.id.isEmpty || target.ownerId.isEmpty) {
+      return MonsterDamageResult.invalidIntent;
+    }
     if (target.ownerId == attackerOwnerId) {
       return MonsterDamageResult.friendlyTarget;
     }
