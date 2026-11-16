@@ -20,11 +20,12 @@ class MonsterProjectile {
     required this.id,
     required MonsterUnit source,
     required this.targetId,
+    required double projectileSpeed,
     required this.positionX,
     required this.positionY,
   })  : ownerId = source.ownerId,
         sourceMonsterId = source.id,
-        speed = source.stats.moveSpeed,
+        speed = projectileSpeed,
         damage = source.stats.damage {
     if (id.isEmpty || targetId.isEmpty || !source.isAlive ||
         source.type != MonsterType.ranged ||
