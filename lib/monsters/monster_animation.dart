@@ -38,6 +38,9 @@ class MonsterAnimationController {
     this.deathSheet,
     this.idleFrame = 0,
   }) : _frameIndex = idleFrame {
+    _validateSheet(walkSheet, 'walkSheet');
+    if (attackSheet != null) _validateSheet(attackSheet, 'attackSheet');
+    if (deathSheet != null) _validateSheet(deathSheet, 'deathSheet');
     if (idleFrame < 0 || idleFrame >= walkSheet.frameCount) {
       throw RangeError.range(idleFrame, 0, walkSheet.frameCount - 1, 'idleFrame');
     }
@@ -106,6 +109,14 @@ class MonsterAnimationController {
       _frameIndex = next % sheet.frameCount;
     } else {
       _frameIndex = next.clamp(0, sheet.frameCount - 1);
+    }
+  }
+
+  void _validateSheet(MonsterSpriteSheet sheet, String name) {
+    if (sheet.asset.isEmpty || sheet.frameWidth <= 0 ||
+        sheet.frameHeight <= 0 || sheet.frameCount <= 0 ||
+        sheet.frameDuration <= Duration.zero) {
+      throw ArgumentError.value(sheet, name, 'Invalid sprite sheet metadata.');
     }
   }
 
