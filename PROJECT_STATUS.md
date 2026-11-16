@@ -419,3 +419,12 @@ Still to decide or test:
 - Added `moveUnitToward` for independent target pursuit with local ally/obstacle avoidance. The match host must call this for per-unit navigation and supply nearby allies and map obstacles.
 - Added `test/monster_formation_movement_test.dart` and included it in the monster GitHub Actions format/analyze/test commands.
 - This is local steering, not full global pathfinding or a collision solver. Long-range route planning around walls/complex terrain and runtime integration remain outstanding. Flutter tests/analyzer/CI have not yet been run successfully or confirmed.
+
+
+## Monster movement integration — 2026-11-17
+- `MonsterCombatController` now delegates per-unit pursuit to `MonsterFormationMovement.moveUnitToward`, replacing its direct linear movement while preserving independent target selection, attack range and cooldown behavior.
+- Added optional per-unit ally and obstacle providers to the combat controller; empty providers preserve compatibility where the match host has not supplied spatial context yet.
+- `MonsterMatchCombatLoop` now accepts `alliesFor` and `obstaclesFor` callbacks and passes their results into each authoritative unit update.
+- Added deterministic circular attack-slot assignment around a target. Slot assignment is currently an explicit API and is not automatically consumed by combat pursuit yet.
+- Expanded movement tests for slot uniqueness/order, invalid geometry, combat pursuit integration, and deterministic repeatability. Corrected the test package import to match the actual package name `archer_fm`.
+- Full global pathfinding, terrain collision resolution, automatic slot reservation/reassignment, and runtime-provided obstacle geometry remain outstanding. No claim of passing Flutter checks until the latest Actions run completes.
