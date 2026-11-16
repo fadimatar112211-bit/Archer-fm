@@ -26,6 +26,17 @@ class MonsterStats {
   final Duration attackCooldown;
   final int purchaseCost;
 
+  void validate() {
+    if (!maxHealth.isFinite || maxHealth <= 0 ||
+        !damage.isFinite || damage <= 0 ||
+        !moveSpeed.isFinite || moveSpeed <= 0 ||
+        !attackRange.isFinite || attackRange < 0 ||
+        attackCooldown.isNegative || attackCooldown == Duration.zero ||
+        purchaseCost < 0) {
+      throw ArgumentError('Monster stats must be finite and within valid ranges.');
+    }
+  }
+
   MonsterStats scaledForLevel(
     int level, {
     required double healthPerLevel,
@@ -66,6 +77,7 @@ class MonsterCatalog {
       throw ArgumentError('Catalog must define exactly the four launch monsters.');
     }
     for (final type in MonsterType.values) {
+      _definitions[type]!.baseStats.validate();
       if (_definitions[type]!.type != type) {
         throw ArgumentError('Catalog key and monster definition type must match.');
       }
@@ -161,7 +173,8 @@ class MonsterTargeting {
     required Iterable<MonsterTarget> candidates,
     double maxDistance = double.infinity,
   }) {
-    if (maxDistance < 0 || maxDistance.isNaN) {
+    if (ownerId.isEmpty || !fromX.isFinite || !fromY.isFinite ||
+        maxDistance < 0 || maxDistance.isNaN) {
       throw ArgumentError.value(maxDistance, 'maxDistance');
     }
     MonsterTarget? best;
@@ -187,12 +200,15 @@ class MonsterTargeting {
     required double fromY,
     required Iterable<MonsterTarget> candidates,
   }) {
+    if (ownerId.isEmpty || !fromX.isFinite || !fromY.isFinite) {
+      throw ArgumentError('Defensive targeting requires a valid owner and position.');
+    }
     MonsterTarget? nearest;
     var nearestDistance = double.infinity;
     for (final target in candidates) {
       if (target.kind != MonsterTargetKind.crystal ||
           target.ownerId != ownerId ||
-          !target.isAlive) continue;
+          !target.isAlive || !target.x.isFinite || !target.y.isFinite) continue;
       final dx = target.x - fromX;
       final dy = target.y - fromY;
       final distance = dx * dx + dy * dy;
