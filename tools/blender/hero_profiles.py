@@ -1073,7 +1073,11 @@ PROFILES = {
         "prefix": "Ranger",
         "rig": "Ranger_Rig",
         "armature": "Ranger_Armature",
-        "palette": {},
+        "palette": {
+            "eye_blue": "#2498E8",
+            "eye_light": "#B7EDFF",
+            "eye_dark": "#132A44",
+        },
         "hair": "spiky",
         "hair_style": "ranger",
         "front_mantle": True,
