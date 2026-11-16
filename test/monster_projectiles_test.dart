@@ -55,52 +55,6 @@ class _Target implements MonsterPositionedDamageTarget {
     return !isAlive;
   }
 
-  group('Monster projectile manager', () {
-    MonsterProjectile projectile(String id) => MonsterProjectile(
-      id: id, source: _ranged(), targetId: 'enemy',
-      projectileSpeed: 10, positionX: 0, positionY: 0,
-    );
-
-    test('enforces configured capacity and unique IDs', () {
-      final manager = MonsterProjectileManager(maxActiveProjectiles: 2);
-      expect(manager.add(projectile('a')), isTrue);
-      expect(manager.add(projectile('a')), isFalse);
-      expect(manager.add(projectile('b')), isTrue);
-      expect(manager.add(projectile('c')), isFalse);
-      expect(manager.activeCount, 2);
-    });
-
-    test('removes resolved projectiles and supports clearing', () {
-      final manager = MonsterProjectileManager(maxActiveProjectiles: 3);
-      manager.add(projectile('a'));
-      manager.add(projectile('b'));
-      final target = _Target('enemy', 'p2', 0, 0);
-      final result = manager.update(
-        elapsed: Duration.zero,
-        resolveTarget: (id) => id == target.id ? target : null,
-      );
-      expect(result['a'], MonsterProjectileResult.hit);
-      expect(result['b'], MonsterProjectileResult.hit);
-      expect(manager.activeCount, 0);
-      manager.add(projectile('c'));
-      manager.clear();
-      expect(manager.activeCount, 0);
-    });
-
-    test('retains travelling projectiles and rejects invalid capacity', () {
-      expect(() => MonsterProjectileManager(maxActiveProjectiles: 0),
-          throwsArgumentError);
-      final manager = MonsterProjectileManager(maxActiveProjectiles: 1);
-      manager.add(projectile('a'));
-      final result = manager.update(
-        elapsed: const Duration(milliseconds: 100),
-        resolveTarget: (_) => _Target('enemy', 'p2', 100, 0),
-      );
-      expect(result['a'], MonsterProjectileResult.travelling);
-      expect(manager.activeCount, 1);
-    });
-  });
-
 }
 
 void main() {
@@ -168,4 +122,51 @@ void main() {
       ), throwsArgumentError);
     });
   });
+
+  group('Monster projectile manager', () {
+    MonsterProjectile projectile(String id) => MonsterProjectile(
+      id: id, source: _ranged(), targetId: 'enemy',
+      projectileSpeed: 10, positionX: 0, positionY: 0,
+    );
+
+    test('enforces configured capacity and unique IDs', () {
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 2);
+      expect(manager.add(projectile('a')), isTrue);
+      expect(manager.add(projectile('a')), isFalse);
+      expect(manager.add(projectile('b')), isTrue);
+      expect(manager.add(projectile('c')), isFalse);
+      expect(manager.activeCount, 2);
+    });
+
+    test('removes resolved projectiles and supports clearing', () {
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 3);
+      manager.add(projectile('a'));
+      manager.add(projectile('b'));
+      final target = _Target('enemy', 'p2', 0, 0);
+      final result = manager.update(
+        elapsed: Duration.zero,
+        resolveTarget: (id) => id == target.id ? target : null,
+      );
+      expect(result['a'], MonsterProjectileResult.hit);
+      expect(result['b'], MonsterProjectileResult.hit);
+      expect(manager.activeCount, 0);
+      manager.add(projectile('c'));
+      manager.clear();
+      expect(manager.activeCount, 0);
+    });
+
+    test('retains travelling projectiles and rejects invalid capacity', () {
+      expect(() => MonsterProjectileManager(maxActiveProjectiles: 0),
+          throwsArgumentError);
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 1);
+      manager.add(projectile('a'));
+      final result = manager.update(
+        elapsed: const Duration(milliseconds: 100),
+        resolveTarget: (_) => _Target('enemy', 'p2', 100, 0),
+      );
+      expect(result['a'], MonsterProjectileResult.travelling);
+      expect(manager.activeCount, 1);
+    });
+  });
+
 }
