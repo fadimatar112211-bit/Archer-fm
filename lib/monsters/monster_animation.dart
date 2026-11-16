@@ -38,8 +38,10 @@ class MonsterAnimationController {
     this.idleFrame = 0,
   }) : _frameIndex = idleFrame {
     _validateSheet(walkSheet, 'walkSheet');
-    if (attackSheet != null) _validateSheet(attackSheet, 'attackSheet');
-    if (deathSheet != null) _validateSheet(deathSheet, 'deathSheet');
+    final attack = attackSheet;
+    if (attack != null) _validateSheet(attack, 'attackSheet');
+    final death = deathSheet;
+    if (death != null) _validateSheet(death, 'deathSheet');
     if (idleFrame < 0 || idleFrame >= walkSheet.frameCount) {
       throw RangeError.range(idleFrame, 0, walkSheet.frameCount - 1, 'idleFrame');
     }
