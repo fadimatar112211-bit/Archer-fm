@@ -7,6 +7,7 @@ import 'package:archero_fm/monsters/monster_projectile_manager.dart';
 import 'package:archero_fm/monsters/monster_ranged_attack_handler.dart';
 import 'package:archero_fm/monsters/monster_combat.dart';
 import 'package:archero_fm/monsters/monster_match_combat_loop.dart';
+import 'package:archero_fm/monsters/monster_external_entity_adapter.dart';
 
 MonsterCatalog _catalog() => MonsterCatalog({
   for (final type in MonsterType.values)
@@ -127,6 +128,29 @@ void main() {
   });
 
 
+
+
+  group('External match entity adapter', () {
+    test('exposes authoritative position and delegates damage', () {
+      var health = 40.0;
+      final adapter = MonsterExternalEntityAdapter(
+        id: 'crystal-1',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.crystal,
+        isAlive: true,
+        positionX: 12,
+        positionY: 18,
+        applyDamage: (amount) {
+          health = (health - amount).clamp(0, 100).toDouble();
+          return health <= 0;
+        },
+      );
+      expect(adapter.positionX, 12);
+      expect(adapter.positionY, 18);
+      expect(adapter.applyDamage(15), isFalse);
+      expect(health, 25);
+    });
+  });
 
   group('Authoritative monster match combat loop', () {
     test('routes melee damage and ranged attacks through the projectile manager', () {
