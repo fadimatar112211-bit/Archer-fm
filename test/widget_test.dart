@@ -115,4 +115,26 @@ void main() {
     expect(find.textContaining('idle_s'), findsOneWidget);
     expect(find.text('فارس اللهب · قريب المدى · إلحاق ضرر'), findsOneWidget);
   });
+  testWidgets('the production Ranger atlas is loaded and painted', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const ArcherFmApp());
+    // Let the real asset bundle load the manifest, atlas metadata and PNG,
+    // while the animation ticker advances through a few idle frames.
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 25));
+    }
+
+    expect(find.text('Archer FM · Ranger'), findsOneWidget);
+    expect(find.text('64 حركة'), findsOneWidget);
+    expect(find.textContaining('idle_s'), findsOneWidget);
+    expect(find.textContaining('تعذّر تحميل صورة الحركة'), findsNothing);
+    expect(find.text('أصول هذا البطل قيد الإنتاج'), findsNothing);
+  });
+
 }
