@@ -6,6 +6,7 @@ on:
     paths:
       - 'lib/monsters/**'
       - 'test/monster_army_test.dart'
+      - 'test/monster_projectiles_test.dart'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'lib/monsters/**'
       - 'test/monster_army_test.dart'
+      - 'test/monster_projectiles_test.dart'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
@@ -29,6 +31,6 @@ jobs:
           channel: stable
       - run: flutter --version
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib/monsters test/monster_army_test.dart
+      - run: dart format --output=none --set-exit-if-changed lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart
       - run: flutter analyze
-      - run: flutter test test/monster_army_test.dart
+      - run: flutter test test/monster_army_test.dart test/monster_projectiles_test.dart
