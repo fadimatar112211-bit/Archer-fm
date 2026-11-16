@@ -180,7 +180,8 @@ class MonsterTargeting {
     MonsterTarget? best;
     var bestDistanceSquared = maxDistance * maxDistance;
     for (final candidate in candidates) {
-      if (!candidate.isAlive || candidate.ownerId == ownerId) continue;
+      if (!candidate.isAlive || candidate.id.isEmpty ||
+          candidate.ownerId.isEmpty || candidate.ownerId == ownerId) continue;
       if (!candidate.x.isFinite || !candidate.y.isFinite) continue;
       // Castles are deliberately not a target kind: crystals gate castle damage.
       final dx = candidate.x - fromX;
@@ -207,7 +208,7 @@ class MonsterTargeting {
     var nearestDistance = double.infinity;
     for (final target in candidates) {
       if (target.kind != MonsterTargetKind.crystal ||
-          target.ownerId != ownerId ||
+          target.id.isEmpty || target.ownerId != ownerId ||
           !target.isAlive || !target.x.isFinite || !target.y.isFinite) continue;
       final dx = target.x - fromX;
       final dy = target.y - fromY;
