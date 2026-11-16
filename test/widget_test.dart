@@ -128,17 +128,21 @@ void main() {
     await tester.pumpWidget(const ArcherFmApp());
     // Let the real asset bundle load the manifest, atlas metadata and PNG,
     // while the animation ticker advances through a few idle frames.
-    for (var i = 0; i < 20; i++) {
+    HeroStagePainter? painter;
+    for (var i = 0; i < 100; i++) {
       await tester.pump(const Duration(milliseconds: 25));
+      final stagePaint = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .where((widget) => widget.painter is HeroStagePainter)
+          .firstOrNull;
+      painter = stagePaint?.painter as HeroStagePainter?;
+      if (painter?.sheet != null) break;
     }
 
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
     expect(find.text('64 حركة'), findsOneWidget);
-    final stagePaint = tester
-        .widgetList<CustomPaint>(find.byType(CustomPaint))
-        .firstWhere((widget) => widget.painter is HeroStagePainter);
-    final painter = stagePaint.painter! as HeroStagePainter;
-    expect(painter.sheet, isNotNull);
+    expect(painter, isNotNull);
+    expect(painter!.sheet, isNotNull, reason: painter.placeholder);
     expect(painter.frameId, startsWith('ranger_idle_s_'));
     expect(painter.sheet!.rectFor(painter.frameId!), isNotNull);
     expect(painter.sheet!.width, greaterThan(0));
