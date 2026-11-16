@@ -1,6 +1,7 @@
 import 'dart:ui' show Size;
 
 import 'package:archer_fm/hero/hero_assets.dart';
+import 'package:archer_fm/hero/hero_stage.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:archer_fm/hero/hero_viewer_screen.dart';
@@ -132,7 +133,15 @@ void main() {
 
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
     expect(find.text('64 حركة'), findsOneWidget);
-    expect(find.textContaining('idle_s'), findsOneWidget);
+    final stagePaint = tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .firstWhere((widget) => widget.painter is HeroStagePainter);
+    final painter = stagePaint.painter! as HeroStagePainter;
+    expect(painter.sheet, isNotNull);
+    expect(painter.frameId, startsWith('ranger_idle_s_'));
+    expect(painter.sheet!.rectFor(painter.frameId!), isNotNull);
+    expect(painter.sheet!.width, greaterThan(0));
+    expect(painter.sheet!.height, greaterThan(0));
     expect(find.textContaining('تعذّر تحميل صورة الحركة'), findsNothing);
     expect(find.text('أصول هذا البطل قيد الإنتاج'), findsNothing);
   });
