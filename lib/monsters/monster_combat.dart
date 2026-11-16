@@ -1,6 +1,5 @@
-import 'dart:math' as math;
-
 import 'monster_models.dart';
+import 'monster_formation_movement.dart';
 
 class MonsterCombatIntent {
   const MonsterCombatIntent({
@@ -17,9 +16,13 @@ class MonsterCombatIntent {
 /// Deterministic per-unit AI. The match authority applies returned damage to
 /// the authoritative target; this class never mutates another player's state.
 class MonsterCombatController {
-  const MonsterCombatController({this.targeting = const MonsterTargeting()});
+  const MonsterCombatController({
+    this.targeting = const MonsterTargeting(),
+    this.movement = const MonsterFormationMovement(),
+  });
 
   final MonsterTargeting targeting;
+  final MonsterFormationMovement movement;
 
   MonsterCombatIntent? updateUnit({
     required MonsterUnit unit,
@@ -27,6 +30,8 @@ class MonsterCombatController {
     required DateTime now,
     required Duration elapsed,
     double cohesion = 0,
+    Iterable<MonsterUnit> allies = const [],
+    Iterable<MonsterMovementObstacle> obstacles = const [],
   }) {
     if (!unit.isAlive) return null;
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
@@ -59,10 +64,14 @@ class MonsterCombatController {
     }
 
     if (elapsed == Duration.zero || distance == 0) return null;
-    final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
-    final step = math.min(unit.stats.moveSpeed * seconds, distance - unit.stats.attackRange);
-    unit.positionX += dx / distance * step;
-    unit.positionY += dy / distance * step;
+    movement.moveUnitToward(
+      unit: unit,
+      allies: allies,
+      targetX: target.x,
+      targetY: target.y,
+      elapsed: elapsed,
+      obstacles: obstacles,
+    );
     return null;
   }
 }
