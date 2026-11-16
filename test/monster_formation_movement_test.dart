@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/monsters/monster_formation_movement.dart';
 import 'package:archero_fm/monsters/monster_models.dart';
+import 'package:archero_fm/monsters/monster_combat.dart';
 
 MonsterUnit _unit(String id, double x, double y) => MonsterUnit(
   id: id,
@@ -103,6 +104,77 @@ void main() {
         obstacles: const [
           MonsterMovementObstacle(x: 0, y: 0, radius: -1),
         ],
+      ), throwsArgumentError);
+    });
+
+    test('assigns stable, evenly distributed attack slots', () {
+      final units = [_unit('a', 0, 0), _unit('b', 1, 0), _unit('c', 2, 0), _unit('d', 3, 0)];
+      final slots = movement.assignAttackSlots(
+        units: units,
+        targetX: 50,
+        targetY: 50,
+        attackRange: 10,
+      );
+      expect(slots, hasLength(4));
+      expect(slots.toSet(), hasLength(4));
+      expect(slots.first.$1, closeTo(50, 0.0001));
+      expect(slots.first.$2, lessThan(50));
+    });
+
+    test('attack slots reject invalid target geometry', () {
+      expect(() => movement.assignAttackSlots(
+        units: [_unit('a', 0, 0)],
+        targetX: double.nan,
+        targetY: 0,
+        attackRange: 10,
+      ), throwsArgumentError);
+    });
+
+    test('combat pursuit uses ally separation and obstacle steering', () {
+      final unit = _unit('a', 0, 0);
+      final ally = _unit('b', 0, 0);
+      const controller = MonsterCombatController();
+      controller.updateUnit(
+        unit: unit,
+        candidates: const [
+          MonsterTarget(
+            id: 'enemy', ownerId: 'p2', kind: MonsterTargetKind.hero,
+            x: 100, y: 0, isAlive: true,
+          ),
+        ],
+        now: DateTime.utc(2026, 1, 1),
+        elapsed: const Duration(seconds: 1),
+        allies: [unit, ally],
+        obstacles: const [
+          MonsterMovementObstacle(x: 1, y: 0, radius: 10),
+        ],
+      );
+      expect(unit.positionY.abs(), greaterThan(0));
+    });
+
+    test('movement remains deterministic for identical snapshots', () {
+      final first = [_unit('a', 0, 0), _unit('b', 0, 20)];
+      final second = [_unit('a', 0, 0), _unit('b', 0, 20)];
+      for (final group in [first, second]) {
+        movement.moveGroup(
+          units: group,
+          targetX: 100,
+          targetY: 30,
+          elapsed: const Duration(milliseconds: 250),
+        );
+      }
+      for (var i = 0; i < first.length; i++) {
+        expect(first[i].positionX, second[i].positionX);
+        expect(first[i].positionY, second[i].positionY);
+      }
+    });
+
+    test('rejects non-finite destination coordinates', () {
+      expect(() => movement.moveGroup(
+        units: [_unit('a', 0, 0)],
+        targetX: double.infinity,
+        targetY: 0,
+        elapsed: const Duration(seconds: 1),
       ), throwsArgumentError);
     });
   });
