@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:archero_fm/monsters/monster_army.dart';
-import 'package:archero_fm/monsters/monster_combat_resolver.dart';
-import 'package:archero_fm/monsters/monster_models.dart';
-import 'package:archero_fm/monsters/monster_projectiles.dart';
-import 'package:archero_fm/monsters/monster_projectile_manager.dart';
-import 'package:archero_fm/monsters/monster_ranged_attack_handler.dart';
-import 'package:archero_fm/monsters/monster_combat.dart';
-import 'package:archero_fm/monsters/monster_match_combat_loop.dart';
-import 'package:archero_fm/monsters/monster_external_entity_adapter.dart';
+import 'package:archer_fm/monsters/monster_army.dart';
+import 'package:archer_fm/monsters/monster_combat_resolver.dart';
+import 'package:archer_fm/monsters/monster_models.dart';
+import 'package:archer_fm/monsters/monster_projectiles.dart';
+import 'package:archer_fm/monsters/monster_projectile_manager.dart';
+import 'package:archer_fm/monsters/monster_ranged_attack_handler.dart';
+import 'package:archer_fm/monsters/monster_combat.dart';
+import 'package:archer_fm/monsters/monster_match_combat_loop.dart';
+import 'package:archer_fm/monsters/monster_external_entity_adapter.dart';
 
 MonsterCatalog _catalog() => MonsterCatalog({
   for (final type in MonsterType.values)
