@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archero_fm/monsters/monster_army.dart';
+import 'package:archero_fm/monsters/monster_combat.dart';
 import 'package:archero_fm/monsters/monster_models.dart';
 
 MonsterCatalog catalog() => MonsterCatalog({
@@ -106,6 +107,99 @@ void main() {
       final unit = makeArmy().units.first;
       expect(() => unit.applyDamage(-1), throwsArgumentError);
       expect(() => unit.applyDamage(double.nan), throwsArgumentError);
+    });
+  });
+
+  group('Monster combat controller', () {
+    const combat = MonsterCombatController();
+
+    test('moves toward nearest enemy, then emits damage inside range', () {
+      final unit = makeArmy().units.first;
+      final target = const MonsterTarget(
+        id: 'enemy', ownerId: 'p2', kind: MonsterTargetKind.hero,
+        x: 200, y: 200, isAlive: true,
+      );
+      final now = DateTime.utc(2026, 2, 1);
+      final initialDistance = (target.x - unit.positionX).abs();
+      final intent = combat.updateUnit(
+        unit: unit,
+        candidates: [target],
+        now: now,
+        elapsed: const Duration(seconds: 1),
+      );
+      expect(intent, isNull);
+      expect((target.x - unit.positionX).abs(), lessThan(initialDistance));
+      expect(unit.targetId, 'enemy');
+
+      unit.positionX = target.x - unit.stats.attackRange;
+      unit.positionY = target.y;
+      final attack = combat.updateUnit(
+        unit: unit,
+        candidates: [target],
+        now: now,
+        elapsed: Duration.zero,
+      );
+      expect(attack?.targetId, 'enemy');
+      expect(attack?.damage, unit.stats.damage);
+    });
+
+    test('does not attack friendlies or dead targets', () {
+      final unit = makeArmy().units.first;
+      final result = combat.updateUnit(
+        unit: unit,
+        candidates: [
+          MonsterTarget(
+            id: 'friendly', ownerId: unit.ownerId,
+            kind: MonsterTargetKind.hero, x: unit.positionX,
+            y: unit.positionY, isAlive: true,
+          ),
+          const MonsterTarget(
+            id: 'dead', ownerId: 'p2',
+            kind: MonsterTargetKind.hero, x: 0, y: 0, isAlive: false,
+          ),
+        ],
+        now: DateTime.utc(2026, 2, 1),
+        elapsed: Duration.zero,
+      );
+      expect(result, isNull);
+      expect(unit.targetId, isNull);
+    });
+
+    test('attacks a crystal target but never a castle target', () {
+      final unit = makeArmy().units.first;
+      unit.positionX = 0;
+      unit.positionY = 0;
+      final result = combat.updateUnit(
+        unit: unit,
+        candidates: [
+          const MonsterTarget(
+            id: 'enemy-crystal', ownerId: 'p2',
+            kind: MonsterTargetKind.crystal, x: 1, y: 0, isAlive: true,
+          ),
+        ],
+        now: DateTime.utc(2026, 2, 1),
+        elapsed: Duration.zero,
+      );
+      expect(result?.targetId, 'enemy-crystal');
+    });
+
+    test('respects attack cooldown', () {
+      final unit = makeArmy().units.first;
+      unit.positionX = 0;
+      unit.positionY = 0;
+      const target = MonsterTarget(
+        id: 'enemy', ownerId: 'p2', kind: MonsterTargetKind.monster,
+        x: 1, y: 0, isAlive: true,
+      );
+      final now = DateTime.utc(2026, 2, 1);
+      expect(combat.updateUnit(
+        unit: unit, candidates: [target], now: now, elapsed: Duration.zero,
+      ), isNotNull);
+      expect(combat.updateUnit(
+        unit: unit, candidates: [target],
+        now: now.add(const Duration(milliseconds: 799)),
+        elapsed: Duration.zero,
+      ), isNull);
     });
   });
 
