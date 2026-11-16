@@ -331,6 +331,26 @@ void main() {
       ), MonsterDamageResult.missingTarget);
     });
 
+    test('rejects self-targeting and malformed target identity', () {
+      final self = _FakeDamageTarget(
+        id: 'attacker', ownerId: 'p2',
+        kind: MonsterTargetKind.monster, health: 50,
+      );
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1', target: self,
+      ), MonsterDamageResult.selfTarget);
+
+      final malformed = _FakeDamageTarget(
+        id: 'target', ownerId: '',
+        kind: MonsterTargetKind.hero, health: 50,
+      );
+      expect(resolver.resolve(
+        intent: intent, attackerOwnerId: 'p1', target: malformed,
+      ), MonsterDamageResult.invalidIntent);
+      expect(self.health, 50);
+      expect(malformed.health, 50);
+    });
+
     test('rejects malformed damage intents', () {
       final target = _FakeDamageTarget(
         id: 'target', ownerId: 'p2',
