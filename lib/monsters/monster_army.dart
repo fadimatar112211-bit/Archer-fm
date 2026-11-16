@@ -109,7 +109,7 @@ class MonsterArmy {
     if (!cohesion.isFinite || cohesion < 0 || cohesion > 1) {
       throw ArgumentError.value(cohesion, 'cohesion');
     }
-    const MonsterFormationMovement().moveGroup(
+    MonsterFormationMovement(cohesionWeight: cohesion).moveGroup(
       units: _units,
       targetX: targetX,
       targetY: targetY,
