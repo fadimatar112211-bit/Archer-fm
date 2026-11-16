@@ -98,6 +98,7 @@ class MonsterUnit {
     required this.stats,
     double? health,
   }) : health = health ?? stats.maxHealth {
+    stats.validate();
     if (id.isEmpty || ownerId.isEmpty) {
       throw ArgumentError('Monster id and owner id cannot be empty.');
     }
