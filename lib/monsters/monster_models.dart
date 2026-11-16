@@ -26,6 +26,57 @@ class MonsterStats {
   final Duration attackCooldown;
   final int purchaseCost;
 
+  MonsterStats scaledForLevel(
+    int level, {
+    required double healthPerLevel,
+    required double damagePerLevel,
+    required double speedPerLevel,
+  }) {
+    if (level < 1 || level > 40) {
+      throw RangeError.range(level, 1, 40, 'level');
+    }
+    for (final value in [healthPerLevel, damagePerLevel, speedPerLevel]) {
+      if (!value.isFinite || value < 0) {
+        throw ArgumentError('Upgrade growth values must be finite and non-negative.');
+      }
+    }
+    final steps = level - 1;
+    return MonsterStats(
+      maxHealth: maxHealth * (1 + steps * healthPerLevel),
+      damage: damage * (1 + steps * damagePerLevel),
+      moveSpeed: moveSpeed * (1 + steps * speedPerLevel),
+      attackRange: attackRange,
+      attackCooldown: attackCooldown,
+      purchaseCost: purchaseCost,
+    );
+  }m MonsterType { runner, tank, stalker, ranged }
+
+enum MonsterTargetKind { hero, monster, crystal }
+
+enum MonsterOrder { advance, defend }
+
+class MonsterStats {
+  const MonsterStats({
+    required this.maxHealth,
+    required this.damage,
+    required this.moveSpeed,
+    required this.attackRange,
+    required this.attackCooldown,
+    required this.purchaseCost,
+  }) : assert(maxHealth > 0),
+       assert(damage > 0),
+       assert(moveSpeed > 0),
+       assert(attackRange >= 0),
+       assert(attackCooldown > 0),
+       assert(purchaseCost >= 0);
+
+  final double maxHealth;
+  final double damage;
+  final double moveSpeed;
+  final double attackRange;
+  final Duration attackCooldown;
+  final int purchaseCost;
+
   MonsterStats scaledForLevel(int level) {
     final safeLevel = level.clamp(1, 40);
     final multiplier = 1 + (safeLevel - 1) * 0.025;
