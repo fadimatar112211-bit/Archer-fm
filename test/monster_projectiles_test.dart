@@ -6,6 +6,7 @@ import 'package:archero_fm/monsters/monster_projectiles.dart';
 import 'package:archero_fm/monsters/monster_projectile_manager.dart';
 import 'package:archero_fm/monsters/monster_ranged_attack_handler.dart';
 import 'package:archero_fm/monsters/monster_combat.dart';
+import 'package:archero_fm/monsters/monster_match_combat_loop.dart';
 
 MonsterCatalog _catalog() => MonsterCatalog({
   for (final type in MonsterType.values)
@@ -125,6 +126,102 @@ void main() {
     });
   });
 
+
+
+  group('Authoritative monster match combat loop', () {
+    test('routes melee damage and ranged attacks through the projectile manager', () {
+      final ranged = _ranged();
+      final melee = MonsterArmy(
+        ownerId: 'p1',
+        catalog: _catalog(),
+        selection: InitialArmySelection({
+          MonsterType.runner: 20, MonsterType.tank: 0,
+          MonsterType.stalker: 0, MonsterType.ranged: 0,
+        }),
+        castleX: 0, castleY: 0,
+      ).units.first;
+      final rangedTarget = _Target(
+        'ranged-enemy', 'p2', ranged.positionX + 1, ranged.positionY,
+      );
+      final meleeTarget = _Target(
+        'melee-enemy', 'p2', melee.positionX + 1, melee.positionY,
+      );
+      final targets = <String, _Target>{
+        rangedTarget.id: rangedTarget,
+        meleeTarget.id: meleeTarget,
+      };
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 8);
+      var sequence = 0;
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: manager,
+        projectileSpeed: 10,
+        projectileId: (_) => 'tick-bolt-${sequence++}',
+      );
+
+      final first = loop.update(
+        units: [ranged, melee],
+        candidatesFor: (unit) => [
+          MonsterTarget(
+            id: unit.type == MonsterType.ranged
+                ? rangedTarget.id : meleeTarget.id,
+            ownerId: 'p2',
+            kind: MonsterTargetKind.hero,
+            x: unit.type == MonsterType.ranged
+                ? rangedTarget.positionX : meleeTarget.positionX,
+            y: unit.type == MonsterType.ranged
+                ? rangedTarget.positionY : meleeTarget.positionY,
+            isAlive: true,
+          ),
+        ],
+        resolveDamageTarget: (id) => targets[id],
+        resolvePositionedTarget: (id) => targets[id],
+        now: DateTime.utc(2026, 3, 1),
+        elapsed: Duration.zero,
+      );
+
+      expect(first.meleeHitsApplied, 1);
+      expect(first.rangedProjectilesCreated, 1);
+      expect(first.rejectedAttacks, 0);
+      expect(manager.activeCount, 1);
+      expect(meleeTarget.health, 38);
+      expect(rangedTarget.health, 50);
+
+      final second = loop.update(
+        units: [ranged, melee],
+        candidatesFor: (_) => const [],
+        resolveDamageTarget: (id) => targets[id],
+        resolvePositionedTarget: (id) => targets[id],
+        now: DateTime.utc(2026, 3, 1).add(const Duration(seconds: 1)),
+        elapsed: const Duration(seconds: 1),
+      );
+      expect(second.projectileResults.values, contains(MonsterProjectileResult.hit));
+      expect(manager.activeCount, 0);
+      expect(rangedTarget.health, 38);
+    });
+
+    test('rejects negative tick duration without advancing projectiles', () {
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 2);
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: manager,
+        projectileSpeed: 10,
+        projectileId: (_) => 'unused',
+      );
+      expect(() => loop.update(
+        units: const [],
+        candidatesFor: (_) => const [],
+        resolveDamageTarget: (_) => null,
+        resolvePositionedTarget: (_) => null,
+        now: DateTime.utc(2026, 3, 1),
+        elapsed: const Duration(milliseconds: -1),
+      ), throwsArgumentError);
+    });
+  });
 
   group('Ranged attack intent integration', () {
     const handler = MonsterRangedAttackHandler();
