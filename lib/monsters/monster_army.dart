@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'monster_models.dart';
+import 'monster_formation_movement.dart';
 
 class InitialArmySelection {
   InitialArmySelection(Map<MonsterType, int> counts)
@@ -103,34 +104,18 @@ class MonsterArmy {
     required double targetY,
     required Duration elapsed,
     double cohesion = 0.35,
+    Iterable<MonsterMovementObstacle> obstacles = const [],
   }) {
-    if (!targetX.isFinite || !targetY.isFinite ||
-        !cohesion.isFinite || cohesion < 0 || cohesion > 1 ||
-        elapsed.isNegative) {
-      throw ArgumentError('Invalid group movement input.');
+    if (!cohesion.isFinite || cohesion < 0 || cohesion > 1) {
+      throw ArgumentError.value(cohesion, 'cohesion');
     }
-    if (elapsed == Duration.zero) return;
-    final living = _units.where((unit) => unit.isAlive).toList();
-    if (living.isEmpty) return;
-    final centerX = living.fold<double>(0, (sum, unit) => sum + unit.positionX) / living.length;
-    final centerY = living.fold<double>(0, (sum, unit) => sum + unit.positionY) / living.length;
-    final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
-
-    for (final unit in living) {
-      final desiredX = targetX + (unit.positionX - centerX) * cohesion;
-      final desiredY = targetY + (unit.positionY - centerY) * cohesion;
-      final dx = desiredX - unit.positionX;
-      final dy = desiredY - unit.positionY;
-      final distance = math.sqrt(dx * dx + dy * dy);
-      final step = unit.stats.moveSpeed * seconds;
-      if (distance <= step || distance == 0) {
-        unit.positionX = desiredX;
-        unit.positionY = desiredY;
-      } else {
-        unit.positionX += dx / distance * step;
-        unit.positionY += dy / distance * step;
-      }
-    }
+    const MonsterFormationMovement().moveGroup(
+      units: _units,
+      targetX: targetX,
+      targetY: targetY,
+      elapsed: elapsed,
+      obstacles: obstacles,
+    );
   }
 
   /// Removes defeated units permanently; they are never auto-respawned.
