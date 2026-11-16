@@ -32,6 +32,32 @@ MonsterArmy makeArmy() => MonsterArmy(
   castleY: 200,
 );
 
+class _FakeDamageTarget implements MonsterDamageTarget {
+  _FakeDamageTarget({
+    required this.id,
+    required this.ownerId,
+    required this.kind,
+    required this.health,
+  });
+
+  @override
+  final String id;
+  @override
+  final String ownerId;
+  @override
+  final MonsterTargetKind kind;
+  double health;
+
+  @override
+  bool get isAlive => health > 0;
+
+  @override
+  bool applyDamage(double amount) {
+    health = (health - amount).clamp(0, double.infinity).toDouble();
+    return !isAlive;
+  }
+}
+
 void main() {
   group('Monster army', () {
     test('creates exactly twenty units from the selected composition', () {
@@ -262,32 +288,6 @@ void main() {
 }
 
 
-class _FakeDamageTarget implements MonsterDamageTarget {
-  _FakeDamageTarget({
-    required this.id,
-    required this.ownerId,
-    required this.kind,
-    required this.health,
-  });
-
-  @override
-  final String id;
-  @override
-  final String ownerId;
-  @override
-  final MonsterTargetKind kind;
-  double health;
-
-  @override
-  bool get isAlive => health > 0;
-
-  @override
-  bool applyDamage(double amount) {
-    health = (health - amount).clamp(0, double.infinity).toDouble();
-    return !isAlive;
-  }
-}
-
   group('Monster combat damage resolver', () {
     const resolver = MonsterCombatResolver();
     const intent = MonsterCombatIntent(
@@ -348,5 +348,4 @@ class _FakeDamageTarget implements MonsterDamageTarget {
       expect(target.health, 50);
     });
   });
-
 }
