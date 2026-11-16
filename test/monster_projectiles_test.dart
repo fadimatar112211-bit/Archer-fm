@@ -312,6 +312,7 @@ void main() {
       expect(create(attack: intent(source.id, 'other-target')), isNull);
       expect(create(victim: _Target('enemy', 'p1', 10, 0)), isNull);
       expect(create(victim: _Target('enemy', 'p2', 10, 0, health: 0)), isNull);
+      expect(create(victim: _Target('enemy', '', 10, 0)), isNull);
       expect(handler.tryCreate(
         intent: intent(source.id, 'enemy'),
         source: source,
