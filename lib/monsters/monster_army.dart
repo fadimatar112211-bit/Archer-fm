@@ -1,4 +1,6 @@
-import 'dart:math' as math;\n\nimport 'monster_models.dart';
+import 'dart:math' as math;
+
+import 'monster_models.dart';
 
 class InitialArmySelection {
   InitialArmySelection(Map<MonsterType, int> counts)
@@ -6,9 +8,11 @@ class InitialArmySelection {
     if (MonsterType.values.any((type) => (this.counts[type] ?? 0) < 0)) {
       throw ArgumentError('Initial army counts cannot be negative.');
     }
+    if (counts.keys.any((type) => !MonsterType.values.contains(type))) {
+      throw ArgumentError('Initial army contains an unknown monster type.');
+    }
     final total = MonsterType.values.fold<int>(
-      0,
-      (sum, type) => sum + (this.counts[type] ?? 0),
+      0, (sum, type) => sum + (this.counts[type] ?? 0),
     );
     if (total != 20) {
       throw ArgumentError('Initial army must contain exactly 20 monsters; got $total.');
@@ -16,6 +20,12 @@ class InitialArmySelection {
   }
 
   final Map<MonsterType, int> counts;
+}
+
+class MonsterPurchase {
+  const MonsterPurchase({required this.unit, required this.cost});
+  final MonsterUnit unit;
+  final int cost;
 }
 
 class MonsterArmy {
@@ -27,14 +37,15 @@ class MonsterArmy {
     required this.castleY,
   }) {
     if (ownerId.isEmpty) throw ArgumentError.value(ownerId, 'ownerId');
-    var index = 0;
+    if (!castleX.isFinite || !castleY.isFinite) {
+      throw ArgumentError('Castle position must be finite.');
+    }
     for (final type in MonsterType.values) {
       final count = selection.counts[type] ?? 0;
       for (var i = 0; i < count; i++) {
-        _units.add(_createUnit(type, index++));
+        _units.add(_createUnit(type, _nextId));
       }
     }
-    _nextId = index;
   }
 
   final String ownerId;
@@ -44,7 +55,7 @@ class MonsterArmy {
   final double castleY;
   final List<MonsterUnit> _units = [];
   int _nextId = 0;
-  int _formationCursor = 0;
+  int _spawnCursor = 0;
 
   List<MonsterUnit> get units => List.unmodifiable(_units);
   int get aliveCount => _units.where((unit) => unit.isAlive).length;
@@ -52,24 +63,25 @@ class MonsterArmy {
       _units.where((unit) => unit.type == type && unit.isAlive).length;
 
   MonsterUnit _createUnit(MonsterType type, int index) {
-    // Compact deterministic ring around the castle; the world layer may
-    // resolve collisions against terrain after receiving these spawn points.
     final slot = index % 20;
     final ring = slot ~/ 8;
-    final angle = slot * 0.7853981633974483;
+    final angle = slot * (math.pi / 4);
     final radius = 34.0 + ring * 24.0;
     final stats = catalog[type].baseStats;
-    return MonsterUnit(
+    final unit = MonsterUnit(
       id: '$ownerId-monster-${_nextId++}',
       ownerId: ownerId,
       type: type,
-      positionX: castleX + radius * _cos(angle),
-      positionY: castleY + radius * _sin(angle),
+      positionX: castleX + radius * math.cos(angle),
+      positionY: castleY + radius * math.sin(angle),
       stats: stats,
     );
+    return unit;
   }
 
-  bool purchase({
+  /// Returns the exact cost with the spawned unit; the economy must debit this
+  /// amount atomically before accepting the purchase in the match state.
+  MonsterPurchase? purchase({
     required MonsterType type,
     required int currentResources,
   }) {
@@ -77,9 +89,47 @@ class MonsterArmy {
       throw ArgumentError.value(currentResources, 'currentResources');
     }
     final cost = catalog[type].baseStats.purchaseCost;
-    if (currentResources < cost) return false;
-    _units.add(_createUnit(type, _formationCursor++));
-    return true;
+    if (currentResources < cost) return null;
+    final unit = _createUnit(type, _spawnCursor++);
+    _units.add(unit);
+    return MonsterPurchase(unit: unit, cost: cost);
+  }
+
+  /// Moves the army toward a shared destination while retaining local spacing.
+  /// Individual units retain independent positions and target decisions.
+  void moveGroupToward({
+    required double targetX,
+    required double targetY,
+    required Duration elapsed,
+    double cohesion = 0.35,
+  }) {
+    if (!targetX.isFinite || !targetY.isFinite ||
+        !cohesion.isFinite || cohesion < 0 || cohesion > 1 ||
+        elapsed.isNegative) {
+      throw ArgumentError('Invalid group movement input.');
+    }
+    if (elapsed == Duration.zero) return;
+    final living = _units.where((unit) => unit.isAlive).toList();
+    if (living.isEmpty) return;
+    final centerX = living.fold<double>(0, (sum, unit) => sum + unit.positionX) / living.length;
+    final centerY = living.fold<double>(0, (sum, unit) => sum + unit.positionY) / living.length;
+    final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
+
+    for (final unit in living) {
+      final desiredX = targetX + (unit.positionX - centerX) * cohesion;
+      final desiredY = targetY + (unit.positionY - centerY) * cohesion;
+      final dx = desiredX - unit.positionX;
+      final dy = desiredY - unit.positionY;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      final step = unit.stats.moveSpeed * seconds;
+      if (distance <= step || distance == 0) {
+        unit.positionX = desiredX;
+        unit.positionY = desiredY;
+      } else {
+        unit.positionX += dx / distance * step;
+        unit.positionY += dy / distance * step;
+      }
+    }
   }
 
   /// Removes defeated units permanently; they are never auto-respawned.
@@ -89,16 +139,4 @@ class MonsterArmy {
     _units.removeAt(index);
     return true;
   }
-
-  static double _sin(double value) {
-    // Small deterministic approximation is replaced by dart:math below.
-    return _Trig.sin(value);
-  }
-
-  static double _cos(double value) => _Trig.cos(value);
-}
-
-class _Trig {
-  static double sin(double value) => _sinImpl(value);
-  static double cos(double value) => _cosImpl(value);
 }
