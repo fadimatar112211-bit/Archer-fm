@@ -60,7 +60,7 @@ void main() {
     test('travels toward a live enemy and applies damage on arrival', () {
       final target = _Target('enemy', 'p2', 15, 0);
       final projectile = MonsterProjectile(
-        id: 'bolt-1', source: _ranged(), targetId: target.id,
+        id: 'bolt-1', source: _ranged(), targetId: target.id, projectileSpeed: 10,
         positionX: 0, positionY: 0,
       );
       expect(projectile.update(
@@ -81,7 +81,7 @@ void main() {
     test('cancels when target disappears, dies, or becomes friendly', () {
       final source = _ranged();
       MonsterProjectile make() => MonsterProjectile(
-        id: 'bolt', source: source, targetId: 'enemy',
+        id: 'bolt', source: source, targetId: 'enemy', projectileSpeed: 10,
         positionX: 0, positionY: 0,
       );
       expect(make().update(
@@ -99,7 +99,7 @@ void main() {
 
     test('rejects negative elapsed and requires a ranged living source', () {
       final projectile = MonsterProjectile(
-        id: 'bolt', source: _ranged(), targetId: 'enemy',
+        id: 'bolt', source: _ranged(), targetId: 'enemy', projectileSpeed: 10,
         positionX: 0, positionY: 0,
       );
       expect(projectile.update(
@@ -115,7 +115,7 @@ void main() {
         castleX: 0, castleY: 0,
       ).units.first;
       expect(() => MonsterProjectile(
-        id: 'bad', source: runner, targetId: 'enemy',
+        id: 'bad', source: runner, targetId: 'enemy', projectileSpeed: 10,
         positionX: 0, positionY: 0,
       ), throwsArgumentError);
     });
