@@ -4,6 +4,7 @@ import 'monster_models.dart';
 import 'monster_projectile_manager.dart';
 import 'monster_projectiles.dart';
 import 'monster_ranged_attack_handler.dart';
+import 'monster_formation_movement.dart';
 
 typedef MonsterTargetCandidates = Iterable<MonsterTarget> Function(
   MonsterUnit source,
@@ -12,6 +13,8 @@ typedef MonsterDamageLookup = MonsterDamageTarget? Function(String targetId);
 typedef MonsterPositionedLookup =
     MonsterPositionedDamageTarget? Function(String targetId);
 typedef MonsterProjectileIdFactory = String Function(MonsterUnit source);
+typedef MonsterAlliesLookup = Iterable<MonsterUnit> Function(MonsterUnit source);
+typedef MonsterObstaclesLookup = Iterable<MonsterMovementObstacle> Function(MonsterUnit source);
 
 /// One authoritative simulation step for monster AI, melee damage and ranged
 /// projectile lifecycle. Call only from the match authority/server tick.
@@ -25,6 +28,8 @@ class MonsterMatchCombatLoop {
     required this.projectiles,
     required this.projectileSpeed,
     required this.projectileId,
+    this.alliesFor = _noAllies,
+    this.obstaclesFor = _noObstacles,
   }) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0) {
       throw ArgumentError.value(projectileSpeed, 'projectileSpeed');
@@ -37,6 +42,11 @@ class MonsterMatchCombatLoop {
   final MonsterProjectileManager projectiles;
   final double projectileSpeed;
   final MonsterProjectileIdFactory projectileId;
+  final MonsterAlliesLookup alliesFor;
+  final MonsterObstaclesLookup obstaclesFor;
+
+  static Iterable<MonsterUnit> _noAllies(MonsterUnit _) => const [];
+  static Iterable<MonsterMovementObstacle> _noObstacles(MonsterUnit _) => const [];
 
   MonsterMatchTickResult update({
     required Iterable<MonsterUnit> units,
@@ -59,6 +69,8 @@ class MonsterMatchCombatLoop {
         candidates: candidatesFor(unit),
         now: now,
         elapsed: elapsed,
+        allies: alliesFor(unit),
+        obstacles: obstaclesFor(unit),
       );
       if (intent == null) continue;
 
