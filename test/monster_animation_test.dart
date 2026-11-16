@@ -116,6 +116,16 @@ void main() {
           frameCount: 4,
         ),
       ), throwsArgumentError);
+      expect(() => MonsterAnimationController(
+        type: MonsterType.runner,
+        walkSheet: const MonsterSpriteSheet(
+          asset: 'walk.svg',
+          frameWidth: 96,
+          frameHeight: 96,
+          frameCount: 4,
+          frameDuration: Duration(milliseconds: -1),
+        ),
+      ), throwsArgumentError);
     });
 
     test('negative elapsed time is rejected', () {
