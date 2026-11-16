@@ -1,7 +1,6 @@
 import 'monster_combat.dart';
 import 'monster_models.dart';
 import 'monster_projectiles.dart';
-import 'monster_combat_resolver.dart';
 
 /// Converts a ranged unit's combat intent into a server-owned projectile.
 /// The match loop remains responsible for calling this only after accepting
