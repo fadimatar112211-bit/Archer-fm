@@ -40,6 +40,29 @@ class MonsterFormationMovement {
   final double separationWeight;
   final double obstacleWeight;
 
+  /// Returns stable ring slots around a target, suitable for melee approach.
+  /// Slot ordering follows the supplied unit order and is deterministic.
+  List<(double, double)> assignAttackSlots({
+    required Iterable<MonsterUnit> units,
+    required double targetX,
+    required double targetY,
+    required double attackRange,
+  }) {
+    if (!targetX.isFinite || !targetY.isFinite ||
+        !attackRange.isFinite || attackRange < 0) {
+      throw ArgumentError('Invalid attack formation geometry.');
+    }
+    final living = units.where((unit) => unit.isAlive).toList(growable: false);
+    if (living.isEmpty) return const [];
+    final radius = math.max(desiredSpacing, attackRange * 0.8);
+    return List.generate(living.length, (index) {
+      final angle = -math.pi / 2 + 2 * math.pi * index / living.length;
+      return (targetX + math.cos(angle) * radius,
+          targetY + math.sin(angle) * radius);
+    }, growable: false);
+  }
+
+
   /// Moves a group toward a destination while preserving its relative shape.
   /// Each unit remains speed-limited by its own movement stat.
   void moveGroup({
@@ -168,6 +191,8 @@ class MonsterFormationMovement {
   }
 
   void _advance(MonsterUnit unit, double dx, double dy, double seconds) {
+    if (!dx.isFinite || !dy.isFinite || !seconds.isFinite || seconds <= 0 ||
+        !unit.stats.moveSpeed.isFinite || unit.stats.moveSpeed <= 0) return;
     final step = unit.stats.moveSpeed * seconds;
     if (step <= 0 || !step.isFinite) return;
     unit.positionX += dx * step;
