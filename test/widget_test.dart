@@ -6,6 +6,7 @@ import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:archer_fm/hero/hero_viewer_screen.dart';
 import 'package:archer_fm/main.dart';
+import 'package:flutter/widgets.dart' show CustomPaint;
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _fakeManifest(String heroId) {
