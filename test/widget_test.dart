@@ -131,11 +131,13 @@ void main() {
     HeroStagePainter? painter;
     for (var i = 0; i < 100; i++) {
       await tester.pump(const Duration(milliseconds: 25));
-      final stagePaint = tester
+      final stagePaints = tester
           .widgetList<CustomPaint>(find.byType(CustomPaint))
           .where((widget) => widget.painter is HeroStagePainter)
-          .firstOrNull;
-      painter = stagePaint?.painter as HeroStagePainter?;
+          .toList();
+      if (stagePaints.isNotEmpty) {
+        painter = stagePaints.first.painter as HeroStagePainter;
+      }
       if (painter?.sheet != null) break;
     }
 
