@@ -90,6 +90,24 @@ void main() {
       expect(() => InitialArmySelection({MonsterType.runner: -1}), throwsArgumentError);
     });
 
+    test('direct unit construction rejects invalid stats', () {
+      expect(() => MonsterUnit(
+        id: 'invalid',
+        ownerId: 'p1',
+        type: MonsterType.runner,
+        positionX: 0,
+        positionY: 0,
+        stats: const MonsterStats(
+          maxHealth: 100,
+          damage: 10,
+          moveSpeed: 0,
+          attackRange: 10,
+          attackCooldown: Duration(seconds: 1),
+          purchaseCost: 1,
+        ),
+      ), throwsArgumentError);
+    });
+
     test('purchase returns exact debit and spawned unit', () {
       final army = makeArmy();
       expect(army.purchase(type: MonsterType.tank, currentResources: 10), isNull);
