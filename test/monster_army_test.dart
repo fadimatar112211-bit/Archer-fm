@@ -285,9 +285,6 @@ void main() {
       expect(target?.id, 'near');
     });
   });
-}
-
-
   group('Monster combat damage resolver', () {
     const resolver = MonsterCombatResolver();
     const intent = MonsterCombatIntent(
