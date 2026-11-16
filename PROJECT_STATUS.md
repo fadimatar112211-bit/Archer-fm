@@ -411,3 +411,11 @@ Still to decide or test:
 - أضيفت اختبارات دورة tick التي تثبت تطبيق ضربة melee وإنشاء مقذوف ranged ثم إصابته في tick لاحق، واختبار رفض tick سالب، واختبار محول الكيانات الخارجية.
 - حدود مهمة: المستودع الحالي لا يحتوي بعد على حلقة مباراة فعلية أو وحدات hero/crystal ضمن `lib`؛ لذلك أُنشئت طبقة orchestration ومحولات جاهزة للتوصيل، ولم ندّعِ أنها موصولة بتشغيل اللعبة أو الشبكة. يجب على تنفيذ المباراة استدعاء هذه الدورة وتمرير lookups سلطوية حديثة للأهداف.
 - لم تُشغّل اختبارات Flutter أو CI فعلياً ضمن هذه الجلسة؛ النتيجة غير مؤكدة.
+
+
+## Monster movement update — 2026-11-17
+- Added `lib/monsters/monster_formation_movement.dart` for deterministic steering: destination seeking, formation cohesion, ally separation, and local circular-obstacle avoidance.
+- `MonsterArmy.moveGroupToward` now delegates to formation steering and accepts optional map obstacles while respecting each unit's movement-speed limit.
+- Added `moveUnitToward` for independent target pursuit with local ally/obstacle avoidance. The match host must call this for per-unit navigation and supply nearby allies and map obstacles.
+- Added `test/monster_formation_movement_test.dart` and included it in the monster GitHub Actions format/analyze/test commands.
+- This is local steering, not full global pathfinding or a collision solver. Long-range route planning around walls/complex terrain and runtime integration remain outstanding. Flutter tests/analyzer/CI have not yet been run successfully or confirmed.
