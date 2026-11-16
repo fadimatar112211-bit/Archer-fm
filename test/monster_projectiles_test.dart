@@ -22,7 +22,7 @@ MonsterCatalog _catalog() => MonsterCatalog({
 MonsterUnit _ranged() => MonsterArmy(
   ownerId: 'p1',
   catalog: _catalog(),
-  selection: const InitialArmySelection({
+  selection: InitialArmySelection({
     MonsterType.runner: 0,
     MonsterType.tank: 0,
     MonsterType.stalker: 0,
@@ -108,7 +108,7 @@ void main() {
       ), MonsterProjectileResult.invalidElapsed);
       final runner = MonsterArmy(
         ownerId: 'p1', catalog: _catalog(),
-        selection: const InitialArmySelection({
+        selection: InitialArmySelection({
           MonsterType.runner: 20, MonsterType.tank: 0,
           MonsterType.stalker: 0, MonsterType.ranged: 0,
         }),
