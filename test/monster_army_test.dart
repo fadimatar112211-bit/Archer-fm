@@ -17,68 +17,49 @@ MonsterCatalog catalog() => MonsterCatalog({
     ),
 });
 
+MonsterArmy makeArmy() => MonsterArmy(
+  ownerId: 'p1',
+  catalog: catalog(),
+  selection: InitialArmySelection({
+    MonsterType.runner: 8,
+    MonsterType.tank: 4,
+    MonsterType.stalker: 5,
+    MonsterType.ranged: 3,
+  }),
+  castleX: 100,
+  castleY: 200,
+);
+
 void main() {
   group('Monster army', () {
     test('creates exactly twenty units from the selected composition', () {
-      final army = MonsterArmy(
-        ownerId: 'p1',
-        catalog: catalog(),
-        selection: InitialArmySelection({
-          MonsterType.runner: 8,
-          MonsterType.tank: 4,
-          MonsterType.stalker: 5,
-          MonsterType.ranged: 3,
-        }),
-        castleX: 100,
-        castleY: 200,
-      );
-
+      final army = makeArmy();
       expect(army.units, hasLength(20));
       expect(army.aliveCount, 20);
       expect(army.countOf(MonsterType.runner), 8);
       expect(army.countOf(MonsterType.ranged), 3);
       expect(army.units.every((unit) => unit.ownerId == 'p1'), isTrue);
+      expect(army.units.map((unit) => unit.id).toSet(), hasLength(20));
     });
 
-    test('rejects a starting army that is not exactly twenty', () {
-      expect(
-        () => InitialArmySelection({MonsterType.runner: 19}),
-        throwsArgumentError,
-      );
+    test('rejects invalid starting compositions', () {
+      expect(() => InitialArmySelection({MonsterType.runner: 19}), throwsArgumentError);
+      expect(() => InitialArmySelection({MonsterType.runner: -1}), throwsArgumentError);
     });
 
-    test('purchase checks funds and creates a unit', () {
-      final army = MonsterArmy(
-        ownerId: 'p1',
-        catalog: catalog(),
-        selection: InitialArmySelection({
-          MonsterType.runner: 20,
-        }),
-        castleX: 0,
-        castleY: 0,
-      );
-
-      expect(
-        army.purchase(type: MonsterType.tank, currentResources: 10),
-        isFalse,
-      );
+    test('purchase returns exact debit and spawned unit', () {
+      final army = makeArmy();
+      expect(army.purchase(type: MonsterType.tank, currentResources: 10), isNull);
       expect(army.units, hasLength(20));
-      expect(
-        army.purchase(type: MonsterType.tank, currentResources: 11),
-        isTrue,
-      );
+      final purchase = army.purchase(type: MonsterType.tank, currentResources: 11);
+      expect(purchase, isNotNull);
+      expect(purchase!.cost, 11);
+      expect(purchase.unit.type, MonsterType.tank);
       expect(army.units, hasLength(21));
-      expect(army.countOf(MonsterType.tank), 1);
     });
 
     test('dead units are removed permanently and not respawned', () {
-      final army = MonsterArmy(
-        ownerId: 'p1',
-        catalog: catalog(),
-        selection: InitialArmySelection({MonsterType.runner: 20}),
-        castleX: 0,
-        castleY: 0,
-      );
+      final army = makeArmy();
       final unit = army.units.first;
       expect(unit.applyDamage(100), isTrue);
       expect(army.removeDefeated(unit.id), isTrue);
@@ -86,15 +67,43 @@ void main() {
       expect(army.removeDefeated(unit.id), isFalse);
     });
 
-    test('damage rejects negative and non-finite values', () {
-      final unit = MonsterUnit(
-        id: 'm1',
-        ownerId: 'p1',
-        type: MonsterType.tank,
-        positionX: 0,
-        positionY: 0,
-        stats: catalog()[MonsterType.tank].baseStats,
+    test('group movement advances units without exceeding individual speed', () {
+      final army = makeArmy();
+      final before = army.units.map((u) => [u.positionX, u.positionY]).toList();
+      army.moveGroupToward(
+        targetX: 500,
+        targetY: 200,
+        elapsed: const Duration(seconds: 1),
       );
+      for (var i = 0; i < army.units.length; i++) {
+        final dx = army.units[i].positionX - before[i][0];
+        final dy = army.units[i].positionY - before[i][1];
+        expect(dx * dx + dy * dy, lessThanOrEqualTo(4.000001));
+      }
+    });
+
+    test('zero elapsed time does not move the group', () {
+      final army = makeArmy();
+      final before = army.units.first.positionX;
+      army.moveGroupToward(
+        targetX: 500, targetY: 500, elapsed: Duration.zero,
+      );
+      expect(army.units.first.positionX, before);
+    });
+  });
+
+  group('Monster unit combat timing', () {
+    test('attack cooldown is enforced', () {
+      final unit = makeArmy().units.first;
+      final first = DateTime.utc(2026, 1, 1);
+      expect(unit.canAttackAt(first), isTrue);
+      unit.recordAttack(first);
+      expect(unit.canAttackAt(first.add(const Duration(milliseconds: 799))), isFalse);
+      expect(unit.canAttackAt(first.add(const Duration(milliseconds: 800))), isTrue);
+    });
+
+    test('damage rejects negative and non-finite values', () {
+      final unit = makeArmy().units.first;
       expect(() => unit.applyDamage(-1), throwsArgumentError);
       expect(() => unit.applyDamage(double.nan), throwsArgumentError);
     });
@@ -122,47 +131,37 @@ void main() {
     ];
 
     test('selects nearest living enemy and ignores friendly/dead units', () {
-      final target = targeting.nearestEnemy(
-        ownerId: 'p1',
-        fromX: 0,
-        fromY: 0,
-        candidates: targets,
-      );
-      expect(target?.id, 'enemy-near');
+      expect(targeting.nearestEnemy(
+        ownerId: 'p1', fromX: 0, fromY: 0, candidates: targets,
+      )?.id, 'enemy-near');
     });
 
     test('respects maximum target distance', () {
-      final target = targeting.nearestEnemy(
-        ownerId: 'p1',
-        fromX: 0,
-        fromY: 0,
-        candidates: targets,
-        maxDistance: 2,
-      );
-      expect(target, isNull);
+      expect(targeting.nearestEnemy(
+        ownerId: 'p1', fromX: 0, fromY: 0,
+        candidates: targets, maxDistance: 2,
+      ), isNull);
     });
 
-    test('defensive target is the nearest owned crystal', () {
+    test('defensive target is nearest living owned crystal', () {
       final target = targeting.defensiveTarget(
-        ownerId: 'p1',
-        fromX: 0,
-        fromY: 0,
+        ownerId: 'p1', fromX: 0, fromY: 0,
         candidates: [
           const MonsterTarget(
-            id: 'own-crystal-far', ownerId: 'p1',
-            kind: MonsterTargetKind.crystal, x: 10, y: 0, isAlive: true,
+            id: 'far', ownerId: 'p1', kind: MonsterTargetKind.crystal,
+            x: 10, y: 0, isAlive: true,
           ),
           const MonsterTarget(
-            id: 'own-crystal-near', ownerId: 'p1',
-            kind: MonsterTargetKind.crystal, x: 3, y: 0, isAlive: true,
+            id: 'near', ownerId: 'p1', kind: MonsterTargetKind.crystal,
+            x: 3, y: 0, isAlive: true,
           ),
           const MonsterTarget(
-            id: 'enemy-crystal', ownerId: 'p2',
-            kind: MonsterTargetKind.crystal, x: 1, y: 0, isAlive: true,
+            id: 'enemy', ownerId: 'p2', kind: MonsterTargetKind.crystal,
+            x: 1, y: 0, isAlive: true,
           ),
         ],
       );
-      expect(target?.id, 'own-crystal-near');
+      expect(target?.id, 'near');
     });
   });
 }
