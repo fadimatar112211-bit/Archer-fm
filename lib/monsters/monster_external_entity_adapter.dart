@@ -13,8 +13,8 @@ class MonsterExternalEntityAdapter
     required this.isAlive,
     required this.positionX,
     required this.positionY,
-    required this.applyDamage,
-  });
+    required bool Function(double amount) applyDamage,
+  }) : _applyDamage = applyDamage;
 
   @override
   final String id;
