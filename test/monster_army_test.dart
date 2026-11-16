@@ -97,7 +97,7 @@ void main() {
         type: MonsterType.runner,
         positionX: 0,
         positionY: 0,
-        stats: const MonsterStats(
+        stats: MonsterStats(
           maxHealth: 100,
           damage: 10,
           moveSpeed: 0,
