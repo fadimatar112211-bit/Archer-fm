@@ -58,6 +58,10 @@ class MonsterProjectile {
       _resolved = true;
       return MonsterProjectileResult.targetMissing;
     }
+    if (target.id.isEmpty || target.ownerId.isEmpty) {
+      _resolved = true;
+      return MonsterProjectileResult.targetMissing;
+    }
     if (target.ownerId == ownerId) {
       _resolved = true;
       return MonsterProjectileResult.friendlyTarget;
