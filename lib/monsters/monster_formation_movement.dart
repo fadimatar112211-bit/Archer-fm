@@ -75,6 +75,7 @@ class MonsterFormationMovement {
     _validate(targetX, targetY, elapsed, obstacles);
     if (elapsed == Duration.zero) return;
     final living = units.where((u) => u.isAlive).toList(growable: false);
+    _validateUnitPositions(living);
     if (living.isEmpty) return;
     final center = _center(living);
     final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
@@ -105,7 +106,11 @@ class MonsterFormationMovement {
   }) {
     _validate(targetX, targetY, elapsed, obstacles);
     if (!unit.isAlive || elapsed == Duration.zero) return false;
+    if (!unit.positionX.isFinite || !unit.positionY.isFinite) {
+      throw ArgumentError('Unit position must be finite.');
+    }
     final others = allies.where((u) => u.isAlive && u.id != unit.id).toList();
+    _validateUnitPositions(others);
     final snapshots = <(double, double)>[
       (unit.positionX, unit.positionY),
       ...others.map((u) => (u.positionX, u.positionY)),
@@ -128,10 +133,26 @@ class MonsterFormationMovement {
     if (!x.isFinite || !y.isFinite || elapsed.isNegative) {
       throw ArgumentError('Invalid movement input.');
     }
+    if (!desiredSpacing.isFinite || desiredSpacing <= 0 ||
+        !separationRadius.isFinite || separationRadius <= 0 ||
+        !obstacleClearance.isFinite || obstacleClearance < 0 ||
+        !cohesionWeight.isFinite || cohesionWeight < 0 ||
+        !separationWeight.isFinite || separationWeight < 0 ||
+        !obstacleWeight.isFinite || obstacleWeight < 0) {
+      throw ArgumentError('Movement tuning values must be finite and non-negative.');
+    }
     for (final obstacle in obstacles) {
       if (!obstacle.x.isFinite || !obstacle.y.isFinite ||
           !obstacle.radius.isFinite || obstacle.radius <= 0) {
         throw ArgumentError('Obstacle geometry must be finite and positive.');
+      }
+    }
+  }
+
+  void _validateUnitPositions(Iterable<MonsterUnit> units) {
+    for (final unit in units) {
+      if (!unit.positionX.isFinite || !unit.positionY.isFinite) {
+        throw ArgumentError('Unit position must be finite.');
       }
     }
   }
