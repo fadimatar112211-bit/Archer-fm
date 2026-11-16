@@ -58,3 +58,22 @@ A local copy of the original upload (`archer boy 3d model.glb`, 22,390,620 bytes
 This independently confirms the original GLB is a static, unskinned mesh. It cannot animate by itself. It must receive valid vertex weights and an Armature modifier from the developed rig before it can be exported as an animated character.
 
 The developed GLB's binary could not be fetched into the local runtime through the connected GitHub reader, so its armature, action names, transforms, and vertex-group layout have not yet been independently inspected here. No mesh transfer or Blender export was performed.
+
+
+## Latest Ranger CI pipeline observation (2026-11-16)
+
+A separate GitHub Actions run on `main` was inspected: run `43858874743` (workflow `Ranger Blender Asset Pipeline`, head `082e303b883f85f785029597ca2bb7023e016cc6`). Its job completed these steps successfully:
+
+- Blender installation and Python syntax check.
+- Build of the procedural Ranger source scene.
+- Blender scene/rig validation.
+- Rendering all configured states and directions.
+- Rendered-frame validation.
+- Sprite-atlas packing.
+- Final sprite-manifest validation.
+
+The run then failed at **Commit validated Ranger runtime atlases**. Artifact upload was skipped. The job-step summary does not expose the exact commit-step error, so the cause is not asserted here.
+
+Important scope distinction: this run was on `main` and invoked `build_ranger_source.py`, which constructs the procedural character. It is evidence that the procedural source-to-atlas pipeline passed its build, render, and validation stages on that commit. It is **not** evidence that `original_model.glb` was merged with `ranger_new/ranger.glb`, nor does it validate the high-detail mesh.
+
+The `ranger-reference-work` branch head remains `e17c5cecbdb70e06f1cf802d7027b552ab73f608`; this CI run did not run on that branch.
