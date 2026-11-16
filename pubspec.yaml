@@ -25,4 +25,5 @@ flutter:
     - assets/heroes/flame/renders/flame_manifest.json
     - assets/heroes/flame/renders/atlases/
     - assets/heroes/shadow/renders/shadow_manifest.json
-    - assets/heroes/shadow/renders/atlases/\n    - assets/monsters/legacy/
+    - assets/heroes/shadow/renders/atlases/
+    - assets/monsters/legacy/
