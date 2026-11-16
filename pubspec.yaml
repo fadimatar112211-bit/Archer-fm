@@ -26,3 +26,5 @@ flutter:
     - assets/heroes/flame/renders/atlases/
     - assets/heroes/shadow/renders/shadow_manifest.json
     - assets/heroes/shadow/renders/atlases/
+    - assets/heroes/ranger_new/renders/ranger_new_manifest.json
+    - assets/heroes/ranger_new/renders/atlases/

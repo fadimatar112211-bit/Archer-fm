@@ -70,6 +70,15 @@ const HeroTheme rangerTheme = HeroTheme(
   stageBottom: Color(0xFF07110C),
 );
 
+const HeroTheme rangerNewTheme = HeroTheme(
+  accent: Color(0xFF62E86C),
+  accentSoft: Color(0x2662E86C),
+  effect: Color(0xFF62E86C),
+  stageTop: Color(0xFF0B1A10),
+  stageMid: Color(0xFF14301C),
+  stageBottom: Color(0xFF07110A),
+);
+
 const HeroTheme flameTheme = HeroTheme(
   accent: Color(0xFFFF9A3C),
   accentSoft: Color(0x26FF8A24),
@@ -97,10 +106,13 @@ const HeroTheme stormTheme = HeroTheme(
   stageBottom: Color(0xFF041017),
 );
 
-/// The four heroes of the current roster.
+/// The playable roster.
 ///
 /// Order is the in-game selection order: the balanced archer first, then the
-/// three melee identities. Names, weapons and skills mirror the production
+/// three melee identities. `ranger_new` is the rebuilt anime-reference Ranger
+/// on its own asset folder; the original ranger stays untouched until the new
+/// build is verified, so both appear side by side during verification.
+/// Names, weapons and skills mirror the production
 /// brief so the viewer and the future combat code describe the same character.
 const List<HeroDefinition> heroCatalog = [
   HeroDefinition(
@@ -154,6 +166,20 @@ const List<HeroDefinition> heroCatalog = [
         'مهارته صاعقة تنزل على الأرض أمامه.',
     icon: Icons.bolt,
     theme: stormTheme,
+  ),
+  HeroDefinition(
+    id: 'ranger_new',
+    nameAr: 'الرامي الجديد',
+    nameEn: 'Ranger II',
+    roleAr: 'بعيد المدى · توازن',
+    weaponAr: 'قوس الطاقة الخضراء',
+    skillAr: 'وابل السهام',
+    descriptionAr:
+        'النسخة النهائية من الرامي، مبنية على المجسّم الأصلي بكل تفاصيله '
+        'وخاماته مع نظام العظام والحركات الثمانية المرخصة: تنقّل، هجوم '
+        'بالسهم، ومهارة الوابل.',
+    icon: Icons.north_east,
+    theme: rangerNewTheme,
   ),
 ];
 

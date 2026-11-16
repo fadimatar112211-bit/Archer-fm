@@ -74,19 +74,26 @@ def require(condition, message):
         raise RuntimeError(message)
 
 
-def reset_pose(armature):
+def reset_pose(armature, action=None):
     """Clear every pose channel before evaluating an Action.
 
     Blender only drives the F-curves that exist in the active Action, so any
     channel the previous Action left behind (the Death action's root rotation,
     for example) survives an Action switch and silently deforms the next state.
+
+    The rotation channels must stay in the mode the Action actually authored:
+    forcing Euler here made every quaternion F-curve (the GLB-exported rigs)
+    silently inert, so posed frames rendered as the rest pose. When an Action
+    is given, each bone's mode is aligned with the curves that Action drives.
     """
+    paths = {fc.data_path for fc in action.fcurves} if action else set()
     for bone in armature.pose.bones:
-        bone.rotation_mode = "XYZ"
-        bone.location = (0.0, 0.0, 0.0)
-        bone.rotation_euler = (0.0, 0.0, 0.0)
-        bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
-        bone.scale = (1.0, 1.0, 1.0)
+        bone.matrix_basis = Matrix.Identity(4)
+        prefix = f'pose.bones["{bone.name}"]'
+        if f"{prefix}.rotation_quaternion" in paths:
+            bone.rotation_mode = "QUATERNION"
+        elif f"{prefix}.rotation_euler" in paths:
+            bone.rotation_mode = "XYZ"
 
 
 def assert_render_colors(path):
@@ -127,7 +134,7 @@ def sampled_frames(config, state):
 
 
 def evaluate_pose(armature, action, frame):
-    reset_pose(armature)
+    reset_pose(armature, action)
     armature.animation_data_create()
     armature.animation_data.action = action
     bpy.context.scene.frame_set(frame)
