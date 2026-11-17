@@ -1,5 +1,3 @@
-import 'dart:ui' show Color;
-
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
