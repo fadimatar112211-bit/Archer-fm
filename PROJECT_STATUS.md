@@ -183,7 +183,7 @@ Still to decide or test:
 | Project scaffold | Not started | No game code committed yet |
 | Gameplay implementation | Partial | Monster/army logic implemented on monster-army-work; no live match screen, map runtime, or full game loop yet |
 | Backend/multiplayer | Not started | No networking code or services configured |
-| Automated tests/build verification | In progress | Monster tests and a dedicated Actions workflow are committed; no successful run is verified yet |
+| Automated tests/build verification | In progress | Monster tests are committed and the existing Monster Army Checks workflow includes them; no successful run is verified yet |
 
 ## 7. Main development roadmap — work one system at a time
 
@@ -467,6 +467,6 @@ Still to decide or test:
 - أضيف maxUnits الاختياري كحاجز تقني يحدده ملف تعريف الجهاز/المباراة، وليس كحد تصميمي ثابت للجيش. بقي غير مضبوط افتراضياً إلى حين قياس الأداء.
 - أضيف MonsterAnimationCatalog وطور MonsterSpriteView لعرض إطارات SVG الأربعة لكل ورقة، تشغيل الحركة/الهجوم/الموت، وشريط صحة اختياري. ملفات ranged المفقودة للهجوم/الموت ما زالت null ولا نستخدم حركة melee مكانها.
 - أضيفت اختبارات A* والتفاف الجدران ومنع القطع القطري، إبطال المسارات عند تغيّر إصدار الخريطة، مواقع الهجوم، الدفاع التلقائي، تصادم الحركة، حد السعة، وتكامل الحركة مع دورة القتال.
-- أضيف workflow مستقل .github/workflows/monster-army-validation.yml لتشغيل formatter وflutter analyze واختبارات الوحوش على الفرع.
+- اعتمدنا workflow الموجود .github/workflows/monster-army-checks.yml؛ وهو يشغّل dart format وflutter analyze واختبارات الوحوش، ويتضمن ملفي الاختبار الجديدين.
 - بوابة التحقق: لا يوجد في أدوات GitHub المتاحة هنا سجل تشغيل ناجح مؤكد لهذه الدفعة، ولم تتوفر أوامر flutter/dart محلياً؛ لذلك لا نسجل الاختبارات على أنها ناجحة.
 - ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام ببيانات العوائق والشبكة من محرك الخريطة الفعلي، توصيله بكيانات الصحة السلطوية الحقيقية للأبطال والكريستالات داخل مباراة حية، دمج MonsterSpriteView في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، واختبارات أداء على أجهزة مستهدفة ثم اجتياز CI.
