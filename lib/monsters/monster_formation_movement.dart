@@ -371,7 +371,7 @@ class MonsterFormationMovement {
     final discriminant = b * b - 4 * lengthSquared * c;
     if (discriminant < 0) return (startX, startY);
     final hitT = ((-b - math.sqrt(discriminant)) / (2 * lengthSquared))
-        .clamp(0.0, 1.0);
+        .clamp(0.0, 1.0).toDouble();
     final contactX = startX + moveX * hitT;
     final contactY = startY + moveY * hitT;
     var normalX = contactX - obstacle.x;
