@@ -115,6 +115,7 @@ class MonsterFormationMovement {
     required double targetY,
     required Duration elapsed,
     Iterable<MonsterMovementObstacle> obstacles = const [],
+    (double, double)? cohesionAnchor,
   }) {
     final obstacleList = _validate(targetX, targetY, elapsed, obstacles);
     if (!unit.isAlive || elapsed == Duration.zero) return false;
@@ -136,6 +137,7 @@ class MonsterFormationMovement {
       0,
       snapshots,
       obstacleList,
+      cohesionAnchor: cohesionAnchor,
     );
     if (steer.$1 == 0 && steer.$2 == 0) return false;
     final beforeX = unit.positionX;
@@ -203,14 +205,26 @@ class MonsterFormationMovement {
     double goalY,
     int selfIndex,
     List<(double, double)> units,
-    List<MonsterMovementObstacle> obstacles,
-  ) {
+    List<MonsterMovementObstacle> obstacles, {
+    (double, double)? cohesionAnchor,
+  }) {
     var vx = goalX - x;
     var vy = goalY - y;
     final goalLength = math.sqrt(vx * vx + vy * vy);
     if (goalLength > 0) {
       vx /= goalLength;
       vy /= goalLength;
+    }
+    if (cohesionAnchor != null && cohesionWeight > 0) {
+      final cohesionX = cohesionAnchor.$1 - x;
+      final cohesionY = cohesionAnchor.$2 - y;
+      final cohesionLength = math.sqrt(
+        cohesionX * cohesionX + cohesionY * cohesionY,
+      );
+      if (cohesionLength > 0 && cohesionLength.isFinite) {
+        vx += cohesionX / cohesionLength * cohesionWeight;
+        vy += cohesionY / cohesionLength * cohesionWeight;
+      }
     }
 
     for (var i = 0; i < units.length; i++) {
