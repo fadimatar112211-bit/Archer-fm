@@ -292,13 +292,18 @@ class MonsterFormationMovement {
         endY = resolved.$2;
       }
       for (var i = 0; i < allies.length; i++) {
-        final resolved = _separateFromPoint(
+        final resolved = _slideAroundCircle(
+          startX,
+          startY,
           endX,
           endY,
-          allies[i].$1,
-          allies[i].$2,
-          minimumAllySpacing,
+          MonsterMovementObstacle(
+            x: allies[i].$1,
+            y: allies[i].$2,
+            radius: minimumAllySpacing,
+          ),
           tieBreaker + i,
+          clearance: 0,
         );
         endX = resolved.$1;
         endY = resolved.$2;
@@ -326,9 +331,10 @@ class MonsterFormationMovement {
     double endX,
     double endY,
     MonsterMovementObstacle obstacle,
-    int tieBreaker,
-  ) {
-    final radius = obstacle.radius + obstacleClearance;
+    int tieBreaker, {
+    double? clearance,
+  }) {
+    final radius = obstacle.radius + (clearance ?? obstacleClearance);
     final startDx = startX - obstacle.x;
     final startDy = startY - obstacle.y;
     final startDistance = math.sqrt(startDx * startDx + startDy * startDy);
@@ -390,24 +396,4 @@ class MonsterFormationMovement {
     );
   }
 
-  (double, double) _separateFromPoint(
-    double x,
-    double y,
-    double otherX,
-    double otherY,
-    double minimumDistance,
-    int tieBreaker,
-  ) {
-    final dx = x - otherX;
-    final dy = y - otherY;
-    final distance = math.sqrt(dx * dx + dy * dy);
-    if (distance >= minimumDistance) return (x, y);
-    final angle = (tieBreaker + 1) * 2.399963229728653;
-    final nx = distance > 1e-9 ? dx / distance : math.cos(angle);
-    final ny = distance > 1e-9 ? dy / distance : math.sin(angle);
-    return (
-      otherX + nx * minimumDistance,
-      otherY + ny * minimumDistance,
-    );
-  }
 }
