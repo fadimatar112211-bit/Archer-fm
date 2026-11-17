@@ -50,6 +50,7 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
   void didUpdateWidget(covariant MonsterSpriteView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animation != widget.animation) {
+      _ticker.stop();
       _lastElapsed = Duration.zero;
     }
     _synchronize();
