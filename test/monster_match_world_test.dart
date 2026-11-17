@@ -120,6 +120,50 @@ void main() {
       expect(defender.health, 88);
     });
 
+    test('live health prevents later attackers from overkilling a defeated target',
+        () {
+      final army = MonsterArmy(
+        ownerId: 'p1',
+        idPrefix: 'p1-army',
+        catalog: _catalog(),
+        selection: InitialArmySelection({
+          for (final type in MonsterType.values)
+            type: type == MonsterType.runner ? 20 : 0,
+        }),
+        castleX: 0,
+        castleY: 0,
+      );
+      final attackers = army.units.take(2).toList(growable: false);
+      var heroHealth = 10.0;
+      final hero = MonsterExternalEntityAdapter(
+        id: 'p2-fragile-hero',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        isAlive: true,
+        positionX: 1,
+        positionY: 0,
+        isAliveNow: () => heroHealth > 0,
+        applyDamage: (amount) {
+          heroHealth -= amount;
+          return heroHealth <= 0;
+        },
+      );
+      final world = MonsterMatchWorldSnapshot(
+        units: attackers,
+        externalEntities: [hero],
+      );
+
+      final result = world.step(
+        loop: _loop(MonsterProjectileManager(maxActiveProjectiles: 4)),
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(result.meleeHitsApplied, 1);
+      expect(result.rejectedAttacks, 1);
+      expect(heroHealth, -2);
+    });
+
     test('resolves homing ranged projectiles against fresh world snapshots',
         () {
       final ranged = _unit(
