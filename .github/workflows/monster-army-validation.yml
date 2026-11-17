@@ -1,0 +1,48 @@
+name: Monster Army Validation
+
+on:
+  push:
+    branches:
+      - monster-army-work
+    paths:
+      - "lib/monsters/**"
+      - "test/monster_*_test.dart"
+      - "pubspec.yaml"
+      - ".github/workflows/monster-army-validation.yml"
+  pull_request:
+    branches:
+      - monster-army-work
+    paths:
+      - "lib/monsters/**"
+      - "test/monster_*_test.dart"
+      - "pubspec.yaml"
+      - ".github/workflows/monster-army-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-monster-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out monster branch
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Check Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib/monsters test/monster_*_test.dart
+
+      - name: Analyze Flutter and Dart code
+        run: flutter analyze
+
+      - name: Run monster system tests
+        run: flutter test test/monster_*_test.dart
