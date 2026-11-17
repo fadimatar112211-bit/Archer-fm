@@ -501,4 +501,5 @@ Still to decide or test:
 - Added movementSpeedMultiplierFor to MonsterMatchCombatLoop so the map host can supply a per-unit surface factor without changing permanent base stats or inventing a global water-speed value.
 - Normal pursuit and explicit return-to-crystal defense both pass the factor through MonsterCombatController into MonsterFormationMovement; invalid zero, negative, or non-finite factors are rejected.
 - Added tests proving a 0.5 surface factor halves travel distance, base moveSpeed remains unchanged, and the match loop applies a per-unit 0.25 factor. This is a hook for water/terrain behavior; the real map still supplies the approved factors.
-- CI verification: Monster Army Checks run #176 passed dart format, flutter analyze, and the complete configured monster test suite, including progression, world integration, navigation, animation, and combat.
+- Permanent progression now exports a versioned save envelope (schema 1) and restores it with validation, while preserving independent type levels and the level-40 cap.
+- CI verification: Monster Army Checks run #182 passed dart format, flutter analyze, and the complete configured monster test suite, including versioned progression saves, world integration, navigation, animation, and combat.
