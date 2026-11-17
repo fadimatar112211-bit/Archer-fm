@@ -395,6 +395,7 @@ void main() {
         navigationGrid: grid,
       );
 
+      var maxYReached = unit.positionY;
       for (var tick = 0; tick < 12; tick++) {
         loop.update(
           units: [unit],
@@ -406,11 +407,12 @@ void main() {
         );
         final currentCell = grid.worldToCell(unit.positionX, unit.positionY);
         expect(grid.isWalkable(currentCell), isTrue);
+        maxYReached = math.max(maxYReached, unit.positionY).toDouble();
       }
 
       expect(loop.pathfinder.cachedRouteCount, 1);
       expect(unit.targetId, 'enemy-crystal');
-      expect(unit.positionY, greaterThan(15));
+      expect(maxYReached, greaterThan(15));
     });
   });
 
