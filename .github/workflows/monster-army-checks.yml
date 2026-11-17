@@ -13,8 +13,6 @@ on:
       - 'test/monster_sprite_view_test.dart'
       - 'test/monster_animation_catalog_test.dart'
       - 'test/monster_navigation_and_formation_test.dart'
-      - 'test/monster_animation_catalog_test.dart'
-      - 'test/monster_navigation_and_formation_test.dart'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
