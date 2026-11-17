@@ -1,6 +1,7 @@
 import 'monster_combat_resolver.dart';
 import 'monster_match_combat_loop.dart';
 import 'monster_models.dart';
+import 'monster_navigation.dart';
 import 'monster_projectiles.dart';
 
 /// A fresh bridge between authoritative match entities and the monster loop.
