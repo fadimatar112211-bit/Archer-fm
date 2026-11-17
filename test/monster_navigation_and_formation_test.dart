@@ -2,6 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/monsters/monster_army.dart';
+import 'package:archer_fm/monsters/monster_combat.dart';
+import 'package:archer_fm/monsters/monster_combat_resolver.dart';
+import 'package:archer_fm/monsters/monster_match_combat_loop.dart';
+import 'package:archer_fm/monsters/monster_projectile_manager.dart';
+import 'package:archer_fm/monsters/monster_ranged_attack_handler.dart';
 import 'package:archer_fm/monsters/monster_attack_slots.dart';
 import 'package:archer_fm/monsters/monster_formation_movement.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
@@ -304,6 +309,60 @@ void main() {
       final dy = unit.positionY - obstacle.y;
       expect(math.sqrt(dx * dx + dy * dy), greaterThanOrEqualTo(18 - 1e-6));
       expect(unit.positionX, lessThan(100));
+    });
+  });
+
+  group('Monster match navigation integration', () {
+    test('combat follows A* waypoints around blocked map cells', () {
+      final unit = _unit(
+        'route-unit',
+        x: 5,
+        y: 15,
+        attackRange: 0,
+        moveSpeed: 10,
+      );
+      final target = const MonsterTarget(
+        id: 'enemy-crystal',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.crystal,
+        x: 55,
+        y: 15,
+        isAlive: true,
+      );
+      final grid = MonsterNavigationGrid(
+        columns: 7,
+        rows: 5,
+        cellSize: 10,
+        blocked: {
+          for (var y = 0; y < 4; y++) MonsterGridCell(3, y),
+        },
+      );
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: MonsterProjectileManager(maxActiveProjectiles: 4),
+        projectileSpeed: 10,
+        projectileId: (_) => 'unused-projectile',
+        navigationGrid: grid,
+      );
+
+      for (var tick = 0; tick < 12; tick++) {
+        loop.update(
+          units: [unit],
+          candidatesFor: (_) => [target],
+          resolveDamageTarget: (_) => null,
+          resolvePositionedTarget: (_) => null,
+          now: DateTime.utc(2026, 11, 17).add(Duration(seconds: tick)),
+          elapsed: const Duration(seconds: 1),
+        );
+        final currentCell = grid.worldToCell(unit.positionX, unit.positionY);
+        expect(grid.isWalkable(currentCell), isTrue);
+      }
+
+      expect(loop.pathfinder.cachedRouteCount, 1);
+      expect(unit.targetId, 'enemy-crystal');
+      expect(unit.positionY, greaterThan(15));
     });
   });
 
