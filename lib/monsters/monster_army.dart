@@ -32,14 +32,16 @@ class MonsterPurchase {
 class MonsterArmy {
   MonsterArmy({
     required this.ownerId,
+    String? idPrefix,
     required this.catalog,
     required this.selection,
     required this.castleX,
     required this.castleY,
     this.maxUnits,
     this.statsForType,
-  }) {
+  }) : idPrefix = idPrefix ?? ownerId {
     if (ownerId.isEmpty) throw ArgumentError.value(ownerId, 'ownerId');
+    if (this.idPrefix.isEmpty) throw ArgumentError.value(this.idPrefix, 'idPrefix');
     if (!castleX.isFinite || !castleY.isFinite) {
       throw ArgumentError('Castle position must be finite.');
     }
@@ -56,6 +58,7 @@ class MonsterArmy {
   }
 
   final String ownerId;
+  final String idPrefix;
   final MonsterCatalog catalog;
   final InitialArmySelection selection;
   final double castleX;
@@ -87,7 +90,7 @@ class MonsterArmy {
     final stats = statsForType?.call(type) ?? catalog[type].baseStats;
     stats.validate();
     return MonsterUnit(
-      id: '$ownerId-monster-${_nextId++}',
+      id: '$idPrefix-monster-${_nextId++}',
       ownerId: ownerId,
       type: type,
       positionX: castleX + radius * math.cos(angle),
