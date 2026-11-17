@@ -252,7 +252,7 @@
 - هذه خطوة عرض قابلة لإعادة الاستخدام وليست ربطاً نهائياً بشاشة مباراة حية. أصول SVG القديمة ما زالت مؤقتة وغير معتمدة إنتاجياً، وranged ما زال يفتقد ورقتي هجوم وموت مخصصتين. لا نعتبر CI ناجحاً قبل انتهاء التشغيل الحالي بنجاح.
 
 
-## 28. A* navigation, automatic defense, formation reservations and sprite component — 2026-11-17
+## 29. A* navigation, automatic defense, formation reservations and sprite component — 2026-11-17
 
 - Added MonsterNavigationGrid and MonsterPathfinder: bounded A* search, eight-way movement, diagonal corner blocking, per-unit cached routes, and map-revision invalidation. The map host must provide an immutable grid snapshot and increment its revision when obstacle geometry changes.
 - Movement now resolves swept-circle intersections against circular map obstacles and nearby allies, and clamps movement to the current waypoint so large ticks cannot skip route nodes.
