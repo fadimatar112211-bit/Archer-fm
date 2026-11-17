@@ -7,6 +7,7 @@ import 'package:archer_fm/monsters/monster_match_combat_loop.dart';
 import 'package:archer_fm/monsters/monster_match_world.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_projectile_manager.dart';
+import 'package:archer_fm/monsters/monster_projectiles.dart';
 import 'package:archer_fm/monsters/monster_ranged_attack_handler.dart';
 
 MonsterCatalog _catalog() => MonsterCatalog({
