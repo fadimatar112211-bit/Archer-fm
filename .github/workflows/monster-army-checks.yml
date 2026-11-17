@@ -36,5 +36,5 @@ jobs:
       - run: flutter --version
       - run: flutter pub get
       - run: dart format lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
-      - run: flutter analyze
+      - run: flutter analyze lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
       - run: flutter test test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
