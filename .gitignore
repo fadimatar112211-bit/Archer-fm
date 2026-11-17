@@ -34,3 +34,7 @@ local.properties
 # workflow's artifact upload carries non-Ranger heroes to the committing
 # machine. The real files live in assets/heroes/<hero>/.
 assets/heroes/ranger/renders/_bundle/
+
+# Flutter build artifacts
+.dart_tool/
+.flutter-plugins-dependencies

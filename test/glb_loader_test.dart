@@ -50,10 +50,9 @@ void main() {
     }
     expect(delta, greaterThan(0.01),
         reason: 'the bow arm must move through the attack clip');
-    // Attack holds its final frame when not looping.
-    final finalPose = Float32List.fromList(poser.skin);
+    // One-shot clips hold their final frame when time runs past the clip.
     poser.poseAt('attack', model.clips['attack']!.durationMs, loop: false);
-    expect(poser.skin, finalPose);
+    final finalPose = Float32List.fromList(poser.skin);
     poser.poseAt('attack', 99999, loop: false);
     expect(poser.skin, finalPose,
         reason: 'one-shot clips must clamp at their last frame');

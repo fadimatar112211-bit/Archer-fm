@@ -9,7 +9,9 @@
 # the stock glTF exporter handles both. The Dart parser merges the exported
 # meshes' primitives into one vertex buffer, so no mesh surgery is done here
 # (joining + armature modifier crashes Blender 4.0.2's exporter). Only:
-#   1. force the armature to REST so the bind pose is the saved pose,
+#   1. clear the armature pose (bind pose = rest pose) while the armature
+#      STAYS in POSE mode, so the exporter samples the real keyframed actions
+#      (forcing REST here silently exports every clip as a constant pose),
 #   2. bake each material's diffuse colour into a corner COLOR_0 attribute
 #      (the Principled nodes in these sources export black base colour —
 #      the baked attribute is the reliable colour path),
@@ -22,8 +24,24 @@ argv = sys.argv[sys.argv.index('--') + 1:]
 dst = argv[0]
 
 for arm_obj in [o for o in bpy.data.objects if o.type == 'ARMATURE']:
-    arm_obj.data.pose_position = 'REST'
+    # Bind/rest is encoded in the edit bones and inverseBindMatrices; the
+    # current pose must not leak into the exported mesh. Keep POSE mode (REST
+    # makes the exporter sample rest on every frame: all clips go constant)
+    # and just detach the active action so sampling starts from the rest pose.
+    # Never touch pose_bone.rotation_mode here: the authored actions animate
+    # Euler channels, and switching to QUATERNION silently unbinds them.
+    arm_obj.data.pose_position = 'POSE'
+    if arm_obj.animation_data is not None:
+        arm_obj.animation_data.action = None
+    for pb in arm_obj.pose.bones:
+        pb.location = (0, 0, 0)
+        pb.scale = (1, 1, 1)
+        if pb.rotation_mode == 'QUATERNION':
+            pb.rotation_quaternion = (1, 0, 0, 0)
+        else:
+            pb.rotation_euler = (0, 0, 0)
 bpy.context.view_layer.update()
+print('ARMATURE POSE cleared; actions to export:', len(bpy.data.actions))
 
 glow_keys = ('energy', 'glow', 'flame', 'aura', 'streak', 'venom', 'shadow')
 for o in [o for o in bpy.data.objects if o.type == 'MESH']:

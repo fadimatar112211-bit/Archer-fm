@@ -470,7 +470,10 @@ class _Track {
       }
       return;
     }
-    var t2 = t;
+    // `t` arrives in milliseconds (Poser/controller clock) while the sampled
+    // glTF keyframe times are seconds. Mixing them made every clip snap to
+    // its last keyframe after the first few ms.
+    var t2 = t / 1000.0;
     if (loop && t2 > times[last]) {
       t2 %= times[last];
     }
