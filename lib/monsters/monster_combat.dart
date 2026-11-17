@@ -61,6 +61,46 @@ class MonsterCombatController {
     if (target == null) {
       unit.targetId = null;
       unit.targetKind = null;
+      if (unit.order == MonsterOrder.defend) {
+        final rally = targeting.defensiveTarget(
+          ownerId: unit.ownerId,
+          fromX: unit.positionX,
+          fromY: unit.positionY,
+          candidates: candidates,
+        );
+        if (rally != null && elapsed > Duration.zero) {
+          var rallyX = rally.x;
+          var rallyY = rally.y;
+          if (navigationGrid != null) {
+            final routePlanner = pathfinder;
+            if (routePlanner == null) {
+              throw ArgumentError(
+                'A pathfinder is required when a navigation grid is supplied.',
+              );
+            }
+            final waypoint = routePlanner.nextWaypoint(
+              unit: unit,
+              grid: navigationGrid,
+              targetX: rallyX,
+              targetY: rallyY,
+              goalRange: navigationGrid.cellSize * 0.2,
+            );
+            if (waypoint == null) return null;
+            rallyX = waypoint.$1;
+            rallyY = waypoint.$2;
+          }
+          movement.moveUnitToward(
+            unit: unit,
+            allies: allies,
+            targetX: rallyX,
+            targetY: rallyY,
+            elapsed: elapsed,
+            obstacles: obstacles,
+            cohesionAnchor: cohesionAnchor,
+          );
+          return null;
+        }
+      }
       pathfinder?.release(unit.id);
       return null;
     }
