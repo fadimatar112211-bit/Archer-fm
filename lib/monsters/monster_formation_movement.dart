@@ -123,7 +123,9 @@ class MonsterFormationMovement {
       throw ArgumentError('Unit position must be finite.');
     }
     final others = allies.where((other) =>
-        other.isAlive && other.id != unit.id).toList(growable: false);
+        other.isAlive &&
+        other.id != unit.id &&
+        other.ownerId == unit.ownerId).toList(growable: false);
     _validateUnitPositions(others);
     final snapshots = <(double, double)>[
       (unit.positionX, unit.positionY),
