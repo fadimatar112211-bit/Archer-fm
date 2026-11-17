@@ -47,6 +47,7 @@ class MonsterCombatController {
     (double, double)? approachPoint,
     MonsterNavigationGrid? navigationGrid,
     MonsterPathfinder? pathfinder,
+    (double, double)? cohesionAnchor,
   }) {
     if (!unit.isAlive) return null;
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
@@ -104,6 +105,7 @@ class MonsterCombatController {
       targetY: moveY,
       elapsed: elapsed,
       obstacles: obstacles,
+      cohesionAnchor: cohesionAnchor,
     );
     return null;
   }
