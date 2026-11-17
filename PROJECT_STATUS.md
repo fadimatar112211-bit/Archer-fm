@@ -470,3 +470,13 @@ Still to decide or test:
 - اعتمدنا workflow الموجود .github/workflows/monster-army-checks.yml؛ وهو يشغّل dart format وflutter analyze واختبارات الوحوش، ويتضمن ملفي الاختبار الجديدين.
 - بوابة التحقق: لا يوجد في أدوات GitHub المتاحة هنا سجل تشغيل ناجح مؤكد لهذه الدفعة، ولم تتوفر أوامر flutter/dart محلياً؛ لذلك لا نسجل الاختبارات على أنها ناجحة.
 - ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام ببيانات العوائق والشبكة من محرك الخريطة الفعلي، توصيله بكيانات الصحة السلطوية الحقيقية للأبطال والكريستالات داخل مباراة حية، دمج MonsterSpriteView في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، واختبارات أداء على أجهزة مستهدفة ثم اجتياز CI.
+
+
+## 29. Permanent monster progression — 2026-11-17
+
+- Added independent permanent levels for runner, tank, stalker, and ranged, each capped at level 40.
+- Upgrade growth and per-level currency costs are injected from balance configuration; no unapproved growth rates or prices are hard-coded as game balance.
+- Added atomic currency debit outcomes, insufficient-funds/max-level handling, stat scaling for health/damage/movement speed, and JSON-safe save/restore data for all four levels.
+- MonsterArmy can now receive a progression stats provider so each new match and each newly purchased unit spawns with the owner's permanent upgrades. Purchase prices remain the base catalog prices.
+- Added tests for independent upgrades, currency rejection, level cap, save/restore, stat scaling, and upgraded army spawning. CI now includes the progression test file.
+- The host still needs to connect the JSON snapshot to the permanent player-save system and provide approved balance growth/cost configuration.
