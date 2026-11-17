@@ -3,17 +3,17 @@ import 'dart:io';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Storm is intentionally NOT playable: the repo has only 4 design SVGs.
-/// These tests lock the prepared gameplay data so that the moment the asset
-/// pipeline lands, wiring is the only remaining work.
+/// Storm is playable: the original uploaded storm.glb mesh + textures ride
+/// the rigged house skeleton, and the kit's four lightning abilities are
+/// wired into GameWorld. These tests lock that contract.
 void main() {
-  group('Storm combat kit (data ready, assets missing)', () {
+  group('Storm combat kit (playable, original GLB in-game)', () {
     final kit = stormKit;
 
-    test('is explicitly blocked until its asset pipeline lands', () {
+    test('is playable with the original model pipeline landed', () {
       expect(kit.heroId, 'storm');
-      expect(kit.playable, isFalse,
-          reason: 'storm has no renders/atlases/manifest on disk yet');
+      expect(kit.playable, isTrue,
+          reason: 'the rigged original model + manifest exist');
     });
 
     test('keeps the mandated 5-hit combo escalation', () {
@@ -55,12 +55,13 @@ void main() {
       expect(kit.buffMoveMult, 1.0);
     });
 
-    test('the asset gap is real, not a code bug', () async {
-      // If this ever fails, storm renders landed and the kit can flip to
-      // playable — re-check the pipeline doc first.
-      final exists = await File('assets/heroes/storm/renders').exists();
-      expect(exists, isFalse,
-          reason: 'flip stormKit.playable once renders exist');
+    test('the playable asset pipeline is on disk', () async {
+      final glb = File('assets/heroes/storm/model/storm_animated.glb');
+      final manifest = File('assets/heroes/storm/renders/storm_manifest.json');
+      expect(glb.existsSync(), isTrue,
+          reason: 'the rigged original model must exist');
+      expect(manifest.existsSync(), isTrue,
+          reason: 'the manifest must exist for the 3D load path');
     });
   });
 }

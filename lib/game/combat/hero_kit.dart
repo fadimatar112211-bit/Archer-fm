@@ -343,7 +343,7 @@ const HeroKit stormKit = HeroKit(
   comboWindowMs: 1800,
   comboHits: standardCombo,
   attackPace: 1.4,
-  playable: false, // blocked on missing renders/atlases/manifest
+  playable: true,
   attackStyle: AttackStyle.melee,
   meleeRange: 125, // longest melee reach: a spear, not a sword
   meleeArcRadians: 0.7, // ±40°: narrow thrust line

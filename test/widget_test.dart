@@ -80,8 +80,8 @@ void main() {
     tester,
   ) async {
     await _pumpHome(tester);
-    // Two heroes are still asset-stage; Ranger II, Flame and Shadow are playable.
-    expect(find.textContaining('قيد التطوير'), findsNWidgets(2));
+    // Every finished hero is playable: Ranger II, Flame, Shadow, Storm.
+    expect(find.textContaining('قيد التطوير'), findsNWidgets(1));
     expect(
       find.text('الرامي الجديد — قوس الطاقة الخضراء'),
       findsOneWidget,
@@ -102,7 +102,7 @@ void main() {
         .whereType<ButtonStyleButton>()
         .where((button) => button.onPressed != null)
         .length;
-    expect(enabled, 3);
+    expect(enabled, 4);
   });
 
   testWidgets('playing the finished Ranger opens the battle screen', (

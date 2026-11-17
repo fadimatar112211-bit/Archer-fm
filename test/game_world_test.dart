@@ -703,4 +703,155 @@ void main() {
       world.releaseWeaponPayload(volley: true);
     });
   });
+
+  group('Storm lightning-spear combat', () {
+    test('thunder_thrust stabs 160% and chains 60% to the nearest '
+        'neighbour of the target', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      final primary = addEnemy(
+        world,
+        position: world.player.position + const Offset(120, 0),
+        hp: 100,
+      );
+      final chained = addEnemy(
+        world,
+        position: world.player.position + const Offset(220, 0),
+        hp: 100,
+      );
+      expect(world.useAbility('thunder_thrust'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      // Primary takes 160%; the chain adds 60% of that onto the enemy
+      // nearest to the primary (100 units away, inside the 200 chain range).
+      expect(100 - primary.hp, closeTo(stormKit.baseDamage * 1.6, 0.01));
+      expect(
+        100 - chained.hp,
+        closeTo(stormKit.baseDamage * 1.6 * 0.6, 0.01),
+      );
+    });
+
+    test('thunder_thrust whiff still draws the spear line without damage', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      addEnemy(world, position: world.player.position + const Offset(400, 0));
+      expect(world.useAbility('thunder_thrust'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      expect(world.fx.where((f) => f.kind == 'slash').length, 1);
+    });
+
+    test('chain_lightning strikes up to 3 nearest enemies within 180 at '
+        '130% each', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      final close = [
+        addEnemy(world, position: world.player.position + const Offset(80, 0)),
+        addEnemy(world, position: world.player.position + const Offset(120, 0)),
+        addEnemy(world, position: world.player.position + const Offset(160, 0)),
+        // Outside the 180 strike radius.
+        addEnemy(world, position: world.player.position + const Offset(400, 0)),
+      ];
+      world.level = 10;
+      expect(world.useAbility('chain_lightning'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      for (var i = 0; i < 3; i++) {
+        // Each close enemy takes exactly one 130% strike.
+        expect(
+          close[i].hp,
+          closeTo(close[i].maxHp - stormKit.baseDamage * 1.3, 0.01),
+        );
+      }
+      // The far enemy is untouched.
+      expect(close[3].hp, close[3].maxHp);
+      // One jagged bolt fx per struck enemy.
+      expect(world.fx.where((f) => f.kind == 'bolt').length, 3);
+    });
+
+    test('static_field buffs 8 s and every swing releases a 40% charge', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      final target = addEnemy(
+        world,
+        position: world.player.position + const Offset(120, 0),
+        hp: 100,
+      );
+      world.level = 20;
+      expect(world.useAbility('static_field'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(world.player.buffUntilMs, greaterThan(world.nowMs + 7000));
+      // Swing while charged: 100% × buff mult 1.2 + a second 40% × 1.2.
+      world.releaseMeleeSwing();
+      expect(
+        100 - target.hp,
+        closeTo(
+          stormKit.baseDamage * (1.0 + 0.4) * stormKit.buffDamageMult,
+          0.01,
+        ),
+      );
+    });
+
+    test('tempest_rage boosts damage 1.2x and stretches the spear 1.25x', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      expect(world.currentMeleeRange(), closeTo(stormKit.meleeRange, 0.01));
+      expect(world.currentDamageMult(), 1.0);
+      world.level = 30;
+      expect(world.useAbility('tempest_rage'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(
+        world.currentMeleeRange(),
+        closeTo(stormKit.meleeRange * 1.25, 0.01),
+      );
+      expect(world.currentDamageMult(), stormKit.buffDamageMult);
+    });
+
+    test('ability levels gate the storm kit the same way', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.energy = stormKit.baseMaxEnergy;
+      expect(world.useAbility('thunder_thrust'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      world.player.energy = stormKit.baseMaxEnergy;
+      expect(world.useAbility('chain_lightning'), isNull);
+      world.level = 10;
+      expect(world.useAbility('chain_lightning'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = stormKit.baseMaxEnergy;
+      expect(world.useAbility('static_field'), isNull);
+      world.level = 20;
+      expect(world.useAbility('static_field'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = stormKit.baseMaxEnergy;
+      expect(world.useAbility('tempest_rage'), isNull);
+      world.level = 30;
+      expect(world.useAbility('tempest_rage'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+    });
+  });
 }

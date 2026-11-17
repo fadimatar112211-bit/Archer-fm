@@ -365,7 +365,82 @@ class GameWorld {
         case 'twin_fangs':
           pendingAbilityId = null;
           _twinFangsStrike();
+        case 'thunder_thrust':
+          pendingAbilityId = null;
+          _thunderThrust();
       }
+    }
+  }
+
+  /// Storm's thunder thrust: a 160% spear stab on the primary target, then
+  /// 60% of that damage chains as lightning to the nearest other enemy.
+  void _thunderThrust() {
+    final range = currentMeleeRange();
+    final halfArc = kit.meleeArcRadians;
+    EnemyState? primary;
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0) continue;
+      final delta = enemy.position - player.position;
+      final dist = delta.distance;
+      if (dist > range + 18) continue;
+      if (dist > 1) {
+        final facingDot =
+            (delta.dx * player.facing.dx + delta.dy * player.facing.dy) /
+                dist;
+        if (facingDot < math.cos(halfArc)) continue;
+      }
+      primary = enemy;
+      break;
+    }
+    if (primary == null) {
+      // Whiffed thrust: the swing still shows.
+      fx.add(
+        GameFx(
+          kind: 'slash',
+          position: player.position,
+          facing: player.facing,
+          radius: range,
+          bornAtMs: nowMs,
+          color: kit.accentColor,
+        ),
+      );
+      return;
+    }
+    final primaryDamage = kit.baseDamage * 1.6 * currentDamageMult();
+    _damageEnemy(primary, primaryDamage);
+    fx.add(
+      GameFx(
+        kind: 'slash',
+        position: player.position,
+        facing: player.facing,
+        radius: range,
+        bornAtMs: nowMs,
+        color: kit.accentColor,
+      ),
+    );
+    // Chain: 60% of the primary damage onto the nearest other living enemy.
+    EnemyState? chain;
+    var chainDist = double.infinity;
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0 || enemy == primary) continue;
+      final dist = (enemy.position - primary.position).distance;
+      if (dist < chainDist) {
+        chainDist = dist;
+        chain = enemy;
+      }
+    }
+    if (chain != null && chainDist <= 200) {
+      _damageEnemy(chain, primaryDamage * 0.6);
+      fx.add(
+        GameFx(
+          kind: 'bolt',
+          position: primary.position,
+          facing: chain.position - primary.position,
+          radius: chainDist,
+          bornAtMs: nowMs,
+          color: kit.accentColor,
+        ),
+      );
     }
   }
 
@@ -454,6 +529,65 @@ class GameWorld {
         break;
       case 'venom_coat':
         player.buffUntilMs = nowMs + 8000;
+        break;
+      case 'chain_lightning':
+        // Up to 3 nearest enemies within 180 are struck for 130% each.
+        final candidates = enemies
+            .where((e) => e.hp > 0)
+            .toList()
+          ..sort(
+            (a, b) => (a.position - player.position)
+                .distance
+                .compareTo((b.position - player.position).distance),
+          );
+        var struck = 0;
+        for (final enemy in candidates) {
+          if (struck >= 3) break;
+          if ((enemy.position - player.position).distance > 180) break;
+          struck++;
+          _damageEnemy(
+            enemy,
+            kit.baseDamage * 1.3 * currentDamageMult(),
+          );
+          fx.add(
+            GameFx(
+              kind: 'bolt',
+              position: player.position,
+              facing: enemy.position - player.position,
+              radius: (enemy.position - player.position).distance,
+              bornAtMs: nowMs,
+              color: kit.accentColor,
+            ),
+          );
+        }
+        break;
+      case 'static_field':
+        // 8 s: every thrust releases a second 40% charge on its target.
+        player.buffUntilMs = nowMs + 8000;
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: 90,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
+        break;
+      case 'tempest_rage':
+        // 6 s storm rage: faster attacks, harder hits, longer reach.
+        player.buffUntilMs = nowMs + 6000;
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: 110,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
         break;
       case 'shadow_execute':
         _shadowExecute();
@@ -590,6 +724,16 @@ class GameWorld {
           tickDamage: kit.baseDamage * 0.15 * currentDamageMult(),
         );
       }
+      // Static field: a buffed Storm releases a second 40% charge on the
+      // thrust's target (first enemy hit).
+      if (kit.heroId == 'storm' &&
+          enemy.hp > 0 &&
+          player.buffUntilMs > nowMs) {
+        _damageEnemy(
+          enemy,
+          kit.baseDamage * 0.4 * currentDamageMult(),
+        );
+      }
     }
     fx.add(
       GameFx(
@@ -648,9 +792,10 @@ class GameWorld {
   double currentDamageMult() =>
       player.buffUntilMs > nowMs ? kit.buffDamageMult : 1.0;
 
-  /// Melee reach, widened while the rage buff is active.
-  double currentMeleeRange() =>
-      kit.meleeRange * (player.buffUntilMs > nowMs ? 1.2 : 1.0);
+  /// Melee reach, widened while the rage buff is active (Storm's tempest
+  /// rage stretches the spear line the farthest).
+  double currentMeleeRange() => kit.meleeRange *
+      (player.buffUntilMs > nowMs ? (kit.heroId == 'storm' ? 1.25 : 1.2) : 1.0);
 
   double currentMoveSpeed() {
     var speed = kit.moveSpeed;

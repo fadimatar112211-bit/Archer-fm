@@ -237,6 +237,31 @@ class ArenaPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 6 * (1 - t),
         );
+      } else if (effect.kind == 'bolt') {
+        // Lightning arc: a jagged line from the source toward [facing]
+        // spanning [radius] units, flickering out over the lifetime.
+        final dir = effect.facing;
+        final len = dir.distance;
+        if (len > 1) {
+          final unit = dir / len;
+          final normal = Offset(-unit.dy, unit.dx);
+          final path = Path()..moveTo(effect.position.dx, effect.position.dy);
+          const joints = 6;
+          for (var j = 1; j <= joints; j++) {
+            final along = effect.radius * j / joints;
+            final jag = (j == joints ? 0.0 : (j.isOdd ? 1.0 : -1.0) * 7);
+            final p = effect.position + unit * along + normal * jag;
+            path.lineTo(p.dx, p.dy);
+          }
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = color
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 5 * (1 - t * 0.5)
+              ..strokeCap = StrokeCap.round,
+          );
+        }
       }
     }
   }

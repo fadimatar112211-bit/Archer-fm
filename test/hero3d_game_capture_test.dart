@@ -133,16 +133,23 @@ void main() {
   );
 
   test(
-    'flame + shadow 3D models render through the arena painter',
+    'flame + shadow + storm 3D models render through the arena painter',
     () async {
       for (final entry in [
         [
           'assets/heroes/flame/model/flame_animated.glb',
           '74_game_3d_flame_attack',
+          'flame',
         ],
         [
           'assets/heroes/shadow/model/shadow_animated.glb',
           '75_game_3d_shadow_attack',
+          'shadow',
+        ],
+        [
+          'assets/heroes/storm/model/storm_animated.glb',
+          '76_game_3d_storm_attack',
+          'storm',
         ],
       ]) {
         final bytes = File(entry[0]).readAsBytesSync();
@@ -150,8 +157,9 @@ void main() {
         final hero3d = Hero3DController(Hero3DModel(model));
         hero3d.model.calibrate();
 
+        final kit = kitForHero(entry[2]);
         final world = GameWorld(
-          kit: kitForHero(entry[0].contains('flame') ? 'flame' : 'shadow'),
+          kit: kit,
           random: math.Random(7),
           spawnWaves: false,
         );
@@ -182,7 +190,7 @@ void main() {
         final painter = ArenaPainter(
           world: world,
           presentation: ArenaPresentation(
-            kit: kitForHero(entry[0].contains('flame') ? 'flame' : 'shadow'),
+            kit: kit,
             theme: ThemeData(brightness: Brightness.dark),
             sheet: null,
             frameId: null,
