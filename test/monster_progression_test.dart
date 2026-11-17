@@ -58,11 +58,11 @@ void main() {
       expect(currency, 80);
       expect(progression.levelOf(MonsterType.runner), 2);
       expect(progression.levelOf(MonsterType.tank), 1);
-      expect(progression.statsFor(MonsterType.runner).maxHealth, 110);
-      expect(progression.statsFor(MonsterType.runner).damage, 10.5);
-      expect(progression.statsFor(MonsterType.runner).moveSpeed, 10.2);
+      expect(progression.statsFor(MonsterType.runner).maxHealth, closeTo(110, 1e-9));
+      expect(progression.statsFor(MonsterType.runner).damage, closeTo(10.5, 1e-9));
+      expect(progression.statsFor(MonsterType.runner).moveSpeed, closeTo(10.2, 1e-9));
       expect(progression.statsFor(MonsterType.runner).purchaseCost, 10);
-      expect(progression.statsFor(MonsterType.tank).maxHealth, 100);
+      expect(progression.statsFor(MonsterType.tank).maxHealth, closeTo(100, 1e-9));
     });
 
     test('does not debit when currency is insufficient', () {
@@ -177,14 +177,14 @@ void main() {
         statsForType: progression.statsFor,
       );
 
-      expect(army.units.first.stats.maxHealth, 110);
+      expect(army.units.first.stats.maxHealth, closeTo(110, 1e-9));
       final purchase = army.purchase(
         type: MonsterType.tank,
         currentResources: 100,
       );
       expect(purchase, isNotNull);
       expect(purchase!.cost, 10);
-      expect(purchase.unit.stats.maxHealth, 110);
+      expect(purchase.unit.stats.maxHealth, closeTo(110, 1e-9));
     });
   });
 }
