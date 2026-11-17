@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-17
-> Project status: Monster/army logic advanced on isolated branch; live match/map integration, production visuals and verified CI remain pending
+> Project status: Monster/army logic advanced on isolated branch; CI run #176 is recorded green, while live map/screen integration and production visuals remain pending
 > Default branch: `main`
 
 ## 1. Project identity
@@ -493,7 +493,7 @@ Still to decide or test:
 - أضيف التحقق من تكرار المعرفات والإحداثيات غير الصالحة، مع resolveDamageTarget وresolvePositionedTarget من لقطة العالم نفسها، ثم step لتشغيل tick القتال. يدعم MonsterExternalEntityAdapter callbacks حية للصحة والموقع حتى ترى الضربة الثانية موت الهدف داخل tick نفسه.
 - أضيفت اختبارات test/monster_match_world_test.dart لضربات melee على بطل حي، ومنع overkill عند موت الهدف خلال tick، ومقذوف ranged موجه إلى هدف متحرك، وإدراج الكريستال الصديق، ورفض المعرفات المكررة والإحداثيات غير الصالحة. الملف مدرج في workflow الحالي.
 - هذا جسر تكامل قابل للاستخدام، لكنه لا يعني أن أنظمة الأبطال والكريستالات الفعلية موصولة بعد؛ على مضيف المباراة إنشاء MonsterExternalEntityAdapter من الكيانات الحقيقية كل tick.
-- أصبحت دورة القتال تقبل grid snapshot محدثاً في كل tick وتعيد التخطيط عند تغيّر revision؛ ما زال على مضيف المباراة تمرير شبكة الخريطة الحقيقية وبيانات العوائق/الأرض، وعرض الوحوش والمقذوفات في شاشة المعركة، واعتماد الأصول النهائية واختبارات الأداء ونتيجة CI الخضراء.
+- أصبحت دورة القتال تقبل grid snapshot محدثاً في كل tick وتعيد التخطيط عند تغيّر revision؛ ما زال على مضيف المباراة تمرير شبكة الخريطة الحقيقية وبيانات العوائق/الأرض، وعرض الوحوش والمقذوفات في شاشة المعركة، واعتماد الأصول النهائية واختبارات الأداء، مع إعادة تشغيل CI على أحدث commit بعد التعديلات اللاحقة.
 
 
 ## 32. Terrain-aware monster movement — 2026-11-17
