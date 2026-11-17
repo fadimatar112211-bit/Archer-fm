@@ -262,7 +262,7 @@
 - Added an optional MonsterArmy.maxUnits technical budget. It is unset by default and must be configured from measured device/runtime capacity; it is not a design-level army cap.
 - Added MonsterAnimationCatalog and upgraded MonsterSpriteView to crop the four horizontal 96×96 frames from each audited SVG sheet, play available one-shot animations, and optionally show a health bar. Missing ranged attack/death sheets remain explicitly unavailable.
 - Added tests in test/monster_navigation_and_formation_test.dart, test/monster_animation_catalog_test.dart, and test/monster_spatial_index_test.dart, and confirmed that the existing .github/workflows/monster-army-checks.yml workflow already includes the navigation, animation, and spatial-index test files and runs formatting, analysis, and monster tests.
-- Verification is not confirmed: no successful GitHub Actions result was observable through the available repository status calls, and Flutter/Dart executables were not installed in the local execution environment. Do not mark these tests as passed until a completed green run is inspected.
+- Verification is confirmed for the tested monster branch: Monster Army Checks runs #174 and #176 completed successfully, including formatting, analysis, and all configured monster tests. Run #176 includes the live-health same-tick overkill test.
 - Remaining integration gates: the actual map must supply the grid and collision geometry; a live match must supply fresh authoritative hero/crystal entities and call the combat loop; the match screen must position MonsterSpriteView; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
 
 
@@ -273,7 +273,7 @@
 - أضيف خصم عملة ذري، ورفض نقص الرصيد أو بلوغ المستوى الأقصى، وحساب الإحصاءات المطورة، وتحويل المستويات إلى JSON واستعادتها.
 - أصبح MonsterArmy يقبل مزود إحصاءات الترقية كي تظهر الوحدات الابتدائية والمشتراة في المباراة التالية بمستوى اللاعب الدائم، مع إبقاء سعر الشراء من الكتالوج الأساسي.
 - أضيفت اختبارات لاستقلال المستويات، والخصم، ورفض العملية، وحد 40، والحفظ والاستعادة، وتطبيق الإحصاءات على الجيش. أُدرج الاختبار في CI.
-- ما زال على طبقة حساب اللاعب ربط JSON بنظام الحفظ الدائم وتزويد إعدادات أسعار ونسب الترقية المعتمدة.
+- أضيف أيضاً idPrefix اختياري إلى MonsterArmy لمنع تكرار معرفات الوحدات عند إنشاء أكثر من نسخة جيش للمالك نفسه. ما زال على طبقة حساب اللاعب ربط JSON بنظام الحفظ الدائم وتزويد إعدادات أسعار ونسب الترقية المعتمدة.
 
 
 ## 31. Monster match-world bridge — 2026-11-17
@@ -283,4 +283,11 @@
 - Duplicate entity IDs and non-finite positions are rejected. The same snapshot supplies damage lookup and positioned projectile lookup, and step() invokes one authoritative combat tick. External adapters can expose live health/position getters, so a second attacker in the same tick sees a target killed by the first hit instead of applying stale-snapshot overkill.
 - Added test/monster_match_world_test.dart for melee damage against a live hero adapter, homing ranged projectile impact against a fresh moving-target snapshot, friendly-crystal candidate inclusion, same-tick overkill prevention via live health callbacks, duplicate-ID rejection, and invalid-coordinate rejection. The existing Monster Army Checks workflow includes this test.
 - This is an integration bridge, not proof that the real hero/crystal systems are already connected. The match host must create MonsterExternalEntityAdapter values from the actual authoritative hero/crystal entities on each tick.
-- Remaining: feed the live map's navigation grid, obstacle geometry and terrain speed multiplier; render MonsterSpriteView and projectile positions in the real battle screen; approve final original 2.5D assets; run target-device performance tests and inspect a green CI run.
+- The match loop accepts a per-unit movementSpeedMultiplierFor callback and applies it to normal and defensive movement; the map host must supply actual surface factors (for example, a reduced factor on water). Green CI: Monster Army Checks #174 and #176 passed. Remaining: provide live map grid/obstacles and surface factors, connect actual hero/crystal adapters, render sprites/projectiles in the battle screen, approve original 2.5D art, connect progression to player saves, and measure target-device performance.
+
+
+## 32. Terrain-aware monster movement — 2026-11-17
+
+- MonsterMatchCombatLoop exposes movementSpeedMultiplierFor per unit. The map layer can now express slow terrain such as water without hard-coding an unapproved multiplier into monster base stats.
+- The factor is validated and applied to both ordinary target pursuit and explicit defend-order return movement. Tests verify direct movement scaling and propagation through a full match tick.
+- Monster Army Checks run #176 passed formatting, static analysis, and all configured monster tests. The actual map still must provide the terrain factors and navigation/collision geometry.
