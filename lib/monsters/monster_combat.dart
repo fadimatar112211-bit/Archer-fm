@@ -98,6 +98,7 @@ class MonsterCombatController {
             elapsed: elapsed,
             obstacles: obstacles,
             cohesionAnchor: cohesionAnchor,
+            speedMultiplier: movementSpeedMultiplier,
           );
           return null;
         }
