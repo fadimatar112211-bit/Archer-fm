@@ -61,6 +61,7 @@ void main() {
       final tankArmy = _army('p2', 'p2-army', MonsterType.tank);
       final runner = runnerArmy.units.single;
       final tank = tankArmy.units.single;
+      tank.positionX = runner.positionX + 10;
       final manager = MonsterProjectileManager(maxActiveProjectiles: 4);
       final runtime = MonsterMatchRuntime(
         armies: [runnerArmy, tankArmy],
