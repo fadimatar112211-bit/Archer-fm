@@ -111,12 +111,15 @@ class MonsterArmy {
     final cost = catalog[type].baseStats.purchaseCost;
     if (currentResources < cost || !tryDebit(cost)) return null;
     try {
-      final purchase = purchase(type: type, currentResources: currentResources);
-      if (purchase == null) {
+      final result = this.purchase(
+        type: type,
+        currentResources: currentResources,
+      );
+      if (result == null) {
         refund(cost);
         return null;
       }
-      return purchase;
+      return result;
     } catch (_) {
       refund(cost);
       rethrow;
