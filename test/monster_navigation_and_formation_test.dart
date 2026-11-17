@@ -414,7 +414,51 @@ void main() {
     });
   });
 
-  group('Runtime army safety budget', () {
+  group('Owner-group cohesion', () {\n    test('match loop keeps units cohesive while they pursue separate targets', () {
+      final first = _unit('cohesive-a', x: 0, y: 0, attackRange: 0, moveSpeed: 10);
+      final second = _unit('cohesive-b', x: 0, y: 60, attackRange: 0, moveSpeed: 10);
+      const firstTarget = MonsterTarget(
+        id: 'target-a',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        x: 100,
+        y: 0,
+        isAlive: true,
+      );
+      const secondTarget = MonsterTarget(
+        id: 'target-b',
+        ownerId: 'p3',
+        kind: MonsterTargetKind.hero,
+        x: 100,
+        y: 60,
+        isAlive: true,
+      );
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: MonsterProjectileManager(maxActiveProjectiles: 4),
+        projectileSpeed: 10,
+        projectileId: (_) => 'unused-projectile',
+      );
+
+      loop.update(
+        units: [first, second],
+        candidatesFor: (source) =>
+            source.id == first.id ? [firstTarget] : [secondTarget],
+        resolveDamageTarget: (_) => null,
+        resolvePositionedTarget: (_) => null,
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(first.targetId, 'target-a');
+      expect(second.targetId, 'target-b');
+      expect(first.positionY, greaterThan(0));
+      expect(second.positionY, lessThan(60));
+    });
+
+  });\n\n  group('Runtime army safety budget', () {
     test('optional technical capacity blocks purchases without debiting', () {
       final counts = {for (final type in MonsterType.values) type: 0};
       counts[MonsterType.runner] = 20;
