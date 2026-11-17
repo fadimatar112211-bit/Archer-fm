@@ -71,8 +71,17 @@ class MonsterProjectile {
       return MonsterProjectileResult.deadTarget;
     }
 
-    final dx = _targetX(target) - positionX;
-    final dy = _targetY(target) - positionY;
+    // Read a moving target's position exactly once per tick. Besides avoiding
+    // inconsistent getter values, this rejects malformed coordinates before
+    // they can enter the distance and movement calculations.
+    final targetX = _targetX(target);
+    final targetY = _targetY(target);
+    if (!targetX.isFinite || !targetY.isFinite) {
+      _resolved = true;
+      return MonsterProjectileResult.targetMissing;
+    }
+    final dx = targetX - positionX;
+    final dy = targetY - positionY;
     final distance = math.sqrt(dx * dx + dy * dy);
     if (!distance.isFinite) {
       _resolved = true;
@@ -87,8 +96,8 @@ class MonsterProjectile {
     final step = speed * elapsed.inMicroseconds /
         Duration.microsecondsPerSecond;
     if (step >= distance) {
-      positionX = _targetX(target);
-      positionY = _targetY(target);
+      positionX = targetX;
+      positionY = targetY;
       target.applyDamage(damage);
       _resolved = true;
       return MonsterProjectileResult.hit;
