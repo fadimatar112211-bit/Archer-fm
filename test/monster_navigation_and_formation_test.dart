@@ -327,6 +327,42 @@ void main() {
       );
     });
 
+    test('auto defense reacts to threats when a unit is already guarding home', () {
+      final unit = _unit('home-guard', x: 0, y: 10, attackRange: 20);
+      const home = MonsterTarget(
+        id: 'home',
+        ownerId: 'p1',
+        kind: MonsterTargetKind.crystal,
+        x: 0,
+        y: 0,
+        isAlive: true,
+      );
+      const nearestButSafe = MonsterTarget(
+        id: 'safe-nearest',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        x: 0,
+        y: 25,
+        isAlive: true,
+      );
+      const homeThreat = MonsterTarget(
+        id: 'home-threat',
+        ownerId: 'p3',
+        kind: MonsterTargetKind.monster,
+        x: 0,
+        y: -15,
+        isAlive: true,
+      );
+
+      expect(
+        const MonsterTargeting().selectCombatTarget(
+          unit: unit,
+          candidates: [home, nearestButSafe, homeThreat],
+        )?.id,
+        'home-threat',
+      );
+    });
+
     test('defend order returns to its owned crystal after a threat clears', () {
       final unit = _unit(
         'returning-guard',
