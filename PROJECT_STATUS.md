@@ -513,3 +513,12 @@ Still to decide or test:
 - `MonsterSpriteView`/`MonsterBattleLayer` provide a death-animation completion callback so the host can remove defeated units from the presentation list after the death animation, while the army has already removed them from simulation.
 - Added widget tests for sprite/projectile rendering, movement frames, one-shot attack completion, and death-animation lifecycle. Added `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` with profile, match-tick, world-snapshot, and renderer wiring contracts.
 - CI verification: Monster Army Checks run #200 passed `dart format`, `flutter analyze`, and all configured monster unit/widget/integration tests.
+
+
+## 34. Unified monster match runtime — 2026-11-17
+
+- Added `MonsterMatchRuntime` as the match-host coordinator for multiple player armies, one combat loop, projectile management, authoritative world snapshots, and visual death lifetimes.
+- `tick()` creates a fresh `MonsterMatchWorldSnapshot`, steps melee/ranged combat and projectiles, removes defeated units from their simulation armies immediately, and retains them in a separate dying presentation list.
+- `buildBattleLayer()` supplies live units, dying units, active projectiles, successful attack IDs, and the simulation tick to `MonsterBattleLayer`; its death-completion callback removes the visual-only unit from the runtime.
+- Added tests for multi-army combat, unique unit IDs, dead-unit removal/retention, renderer handoff, and death callback cleanup. Updated `MONSTER_RUNTIME_INTEGRATION.md` to show the runtime as the single integration entry point.
+- CI verification: Monster Army Checks run #205 passed formatting, analysis, and all configured monster suites — 118 tests passed.
