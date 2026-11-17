@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:archer_fm/monsters/monster_animation.dart';
 import 'package:archer_fm/monsters/monster_army.dart';
 import 'package:archer_fm/monsters/monster_battle_layer.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
@@ -73,7 +74,7 @@ void main() {
         projectiles: [projectile],
         worldToScreen: (x, y) => Offset(x + 50, y + 50),
         simulationTick: 1,
-        attackingUnitIds: {ranged.id},
+        attackingUnitIds: {runner.id},
       )));
 
       expect(find.byType(MonsterSpriteView), findsNWidgets(2));
@@ -86,6 +87,27 @@ void main() {
       );
       expect(sprites.any((sprite) => sprite.attacking), isTrue);
       expect(sprites.every((sprite) => sprite.healthFraction == 1), isTrue);
+      final runnerSprite = sprites.firstWhere(
+        (sprite) => sprite.animation.type == MonsterType.runner,
+      );
+      expect(runnerSprite.animation.state, MonsterAnimationState.attack);
+
+      await tester.pumpWidget(_host(MonsterBattleLayer(
+        units: [runner, ranged],
+        projectiles: [projectile],
+        worldToScreen: (x, y) => Offset(x + 50, y + 50),
+        simulationTick: 2,
+      )));
+      expect(runnerSprite.animation.state, MonsterAnimationState.attack);
+
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpWidget(_host(MonsterBattleLayer(
+        units: [runner, ranged],
+        projectiles: [projectile],
+        worldToScreen: (x, y) => Offset(x + 50, y + 50),
+        simulationTick: 3,
+      )));
+      expect(runnerSprite.animation.state, MonsterAnimationState.idle);
     });
 
     testWidgets('detects movement only when the simulation tick advances',
