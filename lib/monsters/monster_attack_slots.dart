@@ -68,10 +68,10 @@ class MonsterAttackSlotCoordinator {
           1,
           (2 * math.pi * math.max(radius, desiredSpacing) / desiredSpacing)
               .floor(),
-        );
+        ).toInt();
         final ring = slot ~/ slotsPerRing;
         final positionInRing = slot % slotsPerRing;
-        final ringRadius = math.max(0, radius - ring * desiredSpacing * 0.85);
+        final ringRadius = math.max(0, radius - ring * desiredSpacing * 0.85).toDouble();
         final angle = -math.pi / 2 +
             2 * math.pi * positionInRing / slotsPerRing;
         result[unit.id] = (
