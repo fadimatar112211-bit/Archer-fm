@@ -51,7 +51,7 @@ class MonsterStats {
       }
     }
     final steps = level - 1;
-    return MonsterStats(
+    final scaled = MonsterStats(
       maxHealth: maxHealth * (1 + steps * healthPerLevel),
       damage: damage * (1 + steps * damagePerLevel),
       moveSpeed: moveSpeed * (1 + steps * speedPerLevel),
@@ -59,6 +59,9 @@ class MonsterStats {
       attackCooldown: attackCooldown,
       purchaseCost: purchaseCost,
     );
+    // Finite inputs can still overflow during multiplication at high levels.
+    scaled.validate();
+    return scaled;
   }
 }
 
