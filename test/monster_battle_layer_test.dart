@@ -151,17 +151,22 @@ void main() {
       final runner = _unit(idPrefix: 'dead', type: MonsterType.runner);
       runner.applyDamage(100);
 
+      String? completedId;
       await tester.pumpWidget(_host(MonsterBattleLayer(
-        units: [runner],
+        units: const <MonsterUnit>[],
+        dyingUnits: [runner],
         projectiles: const <MonsterProjectile>[],
         worldToScreen: (x, y) => Offset(x, y),
         simulationTick: 1,
+        onDeathAnimationComplete: (id) => completedId = id,
       )));
 
       final sprite = tester.widget<MonsterSpriteView>(
         find.byType(MonsterSpriteView),
       );
       expect(sprite.alive, isFalse);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(completedId, runner.id);
     });
   });
 }
