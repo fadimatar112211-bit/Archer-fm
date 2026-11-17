@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:ui' show Color;
+
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'monster_animation.dart';
@@ -125,6 +127,31 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
     );
   }
 
+  Widget _buildHealthBar(double health) {
+    final fraction = health.isFinite ? health.clamp(0.0, 1.0).toDouble() : 0.0;
+    return SizedBox(
+      width: widget.size * 0.78,
+      height: 4,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: Stack(
+          children: [
+            const Positioned.fill(
+              child: ColoredBox(color: Color.fromARGB(140, 0, 0, 0)),
+            ),
+            FractionallySizedBox(
+              key: const ValueKey('monster-health-fill'),
+              widthFactor: fraction,
+              child: ColoredBox(
+                color: widget.healthColor ?? const Color(0xFFB2FF59),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sprite = _buildSprite();
@@ -137,20 +164,7 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: widget.size * 0.78,
-            height: 4,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: health.clamp(0.0, 1.0).toDouble(),
-                backgroundColor: const Color.fromRGBO(0, 0, 0, 0.55),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  widget.healthColor ?? Colors.lightGreenAccent,
-                ),
-              ),
-            ),
-          ),
+          _buildHealthBar(health),
           const SizedBox(height: 3),
           sprite,
         ],
