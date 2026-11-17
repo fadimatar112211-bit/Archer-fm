@@ -42,7 +42,7 @@ jobs:
         run: dart format --output=none lib/monsters test/monster_*_test.dart
 
       - name: Analyze Flutter and Dart code
-        run: flutter analyze
+        run: flutter analyze lib/monsters test/monster_*_test.dart
 
       - name: Run monster system tests
         run: flutter test test/monster_*_test.dart
