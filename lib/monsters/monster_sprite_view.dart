@@ -20,6 +20,7 @@ class MonsterSpriteView extends StatefulWidget {
     this.healthFraction,
     this.healthColor,
     this.onDeathAnimationComplete,
+    this.animationManagedExternally = false,
   }) : assert(size > 0);
 
   final MonsterAnimationController animation;
@@ -30,6 +31,7 @@ class MonsterSpriteView extends StatefulWidget {
   final double? healthFraction;
   final Color? healthColor;
   final VoidCallback? onDeathAnimationComplete;
+  final bool animationManagedExternally;
 
   @override
   State<MonsterSpriteView> createState() => _MonsterSpriteViewState();
@@ -37,14 +39,16 @@ class MonsterSpriteView extends StatefulWidget {
 
 class _MonsterSpriteViewState extends State<MonsterSpriteView>
     with SingleTickerProviderStateMixin {
-  late final Ticker _ticker;
+  Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   bool _deathCompletionNotified = false;
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker(_onTick);
+    if (!widget.animationManagedExternally) {
+      _ticker = createTicker(_onTick);
+    }
     _synchronize();
     _syncTicker();
     _notifyDeathAnimationComplete();
@@ -55,7 +59,7 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animation != widget.animation ||
         oldWidget.alive != widget.alive) {
-      _ticker.stop();
+      _ticker?.stop();
       _lastElapsed = Duration.zero;
       _deathCompletionNotified = false;
     }
@@ -87,13 +91,18 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
   }
 
   void _syncTicker() {
+    if (widget.animationManagedExternally) {
+      _ticker?.stop();
+      return;
+    }
+    final ticker = _ticker ??= createTicker(_onTick);
     if (widget.animation.needsTicks) {
-      if (!_ticker.isActive) {
+      if (!ticker.isActive) {
         _lastElapsed = Duration.zero;
-        _ticker.start();
+        ticker.start();
       }
-    } else if (_ticker.isActive) {
-      _ticker.stop();
+    } else if (ticker.isActive) {
+      ticker.stop();
     }
   }
 
@@ -107,13 +116,13 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
       setState(() {});
     }
     if (!widget.animation.needsTicks) {
-      _ticker.stop();
+      _ticker?.stop();
     }
   }
 
   @override
   void dispose() {
-    _ticker.dispose();
+    _ticker?.dispose();
     super.dispose();
   }
 
