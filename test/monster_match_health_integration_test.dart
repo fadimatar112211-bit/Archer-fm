@@ -180,7 +180,18 @@ void main() {
       );
       final second = loop.update(
         units: [attacker],
-        candidatesFor: (_) => [hero.candidate()],
+        // Deliberately stale targeting snapshot: the authoritative lookup
+        // below must still reject the already-defeated hero.
+        candidatesFor: (_) => [
+          MonsterTarget(
+            id: hero.id,
+            ownerId: hero.ownerId,
+            kind: hero.kind,
+            x: hero.x,
+            y: hero.y,
+            isAlive: true,
+          ),
+        ],
         resolveDamageTarget: (_) => hero.adapter(),
         resolvePositionedTarget: (_) => hero.adapter(),
         now: DateTime.utc(2026, 11, 17).add(const Duration(seconds: 1)),
