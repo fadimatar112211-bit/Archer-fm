@@ -2,7 +2,9 @@ enum MonsterType { runner, tank, stalker, ranged }
 
 enum MonsterTargetKind { hero, monster, crystal }
 
-enum MonsterOrder { advance, defend }
+/// Automatic is the normal match order. Advance ignores home-crystal threats;
+/// defend stays near the owner's territory until a threat appears.
+enum MonsterOrder { auto, advance, defend }
 
 class MonsterStats {
   const MonsterStats({
@@ -59,7 +61,6 @@ class MonsterStats {
       attackCooldown: attackCooldown,
       purchaseCost: purchaseCost,
     );
-    // Finite inputs can still overflow during multiplication at high levels.
     scaled.validate();
     return scaled;
   }
@@ -99,6 +100,7 @@ class MonsterUnit {
     required this.positionX,
     required this.positionY,
     required this.stats,
+    this.order = MonsterOrder.auto,
     double? health,
   }) : health = health ?? stats.maxHealth {
     stats.validate();
@@ -120,6 +122,7 @@ class MonsterUnit {
   double positionX;
   double positionY;
   double health;
+  MonsterOrder order;
   String? targetId;
   MonsterTargetKind? targetKind;
   DateTime? lastAttackAt;
@@ -198,6 +201,70 @@ class MonsterTargeting {
     return best;
   }
 
+  /// Selects a nearby enemy that is closer to an owned crystal than this unit
+  /// is before falling back to the normal nearest-enemy behavior. This creates
+  /// automatic local defense without inventing a fixed defense-radius value.
+  MonsterTarget? selectCombatTarget({
+    required MonsterUnit unit,
+    required Iterable<MonsterTarget> candidates,
+  }) {
+    final snapshot = candidates.toList(growable: false);
+    final nearest = nearestEnemy(
+      ownerId: unit.ownerId,
+      fromX: unit.positionX,
+      fromY: unit.positionY,
+      candidates: snapshot,
+    );
+    if (unit.order == MonsterOrder.advance) return nearest;
+
+    final crystals = snapshot.where((target) =>
+        target.kind == MonsterTargetKind.crystal &&
+        target.ownerId == unit.ownerId &&
+        target.id.isNotEmpty &&
+        target.isAlive &&
+        target.x.isFinite &&
+        target.y.isFinite).toList(growable: false);
+    if (crystals.isEmpty) {
+      return unit.order == MonsterOrder.defend ? null : nearest;
+    }
+
+    final enemies = snapshot.where((target) =>
+        target.kind != MonsterTargetKind.crystal &&
+        target.ownerId.isNotEmpty &&
+        target.ownerId != unit.ownerId &&
+        target.id.isNotEmpty &&
+        target.isAlive &&
+        target.x.isFinite &&
+        target.y.isFinite).toList(growable: false);
+
+    MonsterTarget? threat;
+    var bestPressure = double.infinity;
+    var bestUnitDistance = double.infinity;
+    for (final enemy in enemies) {
+      for (final crystal in crystals) {
+        final enemyDistance = _distanceSquared(
+          enemy.x, enemy.y, crystal.x, crystal.y,
+        );
+        final unitDistance = _distanceSquared(
+          unit.positionX, unit.positionY, crystal.x, crystal.y,
+        );
+        if (enemyDistance >= unitDistance) continue;
+        final pressure = enemyDistance / mathMax(unitDistance, 1);
+        final unitToEnemy = _distanceSquared(
+          unit.positionX, unit.positionY, enemy.x, enemy.y,
+        );
+        if (pressure < bestPressure ||
+            (pressure == bestPressure && unitToEnemy < bestUnitDistance)) {
+          threat = enemy;
+          bestPressure = pressure;
+          bestUnitDistance = unitToEnemy;
+        }
+      }
+    }
+    if (threat != null) return threat;
+    return unit.order == MonsterOrder.defend ? null : nearest;
+  }
+
   MonsterTarget? defensiveTarget({
     required String ownerId,
     required double fromX,
@@ -223,4 +290,12 @@ class MonsterTargeting {
     }
     return nearest;
   }
+
+  static double _distanceSquared(double x1, double y1, double x2, double y2) {
+    final dx = x1 - x2;
+    final dy = y1 - y2;
+    return dx * dx + dy * dy;
+  }
+
+  static double mathMax(double a, double b) => a > b ? a : b;
 }
