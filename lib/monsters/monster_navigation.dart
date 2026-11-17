@@ -231,7 +231,6 @@ class MonsterPathfinder {
       throw ArgumentError('Invalid live navigation state.');
     }
 
-    final startCell = grid.worldToCell(unit.positionX, unit.positionY);
     final targetCell = grid.worldToCell(targetX, targetY);
     var route = _routes[unit.id];
     final targetMoved = route != null &&
