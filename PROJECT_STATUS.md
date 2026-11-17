@@ -1,8 +1,8 @@
 # Archer FM — Project Status
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
-> Last updated: 2026-11-14
-> Project status: Monster and army system audit in progress on isolated branch
+> Last updated: 2026-11-17
+> Project status: Monster/army logic advanced on isolated branch; live match/map integration, production visuals and verified CI remain pending
 > Default branch: `main`
 
 ## 1. Project identity
@@ -150,7 +150,7 @@ Expected reusable assets from `Archero_fm`:
 - Four hero characters and their artwork/animations.
 - Four monster types and their artwork/animations.
 
-Hero audit and transfer: the four heroes' 16 SVG animation files (idle, walk, attack, death) have been audited, copied, and verified under `assets/heroes/`. No legacy gameplay code was copied. The legacy repository did not show a clear root license file; ownership/licensing must be confirmed before public distribution. Monster assets have not yet been audited or copied.
+Hero audit and transfer: the four heroes' 16 SVG animation files (idle, walk, attack, death) have been audited, copied, and verified under `assets/heroes/`. No legacy gameplay code was copied. The legacy repository did not show a clear root license file; ownership/licensing must be confirmed before public distribution. Monster audit copied the four legacy type sheets and mapped their available animations, but the SVGs remain reference/compatibility assets rather than approved production 2.5D art.
 
 Legacy repository: `https://github.com/fadimatar112211-bit/Archero_fm`
 
@@ -178,12 +178,12 @@ Still to decide or test:
 | New private GitHub repository | Done | `Archer-fm`, branch `main` |
 | Product vision and core requirements | Documented | Based on confirmed planning decisions |
 | Preliminary balance design | Not finalized | Numbers require simulation and playtesting |
-| Legacy asset audit | Partial | Hero sprites audited and copied; other systems not audited |
+| Legacy asset audit | Partial | Hero SVGs audited/copied; four monster-type SVG sheets transferred and mapped; final visual/rights approval still pending |
 | Engine/architecture decision | Not started | Art direction approved as colorful 3D/2.5D chibi; rendering engine and gameplay dimensionality still need a mobile prototype |
 | Project scaffold | Not started | No game code committed yet |
-| Gameplay implementation | Not started | No gameplay systems implemented |
+| Gameplay implementation | Partial | Monster/army logic implemented on monster-army-work; no live match screen, map runtime, or full game loop yet |
 | Backend/multiplayer | Not started | No networking code or services configured |
-| Automated tests/build verification | Not started | No tests run in this repository |
+| Automated tests/build verification | In progress | Monster tests and a dedicated Actions workflow are committed; no successful run is verified yet |
 
 ## 7. Main development roadmap — work one system at a time
 
@@ -203,7 +203,7 @@ Still to decide or test:
 | # | النظام الرئيسي | ما يشمله | حالة Archer FM | فحص Archero_fm |
 |---|---|---|---|---|
 | 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | تم تدقيق الأصول ونسخ 16 ملف SVG؛ تم اعتماد اتجاه فني كرتوني 3D/2.5D؛ برمجة النظام لم تبدأ | اكتمل فحص الكتالوج والرسومات؛ راجع `docs/heroes/HEROES_AUDIT.md` |
-| 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | التنفيذ الأساسي قيد العمل على فرع `monster-army-work` | نُقلت أوراق الحركة المتاحة، وأضيفت نماذج الوحوش والجيش والشراء والاستهداف واختبارات وحدات؛ لم تُشغّل الاختبارات بعد. التفاصيل في `docs/monsters/MONSTERS_ARMY_AUDIT.md` |
+| 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | منطق الجيش والقتال والحركة المتقدمة ومكوّن عرض SVG موجود على monster-army-work؛ لا يزال ربطه بمحرك/شاشة المباراة والأصول الإنتاجية النهائية غير منفذ | فُحصت ونُقلت أوراق SVG المرجعية؛ أضيف A*، تفادي تصادمات، دفاع تلقائي، حجز مواقع هجوم، شراء بسعة تقنية اختيارية، مقذوفات، وعارض إطارات/شريط صحة. الاختبارات ونتيجة CI غير مؤكدة بعد. التفاصيل في docs/monsters/MONSTERS_ARMY_AUDIT.md |
 | 3 | القتال والأسلحة والقدرات | الهجوم اليدوي، الكومبو، الأسلحة، الضرر، المدى، الطاقة، القدرات والتأثيرات | لم يبدأ | لم يبدأ |
 | 4 | الخريطة والعالم | حجم الخريطة، المناطق الحيوية، العوائق، الأنهار والجسور والمياه، الضباب، الكاميرا | لم يبدأ | لم يبدأ |
 | 5 | القلاع والكريستالات | تصميم القلاع، الكريستالات، الصحة، التدمير، سقوط القلعة وإعادة البناء | لم يبدأ | لم يبدأ |
@@ -455,3 +455,18 @@ Still to decide or test:
 - Added navigation tests for wall routing, diagonal corner blocking, map-revision invalidation, route displacement recovery, non-zero grid origins, stable attack slots, automatic crystal defense, collision safety, and technical army capacity.
 - The monster CI workflow now includes the animation catalog, sprite widget, and navigation/formation test suites. The latest run must complete successfully before checks are marked passed.
 - Remaining blockers: no live match screen or authoritative world renderer currently consumes the widget; runtime map geometry must be supplied to pathfinding; final production monster art is not approved, and ranged still lacks dedicated attack/death artwork.
+
+
+## 28. تقدم نظام الوحوش والجيش — 2026-11-17 (دفعة الحركة والتكامل والعرض)
+
+- بقي العمل محصوراً في الفرع monster-army-work داخل fadimatar112211-bit/Archer-fm. لم تُعدّل main أو ملفات الأبطال أو أدوات Blender أو أصولهم.
+- أضيف MonsterNavigationGrid وMonsterPathfinder: بحث A* بثمانية اتجاهات، منع قطع زوايا العوائق، حد أقصى لعُقد التوسّع، وتخزين مسار لكل وحدة مع إعادة التخطيط عند تغيّر هدفها أو إصدار الخريطة.
+- أضيف حل تصادم swept-circle للحركة حتى لا تعبر الوحدة عائقاً دائرياً في خطوة كبيرة، مع فصل الوحدات المتقاربة وتحديد خطوة الحركة حتى لا تتجاوز waypoint.
+- أصبح اختيار الهدف الافتراضي auto يقدّم العدو الذي يقترب من كريستال مالكه على أقرب عدو آخر، دون فرض نصف قطر دفاع أو قيمة توازن غير معتمدة. أضيف أمرا advance وdefend أيضاً.
+- أضيف MonsterAttackSlotCoordinator لحجز مواقع اقتراب ثابتة حول كل هدف، وإعادة استخدام المواقع التي تحررت عند موت وحدة أو تغيير هدفها. دورة المباراة تختار أهداف جميع الوحدات أولاً ثم تخصص المواقع قبل تحريكها.
+- أضيف maxUnits الاختياري كحاجز تقني يحدده ملف تعريف الجهاز/المباراة، وليس كحد تصميمي ثابت للجيش. بقي غير مضبوط افتراضياً إلى حين قياس الأداء.
+- أضيف MonsterAnimationCatalog وطور MonsterSpriteView لعرض إطارات SVG الأربعة لكل ورقة، تشغيل الحركة/الهجوم/الموت، وشريط صحة اختياري. ملفات ranged المفقودة للهجوم/الموت ما زالت null ولا نستخدم حركة melee مكانها.
+- أضيفت اختبارات A* والتفاف الجدران ومنع القطع القطري، إبطال المسارات عند تغيّر إصدار الخريطة، مواقع الهجوم، الدفاع التلقائي، تصادم الحركة، حد السعة، وتكامل الحركة مع دورة القتال.
+- أضيف workflow مستقل .github/workflows/monster-army-validation.yml لتشغيل formatter وflutter analyze واختبارات الوحوش على الفرع.
+- بوابة التحقق: لا يوجد في أدوات GitHub المتاحة هنا سجل تشغيل ناجح مؤكد لهذه الدفعة، ولم تتوفر أوامر flutter/dart محلياً؛ لذلك لا نسجل الاختبارات على أنها ناجحة.
+- ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام ببيانات العوائق والشبكة من محرك الخريطة الفعلي، توصيله بكيانات الصحة السلطوية الحقيقية للأبطال والكريستالات داخل مباراة حية، دمج MonsterSpriteView في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، واختبارات أداء على أجهزة مستهدفة ثم اجتياز CI.
