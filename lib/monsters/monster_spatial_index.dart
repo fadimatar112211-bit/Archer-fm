@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'monster_models.dart';
 
 /// Per-tick spatial hash used to find nearby allied monsters without scanning
@@ -40,17 +38,18 @@ class MonsterSpatialIndex {
       throw ArgumentError('Invalid spatial query.');
     }
     final centerCell = _cell(source.positionX, source.positionY);
-    final range = (radius / cellSize).ceil();
+    final cellRange = radius / cellSize;
     final radiusSquared = radius * radius;
     final result = <MonsterUnit>[];
 
-    if (range > 64) {
+    if (!cellRange.isFinite || cellRange > 64) {
       for (final candidate in _unitsById.values) {
         _addIfNearby(result, candidate, source, radiusSquared);
       }
       return List.unmodifiable(result);
     }
 
+    final range = cellRange.ceil();
     for (var y = centerCell.$2 - range; y <= centerCell.$2 + range; y++) {
       for (var x = centerCell.$1 - range; x <= centerCell.$1 + range; x++) {
         final bucket = _buckets[(x, y)];
@@ -80,6 +79,9 @@ class MonsterSpatialIndex {
   }
 
   void _insert(MonsterUnit unit) {
+    if (_unitsById.containsKey(unit.id)) {
+      throw ArgumentError('Spatial-index unit ids must be unique.');
+    }
     if (!unit.positionX.isFinite || !unit.positionY.isFinite) {
       throw ArgumentError('Spatial-index unit positions must be finite.');
     }
@@ -98,6 +100,12 @@ class MonsterSpatialIndex {
     if (bucket != null && bucket.isEmpty) _buckets.remove(previousCell);
   }
 
-  (int, int) _cell(double x, double y) =>
-      ((x / cellSize).floor(), (y / cellSize).floor());
+  (int, int) _cell(double x, double y) {
+    final cellX = x / cellSize;
+    final cellY = y / cellSize;
+    if (!cellX.isFinite || !cellY.isFinite) {
+      throw RangeError('World position exceeds spatial-index coordinate range.');
+    }
+    return (cellX.floor(), cellY.floor());
+  }
 }
