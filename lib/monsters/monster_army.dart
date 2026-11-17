@@ -37,6 +37,7 @@ class MonsterArmy {
     required this.castleX,
     required this.castleY,
     this.maxUnits,
+    this.statsForType,
   }) {
     if (ownerId.isEmpty) throw ArgumentError.value(ownerId, 'ownerId');
     if (!castleX.isFinite || !castleY.isFinite) {
@@ -64,6 +65,10 @@ class MonsterArmy {
   /// Leave unset until the target device profile has been measured.
   final int? maxUnits;
 
+  /// Supplies permanent progression stats for new units in the next match.
+  /// Purchase prices remain sourced from the base catalog.
+  final MonsterStats Function(MonsterType type)? statsForType;
+
   final List<MonsterUnit> _units = [];
   int _nextId = 0;
   int _spawnCursor = 0;
@@ -79,7 +84,8 @@ class MonsterArmy {
     final ring = index ~/ 8;
     final angle = slot * (math.pi / 4);
     final radius = 34.0 + ring * 24.0;
-    final stats = catalog[type].baseStats;
+    final stats = statsForType?.call(type) ?? catalog[type].baseStats;
+    stats.validate();
     return MonsterUnit(
       id: '$ownerId-monster-${_nextId++}',
       ownerId: ownerId,
