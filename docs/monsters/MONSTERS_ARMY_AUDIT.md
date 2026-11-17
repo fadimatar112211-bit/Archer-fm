@@ -263,3 +263,13 @@
 - Added tests in test/monster_navigation_and_formation_test.dart and test/monster_animation_catalog_test.dart, and confirmed that the existing .github/workflows/monster-army-checks.yml workflow already includes both new test files and runs formatting, analysis, and monster tests.
 - Verification is not confirmed: no successful GitHub Actions result was observable through the available repository status calls, and Flutter/Dart executables were not installed in the local execution environment. Do not mark these tests as passed until a completed green run is inspected.
 - Remaining integration gates: the actual map must supply the grid and collision geometry; a live match must supply fresh authoritative hero/crystal entities and call the combat loop; the match screen must position MonsterSpriteView; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
+
+
+## 29. الترقيات الدائمة للأنواع الأربعة — 2026-11-17
+
+- أُضيف نظام مستويات دائم مستقل لكل من runner وtank وstalker وranged، مع حد أقصى للمستوى 40 لكل نوع.
+- معدلات نمو الصحة والضرر والسرعة وتكلفة كل مستوى تُمرر من إعدادات التوازن؛ لم نثبت أسعاراً أو نسباً غير معتمدة داخل النظام.
+- أضيف خصم عملة ذري، ورفض نقص الرصيد أو بلوغ المستوى الأقصى، وحساب الإحصاءات المطورة، وتحويل المستويات إلى JSON واستعادتها.
+- أصبح MonsterArmy يقبل مزود إحصاءات الترقية كي تظهر الوحدات الابتدائية والمشتراة في المباراة التالية بمستوى اللاعب الدائم، مع إبقاء سعر الشراء من الكتالوج الأساسي.
+- أضيفت اختبارات لاستقلال المستويات، والخصم، ورفض العملية، وحد 40، والحفظ والاستعادة، وتطبيق الإحصاءات على الجيش. أُدرج الاختبار في CI.
+- ما زال على طبقة حساب اللاعب ربط JSON بنظام الحفظ الدائم وتزويد إعدادات أسعار ونسب الترقية المعتمدة.
