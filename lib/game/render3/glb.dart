@@ -429,6 +429,8 @@ int? _findParentNode(List nodesList, int node) {
 class HeroClip {
   HeroClip({required this.durationMs, required this.jointTracks});
   final double durationMs;
+  // Private by design: only GLB loading builds these tracks.
+  // ignore: library_private_types_in_public_api
   final Map<int, _NodeTracks> jointTracks;
 }
 

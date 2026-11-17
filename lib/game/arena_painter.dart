@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../hero/hero_assets.dart';
 import 'combat/hero_kit.dart';
+import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
 import 'world/game_world.dart';
 
@@ -94,7 +95,7 @@ class ArenaPainter extends CustomPainter {
     _paintZones(canvas);
     _paintFireWaves(canvas);
     _paintGroundShadows(canvas);
-    _paintEnemies(canvas);
+    _paintMonsters(canvas);
     _paintProjectiles(canvas);
     _paintFx(canvas);
     _paintHero(canvas);
@@ -276,27 +277,477 @@ class ArenaPainter extends CustomPainter {
       ),
       shadow,
     );
-    for (final enemy in world.enemies) {
+    for (final monster in [...world.enemies, ...world.army]) {
+      if (monster.hp <= 0) continue;
+      final size = monster.radius * 2.6;
       canvas.drawOval(
         Rect.fromCenter(
-          center: enemy.position + const Offset(0, 22),
-          width: _enemySize(enemy) * 0.8,
-          height: _enemySize(enemy) * 0.26,
+          center: monster.position + Offset(0, monster.radius * 1.35),
+          width: size * 0.9,
+          height: size * 0.28,
         ),
         shadow,
       );
     }
   }
 
-  double _enemySize(EnemyState enemy) {
-    switch (enemy.kind) {
-      case 'brute':
-        return 46;
-      case 'archer':
-        return 32;
-      default:
-        return 34;
+  /// Draws corpses, then both armies sorted by depth so lower monsters
+  /// overlap higher ones naturally.
+  void _paintMonsters(Canvas canvas) {
+    for (final corpse in world.corpses) {
+      _paintCorpse(canvas, corpse);
     }
+    final monsters = [...world.enemies, ...world.army]
+      ..sort((a, b) => a.position.dy.compareTo(b.position.dy));
+    for (final monster in monsters) {
+      if (monster.hp <= 0) continue;
+      _paintMonster(canvas, monster);
+    }
+  }
+
+  void _paintMonster(Canvas canvas, EnemyState monster) {
+    final def = MonsterCatalog.def(monster.type);
+    final now = world.nowMs;
+    final anim = monster.animStateAt(now);
+    final flashing = now < monster.hitFlashUntilMs;
+    final ally = monster.team == MonsterTeam.player;
+    final bodyColor = flashing ? Colors.white : Color(def.color);
+    final accent = flashing ? Colors.white : Color(def.accent);
+    final dark = Color.lerp(bodyColor, Colors.black, 0.35)!;
+    final size = monster.radius * 2.35;
+    final face = monster.facing.dx < -0.08 ? -1.0 : 1.0;
+
+    final walking = anim == MonsterAnimState.walk;
+    final phase = monster.walkPhase;
+    final bob =
+        walking ? math.sin(phase * 2).abs() * 1.5 : math.sin(now / 520 + monster.id.hashCode) * 0.7;
+    final swing = walking ? math.sin(phase) * 0.62 : 0.10;
+    final attackT = anim == MonsterAnimState.attack
+        ? (1 - ((monster.attackAnimUntilMs - now) / 320).clamp(0.0, 1.0))
+        : 0.0;
+    final lunge = math.sin(attackT * math.pi) * size * 0.34;
+
+    canvas.save();
+    // Origin at the feet; all body parts are negative-Y.
+    canvas.translate(
+      monster.position.dx + face * lunge,
+      monster.position.dy + monster.radius * 0.95 - bob * 0.35,
+    );
+    canvas.scale(face, 1);
+
+    // Team ring under the feet.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(0, 0),
+        width: size * 0.95,
+        height: size * 0.3,
+      ),
+      Paint()
+        ..color = (ally ? const Color(0xFF7CFF9B) : const Color(0xFFFF6A5A))
+            .withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6,
+    );
+
+    final legColor = Color.lerp(bodyColor, Colors.black, 0.22)!;
+    final hipY = -size * 0.44;
+    _monsterLimb(
+      canvas,
+      Offset(-size * 0.16, hipY),
+      -swing,
+      size * 0.46,
+      size * 0.15,
+      legColor,
+    );
+    _monsterLimb(
+      canvas,
+      Offset(size * 0.16, hipY),
+      swing,
+      size * 0.46,
+      size * 0.15,
+      legColor,
+    );
+
+    // Back arm (swings opposite the legs).
+    _monsterLimb(
+      canvas,
+      Offset(-size * 0.26, -size * 0.72),
+      -swing * 0.8 + 0.25,
+      size * 0.34,
+      size * 0.12,
+      dark,
+    );
+
+    switch (monster.type) {
+      case MonsterType.tank:
+        _paintTankBody(canvas, size, bodyColor, dark, accent);
+      case MonsterType.runner:
+        _paintRunnerBody(canvas, size, bodyColor, dark, accent);
+      case MonsterType.stalker:
+        _paintStalkerBody(canvas, size, bodyColor, dark, accent);
+      case MonsterType.ranged:
+        _paintRangedBody(canvas, size, bodyColor, dark, accent);
+    }
+
+    // Front arm + weapon. It drives the attack lunge.
+    final armSwing = attackT > 0
+        ? -0.9 + math.sin(attackT * math.pi) * 1.5
+        : swing * 0.9;
+    _monsterLimb(
+      canvas,
+      Offset(size * 0.26, -size * 0.72),
+      armSwing,
+      size * 0.36,
+      size * 0.12,
+      accent,
+    );
+    _paintMonsterWeapon(canvas, monster, size, accent, attackT);
+
+    // Hit spark.
+    if (flashing) {
+      canvas.drawCircle(
+        Offset(0, -size * 0.6),
+        size * 0.5,
+        Paint()..color = Colors.white.withValues(alpha: 0.18),
+      );
+    }
+
+    canvas.restore();
+
+    // Burning indicator (hostile monsters only; Flame's DoT).
+    if (monster.burnTicksLeft > 0) {
+      final flicker = math.sin(now / 90 + monster.id.hashCode) * 2;
+      final base = monster.position - Offset(0, size * 1.15);
+      final flame = Paint()..color = const Color(0xFFFF7A33);
+      canvas.drawCircle(base + Offset(-5, flicker * 0.4), 3.5, flame);
+      canvas.drawCircle(base + Offset(5, -flicker * 0.4), 3.0, flame);
+      canvas.drawCircle(
+        base + const Offset(0, -4),
+        2.4,
+        Paint()..color = const Color(0xFFFFD9A8),
+      );
+    }
+
+    _paintMonsterBar(
+      canvas,
+      monster,
+      ally ? const Color(0xFF7CFF9B) : const Color(0xFFFF6A5A),
+      topY: monster.position.dy - size * 1.42,
+      width: size * 1.25,
+    );
+  }
+
+  void _monsterLimb(
+    Canvas canvas,
+    Offset joint,
+    double angle,
+    double length,
+    double width,
+    Color color,
+  ) {
+    canvas.save();
+    canvas.translate(joint.dx, joint.dy);
+    canvas.rotate(angle);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-width / 2, 0, width, length),
+        Radius.circular(width / 2),
+      ),
+      Paint()..color = color,
+    );
+    canvas.drawCircle(
+      Offset(0, length),
+      width * 0.62,
+      Paint()..color = Color.lerp(color, Colors.black, 0.18)!,
+    );
+    canvas.restore();
+  }
+
+  void _paintTankBody(
+    Canvas canvas,
+    double size,
+    Color body,
+    Color dark,
+    Color accent,
+  ) {
+    final rect = Rect.fromLTWH(-size * 0.44, -size * 0.86, size * 0.88, size * 0.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(size * 0.16)),
+      Paint()..color = body,
+    );
+    // Shoulder plates.
+    canvas.drawCircle(
+      Offset(-size * 0.36, -size * 0.76),
+      size * 0.17,
+      Paint()..color = accent,
+    );
+    canvas.drawCircle(
+      Offset(size * 0.36, -size * 0.76),
+      size * 0.17,
+      Paint()..color = accent,
+    );
+    // Belt.
+    canvas.drawRect(
+      Rect.fromLTWH(-size * 0.4, -size * 0.5, size * 0.8, size * 0.08),
+      Paint()..color = dark,
+    );
+    _monsterHead(canvas, size, body, dark, accent, horned: true);
+  }
+
+  void _paintRunnerBody(
+    Canvas canvas,
+    double size,
+    Color body,
+    Color dark,
+    Color accent,
+  ) {
+    final rect = Rect.fromLTWH(-size * 0.3, -size * 0.88, size * 0.6, size * 0.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(size * 0.2)),
+      Paint()..color = body,
+    );
+    // Scarf trailing behind the run direction.
+    final scarf = Path()
+      ..moveTo(-size * 0.22, -size * 0.74)
+      ..lineTo(-size * 0.62, -size * 0.58)
+      ..lineTo(-size * 0.2, -size * 0.58)
+      ..close();
+    canvas.drawPath(scarf, Paint()..color = accent);
+    _monsterHead(canvas, size, body, dark, accent, earred: true);
+  }
+
+  void _paintStalkerBody(
+    Canvas canvas,
+    double size,
+    Color body,
+    Color dark,
+    Color accent,
+  ) {
+    // Hooded cloak: wide at the hem, narrow at the shoulders.
+    final cloak = Path()
+      ..moveTo(-size * 0.3, -size * 0.82)
+      ..lineTo(size * 0.3, -size * 0.82)
+      ..lineTo(size * 0.46, -size * 0.06)
+      ..lineTo(-size * 0.46, -size * 0.06)
+      ..close();
+    canvas.drawPath(cloak, Paint()..color = body);
+    canvas.drawPath(
+      Path()
+        ..moveTo(-size * 0.3, -size * 0.82)
+        ..lineTo(0, -size * 0.8)
+        ..lineTo(-size * 0.46, -size * 0.06)
+        ..close(),
+      Paint()..color = dark,
+    );
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: Offset(0, -size * 0.86),
+        width: size * 0.52,
+        height: size * 0.5,
+      ),
+      math.pi,
+      math.pi,
+      true,
+      Paint()..color = accent,
+    );
+    _monsterHead(canvas, size, body, dark, accent, hooded: true);
+  }
+
+  void _paintRangedBody(
+    Canvas canvas,
+    double size,
+    Color body,
+    Color dark,
+    Color accent,
+  ) {
+    final rect = Rect.fromLTWH(-size * 0.34, -size * 0.86, size * 0.68, size * 0.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(size * 0.14)),
+      Paint()..color = body,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(-size * 0.05, -size * 0.86, size * 0.1, size * 0.5),
+      Paint()..color = accent,
+    );
+    _monsterHead(canvas, size, body, dark, accent, hooded: true);
+  }
+
+  void _monsterHead(
+    Canvas canvas,
+    double size,
+    Color body,
+    Color dark,
+    Color accent, {
+    bool horned = false,
+    bool earred = false,
+    bool hooded = false,
+  }) {
+    final center = Offset(0, -size * 1.0);
+    final radius = size * 0.23;
+    canvas.drawCircle(center, radius, Paint()..color = body);
+    if (hooded) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius * 1.18),
+        math.pi,
+        math.pi,
+        true,
+        Paint()..color = dark,
+      );
+    }
+    if (horned) {
+      for (final sign in const [-1.0, 1.0]) {
+        final horn = Path()
+          ..moveTo(center.dx + sign * radius * 0.7, center.dy - radius * 0.6)
+          ..lineTo(center.dx + sign * radius * 1.35, center.dy - radius * 1.5)
+          ..lineTo(center.dx + sign * radius * 0.35, center.dy - radius * 0.85)
+          ..close();
+        canvas.drawPath(horn, Paint()..color = accent);
+      }
+    }
+    if (earred) {
+      for (final sign in const [-1.0, 1.0]) {
+        final ear = Path()
+          ..moveTo(center.dx + sign * radius * 0.55, center.dy - radius * 0.55)
+          ..lineTo(center.dx + sign * radius * 1.15, center.dy - radius * 1.3)
+          ..lineTo(center.dx + sign * radius * 0.2, center.dy - radius * 0.75)
+          ..close();
+        canvas.drawPath(ear, Paint()..color = dark);
+      }
+    }
+    // Eyes: two highlights, always looking forward.
+    canvas.drawCircle(
+      center + Offset(radius * 0.34, -radius * 0.06),
+      radius * 0.16,
+      Paint()..color = const Color(0xFFFFF4D8),
+    );
+    canvas.drawCircle(
+      center + Offset(radius * 0.72, -radius * 0.02),
+      radius * 0.1,
+      Paint()..color = const Color(0xFFFFF4D8),
+    );
+  }
+
+  void _paintMonsterWeapon(
+    Canvas canvas,
+    EnemyState monster,
+    double size,
+    Color accent,
+    double attackT,
+  ) {
+    final hand = Offset(size * 0.28, size * 0.12);
+    switch (monster.type) {
+      case MonsterType.tank:
+        canvas.drawCircle(hand, size * 0.17, Paint()..color = accent);
+        canvas.drawCircle(
+          hand + Offset(0, -size * 0.02),
+          size * 0.1,
+          Paint()..color = Colors.black.withValues(alpha: 0.18),
+        );
+      case MonsterType.runner:
+        canvas.drawLine(
+          hand,
+          hand + Offset(size * 0.42, -size * 0.28),
+          Paint()
+            ..color = accent
+            ..strokeWidth = size * 0.08
+            ..strokeCap = StrokeCap.round,
+        );
+      case MonsterType.stalker:
+        canvas.drawLine(
+          hand,
+          hand + Offset(size * 0.36, -size * 0.24),
+          Paint()
+            ..color = accent
+            ..strokeWidth = size * 0.06
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawLine(
+          Offset(-hand.dx, hand.dy),
+          Offset(-hand.dx - size * 0.36, hand.dy - size * 0.24),
+          Paint()
+            ..color = accent.withValues(alpha: 0.7)
+            ..strokeWidth = size * 0.06
+            ..strokeCap = StrokeCap.round,
+        );
+      case MonsterType.ranged:
+        // Staff with a fire orb that flares while attacking.
+        canvas.drawLine(
+          Offset(size * 0.2, -size * 0.2),
+          Offset(size * 0.52, -size * 1.0),
+          Paint()
+            ..color = accent
+            ..strokeWidth = size * 0.06
+            ..strokeCap = StrokeCap.round,
+        );
+        final flare = 0.5 + attackT * 0.8;
+        canvas.drawCircle(
+          Offset(size * 0.52, -size * 1.0),
+          size * 0.12 * flare,
+          Paint()..color = const Color(0xFFFF8A3C).withValues(alpha: 0.8),
+        );
+        canvas.drawCircle(
+          Offset(size * 0.52, -size * 1.0),
+          size * 0.06 * flare,
+          Paint()..color = const Color(0xFFFFE0A8),
+        );
+    }
+  }
+
+  void _paintMonsterBar(
+    Canvas canvas,
+    EnemyState monster,
+    Color color, {
+    required double topY,
+    required double width,
+  }) {
+    final ratio = monster.hpRatio;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(monster.position.dx - width / 2, topY, width, 4.5),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xAA000000),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          monster.position.dx - width / 2,
+          topY,
+          width * ratio,
+          4.5,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = color,
+    );
+  }
+
+  void _paintCorpse(Canvas canvas, MonsterCorpse corpse) {
+    final def = MonsterCatalog.def(corpse.type);
+    final progress = corpse.progressAt(world.nowMs);
+    final alpha = (1 - progress).clamp(0.0, 1.0);
+    final size = def.radius * 2.35;
+    final face = corpse.facing.dx < -0.08 ? -1.0 : 1.0;
+    canvas.save();
+    canvas.translate(corpse.position.dx, corpse.position.dy);
+    canvas.scale(face, 1);
+    canvas.rotate(progress * math.pi * 0.42);
+    final paint = Paint()
+      ..color = Color(def.color).withValues(alpha: alpha * 0.85);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-size * 0.42, -size * 0.4, size * 0.84, size * 0.36),
+        Radius.circular(size * 0.16),
+      ),
+      paint,
+    );
+    canvas.drawCircle(
+      Offset(size * 0.36, -size * 0.3),
+      size * 0.18,
+      Paint()
+        ..color = Color(def.accent).withValues(alpha: alpha * 0.8),
+    );
+    canvas.restore();
   }
 
   void _paintZones(Canvas canvas) {
@@ -335,122 +786,6 @@ class ArenaPainter extends CustomPainter {
         );
       }
     }
-  }
-
-  void _paintEnemies(Canvas canvas) {
-    for (final enemy in world.enemies) {
-      final size = _enemySize(enemy);
-      final flashing = world.nowMs < enemy.hitFlashUntilMs;
-      final baseColor = switch (enemy.kind) {
-        'brute' => const Color(0xFFC2472E),
-        'archer' => const Color(0xFFE88A3C),
-        _ => const Color(0xFFE05A48),
-      };
-      final color = flashing ? Colors.white : baseColor;
-      final paint = Paint()..color = color;
-
-      if (enemy.kind == 'slime') {
-        final wobble = math.sin(world.nowMs / 120 + enemy.id.hashCode) * 2;
-        final rect = Rect.fromCenter(
-          center: enemy.position - Offset(0, 6 + wobble),
-          width: size,
-          height: size * 0.85,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(14)),
-          paint,
-        );
-        _paintEyes(canvas, enemy.position - Offset(0, 10), dark: true);
-      } else if (enemy.kind == 'archer') {
-        final rect = Rect.fromCenter(
-          center: enemy.position - Offset(0, 10),
-          width: size * 0.7,
-          height: size * 1.05,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(10)),
-          paint,
-        );
-        // Bow arc facing the player.
-        canvas.drawArc(
-          Rect.fromCenter(
-            center: enemy.position - Offset(0, 12),
-            width: 26,
-            height: 26,
-          ),
-          -math.pi / 2 - 0.8,
-          1.6,
-          false,
-          Paint()
-            ..color = const Color(0xFFFFD9A8)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 3,
-        );
-      } else {
-        final rect = Rect.fromCenter(
-          center: enemy.position - Offset(0, 12),
-          width: size,
-          height: size * 1.15,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(8)),
-          paint,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: enemy.position - Offset(0, 12) + Offset(0, 6),
-            width: size * 0.3,
-            height: size * 0.55,
-          ),
-          Paint()..color = const Color(0x33000000),
-        );
-      }
-
-      // Burning indicator: small flames over a burning enemy.
-      if (enemy.burnTicksLeft > 0) {
-        final flicker = math.sin(world.nowMs / 90 + enemy.id.hashCode) * 2;
-        final base = enemy.position - Offset(0, 26 + size * 0.5);
-        final flame = Paint()..color = const Color(0xFFFF7A33);
-        canvas.drawCircle(base + Offset(-5, flicker * 0.4), 3.5, flame);
-        canvas.drawCircle(base + Offset(5, -flicker * 0.4), 3.0, flame);
-        canvas.drawCircle(
-          base + const Offset(0, -4),
-          2.4,
-          Paint()..color = const Color(0xFFFFD9A8),
-        );
-      }
-
-      // HP bar, shown once the enemy is damaged.
-      if (enemy.hp < enemy.maxHp) {
-        final barWidth = size + 8;
-        final ratio = (enemy.hp / enemy.maxHp).clamp(0.0, 1.0);
-        final barTop = enemy.position - Offset(0, 28 + size * 0.5);
-        canvas.drawRect(
-          Rect.fromLTWH(
-            enemy.position.dx - barWidth / 2,
-            barTop.dy,
-            barWidth,
-            4.5,
-          ),
-          Paint()..color = const Color(0x88000000),
-        );
-        canvas.drawRect(
-          Rect.fromLTWH(
-            enemy.position.dx - barWidth / 2,
-            barTop.dy,
-            barWidth * ratio,
-            4.5,
-          ),
-          Paint()..color = const Color(0xFFFF5A4A),
-        );
-      }
-    }
-  }
-
-  void _paintEyes(Canvas canvas, Offset center, {required bool dark}) {
-    final eye = Paint()..color = dark ? const Color(0xFF25301F) : Colors.white;
-    canvas.drawCircle(center - const Offset(5, 0), 2.6, eye);
-    canvas.drawCircle(center + const Offset(5, 0), 2.6, eye);
   }
 
   void _paintProjectiles(Canvas canvas) {

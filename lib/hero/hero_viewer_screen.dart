@@ -575,7 +575,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
             ),
           IconButton(
             tooltip: 'إعادة من البداية',
-            onPressed: player == null ? null : player.restart,
+            onPressed: player?.restart,
             icon: const Icon(Icons.restart_alt),
           ),
           const Spacer(),

@@ -2,17 +2,22 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persisted combat progress for one hero: level, xp and kill count.
+/// Persisted combat progress for one hero: level, xp, kill count, permanent
+/// monster upgrade levels and the monster essence wallet.
 class HeroProgress {
   const HeroProgress({
     required this.level,
     required this.xp,
     required this.kills,
+    this.armyLevels = const {},
+    this.essence = 0,
   });
 
   final int level;
   final int xp;
   final int kills;
+  final Map<String, int> armyLevels;
+  final int essence;
 
   static const initial = HeroProgress(level: 1, xp: 0, kills: 0);
 }
@@ -39,7 +44,23 @@ class SharedPreferencesProgressStore implements ProgressStore {
       final xp = data['xp'];
       final kills = data['kills'];
       if (level is! int || xp is! int || kills is! int) return null;
-      return HeroProgress(level: level, xp: xp, kills: kills);
+      final rawArmy = data['armyLevels'];
+      final armyLevels = <String, int>{};
+      if (rawArmy is Map) {
+        for (final entry in rawArmy.entries) {
+          final key = entry.key;
+          final value = entry.value;
+          if (key is String && value is int) armyLevels[key] = value;
+        }
+      }
+      final essence = data['essence'];
+      return HeroProgress(
+        level: level,
+        xp: xp,
+        kills: kills,
+        armyLevels: armyLevels,
+        essence: essence is int ? essence : 0,
+      );
     } on FormatException {
       return null;
     }
@@ -54,6 +75,8 @@ class SharedPreferencesProgressStore implements ProgressStore {
         'level': progress.level,
         'xp': progress.xp,
         'kills': progress.kills,
+        'armyLevels': progress.armyLevels,
+        'essence': progress.essence,
       }),
     );
   }
@@ -67,6 +90,8 @@ class MemoryProgressStore implements ProgressStore {
   Future<HeroProgress?> load(String heroId) async => _values[heroId];
 
   @override
-  Future<void> save(String heroId, HeroProgress progress) =>
-      Future.value(_values[heroId] = progress);
+  Future<void> save(String heroId, HeroProgress progress) {
+    _values[heroId] = progress;
+    return Future.value();
+  }
 }

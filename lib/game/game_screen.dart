@@ -11,6 +11,7 @@ import '../hero/hero_manifest.dart';
 import '../hero/sprite_player.dart';
 import 'arena_painter.dart';
 import 'combat/hero_kit.dart';
+import 'monsters/monster_models.dart';
 import 'progress/hero_progress.dart';
 import 'render3/glb.dart';
 import 'render3/hero3d_painter.dart';
@@ -138,13 +139,21 @@ class _GameScreenState extends State<GameScreen>
       world.level = saved.level.clamp(1, 40);
       world.xp = saved.xp;
       world.kills = saved.kills;
+      world.upgrades.loadFromMap(saved.armyLevels);
+      world.essence = saved.essence;
     });
   }
 
   Future<void> _persistProgress() async {
     await store.save(
       widget.hero.id,
-      HeroProgress(level: world.level, xp: world.xp, kills: world.kills),
+      HeroProgress(
+        level: world.level,
+        xp: world.xp,
+        kills: world.kills,
+        armyLevels: world.upgrades.toMap(),
+        essence: world.essence,
+      ),
     );
   }
 
@@ -236,6 +245,8 @@ class _GameScreenState extends State<GameScreen>
               color: accentColor.withValues(alpha: 0.85),
             ),
           );
+        case ArmyMonsterLostEvent(:final type):
+          _showToast('سقط ${MonsterCatalog.def(type).nameAr} — اشترِ بديلًا');
         case LevelUpEvent(:final newLevel, :final unlockedAbilityIds):
           _showToast('المستوى $newLevel!');
           if (unlockedAbilityIds.isNotEmpty) {
@@ -575,6 +586,15 @@ class _GameScreenState extends State<GameScreen>
                           _statsPanel(theme, comboText: comboText),
                         ],
                       ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _armyPanel(theme),
+                          const Spacer(),
+                          _monsterUpgradeButton(theme),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -818,6 +838,202 @@ class _GameScreenState extends State<GameScreen>
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       );
+
+  Widget _armyPanel(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: _panelDecoration(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'الجيش ${world.army.length}',
+            style: TextStyle(
+              color: accentColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(width: 6),
+          for (final type in MonsterType.values) ...[
+            _buyMonsterButton(type),
+            const SizedBox(width: 4),
+          ],
+          const SizedBox(width: 2),
+          Text(
+            'موارد ${world.resources} · جوهر ${world.essence}',
+            style: const TextStyle(color: Colors.white, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buyMonsterButton(MonsterType type) {
+    final def = MonsterCatalog.def(type);
+    final count = world.army.where((m) => m.type == type).length;
+    final affordable = world.canBuyMonster(type);
+    return GestureDetector(
+      key: ValueKey('buy_${type.name}'),
+      onTap: () => _onBuyMonster(type),
+      child: Container(
+        width: 62,
+        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+        decoration: BoxDecoration(
+          color: affordable
+              ? Color(def.color).withValues(alpha: 0.82)
+              : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Color(def.accent).withValues(alpha: affordable ? 0.9 : 0.25),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              def.nameAr,
+              style: TextStyle(
+                color: affordable ? Colors.white : Colors.white54,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '$count · ${def.price}',
+              style: TextStyle(
+                color: affordable ? Colors.white70 : Colors.white38,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onBuyMonster(MonsterType type) {
+    final def = MonsterCatalog.def(type);
+    if (world.buyMonster(type)) {
+      setState(() {});
+      _showToast('انضم ${def.nameAr} إلى الجيش');
+    } else if (world.army.length >= GameWorld.maxArmySize) {
+      _showToast('الجيش وصل الحد الأقصى');
+    } else {
+      _showToast('الموارد غير كافية (${def.price})');
+    }
+  }
+
+  Widget _monsterUpgradeButton(ThemeData theme) {
+    return OutlinedButton.icon(
+      key: const ValueKey('btn_monster_upgrades'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: accentColor,
+        side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
+        backgroundColor: Colors.black.withValues(alpha: 0.45),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        minimumSize: const Size(0, 30),
+      ),
+      onPressed: _showMonsterUpgrades,
+      icon: const Icon(Icons.upgrade, size: 15),
+      label: const Text('ترقية الوحوش', style: TextStyle(fontSize: 11)),
+    );
+  }
+
+  Future<void> _showMonsterUpgrades() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('ترقية الوحوش — جوهر ${world.essence}'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final type in MonsterType.values)
+                      _monsterUpgradeRow(type, setDialogState),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('إغلاق'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (mounted) setState(() {});
+  }
+
+  Widget _monsterUpgradeRow(
+    MonsterType type,
+    StateSetter setDialogState,
+  ) {
+    final def = MonsterCatalog.def(type);
+    final level = world.upgrades.levelOf(type);
+    final maxed = level >= MonsterUpgrades.maxLevel;
+    final cost = world.upgrades.upgradeCost(type);
+    final stats = MonsterStats.of(type, level);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Color(def.color),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${def.nameAr} — المستوى $level',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${def.roleAr} · HP ${stats.maxHp.round()} · ضرر ${stats.damage.round()}',
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            key: ValueKey('upgrade_${type.name}'),
+            onPressed: maxed
+                ? null
+                : () {
+                    if (world.upgradeMonster(type)) {
+                      setDialogState(() {});
+                      setState(() {});
+                      _persistProgress();
+                      _showToast(
+                        '${def.nameAr} أصبح المستوى '
+                        '${world.upgrades.levelOf(type)}',
+                      );
+                    } else {
+                      _showToast('الجوهر غير كافٍ ($cost)');
+                    }
+                  },
+            child: Text(maxed ? 'الأقصى' : 'ترقية ($cost)'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _controlCluster(ThemeData theme) {
     return Column(

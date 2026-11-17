@@ -3,6 +3,7 @@ import 'dart:ui' show Offset;
 
 import '../combat/combo.dart';
 import '../combat/hero_kit.dart';
+import '../monsters/monster_models.dart';
 
 /// Logical size of the battle arena in world units.
 const double arenaWidth = 960;
@@ -20,6 +21,13 @@ class EnemyKilledEvent extends WorldEvent {
   const EnemyKilledEvent(this.enemyKind, this.xpGained);
   final String enemyKind;
   final int xpGained;
+}
+
+/// Emitted when one of the player's permanently-owned monsters dies. The
+/// monster is gone for the rest of the match and must be repurchased.
+class ArmyMonsterLostEvent extends WorldEvent {
+  const ArmyMonsterLostEvent(this.type);
+  final MonsterType type;
 }
 
 class LevelUpEvent extends WorldEvent {
@@ -69,7 +77,12 @@ class PlayerState {
   int buffUntilMs = 0;
 }
 
-/// Simulation state of one enemy.
+/// Simulation state of one monster.
+///
+/// Both sides use this class: `world.enemies` are hostile monsters and
+/// `world.army` are the player's permanently-owned monsters. [type] drives the
+/// catalog stats, [team] drives targeting, and [walkPhase] / [attackAnimUntilMs]
+/// drive the procedural walk and attack animations painted by `ArenaPainter`.
 class EnemyState {
   EnemyState({
     required this.id,
@@ -79,25 +92,42 @@ class EnemyState {
     required this.speed,
     required this.contactDamage,
     required this.xpValue,
-    this.ranged = false,
-  }) : hp = maxHp;
+    bool ranged = false,
+    MonsterType? type,
+    this.team = MonsterTeam.enemy,
+    this.level = 1,
+    double? radius,
+  })  : type = type ?? monsterTypeFromName(kind),
+        ranged = ranged ||
+            (type ?? monsterTypeFromName(kind)) == MonsterType.ranged,
+        radius = radius ?? MonsterCatalog.def(
+            type ?? monsterTypeFromName(kind)).radius,
+        hp = maxHp;
 
   final String id;
+
+  /// Legacy display name (`slime`, `archer`, `brute`) or the production type
+  /// name. Kept for kill events and old captures; gameplay uses [type].
   final String kind;
+  final MonsterType type;
+  final MonsterTeam team;
+  final int level;
+  final double radius;
+
   Offset position;
   double hp;
   final double maxHp;
-  final double speed;
+  double speed;
   final double contactDamage;
   final int xpValue;
 
-  /// Ranged enemies keep distance and shoot instead of closing in.
+  /// Ranged monsters keep distance and shoot instead of closing in.
   final bool ranged;
 
   double attackCooldownUntilMs = 0;
   int windupUntilMs = 0;
 
-  /// Burning damage-over-time state (Flame's flame_slash).
+  /// Burn/dot state (Flame's flame_slash).
   int burnTicksLeft = 0;
   int burnNextTickAtMs = 0;
   double burnTickDamage = 0;
@@ -105,6 +135,37 @@ class EnemyState {
   /// Visual hit flash timer (ms timestamp).
   int hitFlashUntilMs = 0;
   Offset facing = const Offset(0, 1);
+
+  // ---- Animation / behaviour state -----------------------------------------
+
+  /// True while the monster is actually stepping this frame.
+  bool moving = false;
+
+  /// Distance-driven gait clock. Two legs use `sin(walkPhase)` and
+  /// `sin(walkPhase + pi)`, so they alternate like a real walk cycle.
+  double walkPhase = 0;
+
+  /// End timestamp of the current attack lunge.
+  int attackAnimUntilMs = 0;
+
+  /// Runner dash window / schedule.
+  int dashUntilMs = 0;
+  int nextDashAtMs = 0;
+
+  /// Stalker strafe phase offset so the pack does not move in lockstep.
+  double strafePhase = 0;
+
+  /// Stable formation slot used when the army has no target nearby.
+  int groupSlot = 0;
+
+  MonsterAnimState animStateAt(int nowMs) {
+    if (hp <= 0) return MonsterAnimState.death;
+    if (nowMs < attackAnimUntilMs) return MonsterAnimState.attack;
+    if (moving) return MonsterAnimState.walk;
+    return MonsterAnimState.idle;
+  }
+
+  double get hpRatio => maxHp <= 0 ? 0 : (hp / maxHp).clamp(0.0, 1.0);
 }
 
 /// One live arrow in the air. The `hitIds` set guarantees a single projectile
@@ -119,7 +180,8 @@ class ProjectileState {
     required this.maxTravel,
     required this.tint,
     required this.big,
-  });
+    bool? hostile,
+  }) : hostile = hostile ?? tint == 0xFFFF7A5A;
 
   final String id;
   Offset position;
@@ -131,8 +193,12 @@ class ProjectileState {
   final int tint;
   final bool big;
 
-  /// True while this arrow was shot by an enemy.
-  bool get fromEnemy => tint == 0xFFFF7A5A;
+  /// True while this projectile belongs to the hostile side. Hostile shots
+  /// damage the player and the player's monsters; friendly shots (the hero and
+  /// the player's ranged monsters) damage hostile monsters only.
+  final bool hostile;
+
+  bool get fromEnemy => hostile;
   final Set<String> hitIds = {};
 }
 
@@ -210,11 +276,18 @@ class GameWorld {
     required this.kit,
     math.Random? random,
     this.spawnWaves = true,
+    Map<MonsterType, int>? startingArmy,
   })  : rng = random ?? math.Random(),
-        player = PlayerState() {
+        player = PlayerState(),
+        _startingArmy = startingArmy ?? MonsterCatalog.defaultStartingArmy {
     player.hp = kit.baseMaxHp;
     player.energy = kit.baseMaxEnergy * 0.5;
-    if (spawnWaves) spawnWave(initial: true);
+    if (spawnWaves) {
+      _spawnStartingArmy();
+      spawnWave(initial: true);
+    } else if (startingArmy != null) {
+      _spawnStartingArmy();
+    }
   }
 
   final HeroKit kit;
@@ -224,12 +297,42 @@ class GameWorld {
   final bool spawnWaves;
   final PlayerState player;
   final List<EnemyState> enemies = [];
+
+  /// The player's permanently-owned monster army. Dead members are removed and
+  /// never respawn; the player must buy replacements.
+  final List<EnemyState> army = [];
+
+  /// Short-lived death animations for both sides.
+  final List<MonsterCorpse> corpses = [];
+
   final List<ProjectileState> projectiles = [];
   final List<ZoneState> zones = [];
   final List<WaveState> waves = [];
 
   /// Transient combat visuals (slash arcs, burst rings), world-managed.
   final List<GameFx> fx = [];
+
+  /// Per-type permanent upgrade levels (1..40), shared with the save layer.
+  final MonsterUpgrades upgrades = MonsterUpgrades();
+
+  /// Match currency used to buy monsters during the battle.
+  int resources = 320;
+
+  /// Permanent currency used to upgrade monster types between/inside
+  /// matches. Earned by defeating hostile monsters.
+  int essence = 0;
+
+  final Map<MonsterType, int> _startingArmy;
+  int _armySeq = 0;
+  int _incomeCarryMs = 0;
+
+  /// Performance-driven cap for the live army (the design leaves the exact
+  /// number to device testing; 40 keeps the arena readable on phones).
+  static const int maxArmySize = 40;
+  static const int startingArmySize = 20;
+  static const int maxAliveEnemiesCap = 12;
+  static const int armyAggroRange = 340;
+  static const int enemyAggroRange = 320;
 
   /// Movement input from the joystick, normalized (length ≤ 1).
   Offset moveInput = Offset.zero;
@@ -272,7 +375,7 @@ class GameWorld {
   int get respawnDelayMs => 2500;
   int get dodgeCooldownMs => 3000;
   int get waveIntervalMs => 8000;
-  int get maxAliveEnemies => 8;
+  int get maxAliveEnemies => maxAliveEnemiesCap;
 
   // ---- Input ----------------------------------------------------------------
 
@@ -788,11 +891,14 @@ class GameWorld {
     nowMs += deltaMs;
     _updatePlayer(deltaMs);
     _updateEnemies(deltaMs);
+    _updateArmy(deltaMs);
     _updateProjectiles(deltaMs);
     _updateZones();
     _updateFireWaves(deltaMs);
     _updateBurns();
     _pruneFx();
+    _pruneCorpses();
+    _updateEconomy(deltaMs);
     _updateWaves();
     _regenEnergy(deltaMs);
   }
@@ -844,27 +950,58 @@ class GameWorld {
   void _updateEnemies(int deltaMs) {
     for (final enemy in enemies) {
       if (enemy.hp <= 0) continue;
-      final toPlayer = player.position - enemy.position;
-      final dist = toPlayer.distance;
-      if (dist > 1) enemy.facing = toPlayer / dist;
+      enemy.moving = false;
 
-      if (player.dead) continue;
+      // Target the nearest of the player's monsters; fall back to the hero.
+      EnemyState? armyTarget;
+      var best = double.infinity;
+      for (final ally in army) {
+        if (ally.hp <= 0) continue;
+        final dist = (ally.position - enemy.position).distance;
+        if (dist < best && dist <= enemyAggroRange) {
+          best = dist;
+          armyTarget = ally;
+        }
+      }
+      final Offset? targetPos = armyTarget?.position ??
+          (player.dead ? null : player.position);
+      if (targetPos == null) continue;
 
+      final toTarget = targetPos - enemy.position;
+      final dist = toTarget.distance;
+      if (dist > 1) enemy.facing = toTarget / dist;
+
+      // Finish a started swing. Damage only lands if the target is still in
+      // reach, so sidestepping an attack works for the hero and the army.
       if (enemy.windupUntilMs > 0 && nowMs >= enemy.windupUntilMs) {
         enemy.windupUntilMs = 0;
-        if (dist < 64) {
-          _damagePlayer(enemy.contactDamage);
+        final reach = armyTarget != null
+            ? (armyTarget.hp > 0
+                ? (armyTarget.position - enemy.position).distance
+                : double.infinity)
+            : (player.dead
+                ? double.infinity
+                : (player.position - enemy.position).distance);
+        if (reach < 64) {
+          if (armyTarget != null && armyTarget.hp > 0) {
+            _damageMonster(armyTarget, enemy.contactDamage);
+          } else if (!player.dead) {
+            _damagePlayer(enemy.contactDamage);
+          }
         }
-        enemy.attackCooldownUntilMs = nowMs + 1600;
+        enemy.attackCooldownUntilMs =
+            (nowMs + MonsterCatalog.def(enemy.type).attackCooldownMs)
+                .toDouble();
       }
+      if (enemy.windupUntilMs > 0) continue;
 
-      final attackRange = enemy.ranged ? 260.0 : 46.0;
-      final preferred = enemy.ranged ? 210.0 : 40.0;
-      final canAct = nowMs >= enemy.attackCooldownUntilMs &&
-          enemy.windupUntilMs == 0;
-      if (canAct && dist <= attackRange) {
+      final def = MonsterCatalog.def(enemy.type);
+      final canAct =
+          nowMs >= enemy.attackCooldownUntilMs && enemy.windupUntilMs == 0;
+      if (canAct && dist <= def.attackRange) {
         if (enemy.ranged) {
-          enemy.attackCooldownUntilMs = nowMs + 2400;
+          enemy.attackCooldownUntilMs = (nowMs + def.attackCooldownMs).toDouble();
+          enemy.attackAnimUntilMs = nowMs + 260;
           spawnArrow(
             origin: enemy.position,
             direction: enemy.facing,
@@ -872,43 +1009,179 @@ class GameWorld {
             speed: 240,
             range: 340,
             tint: 0xFFFF7A5A,
+            hostile: true,
           );
         } else {
-          enemy.windupUntilMs = nowMs + 400;
+          enemy.windupUntilMs = nowMs + 320;
+          enemy.attackAnimUntilMs = nowMs + 320;
         }
         continue;
       }
 
-      // Movement: close in; ranged enemies hold their preferred distance.
-      final Offset stepDir;
+      // Movement: melee closes in, ranged holds its preferred band, stalkers
+      // circle, runners dash in bursts.
+      var stepDir = enemy.facing;
+      var speedMult = 1.0;
       if (enemy.ranged) {
-        if (dist > preferred + 40) {
+        if (dist > def.preferredRange + 30) {
           stepDir = enemy.facing;
-        } else if (dist < preferred - 60) {
+        } else if (dist < def.preferredRange - 45) {
           stepDir = -enemy.facing;
         } else {
           stepDir = Offset.zero;
         }
-      } else {
-        stepDir = enemy.facing;
+      } else if (dist <= def.attackRange * 0.9) {
+        stepDir = Offset.zero;
+      } else if (enemy.type == MonsterType.stalker) {
+        final side = Offset(-enemy.facing.dy, enemy.facing.dx);
+        final sway = math.sin(nowMs / 520 + enemy.strafePhase);
+        stepDir = _normalize(enemy.facing + side * (sway * 0.55));
+      } else if (enemy.type == MonsterType.runner &&
+          nowMs >= enemy.nextDashAtMs) {
+        enemy.dashUntilMs = nowMs + 360;
+        enemy.nextDashAtMs = nowMs + 2400;
       }
-      final speedMult = enemy.windupUntilMs > 0 ? 0.0 : 1.0;
-      enemy.position = Offset(
-        _clampD(
-          enemy.position.dx +
-              stepDir.dx * enemy.speed * speedMult * deltaMs / 1000,
-          20,
-          arenaWidth - 20,
-        ),
-        _clampD(
-          enemy.position.dy +
-              stepDir.dy * enemy.speed * speedMult * deltaMs / 1000,
-          60,
-          arenaHeight - 24,
-        ),
-      );
+      if (nowMs < enemy.dashUntilMs) speedMult = 2.15;
+      if (stepDir.distance > 0.001) {
+        _moveMonster(
+          enemy,
+          stepDir,
+          deltaMs,
+          speedMult: speedMult,
+          neighbors: enemies,
+        );
+      }
     }
     enemies.removeWhere((enemy) => enemy.hp <= 0);
+  }
+
+  /// The player's army: automatically picks the nearest hostile monster,
+  /// fights it, and otherwise regroups in a ring around the hero.
+  void _updateArmy(int deltaMs) {
+    for (final ally in army) {
+      if (ally.hp <= 0) continue;
+      ally.moving = false;
+
+      EnemyState? target;
+      var best = double.infinity;
+      for (final enemy in enemies) {
+        if (enemy.hp <= 0) continue;
+        final dist = (enemy.position - ally.position).distance;
+        if (dist < best && dist <= armyAggroRange) {
+          best = dist;
+          target = enemy;
+        }
+      }
+
+      if (target == null) {
+        // No enemy in range: walk back into formation around the hero.
+        final anchor = Offset(
+          _clampD(
+            player.position.dx +
+                armyFormationOffset(ally.groupSlot, army.length).dx,
+            26,
+            arenaWidth - 26,
+          ),
+          _clampD(
+            player.position.dy +
+                armyFormationOffset(ally.groupSlot, army.length).dy,
+            70,
+            arenaHeight - 26,
+          ),
+        );
+        final delta = anchor - ally.position;
+        if (delta.distance > 16) {
+          ally.facing = _normalize(delta);
+          _moveMonster(ally, delta, deltaMs, neighbors: army);
+        }
+        continue;
+      }
+
+      final toTarget = target.position - ally.position;
+      final dist = toTarget.distance;
+      if (dist > 1) ally.facing = toTarget / dist;
+      final def = MonsterCatalog.def(ally.type);
+
+      if (dist <= def.attackRange &&
+          nowMs >= ally.attackCooldownUntilMs) {
+        ally.attackCooldownUntilMs = (nowMs + def.attackCooldownMs).toDouble();
+        ally.attackAnimUntilMs = nowMs + 260;
+        if (ally.ranged) {
+          spawnArrow(
+            origin: ally.position,
+            direction: ally.facing,
+            damage: ally.contactDamage,
+            speed: 300,
+            range: 320,
+            tint: def.accent,
+          );
+        } else {
+          _damageEnemy(target, ally.contactDamage);
+        }
+        continue;
+      }
+
+      var stepDir = ally.facing;
+      if (ally.ranged) {
+        if (dist > def.preferredRange + 20) {
+          stepDir = ally.facing;
+        } else if (dist < def.preferredRange - 40) {
+          stepDir = -ally.facing;
+        } else {
+          stepDir = Offset.zero;
+        }
+      } else if (dist <= def.attackRange * 0.85) {
+        stepDir = Offset.zero;
+      } else if (ally.type == MonsterType.stalker) {
+        final side = Offset(-ally.facing.dy, ally.facing.dx);
+        final sway = math.sin(nowMs / 480 + ally.strafePhase);
+        stepDir = _normalize(ally.facing + side * (sway * 0.6));
+      }
+      if (stepDir.distance > 0.001) {
+        _moveMonster(ally, stepDir, deltaMs, neighbors: army);
+      }
+    }
+    army.removeWhere((ally) => ally.hp <= 0);
+  }
+
+  /// Steps [monster] in [direction] with simple same-team separation so packs
+  /// walk as a group instead of merging into one blob. Advances the gait clock
+  /// with the distance actually travelled, which is what animates the legs.
+  void _moveMonster(
+    EnemyState monster,
+    Offset direction,
+    int deltaMs, {
+    double speedMult = 1.0,
+    List<EnemyState>? neighbors,
+  }) {
+    var dir = _normalize(direction);
+    var separation = Offset.zero;
+    if (neighbors != null) {
+      for (final other in neighbors) {
+        if (identical(other, monster) || other.hp <= 0) continue;
+        final away = monster.position - other.position;
+        final dist = away.distance;
+        final minGap = monster.radius + other.radius + 6;
+        if (dist > 0.001 && dist < minGap) {
+          separation += away / dist * ((minGap - dist) / minGap);
+        }
+      }
+    }
+    if (separation.distance > 0.001) {
+      dir = _normalize(dir + separation * 1.4);
+    }
+
+    final before = monster.position;
+    final step = dir * (monster.speed * speedMult * deltaMs / 1000);
+    monster.position = Offset(
+      _clampD(monster.position.dx + step.dx, 20, arenaWidth - 20),
+      _clampD(monster.position.dy + step.dy, 60, arenaHeight - 24),
+    );
+    final moved = (monster.position - before).distance;
+    monster.moving = moved > 0.02;
+    if (monster.moving) {
+      monster.walkPhase += moved * 0.22;
+    }
   }
 
   void _updateProjectiles(int deltaMs) {
@@ -917,9 +1190,24 @@ class GameWorld {
       projectile.position = projectile.position + step;
       projectile.traveled += step.distance;
       if (projectile.traveled >= projectile.maxTravel) continue;
-      if (projectile.fromEnemy) {
-        // Enemy arrow: hits the player once.
-        if (!player.dead &&
+      if (projectile.hostile) {
+        // Hostile arrow: the player's monsters body-block it first, then the
+        // hero. One projectile damages at most one of them.
+        var consumed = false;
+        for (final ally in army) {
+          if (ally.hp <= 0 || projectile.hitIds.contains(ally.id)) continue;
+          if ((projectile.position - ally.position).distance <
+              ally.radius + 6) {
+            projectile.hitIds.add(ally.id);
+            _damageMonster(ally, projectile.damage);
+            // The arrow is spent on the first body it hits.
+            projectile.traveled = projectile.maxTravel;
+            consumed = true;
+            break;
+          }
+        }
+        if (!consumed &&
+            !player.dead &&
             nowMs >= player.invulnerableUntilMs &&
             (projectile.position - player.position).distance < 22) {
           projectile.traveled = projectile.maxTravel;
@@ -929,7 +1217,8 @@ class GameWorld {
       }
       for (final enemy in enemies) {
         if (enemy.hp <= 0 || projectile.hitIds.contains(enemy.id)) continue;
-        if ((projectile.position - enemy.position).distance < 20) {
+        if ((projectile.position - enemy.position).distance <
+            enemy.radius + 8) {
           projectile.hitIds.add(enemy.id);
           _damageEnemy(enemy, projectile.damage);
           if (projectile.pierceLeft <= 0) {
@@ -1025,8 +1314,8 @@ class GameWorld {
   void spawnWave({bool initial = false}) {
     _wave++;
     _waveAtMs = nowMs + (initial ? 1500 : waveIntervalMs);
-    var count = math.min(2 + _wave ~/ 2, 5);
-    if (initial) count = 3;
+    var count = math.min(3 + _wave, 10);
+    if (initial) count = 5;
     for (var i = 0; i < count && enemies.length < maxAliveEnemies; i++) {
       enemies.add(_spawnEnemy());
     }
@@ -1034,44 +1323,175 @@ class GameWorld {
 
   EnemyState _spawnEnemy() {
     Offset position;
+    var tries = 0;
     do {
       position = Offset(
         60 + rng.nextDouble() * (arenaWidth - 120),
         80 + rng.nextDouble() * (arenaHeight - 130),
       );
-    } while ((position - player.position).distance < 260);
+      tries++;
+    } while (tries < 40 &&
+        ((position - player.position).distance < 280 ||
+            army.any((ally) =>
+                (ally.position - position).distance <
+                ally.radius + 30)));
+
+    // Weighted draft of the four approved types. Runners are the bulk,
+    // stalkers flank, ranged pressure and tanks anchor the wave.
     final roll = rng.nextDouble();
-    if (roll < 0.2 && _wave >= 2) {
-      return EnemyState(
-        id: 'enemy_${_nextEntityId++}',
-        kind: 'brute',
-        position: position,
-        maxHp: 95,
-        speed: 55,
-        contactDamage: 14,
-        xpValue: 25,
-      );
+    final MonsterType type;
+    if (roll < 0.36) {
+      type = MonsterType.runner;
+    } else if (roll < 0.60) {
+      type = MonsterType.stalker;
+    } else if (roll < 0.82) {
+      type = MonsterType.ranged;
+    } else {
+      type = MonsterType.tank;
     }
-    if (roll < 0.55) {
-      return EnemyState(
-        id: 'enemy_${_nextEntityId++}',
-        kind: 'archer',
-        position: position,
-        maxHp: 26,
-        speed: 95,
-        contactDamage: 6,
-        xpValue: 14,
-        ranged: true,
-      );
-    }
+    final level = (1 + (_wave - 1) ~/ 2).clamp(1, monsterMaxLevel);
+    final stats = MonsterStats.of(type, level);
     return EnemyState(
       id: 'enemy_${_nextEntityId++}',
-      kind: 'slime',
+      kind: type.name,
+      type: type,
+      team: MonsterTeam.enemy,
+      level: level,
       position: position,
-      maxHp: 40,
-      speed: 120,
-      contactDamage: 8,
-      xpValue: 10,
+      maxHp: stats.maxHp,
+      speed: stats.speed,
+      contactDamage: stats.damage,
+      xpValue: stats.xpValue,
+      ranged: type == MonsterType.ranged,
+      radius: stats.radius,
+    );
+  }
+
+  void _spawnStartingArmy() {
+    final distribution = _startingArmy.isEmpty
+        ? MonsterCatalog.defaultStartingArmy
+        : _startingArmy;
+    var slot = 0;
+    for (final entry in distribution.entries) {
+      for (var i = 0; i < entry.value && army.length < maxArmySize; i++) {
+        _spawnArmyMonster(entry.key, slot: slot++);
+      }
+    }
+    // Always honour the documented free 20-monster army even if the caller
+    // passed a partial distribution.
+    while (army.length < startingArmySize) {
+      _spawnArmyMonster(MonsterType.runner, slot: slot++);
+    }
+  }
+
+  EnemyState _spawnArmyMonster(
+    MonsterType type, {
+    int? slot,
+    Offset? near,
+  }) {
+    final level = upgrades.levelOf(type);
+    final stats = MonsterStats.of(type, level);
+    final formationSlot = slot ?? army.length;
+    final base = near ?? player.position;
+    final jitter = Offset(
+      (rng.nextDouble() - 0.5) * 16,
+      (rng.nextDouble() - 0.5) * 16,
+    );
+    final offset = armyFormationOffset(formationSlot, math.max(army.length + 1, 20));
+    var position = Offset(
+      _clampD(base.dx + offset.dx + jitter.dx, 26, arenaWidth - 26),
+      _clampD(base.dy + offset.dy + jitter.dy, 70, arenaHeight - 26),
+    );
+    // Never spawn inside an existing army monster: the ring layout is roomy,
+    // but the per-spawn jitter can close a gap. Push the newcomer out along
+    // the connecting line until the bodies no longer overlap.
+    for (final other in army) {
+      if (other.hp <= 0) continue;
+      final away = position - other.position;
+      final gap = away.distance;
+      final minGap = stats.radius + other.radius + 6;
+      if (gap > 0.001 && gap < minGap) {
+        position += away / gap * (minGap - gap);
+      }
+    }
+    position = Offset(
+      _clampD(position.dx, 26, arenaWidth - 26),
+      _clampD(position.dy, 70, arenaHeight - 26),
+    );
+    final monster = EnemyState(
+      id: 'army_${_armySeq++}',
+      kind: type.name,
+      type: type,
+      team: MonsterTeam.player,
+      level: level,
+      position: position,
+      maxHp: stats.maxHp,
+      speed: stats.speed,
+      contactDamage: stats.damage,
+      xpValue: 0,
+      ranged: type == MonsterType.ranged,
+      radius: stats.radius,
+    );
+    monster.groupSlot = formationSlot;
+    monster.strafePhase = rng.nextDouble() * math.pi * 2;
+    monster.nextDashAtMs = nowMs + rng.nextInt(1400);
+    army.add(monster);
+    return monster;
+  }
+
+  /// Buys one monster of [type] with match resources. Returns false when the
+  /// army is full or the player cannot afford it. Reinforcements appear beside
+  /// the player, the current stand-in for the castle spawn point.
+  bool buyMonster(MonsterType type) {
+    final price = MonsterCatalog.def(type).price;
+    if (army.length >= maxArmySize || resources < price) return false;
+    resources -= price;
+    _spawnArmyMonster(
+      type,
+      slot: army.length,
+      near: player.position + const Offset(0, 46),
+    );
+    return true;
+  }
+
+  bool canBuyMonster(MonsterType type) =>
+      army.length < maxArmySize &&
+      resources >= MonsterCatalog.def(type).price;
+
+  /// Permanent per-type upgrade, paid with monster essence. The new level is
+  /// applied to every future purchase (existing monsters keep their stats).
+  bool upgradeMonster(MonsterType type) {
+    final cost = upgrades.upgradeCost(type);
+    if (!upgrades.canUpgrade(type, essence)) return false;
+    upgrades.upgrade(type, essence: essence);
+    essence -= cost;
+    return true;
+  }
+
+  void _updateEconomy(int deltaMs) {
+    // Passive match income stands in for the mine system until it exists.
+    _incomeCarryMs += deltaMs;
+    while (_incomeCarryMs >= 1500) {
+      _incomeCarryMs -= 1500;
+      resources = math.min(9999, resources + 2);
+    }
+  }
+
+  void _pruneCorpses() {
+    corpses.removeWhere(
+      (corpse) => nowMs - corpse.bornAtMs > MonsterCorpse.lifetimeMs,
+    );
+  }
+
+  void _addCorpse(EnemyState monster) {
+    corpses.add(
+      MonsterCorpse(
+        type: monster.type,
+        team: monster.team,
+        position: monster.position,
+        facing: monster.facing,
+        bornAtMs: nowMs,
+      ),
     );
   }
 
@@ -1084,6 +1504,7 @@ class GameWorld {
     required int tint,
     int pierceLeft = 0,
     bool big = false,
+    bool? hostile,
   }) {
     projectiles.add(
       ProjectileState(
@@ -1095,19 +1516,44 @@ class GameWorld {
         maxTravel: range,
         tint: tint,
         big: big,
+        hostile: hostile,
       ),
     );
   }
 
   void _damageEnemy(EnemyState enemy, double amount) {
+    if (enemy.hp <= 0) return;
     enemy.hp -= amount;
     enemy.hitFlashUntilMs = nowMs + 160;
     totalDamageDealt += amount;
-    player.energy = _clampD(player.energy + 2, 0, kit.baseMaxEnergy);
+    if (!player.dead) {
+      player.energy = _clampD(player.energy + 2, 0, kit.baseMaxEnergy);
+    }
     if (enemy.hp <= 0) {
+      enemy.hp = 0;
       kills++;
       _addXp(enemy.xpValue);
+      _addCorpse(enemy);
+      // Permanent currency for the kill, scaled with the monster's value.
+      essence += 1 + enemy.xpValue ~/ 12;
+      resources = math.min(
+        9999,
+        resources + 2 + MonsterCatalog.def(enemy.type).price ~/ 6,
+      );
       _events.add(EnemyKilledEvent(enemy.kind, enemy.xpValue));
+    }
+  }
+
+  /// Damage to one of the player's permanently-owned monsters. A dead ally is
+  /// removed from the army for the rest of the match and must be repurchased.
+  void _damageMonster(EnemyState monster, double amount) {
+    if (monster.hp <= 0) return;
+    monster.hp -= amount;
+    monster.hitFlashUntilMs = nowMs + 140;
+    if (monster.hp <= 0) {
+      monster.hp = 0;
+      _addCorpse(monster);
+      _events.add(ArmyMonsterLostEvent(monster.type));
     }
   }
 
