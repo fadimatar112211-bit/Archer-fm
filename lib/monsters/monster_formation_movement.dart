@@ -343,6 +343,7 @@ class MonsterFormationMovement {
       final endDx = endX - obstacle.x;
       final endDy = endY - obstacle.y;
       final endDistance = math.sqrt(endDx * endDx + endDy * endDy);
+      if (endDistance >= radius) return (endX, endY);
       final angle = (tieBreaker + 1) * 2.399963229728653;
       final nx = endDistance > 1e-9 ? endDx / endDistance : math.cos(angle);
       final ny = endDistance > 1e-9 ? endDy / endDistance : math.sin(angle);
