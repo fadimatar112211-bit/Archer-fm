@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'monster_animation.dart';
@@ -43,7 +44,10 @@ class MonsterBattleLayer extends StatefulWidget {
   State<MonsterBattleLayer> createState() => _MonsterBattleLayerState();
 }
 
-class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
+class _MonsterBattleLayerState extends State<MonsterBattleLayer>
+    with SingleTickerProviderStateMixin {
+  late final Ticker _ticker;
+  Duration _lastElapsed = Duration.zero;
   final Map<String, MonsterAnimationController> _animations = {};
   final Map<String, (double, double)> _previousPositions = {};
   Set<String> _movingUnitIds = const {};
@@ -51,6 +55,7 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
   @override
   void initState() {
     super.initState();
+    _ticker = createTicker(_onTick);
     _syncUnits(detectMovement: false);
   }
 
@@ -89,6 +94,47 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
     _previousPositions.removeWhere((id, _) => !currentIds.contains(id));
     moving.removeWhere((id) => !currentIds.contains(id));
     _movingUnitIds = moving;
+    for (final unit in [...widget.units, ...widget.dyingUnits]) {
+      _animations[unit.id]!.synchronize(
+        alive: unit.isAlive,
+        moving: _movingUnitIds.contains(unit.id),
+        attacking: unit.isAlive && widget.attackingUnitIds.contains(unit.id),
+      );
+    }
+    _syncTicker();
+  }
+
+  void _syncTicker() {
+    final needsTicks = _animations.values.any((animation) => animation.needsTicks);
+    if (needsTicks) {
+      if (!_ticker.isActive) {
+        _lastElapsed = Duration.zero;
+        _ticker.start();
+      }
+    } else if (_ticker.isActive) {
+      _ticker.stop();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    final delta = elapsed - _lastElapsed;
+    _lastElapsed = elapsed;
+    var frameChanged = false;
+    for (final animation in _animations.values) {
+      final previousFrame = animation.frameIndex;
+      animation.advance(delta);
+      if (previousFrame != animation.frameIndex) frameChanged = true;
+    }
+    if (frameChanged && mounted) setState(() {});
+    if (!_animations.values.any((animation) => animation.needsTicks)) {
+      _ticker.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
   }
 
   @override
@@ -111,6 +157,7 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
         child: MonsterSpriteView(
           key: ValueKey('monster-${unit.id}'),
           animation: animation,
+          animationManagedExternally: true,
           size: widget.unitSize,
           alive: unit.isAlive,
           moving: _movingUnitIds.contains(unit.id),
