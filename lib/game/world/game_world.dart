@@ -476,6 +476,16 @@ class GameWorld {
         break;
       case 'gale_surge':
         player.buffUntilMs = nowMs + 6000;
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: 95,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
         break;
       case 'fire_wave':
         waves.add(
@@ -529,6 +539,16 @@ class GameWorld {
         break;
       case 'venom_coat':
         player.buffUntilMs = nowMs + 8000;
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: 85,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
         break;
       case 'chain_lightning':
         // Up to 3 nearest enemies within 180 are struck for 130% each.

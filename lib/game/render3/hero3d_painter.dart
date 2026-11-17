@@ -399,8 +399,6 @@ class Hero3DModel {
 
     // Pass B: emit visible triangles, bucket by bucket (far→near fill order
     // does not matter — drawing order below decides occlusion).
-    var dbgMax = 0.0;
-    int dbgT = -1;
     for (var t = 0; t < nTris; t++) {
       if (_triMark[t] != _triMarkValue) continue; // culled or stale
       final bucket = _triBucket[t];
@@ -431,20 +429,7 @@ class Hero3DModel {
               ((shade * baseB * mc[v * 3 + 2]).round().clamp(0, 255));
         }
         _bucketFill[bucket] = slot + 1;
-        final c0 = _bucketPositions[slot * 6].abs();
-        final c1 = _bucketPositions[slot * 6 + 1].abs();
-        final c2 = _bucketPositions[slot * 6 + 2].abs();
-        final c3 = _bucketPositions[slot * 6 + 3].abs();
-        final m2 = [c0, c1, c2, c3].reduce((a, b) => a > b ? a : b);
-        if (m2 > dbgMax) {
-          dbgMax = m2;
-          dbgT = t;
-        }
       }
-    }
-    if (dbgMax > 500) {
-      // ignore: avoid_print
-      print('DBG giant: max=$dbgMax tri=$dbgT screen=${_triScreen.sublist(dbgT * 6, dbgT * 6 + 6)} skinnedIdx=${[0,1,2].map((vi) => is16 ? idx16![dbgT*3+vi] : idx32![dbgT*3+vi]).toList()}');
     }
     if (visible == 0) return;
     // _bucketFill now equals bucket ends after pass B.

@@ -854,4 +854,158 @@ void main() {
       world.releaseWeaponPayload(volley: true);
     });
   });
+
+  group('special abilities stay independent of the five-hit combo', () {
+    test('ranger: an ability between combo hits neither advances nor '
+        'resets the chain', () {
+      final world = makeWorld();
+      world.player.facing = const Offset(1, 0);
+      addEnemy(world, hp: 400, xp: 40);
+      // Combo hit 1 registers (100%).
+      expect(world.requestAttack(), isTrue);
+      expect(world.combo.hitIndex, 2);
+      world.releaseArrow();
+      // A special ability in between: accepted, chain untouched.
+      expect(world.useAbility('multi_shot'), isNotNull);
+      expect(world.combo.hitIndex, 2);
+      expect(world.combo.chainLength, 1);
+      world.releaseWeaponPayload(volley: true);
+      // Wait out the attack cycle, then the next normal attack resumes at
+      // hit 2 (110%), not an advanced 120% nor a reset 100%.
+      runFor(world, 1100);
+      expect(world.requestAttack(), isTrue);
+      expect(world.pendingHitMultiplier, closeTo(1.10, 0.001));
+      // Cleanup the volley so it cannot disturb later assertions.
+      world.projectiles.clear();
+    });
+
+    test('ranger: while an ability is pending the normal attack is refused '
+        'and the combo does not advance', () {
+      final world = makeWorld();
+      world.player.facing = const Offset(1, 0);
+      addEnemy(world, hp: 400, xp: 40);
+      expect(world.requestAttack(), isTrue);
+      world.releaseArrow();
+      world.level = 10; // piercing_shot unlocks at 10
+      expect(world.useAbility('piercing_shot'), isNotNull);
+      expect(world.pendingAbilityId, 'piercing_shot');
+      final chainLength = world.combo.chainLength;
+      expect(world.requestAttack(), isFalse);
+      expect(world.combo.chainLength, chainLength);
+      world.releaseWeaponPayload(volley: false);
+      expect(world.pendingAbilityId, isNull);
+      // After the ability the attack cycle still governs the next press.
+      runFor(world, 1100);
+      expect(world.requestAttack(), isTrue);
+    });
+
+    test('flame: an ability between melee combo hits keeps the chain '
+        'position', () {
+      final world = GameWorld(
+        kit: flameKit,
+        random: math.Random(7),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      addEnemy(world, hp: 400, xp: 40);
+      expect(world.requestAttack(), isTrue);
+      expect(world.combo.hitIndex, 2);
+      world.releaseMeleeSwing();
+      expect(world.useAbility('flame_slash'), isNotNull);
+      expect(world.combo.hitIndex, 2);
+      world.releaseWeaponPayload(volley: false);
+      runFor(world, 1400);
+      expect(world.requestAttack(), isTrue);
+      expect(world.pendingHitMultiplier, closeTo(1.10, 0.001));
+    });
+
+    test('storm + shadow: abilities never consume combo presses and the '
+        'five-hit chain still escalates to 155%', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(7),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      // Inside the spear's 125 px reach so the swings really land.
+      final enemy = addEnemy(
+        world,
+        position: world.player.position + const Offset(100, 0),
+        hp: 300,
+        xp: 40,
+      );
+      // Hit 1, ability, then hits 2..5 in sequence: the fifth press must
+      // still register as hit 5 with the 155% multiplier.
+      expect(world.requestAttack(), isTrue);
+      world.releaseMeleeSwing();
+      expect(world.useAbility('thunder_thrust'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      expect(world.combo.hitIndex, 2);
+      runFor(world, 1400);
+      for (var hit = 2; hit <= 5; hit++) {
+        expect(world.requestAttack(), isTrue);
+        world.releaseMeleeSwing();
+        runFor(world, 1700);
+      }
+      expect(enemy.hp, lessThan(enemy.maxHp));
+      // Five presses registered: the chain sits on hit 5 (155%) and the next
+      // in-window press would wrap back to hit 1.
+      expect(world.combo.chainLength, 5);
+      expect(world.combo.hitIndex, 5);
+      expect(world.pendingHitMultiplier, closeTo(1.55, 0.001));
+      // Shadow kit mirrors the same independence.
+      final shadow = GameWorld(
+        kit: shadowKit,
+        random: math.Random(7),
+        spawnWaves: false,
+      );
+      shadow.enemies.clear();
+      expect(shadow.requestAttack(), isTrue);
+      shadow.releaseMeleeSwing();
+      expect(shadow.useAbility('twin_fangs'), isNotNull);
+      expect(shadow.combo.hitIndex, 2);
+      shadow.releaseWeaponPayload(volley: false);
+      runFor(shadow, 1400);
+      expect(shadow.requestAttack(), isTrue);
+      expect(shadow.pendingHitMultiplier, closeTo(1.10, 0.001));
+    });
+  });
+
+  group('ability energy and cooldown work for every hero', () {
+    for (final kit in [rangerNewKit, flameKit, shadowKit, stormKit]) {
+      final ability = kit.abilities.first; // the level-1 special
+      final label = '${kit.heroId} ${ability.id}';
+      test(
+        '$label costs energy and its cooldown blocks immediate reuse',
+        () {
+          final world = GameWorld(
+            kit: kit,
+            random: math.Random(7),
+            spawnWaves: false,
+          );
+          world.enemies.clear();
+          world.player.energy = kit.baseMaxEnergy.toDouble();
+          expect(world.useAbility(ability.id), isNotNull);
+          expect(world.player.energy, kit.baseMaxEnergy - ability.energyCost);
+          // Release the queued payload like the weapon-event frame does.
+          world.releaseWeaponPayload(volley: !ability.usesAttackClip);
+          // Inside the cooldown: rejected.
+          expect(world.useAbility(ability.id), isNull);
+          // Regen never jumps the cooldown.
+          for (var t = 0; t < ability.cooldownMs - 100; t += 16) {
+            world.update(16);
+          }
+          expect(world.useAbility(ability.id), isNull);
+          // Once the cooldown elapses (and energy refills), it is accepted.
+          for (var t = 0; t < 400; t += 16) {
+            world.update(16);
+          }
+          world.player.energy = kit.baseMaxEnergy.toDouble();
+          expect(world.useAbility(ability.id), isNotNull);
+        },
+      );
+    }
+  });
 }

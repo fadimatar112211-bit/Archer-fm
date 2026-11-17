@@ -1,7 +1,7 @@
 # Archer FM — Project Status
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
-> Last updated: 2026-11-14
+> Last updated: 2026-11-17
 > Project status: Hero asset audit and transfer in progress
 > Default branch: `main`
 
@@ -412,3 +412,26 @@ Still to decide or test:
   المستويات 1/10/20/30، ضرر السلسلة والبرق بالأرقام الدقيقة، provenance الأصل،
   لقطات 74/75/76 لـFlame/Shadow/Storm داخل الحلبة).
 - تبقى: التجربة اليدوية على جهاز حقيقي (قيد البيئة نفسها).
+
+## 23. تدقيق وتثبيت ضربات الـSpecial الـ16 (2026-11-17)
+
+- تدقيق من الكود (لا من التقارير): التعريفات الـ16 في `lib/game/combat/hero_kit.dart`،
+  والتنفيذ الفعلي في `GameWorld` لكل قدرة (ضرر/مدى/أهداف/DoT/buff/cooldown/طاقة)،
+  والربط بالأنيميشن عبر أحداث المانيفست في `GameScreen._handleCombatEvent`.
+- قفل المستويات 1/10/20/30 مطبّق في `useAbility` لكل الأبطال الأربعة، ومثبت
+  باختبارات رفض قبل الفتح وقبول بعده.
+- إصلاح فجوتين بصريتين: `gale_surge` و`venom_coat` كانا بلا مؤثر لحظي — أُضيف
+  `burst` بلون البطل عند التفعيل. وحُذف `DBG giant` print من
+  `hero3d_painter.dart` (كان يطبع كل إطار في الإنتاج).
+- اختبارات جديدة: مجموعة «special abilities stay independent of the five-hit
+  combo» (4 أبطال: القدرة لا تقدّم/تُصفّر السلسلة، والهجوم العادي مرفوض أثناء
+  قدرة معلّقة، والسلسلة تصل 155%) + مجموعة «ability energy and cooldown work for
+  every hero» (4 أبطال بطاقة/تبريد فعليين).
+- إثبات بصري داخل اللعبة: 9 لقطات جديدة عبر `ArenaPainter` الحقيقي مع ضرر محسوب
+  من فرق HP فعلي (`test/special_abilities_capture_test.dart`):
+  `13_piercing_shot`، `14_gale_surge`، `15_inferno_rage`، `16_twin_fangs`،
+  `17_venom_coat`، `18_thunder_thrust`، `19_chain_lightning`،
+  `32_static_field`، `33_tempest_rage`.
+- النتيجة: **115/115 اختبار ناجح** + `flutter analyze --no-pub` نظيف.
+  التفاصيل والجدول الكامل: `docs/game/special_abilities.md`.
+- تبقى: التجربة اليدوية على جهاز حقيقي فقط (قيد البيئة بلا شاشة لمس/صوت).
