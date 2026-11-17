@@ -262,8 +262,8 @@
 - Added an optional MonsterArmy.maxUnits technical budget. It is unset by default and must be configured from measured device/runtime capacity; it is not a design-level army cap.
 - Added MonsterAnimationCatalog and upgraded MonsterSpriteView to crop the four horizontal 96×96 frames from each audited SVG sheet, play available one-shot animations, and optionally show a health bar. Missing ranged attack/death sheets remain explicitly unavailable.
 - Added tests in test/monster_navigation_and_formation_test.dart, test/monster_animation_catalog_test.dart, and test/monster_spatial_index_test.dart, and confirmed that the existing .github/workflows/monster-army-checks.yml workflow already includes the navigation, animation, and spatial-index test files and runs formatting, analysis, and monster tests.
-- Verification is confirmed for the tested monster branch: Monster Army Checks runs #174 and #176 completed successfully, including formatting, analysis, and all configured monster tests. Run #176 includes the live-health same-tick overkill test.
-- Remaining integration gates: the actual map must supply the grid and collision geometry; a live match must supply fresh authoritative hero/crystal entities and call the combat loop; the match screen must position MonsterSpriteView; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
+- Verification is confirmed for the tested monster branch: Monster Army Checks runs #174, #176, #182 and #200 completed successfully, including formatting, analysis, and all configured monster tests. Run #200 includes the battle-layer widget suite.
+- Remaining integration gates: the actual map must supply the grid, collision geometry and terrain factors; a live match must supply fresh authoritative hero/crystal entities; the actual match screen must mount MonsterBattleLayer; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
 
 
 ## 30. الترقيات الدائمة للأنواع الأربعة — 2026-11-17
@@ -290,7 +290,7 @@
 
 - MonsterMatchCombatLoop exposes movementSpeedMultiplierFor per unit. The map layer can now express slow terrain such as water without hard-coding an unapproved multiplier into monster base stats.
 - The factor is validated and applied to both ordinary target pursuit and explicit defend-order return movement. Tests verify direct movement scaling and propagation through a full match tick.
-- Permanent progression now has a versioned save envelope (schema 1) with validated restore. Monster Army Checks run #182 passed formatting, static analysis, and all configured monster tests. The actual map still must provide terrain factors and navigation/collision geometry.
+- Permanent progression now has a versioned save envelope (schema 1) with validated restore. Monster Army Checks run #200 passed formatting, static analysis, and all configured monster tests. The actual map still must provide terrain factors and navigation/collision geometry.
 
 
 ## 33. Monster battle presentation layer — 2026-11-17
