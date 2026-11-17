@@ -183,6 +183,22 @@ void main() {
       expect(recovered!.$2, greaterThan(5));
     });
 
+    test('respects the configured A* expansion budget', () {
+      final grid = MonsterNavigationGrid(
+        columns: 30,
+        rows: 30,
+        cellSize: 10,
+      );
+      final path = MonsterPathfinder(maxExpandedNodes: 1).findPath(
+        grid: grid,
+        startX: 5,
+        startY: 5,
+        goalX: 285,
+        goalY: 285,
+      );
+      expect(path, isNull);
+    });
+
     test('rejects invalid grid and pathfinder settings', () {
       expect(
         () => MonsterNavigationGrid(columns: 0, rows: 2, cellSize: 10),
