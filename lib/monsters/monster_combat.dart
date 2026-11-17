@@ -55,9 +55,10 @@ class MonsterCombatController {
     if (!movementSpeedMultiplier.isFinite || movementSpeedMultiplier <= 0) {
       throw ArgumentError.value(movementSpeedMultiplier, 'movementSpeedMultiplier');
     }
+    final candidateSnapshot = candidates.toList(growable: false);
     final target = selectedTargetProvided
         ? selectedTarget
-        : selectTarget(unit: unit, candidates: candidates);
+        : selectTarget(unit: unit, candidates: candidateSnapshot);
     if (target == null) {
       unit.targetId = null;
       unit.targetKind = null;
@@ -66,7 +67,7 @@ class MonsterCombatController {
           ownerId: unit.ownerId,
           fromX: unit.positionX,
           fromY: unit.positionY,
-          candidates: candidates,
+          candidates: candidateSnapshot,
         );
         if (rally != null && elapsed > Duration.zero) {
           var rallyX = rally.x;
