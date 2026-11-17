@@ -363,6 +363,25 @@ void main() {
       ), isNull);
     });
 
+    test('rejects ranged sources with non-finite launch coordinates', () {
+      final source = _ranged();
+      final target = _Target('enemy', 'p2', 10, 0);
+      final intent = MonsterCombatIntent(
+        monsterId: source.id, targetId: target.id, damage: source.stats.damage,
+      );
+      source.positionX = double.nan;
+      expect(handler.tryCreate(
+        intent: intent, source: source, target: target,
+        projectileId: 'invalid-launch-x', projectileSpeed: 10,
+      ), isNull);
+      source.positionX = 0;
+      source.positionY = double.infinity;
+      expect(handler.tryCreate(
+        intent: intent, source: source, target: target,
+        projectileId: 'invalid-launch-y', projectileSpeed: 10,
+      ), isNull);
+    });
+
     test('rejects non-ranged and defeated sources', () {
       final source = MonsterArmy(
         ownerId: 'p1', catalog: _catalog(),
