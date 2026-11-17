@@ -303,7 +303,7 @@ class MonsterPathfinder {
     final worldDistance = math.sqrt(
       _distanceSquared(center.$1, center.$2, goalX, goalY),
     );
-    return math.max(0, math.min(cellDistance, worldDistance) - goalRange);
+    return math.max(0, math.min(cellDistance, worldDistance) - goalRange).toDouble();
   }
 
   static double _distanceSquared(double x1, double y1, double x2, double y2) {
