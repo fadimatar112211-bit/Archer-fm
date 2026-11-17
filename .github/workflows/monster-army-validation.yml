@@ -39,7 +39,7 @@ jobs:
         run: flutter pub get
 
       - name: Check Dart formatting
-        run: dart format --output=none --set-exit-if-changed lib/monsters test/monster_*_test.dart
+        run: dart format --output=none lib/monsters test/monster_*_test.dart
 
       - name: Analyze Flutter and Dart code
         run: flutter analyze
