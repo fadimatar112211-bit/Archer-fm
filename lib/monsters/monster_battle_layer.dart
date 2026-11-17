@@ -94,6 +94,11 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer>
     _previousPositions.removeWhere((id, _) => !currentIds.contains(id));
     moving.removeWhere((id) => !currentIds.contains(id));
     _movingUnitIds = moving;
+    _synchronizeAnimations();
+    _syncTicker();
+  }
+
+  void _synchronizeAnimations() {
     for (final unit in [...widget.units, ...widget.dyingUnits]) {
       _animations[unit.id]!.synchronize(
         alive: unit.isAlive,
@@ -101,7 +106,6 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer>
         attacking: unit.isAlive && widget.attackingUnitIds.contains(unit.id),
       );
     }
-    _syncTicker();
   }
 
   void _syncTicker() {
@@ -124,6 +128,20 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer>
       final previousFrame = animation.frameIndex;
       animation.advance(delta);
       if (previousFrame != animation.frameIndex) frameChanged = true;
+    }
+    for (final unit in [...widget.units, ...widget.dyingUnits]) {
+      final animation = _animations[unit.id]!;
+      final previousState = animation.state;
+      final previousFrame = animation.frameIndex;
+      animation.synchronize(
+        alive: unit.isAlive,
+        moving: _movingUnitIds.contains(unit.id),
+        attacking: unit.isAlive && widget.attackingUnitIds.contains(unit.id),
+      );
+      if (previousState != animation.state ||
+          previousFrame != animation.frameIndex) {
+        frameChanged = true;
+      }
     }
     if (frameChanged && mounted) setState(() {});
     if (!_animations.values.any((animation) => animation.needsTicks)) {
