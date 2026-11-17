@@ -19,6 +19,7 @@ class MonsterSpriteView extends StatefulWidget {
     this.attacking = false,
     this.healthFraction,
     this.healthColor,
+    this.onDeathAnimationComplete,
   }) : assert(size > 0);
 
   final MonsterAnimationController animation;
@@ -28,6 +29,7 @@ class MonsterSpriteView extends StatefulWidget {
   final bool attacking;
   final double? healthFraction;
   final Color? healthColor;
+  final VoidCallback? onDeathAnimationComplete;
 
   @override
   State<MonsterSpriteView> createState() => _MonsterSpriteViewState();
@@ -37,6 +39,7 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
+  bool _deathCompletionNotified = false;
 
   @override
   void initState() {
@@ -44,17 +47,21 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
     _ticker = createTicker(_onTick);
     _synchronize();
     _syncTicker();
+    _notifyDeathAnimationComplete();
   }
 
   @override
   void didUpdateWidget(covariant MonsterSpriteView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.animation != widget.animation) {
+    if (oldWidget.animation != widget.animation ||
+        oldWidget.alive != widget.alive) {
       _ticker.stop();
       _lastElapsed = Duration.zero;
+      _deathCompletionNotified = false;
     }
     _synchronize();
     _syncTicker();
+    _notifyDeathAnimationComplete();
   }
 
   void _synchronize() {
@@ -63,6 +70,20 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
       moving: widget.moving,
       attacking: widget.attacking,
     );
+  }
+
+  void _notifyDeathAnimationComplete() {
+    final callback = widget.onDeathAnimationComplete;
+    if (widget.alive ||
+        callback == null ||
+        _deathCompletionNotified ||
+        !widget.animation.isComplete) {
+      return;
+    }
+    _deathCompletionNotified = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) callback();
+    });
   }
 
   void _syncTicker() {
@@ -81,6 +102,7 @@ class _MonsterSpriteViewState extends State<MonsterSpriteView>
     _lastElapsed = elapsed;
     final previousFrame = widget.animation.frameIndex;
     widget.animation.advance(delta);
+    _notifyDeathAnimationComplete();
     if (previousFrame != widget.animation.frameIndex && mounted) {
       setState(() {});
     }
