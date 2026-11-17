@@ -7,6 +7,7 @@ import 'monster_ranged_attack_handler.dart';
 import 'monster_formation_movement.dart';
 import 'monster_navigation.dart';
 import 'monster_attack_slots.dart';
+import 'monster_spatial_index.dart';
 
 typedef MonsterTargetCandidates = Iterable<MonsterTarget> Function(
   MonsterUnit source,
@@ -28,7 +29,7 @@ class MonsterMatchCombatLoop {
     required this.projectiles,
     required this.projectileSpeed,
     required this.projectileId,
-    this.alliesFor = _noAllies,
+    this.alliesFor,
     this.obstaclesFor = _noObstacles,
     this.navigationGrid,
     MonsterPathfinder? pathfinder,
@@ -46,13 +47,12 @@ class MonsterMatchCombatLoop {
   final MonsterProjectileManager projectiles;
   final double projectileSpeed;
   final MonsterProjectileIdFactory projectileId;
-  final MonsterAlliesLookup alliesFor;
+  final MonsterAlliesLookup? alliesFor;
   final MonsterObstaclesLookup obstaclesFor;
   final MonsterNavigationGrid? navigationGrid;
   final MonsterPathfinder pathfinder;
   final MonsterAttackSlotCoordinator attackSlots;
 
-  static Iterable<MonsterUnit> _noAllies(MonsterUnit _) => const [];
   static Iterable<MonsterMovementObstacle> _noObstacles(MonsterUnit _) => const [];
 
   MonsterMatchTickResult update({
@@ -66,6 +66,26 @@ class MonsterMatchCombatLoop {
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
 
     final unitSnapshot = units.toList(growable: false);
+    final unitsByOwner = <String, List<MonsterUnit>>{};
+    for (final unit in unitSnapshot) {
+      if (unit.isAlive) {
+        unitsByOwner.putIfAbsent(unit.ownerId, () => []).add(unit);
+      }
+    }
+    final cohesionAnchors = <String, (double, double)>{};
+    for (final entry in unitsByOwner.entries) {
+      final group = entry.value;
+      cohesionAnchors[entry.key] = (
+        group.fold<double>(0, (sum, unit) => sum + unit.positionX) / group.length,
+        group.fold<double>(0, (sum, unit) => sum + unit.positionY) / group.length,
+      );
+    }
+    final spatialIndex = alliesFor == null
+        ? MonsterSpatialIndex(
+            units: unitSnapshot,
+            cellSize: combat.movement.separationRadius * 2,
+          )
+        : null;
 
     // Advance only projectiles that existed at the beginning of this tick.
     // Projectiles launched below must not receive travel time retroactively.
@@ -106,7 +126,15 @@ class MonsterMatchCombatLoop {
     var rejected = 0;
 
     for (final unit in unitSnapshot) {
-      if (!unit.isAlive) continue;
+      if (!unit.isAlive) {
+        spatialIndex?.update(unit);
+        continue;
+      }
+      final nearbyAllies = alliesFor?.call(unit) ??
+          spatialIndex!.nearbyUnits(
+            unit,
+            radius: combat.movement.separationRadius,
+          );
       final intent = combat.updateUnit(
         unit: unit,
         candidates: candidatesByUnit[unit.id] ?? const [],
@@ -115,11 +143,13 @@ class MonsterMatchCombatLoop {
         approachPoint: approachSlots[unit.id],
         now: now,
         elapsed: elapsed,
-        allies: alliesFor(unit),
+        allies: nearbyAllies,
         obstacles: obstaclesFor(unit),
         navigationGrid: navigationGrid,
         pathfinder: pathfinder,
+        cohesionAnchor: cohesionAnchors[unit.ownerId],
       );
+      spatialIndex?.update(unit);
       if (intent == null) continue;
 
       if (unit.type == MonsterType.ranged) {
