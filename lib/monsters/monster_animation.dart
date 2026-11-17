@@ -1,3 +1,6 @@
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'monster_assets.dart';
 import 'monster_models.dart';
 
 /// Visual state selected from authoritative monster simulation state.
@@ -24,6 +27,50 @@ class MonsterSpriteSheet {
   final bool loop;
 
   int get sheetWidth => frameWidth * frameCount;
+}
+
+/// Builds animation controllers from the audited four-type legacy asset map.
+/// Missing ranged attack/death sheets remain null instead of borrowing a
+/// visually incorrect melee animation.
+class MonsterAnimationCatalog {
+  MonsterAnimationCatalog._();
+
+  static const int frameWidth = 96;
+  static const int frameHeight = 96;
+  static const int frameCount = 4;
+
+  static MonsterAnimationController createController(MonsterType type) {
+    final assets = MonsterAssetCatalog.forType(type);
+    return MonsterAnimationController(
+      type: type,
+      walkSheet: MonsterSpriteSheet(
+        asset: assets.idle,
+        frameWidth: frameWidth,
+        frameHeight: frameHeight,
+        frameCount: frameCount,
+      ),
+      attackSheet: assets.attack == null
+          ? null
+          : MonsterSpriteSheet(
+              asset: assets.attack!,
+              frameWidth: frameWidth,
+              frameHeight: frameHeight,
+              frameCount: frameCount,
+              frameDuration: const Duration(milliseconds: 90),
+              loop: false,
+            ),
+      deathSheet: assets.death == null
+          ? null
+          : MonsterSpriteSheet(
+              asset: assets.death!,
+              frameWidth: frameWidth,
+              frameHeight: frameHeight,
+              frameCount: frameCount,
+              frameDuration: const Duration(milliseconds: 100),
+              loop: false,
+            ),
+    );
+  }
 }
 
 /// Owns the animation clock for one monster; it never changes world position.
@@ -62,8 +109,18 @@ class MonsterAnimationController {
   MonsterSpriteSheet get currentSheet => _activeSheet;
   int get frameIndex => _frameIndex;
   Duration get elapsedInFrame => _elapsed;
-  bool get isComplete => _state == MonsterAnimationState.death &&
-      _frameIndex == _activeSheet.frameCount - 1;
+  bool get isComplete =>
+      _state == MonsterAnimationState.death && isAnimationFinished;
+  bool get isAnimationFinished {
+    if (_state == MonsterAnimationState.idle) return true;
+    if (_state == MonsterAnimationState.death) {
+      return _frameIndex == _activeSheet.frameCount - 1;
+    }
+    return !_activeSheet.loop && _frameIndex == _activeSheet.frameCount - 1;
+  }
+
+  bool get needsTicks =>
+      _state != MonsterAnimationState.idle && !isAnimationFinished;
 
   MonsterSpriteSheet get _activeSheet {
     switch (_state) {
@@ -79,7 +136,11 @@ class MonsterAnimationController {
 
   /// Selects the highest-priority visual state without changing simulation.
   /// Death is terminal; an attack sheet is used only when one exists.
-  void synchronize({required bool alive, required bool moving, bool attacking = false}) {
+  void synchronize({
+    required bool alive,
+    required bool moving,
+    bool attacking = false,
+  }) {
     if (_dead) return;
     if (!alive) {
       _dead = true;
@@ -97,8 +158,7 @@ class MonsterAnimationController {
   /// Large frame deltas are reduced arithmetically to avoid unbounded loops.
   void advance(Duration delta) {
     if (delta.isNegative) throw ArgumentError.value(delta, 'delta');
-    if (delta == Duration.zero || isComplete ||
-        _state == MonsterAnimationState.idle) return;
+    if (delta == Duration.zero || isAnimationFinished) return;
     final sheet = _activeSheet;
     final frameUs = sheet.frameDuration.inMicroseconds;
     final totalUs = _elapsed.inMicroseconds + delta.inMicroseconds;
@@ -110,13 +170,15 @@ class MonsterAnimationController {
     if (sheet.loop && _state != MonsterAnimationState.death) {
       _frameIndex = next % sheet.frameCount;
     } else {
-      _frameIndex = next.clamp(0, sheet.frameCount - 1);
+      _frameIndex = next.clamp(0, sheet.frameCount - 1).toInt();
     }
   }
 
   void _validateSheet(MonsterSpriteSheet sheet, String name) {
-    if (sheet.asset.isEmpty || sheet.frameWidth <= 0 ||
-        sheet.frameHeight <= 0 || sheet.frameCount <= 0 ||
+    if (sheet.asset.isEmpty ||
+        sheet.frameWidth <= 0 ||
+        sheet.frameHeight <= 0 ||
+        sheet.frameCount <= 0 ||
         sheet.frameDuration <= Duration.zero) {
       throw ArgumentError.value(sheet, name, 'Invalid sprite sheet metadata.');
     }
