@@ -151,7 +151,16 @@ class MonsterPathfinder {
     open.add(_PathNode(
       cell: start,
       cost: 0,
-      estimate: _heuristic(start, goal, grid.cellSize, goalX, goalY, goalRange),
+      estimate: _heuristic(
+        start,
+        goal,
+        grid.cellSize,
+        grid.originX,
+        grid.originY,
+        goalX,
+        goalY,
+        goalRange,
+      ),
       sequence: sequence++,
     ));
 
@@ -183,7 +192,16 @@ class MonsterPathfinder {
         open.add(_PathNode(
           cell: next,
           cost: tentative,
-          estimate: _heuristic(next, goal, grid.cellSize, goalX, goalY, goalRange),
+          estimate: _heuristic(
+                next,
+                goal,
+                grid.cellSize,
+                grid.originX,
+                grid.originY,
+                goalX,
+                goalY,
+                goalRange,
+              ),
           sequence: sequence++,
         ));
       }
@@ -219,11 +237,15 @@ class MonsterPathfinder {
     final targetMoved = route != null &&
         _distanceSquared(route.targetX, route.targetY, targetX, targetY) >
             grid.cellSize * grid.cellSize * 0.25;
+    final deviated = route != null &&
+        startCell != route.lastObservedCell &&
+        !route.path.contains(startCell);
     if (route == null ||
         route.targetCell != targetCell ||
         route.gridRevision != grid.revision ||
         route.goalRange != goalRange ||
-        targetMoved) {
+        targetMoved ||
+        deviated) {
       final path = findPath(
         grid: grid,
         startX: unit.positionX,
@@ -243,8 +265,15 @@ class MonsterPathfinder {
         targetX: targetX,
         targetY: targetY,
         goalRange: goalRange,
+        lastObservedCell: startCell,
       );
       _routes[unit.id] = route;
+    } else {
+      route.lastObservedCell = startCell;
+      final routeCellIndex = route.path.indexOf(startCell);
+      if (routeCellIndex >= route.nextIndex) {
+        route.nextIndex = routeCellIndex + 1;
+      }
     }
 
     final tolerance = grid.cellSize * waypointTolerance;
@@ -286,6 +315,8 @@ class MonsterPathfinder {
     MonsterGridCell cell,
     MonsterGridCell goal,
     double cellSize,
+    double originX,
+    double originY,
     double goalX,
     double goalY,
     double goalRange,
@@ -296,8 +327,8 @@ class MonsterPathfinder {
     final straight = math.max(dx, dy) - diagonal;
     final cellDistance = (straight + diagonal * math.sqrt2) * cellSize;
     final center = (
-      (cell.x + 0.5) * cellSize,
-      (cell.y + 0.5) * cellSize,
+      originX + (cell.x + 0.5) * cellSize,
+      originY + (cell.y + 0.5) * cellSize,
     );
     final worldDistance = math.sqrt(
       _distanceSquared(center.$1, center.$2, goalX, goalY),
@@ -320,6 +351,7 @@ class _CachedMonsterPath {
     required this.targetX,
     required this.targetY,
     required this.goalRange,
+    required this.lastObservedCell,
   });
 
   final List<MonsterGridCell> path;
@@ -328,6 +360,7 @@ class _CachedMonsterPath {
   final double targetX;
   final double targetY;
   final double goalRange;
+  MonsterGridCell lastObservedCell;
   int nextIndex = 0;
 }
 
