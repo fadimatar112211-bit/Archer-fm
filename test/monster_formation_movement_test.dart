@@ -178,7 +178,7 @@ void main() {
         targetX: 10,
         targetY: 0,
         elapsed: const Duration(seconds: 1),
-      ), throwsArgumentError);
+      ), throwsAssertionError);
 
       final corrupted = _unit('bad', 0, 0)..positionX = double.infinity;
       expect(() => movement.moveGroup(
