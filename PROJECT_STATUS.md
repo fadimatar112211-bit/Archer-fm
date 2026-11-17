@@ -457,7 +457,7 @@ Still to decide or test:
 - Remaining blockers: no live match screen or authoritative world renderer currently consumes the widget; runtime map geometry must be supplied to pathfinding; final production monster art is not approved, and ranged still lacks dedicated attack/death artwork.
 
 
-## 28. تقدم نظام الوحوش والجيش — 2026-11-17 (دفعة الحركة والتكامل والعرض)
+## 29. تقدم نظام الوحوش والجيش — 2026-11-17 (دفعة الحركة والتكامل والعرض)
 
 - بقي العمل محصوراً في الفرع monster-army-work داخل fadimatar112211-bit/Archer-fm. لم تُعدّل main أو ملفات الأبطال أو أدوات Blender أو أصولهم.
 - أضيف MonsterNavigationGrid وMonsterPathfinder: بحث A* بثمانية اتجاهات، منع قطع زوايا العوائق، حد أقصى لعُقد التوسّع، وتخزين مسار لكل وحدة مع إعادة التخطيط عند تغيّر هدفها أو إصدار الخريطة.
