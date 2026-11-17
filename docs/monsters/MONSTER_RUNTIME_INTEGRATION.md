@@ -35,21 +35,29 @@ final army = MonsterArmy(
 
 Use a match-scoped `idPrefix` if an owner can have more than one army instance during restoration/rebuild. Purchase costs remain in the base catalog; permanent levels do not silently change the match economy.
 
-## 3. Build the authoritative world snapshot every tick
+## 3. Create the match runtime once
 
-Create fresh adapters from the current hero and crystal models. Include all live monster units. Rebuild the snapshot each authoritative tick so target positions and health reflect the latest match state:
+Create one `MonsterMatchRuntime` for the match with all player armies and the authoritative combat loop:
 
 ```dart
-final world = MonsterMatchWorldSnapshot(
-  units: allLiveMonsterUnits,
+final runtime = MonsterMatchRuntime(
+  armies: allPlayerArmies,
+  combatLoop: monsterCombatLoop,
+);
+```
+
+The runtime checks unit IDs across armies, builds a fresh `MonsterMatchWorldSnapshot` each tick, steps combat/projectiles, removes defeated units from their simulation armies, and keeps those units in a separate presentation list until their death animation completes.
+
+## 4. Supply live hero/crystal entities and advance each tick
+
+Create fresh adapters from the current hero and crystal models. The runtime receives them and the current map grid on every authoritative tick:
+
+```dart
+final result = runtime.tick(
   externalEntities: [
     ...heroAdapters,
     ...crystalAdapters,
   ],
-);
-
-final result = world.step(
-  loop: monsterCombatLoop,
   now: matchClock,
   elapsed: delta,
   navigationGrid: currentNavigationGrid,
@@ -61,44 +69,28 @@ External adapters implement `MonsterPositionedDamageTarget`. Use the live getter
 Configure `MonsterMatchCombatLoop` with:
 - `obstaclesFor`: nearby map collision geometry for steering.
 - `movementSpeedMultiplierFor`: the map's per-unit terrain factor (for example, a lower factor while a unit is over water).
-- `navigationGrid`: the current grid; it can also be replaced per tick through `world.step`.
+- `navigationGrid`: the current grid; it can also be replaced per tick through `runtime.tick`.
 - A projectile ID factory and approved projectile speed.
 
 The loop handles target selection, melee damage, ranged projectile creation/flight, attack-slot assignment, spatial queries, and route caching. The host remains responsible for updating the authoritative hero/crystal models through the adapters.
 
-## 4. Remove defeated units from simulation, retain them for presentation
+## 5. Remove defeated units from simulation, retain them for presentation
 
-A defeated monster is permanently removed from its army and cannot be revived. Keep a separate presentation list so its death animation can finish:
+The runtime automatically calls `MonsterArmy.removeDefeated` after each successful tick. Defeated monsters are permanently removed from their armies and cannot be revived, but remain in `runtime.dyingUnits` for the death animation. The host does not need a second manual removal loop.
 
-```dart
-for (final unit in army.units.where((unit) => !unit.isAlive).toList()) {
-  if (army.removeDefeated(unit.id)) {
-    dyingUnits.add(unit);
-  }
-}
-```
+## 6. Render monsters and projectiles
 
-Only live army units should be supplied to `MonsterMatchWorldSnapshot`. The `dyingUnits` list is visual-only and is passed to the battle layer below.
-
-## 5. Render monsters and projectiles
-
-Mount `MonsterBattleLayer` inside the match screen's world Stack. The camera/map layer supplies the world-to-screen transform. The combat result supplies successful attack events:
+Mount the runtime's battle layer inside the match screen's world Stack. The camera/map layer supplies the world-to-screen transform:
 
 ```dart
-MonsterBattleLayer(
-  units: army.units,
-  dyingUnits: dyingUnits,
-  projectiles: projectileManager.active,
+runtime.buildBattleLayer(
   worldToScreen: camera.worldToScreen,
-  simulationTick: authoritativeTickNumber,
-  attackingUnitIds: result.attackingUnitIds,
-  onDeathAnimationComplete: (unitId) {
-    dyingUnits.removeWhere((unit) => unit.id == unitId);
-  },
 )
 ```
 
-Increment `simulationTick` once per authoritative simulation tick, not for unrelated UI rebuilds. The layer derives movement from unit positions between ticks, sorts sprites by world Y, renders health bars and active homing projectiles, and uses one shared animation ticker for the whole monster layer. Successful melee/ranged attack IDs start one-shot attack animations; those animations finish even after the one-tick attack signal clears. Defeated units remain visible until their death animation callback fires.
+The runtime automatically passes live army units, dying presentation units, active homing projectiles, the current simulation tick, and `result.attackingUnitIds` from the most recent tick. The battle layer reports death-animation completion back to the runtime, which removes that visual-only unit.
+
+Incrementing the authoritative tick is handled by `runtime.tick`; rebuild the battle-layer widget after each tick. The layer derives movement from unit positions between ticks, sorts sprites by world Y, renders health bars and active homing projectiles, and uses one shared animation ticker for the whole monster layer. Successful melee/ranged attack IDs start one-shot attack animations; those animations finish even after the one-tick attack signal clears.
 
 ## 6. Remaining host-owned acceptance work
 
