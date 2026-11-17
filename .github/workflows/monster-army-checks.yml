@@ -10,6 +10,7 @@ on:
       - 'test/monster_match_health_integration_test.dart'
       - 'test/monster_formation_movement_test.dart'
       - 'test/monster_animation_test.dart'
+      - 'test/monster_sprite_view_test.dart'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
@@ -22,6 +23,7 @@ on:
       - 'test/monster_match_health_integration_test.dart'
       - 'test/monster_formation_movement_test.dart'
       - 'test/monster_animation_test.dart'
+      - 'test/monster_sprite_view_test.dart'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
@@ -37,6 +39,6 @@ jobs:
           channel: stable
       - run: flutter --version
       - run: flutter pub get
-      - run: dart format lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
-      - run: flutter analyze lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
-      - run: flutter test test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart
+      - run: dart format lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart
+      - run: flutter analyze lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart
+      - run: flutter test test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart
