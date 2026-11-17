@@ -58,6 +58,14 @@ class MonsterMatchCombatLoop {
   }) {
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
 
+    // Advance only projectiles that existed at the beginning of this tick.
+    // Projectiles launched below must not receive a full tick of travel time
+    // before they have actually been created.
+    final projectileResults = projectiles.update(
+      elapsed: elapsed,
+      resolveTarget: resolvePositionedTarget,
+    );
+
     var meleeApplied = 0;
     var rangedCreated = 0;
     var rejected = 0;
@@ -101,10 +109,6 @@ class MonsterMatchCombatLoop {
       }
     }
 
-    final projectileResults = projectiles.update(
-      elapsed: elapsed,
-      resolveTarget: resolvePositionedTarget,
-    );
     return MonsterMatchTickResult(
       meleeHitsApplied: meleeApplied,
       rangedProjectilesCreated: rangedCreated,
