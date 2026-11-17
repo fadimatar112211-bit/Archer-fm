@@ -1,11 +1,10 @@
-import 'package:flutter/widgets.dart';
-
 import 'monster_army.dart';
 import 'monster_battle_layer.dart';
 import 'monster_match_combat_loop.dart';
 import 'monster_match_world.dart';
 import 'monster_models.dart';
 import 'monster_navigation.dart';
+import 'monster_projectile_manager.dart';
 import 'monster_projectiles.dart';
 
 /// Coordinates armies, one authoritative combat tick, projectiles, and the
