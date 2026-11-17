@@ -1,22 +1,25 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/monsters/monster_animation.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_sprite_view.dart';
+
+Widget _host(Widget child) => Directionality(
+      textDirection: TextDirection.ltr,
+      child: child,
+    );
 
 void main() {
   group('Monster sprite view', () {
     testWidgets('walk frames advance from Flutter ticker time', (tester) async {
       final animation =
           MonsterAnimationCatalog.createController(MonsterType.runner);
-      await tester.pumpWidget(MaterialApp(
-        home: MonsterSpriteView(
-          animation: animation,
-          alive: true,
-          moving: true,
-          size: 72,
-        ),
-      ));
+      await tester.pumpWidget(_host(MonsterSpriteView(
+        animation: animation,
+        alive: true,
+        moving: true,
+        size: 72,
+      )));
 
       expect(animation.state, MonsterAnimationState.walk);
       expect(animation.frameIndex, 0);
@@ -28,13 +31,11 @@ void main() {
         (tester) async {
       final animation =
           MonsterAnimationCatalog.createController(MonsterType.tank);
-      await tester.pumpWidget(MaterialApp(
-        home: MonsterSpriteView(
-          animation: animation,
-          alive: true,
-          moving: false,
-        ),
-      ));
+      await tester.pumpWidget(_host(MonsterSpriteView(
+        animation: animation,
+        alive: true,
+        moving: false,
+      )));
 
       await tester.pump(const Duration(seconds: 2));
       expect(animation.state, MonsterAnimationState.idle);
@@ -45,13 +46,11 @@ void main() {
         (tester) async {
       final animation =
           MonsterAnimationCatalog.createController(MonsterType.stalker);
-      await tester.pumpWidget(MaterialApp(
-        home: MonsterSpriteView(
-          animation: animation,
-          alive: false,
-          moving: false,
-        ),
-      ));
+      await tester.pumpWidget(_host(MonsterSpriteView(
+        animation: animation,
+        alive: false,
+        moving: false,
+      )));
 
       await tester.pump(const Duration(milliseconds: 500));
       expect(animation.state, MonsterAnimationState.death);
@@ -65,14 +64,12 @@ void main() {
     testWidgets('non-looping attack stops on its final frame', (tester) async {
       final animation =
           MonsterAnimationCatalog.createController(MonsterType.runner);
-      await tester.pumpWidget(MaterialApp(
-        home: MonsterSpriteView(
-          animation: animation,
-          alive: true,
-          moving: false,
-          attacking: true,
-        ),
-      ));
+      await tester.pumpWidget(_host(MonsterSpriteView(
+        animation: animation,
+        alive: true,
+        moving: false,
+        attacking: true,
+      )));
 
       await tester.pump(const Duration(milliseconds: 500));
       expect(animation.state, MonsterAnimationState.attack);
@@ -85,19 +82,17 @@ void main() {
         (tester) async {
       final animation =
           MonsterAnimationCatalog.createController(MonsterType.ranged);
-      await tester.pumpWidget(MaterialApp(
-        home: MonsterSpriteView(
-          animation: animation,
-          alive: true,
-          moving: false,
-          healthFraction: 0.5,
-        ),
-      ));
+      await tester.pumpWidget(_host(MonsterSpriteView(
+        animation: animation,
+        alive: true,
+        moving: false,
+        healthFraction: 0.5,
+      )));
 
-      final bar = tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator),
+      final fill = tester.widget<FractionallySizedBox>(
+        find.byKey(const ValueKey('monster-health-fill')),
       );
-      expect(bar.value, 0.5);
+      expect(fill.widthFactor, 0.5);
     });
   });
 }
