@@ -18,6 +18,9 @@ typedef MonsterPositionedLookup =
 typedef MonsterProjectileIdFactory = String Function(MonsterUnit source);
 typedef MonsterAlliesLookup = Iterable<MonsterUnit> Function(MonsterUnit source);
 typedef MonsterObstaclesLookup = Iterable<MonsterMovementObstacle> Function(MonsterUnit source);
+typedef MonsterMovementSpeedMultiplier = double Function(MonsterUnit source);
+
+double _normalMonsterMovementSpeed(MonsterUnit _) => 1;
 
 /// One authoritative simulation step for monster AI, melee damage and ranged
 /// projectile lifecycle. Call only from the match authority/server tick.
@@ -31,6 +34,7 @@ class MonsterMatchCombatLoop {
     required this.projectileId,
     this.alliesFor,
     this.obstaclesFor = _noObstacles,
+    this.movementSpeedMultiplierFor = _normalMonsterMovementSpeed,
     this.navigationGrid,
     MonsterPathfinder? pathfinder,
     MonsterAttackSlotCoordinator? attackSlots,
@@ -49,6 +53,8 @@ class MonsterMatchCombatLoop {
   final MonsterProjectileIdFactory projectileId;
   final MonsterAlliesLookup? alliesFor;
   final MonsterObstaclesLookup obstaclesFor;
+  /// Map hosts can lower movement on water or other slow surfaces.
+  final MonsterMovementSpeedMultiplier movementSpeedMultiplierFor;
   final MonsterNavigationGrid? navigationGrid;
   final MonsterPathfinder pathfinder;
   final MonsterAttackSlotCoordinator attackSlots;
@@ -148,6 +154,7 @@ class MonsterMatchCombatLoop {
         navigationGrid: navigationGrid,
         pathfinder: pathfinder,
         cohesionAnchor: cohesionAnchors[unit.ownerId],
+        movementSpeedMultiplier: movementSpeedMultiplierFor(unit),
       );
       spatialIndex?.update(unit);
       if (intent == null) continue;
