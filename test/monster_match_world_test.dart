@@ -90,6 +90,7 @@ void main() {
       );
 
       expect(result.meleeHitsApplied, 1);
+      expect(result.attackingUnitIds, contains(attacker.id));
       expect(heroHealth, 38);
     });
 
@@ -197,6 +198,7 @@ void main() {
         elapsed: Duration.zero,
       );
       expect(first.rangedProjectilesCreated, 1);
+      expect(first.attackingUnitIds, contains(ranged.id));
       expect(heroHealth, 50);
 
       heroX = ranged.positionX + 10;
