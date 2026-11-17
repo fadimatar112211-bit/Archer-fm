@@ -131,4 +131,84 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  test(
+    'flame + shadow 3D models render through the arena painter',
+    () async {
+      for (final entry in [
+        [
+          'assets/heroes/flame/model/flame_animated.glb',
+          '74_game_3d_flame_attack',
+        ],
+        [
+          'assets/heroes/shadow/model/shadow_animated.glb',
+          '75_game_3d_shadow_attack',
+        ],
+      ]) {
+        final bytes = File(entry[0]).readAsBytesSync();
+        final model = await GlbModel.load(Uint8List.fromList(bytes));
+        final hero3d = Hero3DController(Hero3DModel(model));
+        hero3d.model.calibrate();
+
+        final world = GameWorld(
+          kit: kitForHero(entry[0].contains('flame') ? 'flame' : 'shadow'),
+          random: math.Random(7),
+          spawnWaves: false,
+        );
+        world.enemies.clear();
+        world.enemies.add(
+          EnemyState(
+            id: 'dummy',
+            kind: 'slime',
+            position: world.player.position + const Offset(150, 10),
+            maxHp: 500,
+            speed: 0,
+            contactDamage: 8,
+            xpValue: 10,
+          ),
+        );
+        world.player.facing = const Offset(1, 0);
+
+        hero3d.playClip(
+          'attack',
+          loop: false,
+          pace: 1.0,
+          nowMs: world.nowMs,
+          events: const [],
+          durationMs: 0,
+        );
+        hero3d.advance(world.nowMs + 1200, onEvent: (_) {});
+
+        final painter = ArenaPainter(
+          world: world,
+          presentation: ArenaPresentation(
+            kit: kitForHero(entry[0].contains('flame') ? 'flame' : 'shadow'),
+            theme: ThemeData(brightness: Brightness.dark),
+            sheet: null,
+            frameId: null,
+            pivotX: 0.5,
+            pivotY: 0.85,
+            frameWidth: 192,
+            frameHeight: 192,
+            labels: const [],
+            timeMs: world.nowMs,
+            comboText: null,
+            hero3d: hero3d,
+          ),
+        );
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        painter.paint(canvas, const Size(800, 450));
+        final image = recorder.endRecording().toImageSync(800, 450);
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        final dir = Directory('/tmp/opencode/merge/captures');
+        if (!dir.existsSync()) dir.createSync(recursive: true);
+        File('${dir.path}/${entry[1]}.png')
+            .writeAsBytesSync(data!.buffer.asUint8List());
+        image.dispose();
+        expect(hero3d.model.drawnTriangles, greaterThan(0));
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
 }

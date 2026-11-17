@@ -26,6 +26,9 @@ class Hero3DController {
   List<MapEntry<double, String>> _schedule = const [];
   int _firedCount = 0;
 
+  /// Gameplay (manifest) duration of the active clip; 0 = GLB duration.
+  double _gameDurationMs = 0;
+
   /// True once the current non-looping clip has played out.
   bool get completed => _completed;
 
@@ -56,13 +59,29 @@ class Hero3DController {
     return const [];
   }
 
+  /// Atlas-clip duration (ms) for [state]; 0 when the manifest has no clip
+  /// for it (the GLB's own duration is used then).
+  static double durationFor(HeroManifest? manifest, String state) {
+    if (manifest == null) return 0;
+    for (final clip in manifest.clips.values) {
+      if (!clip.name.startsWith('${state}_')) continue;
+      return clip.frameDurationMs * clip.frames.length.toDouble();
+    }
+    return 0;
+  }
+
   /// Starts [state] (idle/run/attack/...) at [nowMs].
+  ///
+  /// [durationMs] is the gameplay timing (manifest atlas duration). When the
+  /// GLB clip runs at a different length, the pose is rescaled so the
+  /// animation finishes exactly when the gameplay clip does.
   void playClip(
     String state, {
     required bool loop,
     required double pace,
     required int nowMs,
     required List<MapEntry<double, String>> events,
+    double durationMs = 0,
   }) {
     if (!_looping || _clipState != state) {
       // Restarting or switching: reset the clock.
@@ -74,6 +93,7 @@ class Hero3DController {
     _pace = pace;
     _completed = false;
     _schedule = events;
+    _gameDurationMs = durationMs;
   }
 
   /// Poses + skins the model for [nowMs] and fires crossed events.
@@ -97,13 +117,20 @@ class Hero3DController {
       _completed = true;
       return;
     }
+    // Rescale the GLB clip so it finishes exactly when the gameplay clip
+    // (manifest timing) does.
+    final gameMs =
+        _gameDurationMs > 0 ? _gameDurationMs : clip.durationMs;
+    final poseMs = (gameMs > 0)
+        ? localMs * clip.durationMs / gameMs
+        : localMs;
     if (_looping) {
-      model.pose(state, localMs % clip.durationMs, loop: true);
-    } else if (localMs >= clip.durationMs) {
+      model.pose(state, poseMs % clip.durationMs, loop: true);
+    } else if (localMs >= gameMs) {
       model.pose(state, clip.durationMs, loop: false);
       _completed = true;
     } else {
-      model.pose(state, localMs, loop: false);
+      model.pose(state, poseMs, loop: false);
     }
     model.skin();
   }

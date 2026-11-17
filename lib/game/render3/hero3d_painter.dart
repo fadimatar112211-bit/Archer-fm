@@ -422,10 +422,13 @@ class Hero3DModel {
           var shade = (nx * lx + ny * ly + nz * lz) * ln;
           shade = 0.68 + 0.32 * shade.clamp(0.0, 1.0);
           final co = slot * 3 + vi;
+          // Per-vertex material base colour (white for texture-driven
+          // models — the texture carries the colouring instead).
+          final mc = model.materialColors;
           _bucketColors[co] = 0xFF000000 |
-              ((shade * baseR).round().clamp(0, 255) << 16) |
-              ((shade * baseG).round().clamp(0, 255) << 8) |
-              (shade * baseB).round().clamp(0, 255);
+              ((shade * baseR * mc[v * 3]).round().clamp(0, 255) << 16) |
+              ((shade * baseG * mc[v * 3 + 1]).round().clamp(0, 255) << 8) |
+              ((shade * baseB * mc[v * 3 + 2]).round().clamp(0, 255));
         }
         _bucketFill[bucket] = slot + 1;
         final c0 = _bucketPositions[slot * 6].abs();

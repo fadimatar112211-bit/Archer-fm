@@ -398,6 +398,7 @@ class _GameScreenState extends State<GameScreen>
         pace: pace,
         nowMs: world.nowMs,
         events: Hero3DController.scheduleFor(m, state),
+        durationMs: Hero3DController.durationFor(m, state),
       );
       _clipName = name;
       if (!loop) _busyClip = name;

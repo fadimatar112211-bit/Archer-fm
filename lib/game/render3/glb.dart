@@ -26,6 +26,7 @@ class GlbModel {
     required this.restGlobal,
     required this.clips,
     required this.baseColor,
+    required this.materialColors,
     required this.indexCount,
   });
 
@@ -47,6 +48,11 @@ class GlbModel {
   final Float32List restGlobal; // rest-pose global matrices, 16 per joint
   final Map<String, HeroClip> clips;
   final ui.Image? baseColor;
+
+  /// Per-vertex material base colour (linear→sRGB), 3 floats per vertex.
+  /// White when the model is texture-driven (ranger) — the texture carries
+  /// the colouring through the ImageShader instead.
+  final Float32List materialColors;
 
   int get vertexCount => positions.length ~/ 3;
   int get triangleCount => indexCount ~/ 3;
@@ -77,41 +83,138 @@ class GlbModel {
     }
     final gltf = jsonDecode(jsonText) as Map<String, dynamic>;
 
-    final mesh = (gltf['meshes'] as List).first as Map<String, dynamic>;
-    final prim = (mesh['primitives'] as List).first as Map<String, dynamic>;
-    final attrs = prim['attributes'] as Map<String, dynamic>;
-    final positions =
-        _readVec(gltf, bin, attrs['POSITION'] as int, 3) as Float32List;
-    final normals =
-        _readVec(gltf, bin, attrs['NORMAL'] as int, 3) as Float32List;
-    final texCoords =
-        _readVec(gltf, bin, attrs['TEXCOORD_0'] as int, 2) as Float32List;
-    final jointIdxAcc = (gltf['accessors'] as List)[attrs['JOINTS_0'] as int]
-        as Map<String, dynamic>;
-    final Uint8List joints;
-    if (jointIdxAcc['componentType'] == 5121) {
-      joints =
-          _readVec(gltf, bin, attrs['JOINTS_0'] as int, 4) as Uint8List;
-    } else {
-      final us = _readVec(gltf, bin, attrs['JOINTS_0'] as int, 4)
-          as Uint16List;
-      joints = Uint8List(us.length);
-      for (var i = 0; i < us.length; i++) {
-        joints[i] = us[i];
+    // Heroes export as many small bone-bound meshes sharing one skin; merge
+    // every primitive into a single vertex buffer. These models are
+    // untextured, so each primitive's material base colour becomes a
+    // per-vertex colour (linear → sRGB for canvas display).
+    final positions = <double>[];
+    final normals = <double>[];
+    final texCoords = <double>[];
+    final jointIndices = <int>[];
+    final weights = <double>[];
+    final materialColors = <double>[];
+    final indicesList = <int>[];
+    final materialsList = (gltf['materials'] as List?) ?? const [];
+    for (final mesh in (gltf['meshes'] as List).cast<Map<String, dynamic>>()) {
+      for (final prim
+          in (mesh['primitives'] as List).cast<Map<String, dynamic>>()) {
+        final attrs = prim['attributes'] as Map<String, dynamic>;
+        final posAcc = attrs['POSITION'] as int?;
+        if (posAcc == null) continue;
+        final p = _readVec(gltf, bin, posAcc, 3) as Float32List;
+        final count = p.length ~/ 3;
+        final baseVertex = positions.length ~/ 3;
+        positions.addAll(p);
+
+        final nAcc = attrs['NORMAL'] as int?;
+        if (nAcc != null) {
+          normals.addAll(_readVec(gltf, bin, nAcc, 3) as List<double>);
+        } else {
+          for (var i = 0; i < count * 3; i++) {
+            normals.add(0);
+          }
+        }
+
+        final uvAcc = attrs['TEXCOORD_0'] as int?;
+        if (uvAcc != null) {
+          texCoords.addAll(_readVec(gltf, bin, uvAcc, 2) as List<double>);
+        } else {
+          for (var i = 0; i < count * 2; i++) {
+            texCoords.add(0);
+          }
+        }
+
+        final jAcc = attrs['JOINTS_0'] as int?;
+        final wAcc = attrs['WEIGHTS_0'] as int?;
+        if (jAcc != null && wAcc != null) {
+          final raw = _readVec(gltf, bin, jAcc, 4);
+          if (raw is Uint8List) {
+            jointIndices.addAll(raw);
+          } else {
+            final us = raw as Uint16List;
+            for (var i = 0; i < us.length; i++) {
+              jointIndices.add(us[i]);
+            }
+          }
+          weights.addAll(_readVec(gltf, bin, wAcc, 4) as List<double>);
+        } else {
+          // Rigid part without skin data: pin every vertex to the root joint.
+          for (var i = 0; i < count; i++) {
+            jointIndices.addAll(const [0, 0, 0, 0]);
+            weights.addAll(const [1.0, 0, 0, 0]);
+          }
+        }
+
+        // Material base colour → per-vertex colour (linear → sRGB). A baked
+        // COLOR_0 attribute (from tools/blender_export_glb.py) wins over the
+        // material factor; a texture-driven model has neither (white).
+        double r = 1, g = 1, b = 1;
+        final cAcc = attrs['COLOR_0'] as int?;
+        if (cAcc != null) {
+          final cacc =
+              (gltf['accessors'] as List)[cAcc] as Map<String, dynamic>;
+          final ccomps = (cacc['type'] as String) == 'VEC3' ? 3 : 4;
+          final raw = _readVec(gltf, bin, cAcc, ccomps);
+          for (var i = 0; i < count; i++) {
+            double cr = 1, cg = 1, cb = 1;
+            if (raw is Float32List) {
+              cr = raw[i * ccomps];
+              cg = raw[i * ccomps + 1];
+              cb = raw[i * ccomps + 2];
+            } else if (raw is Uint8List) {
+              cr = raw[i * ccomps] / 255;
+              cg = raw[i * ccomps + 1] / 255;
+              cb = raw[i * ccomps + 2] / 255;
+            } else if (raw is Uint16List) {
+              cr = raw[i * ccomps] / 65535;
+              cg = raw[i * ccomps + 1] / 65535;
+              cb = raw[i * ccomps + 2] / 65535;
+            }
+            materialColors.addAll([
+              _srgbFromLinear(cr.clamp(0.0, 1.0)),
+              _srgbFromLinear(cg.clamp(0.0, 1.0)),
+              _srgbFromLinear(cb.clamp(0.0, 1.0)),
+            ]);
+          }
+        } else {
+          final matIdx = prim['material'];
+          if (matIdx is int && matIdx >= 0 && matIdx < materialsList.length) {
+            final pbr = (materialsList[matIdx] as Map)['pbrMetallicRoughness']
+                as Map<String, dynamic>? ??
+                const {};
+            final factor = pbr['baseColorFactor'] as List? ??
+                const [1, 1, 1, 1];
+            r = _srgbFromLinear((factor[0] as num).toDouble());
+            g = _srgbFromLinear((factor[1] as num).toDouble());
+            b = _srgbFromLinear((factor[2] as num).toDouble());
+          }
+          for (var i = 0; i < count; i++) {
+            materialColors.addAll([r, g, b]);
+          }
+        }
+
+        final rawIdx = _readVec(gltf, bin, prim['indices'] as int, 1);
+        if (rawIdx is Uint16List) {
+          for (var i = 0; i < rawIdx.length; i++) {
+            indicesList.add(baseVertex + rawIdx[i]);
+          }
+        } else {
+          final ul = rawIdx as Uint32List;
+          for (var i = 0; i < ul.length; i++) {
+            indicesList.add(baseVertex + ul[i]);
+          }
+        }
       }
     }
-    final weights =
-        _readVec(gltf, bin, attrs['WEIGHTS_0'] as int, 4) as Float32List;
 
-    final idxAcc = (gltf['accessors'] as List)[prim['indices'] as int]
-        as Map<String, dynamic>;
+    final vertexTotal = positions.length ~/ 3;
     final TypedData indices;
     final bool indexUint16;
-    if (idxAcc['componentType'] == 5123) {
-      indices = _readVec(gltf, bin, prim['indices'] as int, 1) as Uint16List;
+    if (vertexTotal <= 65535) {
+      indices = Uint16List.fromList(indicesList);
       indexUint16 = true;
     } else {
-      indices = _readVec(gltf, bin, prim['indices'] as int, 1) as Uint32List;
+      indices = Uint32List.fromList(indicesList);
       indexUint16 = false;
     }
 
@@ -206,7 +309,7 @@ class GlbModel {
     final clips = <String, HeroClip>{};
     for (final raw in (gltf['animations'] as List).cast<dynamic>()) {
       final anim = raw as Map<String, dynamic>;
-      final name = (anim['name'] as String?) ?? 'clip';
+      final name = _normalizeClipName((anim['name'] as String?) ?? 'clip');
       final samplers =
           (anim['samplers'] as List).cast<Map<String, dynamic>>();
       final tracksByNode = <int, Map<String, _Track>>{};
@@ -272,11 +375,11 @@ class GlbModel {
     }
 
     return GlbModel(
-      positions: positions,
-      normals: normals,
-      texCoords: texCoords,
-      jointIndices: joints,
-      weights: weights,
+      positions: Float32List.fromList(positions),
+      normals: Float32List.fromList(normals),
+      texCoords: Float32List.fromList(texCoords),
+      jointIndices: Uint8List.fromList(jointIndices),
+      weights: Float32List.fromList(weights),
       indices: indices,
       indexUint16: indexUint16,
       jointNames: jointNames,
@@ -286,9 +389,31 @@ class GlbModel {
       restGlobal: restGlobal,
       clips: clips,
       baseColor: baseColor,
-      indexCount: idxAcc['count'] as int,
+      materialColors: Float32List.fromList(materialColors),
+      indexCount: indicesList.length,
     );
   }
+}
+
+/// glTF material colours are linear; canvas colours are sRGB.
+double _srgbFromLinear(double c) {
+  if (c <= 0.0031308) return c * 12.92;
+  return 1.055 * math.pow(c, 1 / 2.4).toDouble() - 0.055;
+}
+
+/// Maps exporter clip names (`Flame_Attack`, `attack`) onto the gameplay
+/// state keys (`idle`/`run`/... ) the controller looks up.
+String _normalizeClipName(String name) {
+  final lower = name.toLowerCase();
+  const states = [
+    'idle', 'walk', 'run', 'attack', 'skill', 'dodge', 'hit', 'death',
+  ];
+  final cut = lower.lastIndexOf('_');
+  if (cut >= 0 && cut + 1 < lower.length) {
+    final suffix = lower.substring(cut + 1);
+    if (states.contains(suffix)) return suffix;
+  }
+  return lower;
 }
 
 /// Finds the parent node index of [node] in [nodesList], or null for roots.

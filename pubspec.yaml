@@ -31,3 +31,5 @@ flutter:
     - assets/heroes/ranger_new/renders/atlases/
     # Real in-game 3D hero models (glTF binary: mesh + bones + animations).
     - assets/heroes/ranger_new/ranger_animated.glb
+    - assets/heroes/flame/model/flame_animated.glb
+    - assets/heroes/shadow/model/shadow_animated.glb
