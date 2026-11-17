@@ -106,18 +106,9 @@ void main() {
         return recorder.endRecording().toImageSync(800, 450);
       }
 
-      Future<void> save(String name, ui.Image image) async {
-        final data = await image.toByteData(format: ui.ImageByteFormat.png);
-        final dir = Directory('/tmp/opencode/merge/captures');
-        if (!dir.existsSync()) dir.createSync(recursive: true);
-        File('${dir.path}/$name.png')
-            .writeAsBytesSync(data!.buffer.asUint8List());
-        image.dispose();
-      }
-
       // 1 — idle, first combo state, no shots yet.
       activeSheet = sheets['idle_e']!;
-      save('01_idle', capture('ranger_new_idle_e_000'));
+      await _save('01_idle', capture('ranger_new_idle_e_000'));
 
       // 2 — attack chain: two escalating hits, second arrow in flight.
       activeSheet = sheets['attack_e']!;
@@ -127,7 +118,7 @@ void main() {
       world.requestAttack();
       world.releaseArrow();
       _runFor(world, 240); // second arrow mid-flight
-      save(
+      await _save(
         '02_attack_chain',
         capture('ranger_new_attack_e_002', combo: 'الضربة 2/5 · 110%'),
       );
@@ -140,7 +131,7 @@ void main() {
       expect(world.projectiles.length, 5);
       _runFor(world, 180);
       activeSheet = sheets['skill_e']!;
-      save('03_multi_shot_volley', capture('ranger_new_skill_e_006'));
+      await _save('03_multi_shot_volley', capture('ranger_new_skill_e_006'));
 
       // 4 — arrow rain zone ticking on the slime.
       world.level = 20;
@@ -149,7 +140,7 @@ void main() {
       world.releaseWeaponPayload(volley: true);
       expect(world.zones.length, 1);
       _runFor(world, 600); // two rain ticks landed
-      save('04_arrow_rain_zone', capture('ranger_new_skill_e_004'));
+      await _save('04_arrow_rain_zone', capture('ranger_new_skill_e_004'));
 
       // Real combat accounting happened across the scripted scene.
       expect(world.totalDamageDealt, greaterThan(rangerNewKit.baseDamage * 2));
@@ -162,6 +153,120 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
+
+  test(
+    'flame battle scenes render through ArenaPainter with real atlases',
+    () async {
+      final hero = heroById('flame');
+      final loader = _FileAtlasLoader(hero, hero.assetRoot);
+      final manifest = await loader.loadManifest();
+      final sheets = <String, AtlasSheet>{};
+      for (final animation in const ['idle_e', 'attack_e', 'skill_e']) {
+        sheets[animation] = await loader.loadSheet(manifest, animation);
+      }
+
+      final world = GameWorld(
+        kit: flameKit,
+        random: math.Random(9),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.enemies.addAll([
+        EnemyState(
+          id: 'f1',
+          kind: 'slime',
+          position: world.player.position + const Offset(90, 0),
+          maxHp: 120,
+          speed: 0,
+          contactDamage: 8,
+          xpValue: 10,
+        ),
+        EnemyState(
+          id: 'f2',
+          kind: 'archer',
+          position: world.player.position + const Offset(150, -110),
+          maxHp: 40,
+          speed: 0,
+          contactDamage: 6,
+          xpValue: 14,
+          ranged: true,
+        ),
+      ]);
+      world.player.facing = const Offset(1, 0);
+
+      AtlasSheet? activeSheet;
+      String? activeFrameId;
+
+      ui.Image capture(String frameId) {
+        activeFrameId = frameId;
+        final painter = ArenaPainter(
+          world: world,
+          presentation: ArenaPresentation(
+            kit: flameKit,
+            theme: ThemeData(brightness: Brightness.dark),
+            sheet: activeSheet,
+            frameId: activeFrameId,
+            pivotX: manifest.pivotX,
+            pivotY: manifest.pivotY,
+            frameWidth: manifest.frameWidth,
+            frameHeight: manifest.frameHeight,
+            labels: const [],
+            timeMs: world.nowMs,
+            comboText: null,
+          ),
+        );
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        painter.paint(canvas, const Size(800, 450));
+        return recorder.endRecording().toImageSync(800, 450);
+      }
+
+      activeSheet = sheets['idle_e']!;
+      await _save('05_flame_idle', capture('flame_idle_e_000'));
+
+      // Melee swing on the enemy in front: slash arc + damaged enemy.
+      activeSheet = sheets['attack_e']!;
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      await _save('06_flame_slash', capture('flame_attack_e_004'));
+      expect(
+        world.enemies.first.maxHp - world.enemies.first.hp,
+        closeTo(flameKit.baseDamage, 0.01),
+      );
+
+      // Hell burst: ring around the hero, both enemies take 220%.
+      world.level = 20;
+      world.player.energy = flameKit.baseMaxEnergy;
+      expect(world.useAbility('hell_burst'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      activeSheet = sheets['skill_e']!;
+      await _save('07_flame_hell_burst', capture('flame_skill_e_006'));
+      expect(world.fx.any((effect) => effect.kind == 'burst'), isTrue);
+
+      // Fire wave mid-travel.
+      world.player.energy = flameKit.baseMaxEnergy;
+      world.level = 10;
+      expect(world.useAbility('fire_wave'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      _runFor(world, 400);
+      await _save('08_flame_fire_wave', capture('flame_skill_e_005'));
+      expect(world.waves, isNotEmpty);
+
+      for (final sheet in sheets.values) {
+        sheet.dispose();
+      }
+      loader.dispose();
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+}
+
+Future<void> _save(String name, ui.Image image) async {
+  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  final dir = Directory('/tmp/opencode/merge/captures');
+  if (!dir.existsSync()) dir.createSync(recursive: true);
+  File('${dir.path}/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
+  image.dispose();
 }
 
 /// Loads the real bundled atlases straight from disk (no rootBundle).

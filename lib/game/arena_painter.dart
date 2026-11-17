@@ -54,9 +54,7 @@ class ArenaPresentation {
   /// e.g. "الضربة 3/5 · 120%"
   final String? comboText;
 
-  Color get accent => kit.heroId == 'ranger_new'
-      ? const Color(0xFF62E86C)
-      : const Color(0xFF9BE845);
+  Color get accent => Color(kit.accentColor);
 }
 
 /// Draws the whole battle arena: ground, hero sprite, enemies, projectiles,
@@ -88,9 +86,11 @@ class ArenaPainter extends CustomPainter {
     canvas.scale(scale);
 
     _paintZones(canvas);
+    _paintFireWaves(canvas);
     _paintGroundShadows(canvas);
     _paintEnemies(canvas);
     _paintProjectiles(canvas);
+    _paintFx(canvas);
     _paintHero(canvas);
     _paintLabels(canvas, scale);
 
@@ -116,7 +116,7 @@ class ArenaPainter extends CustomPainter {
     canvas.drawRect(rect, paint);
     // Ground grid.
     final grid = Paint()
-      ..color = const Color(0x1A62E86C)
+      ..color = presentation.accent.withValues(alpha: 0.10)
       ..strokeWidth = 1;
     const spacing = 60.0;
     for (var x = 0.0; x <= arenaWidth; x += spacing) {
@@ -136,6 +136,104 @@ class ArenaPainter extends CustomPainter {
   }
 
   // ---- Entities -----------------------------------------------------------------
+
+  /// Traveling fire waves: a glowing crescent band across the ground.
+  void _paintFireWaves(Canvas canvas) {
+    for (final wave in world.waves) {
+      final velocity = wave.velocity;
+      final dir = velocity / velocity.distance;
+      final perpendicular = Offset(-dir.dy, dir.dx);
+      final center = wave.position;
+      final halfWidth = wave.halfWidth;
+      final paint = Paint()
+        ..color = const Color(0x55FF7A33)
+        ..style = PaintingStyle.fill;
+      final path = ui.Path()
+        ..moveTo(center.dx, center.dy)
+        ..lineTo(
+          center.dx - dir.dx * 26 + perpendicular.dx * halfWidth,
+          center.dy - dir.dy * 26 + perpendicular.dy * halfWidth,
+        )
+        ..lineTo(
+          center.dx + dir.dx * 34 + perpendicular.dx * halfWidth,
+          center.dy + dir.dy * 34 + perpendicular.dy * halfWidth,
+        )
+        ..lineTo(
+          center.dx + dir.dx * 34 - perpendicular.dx * halfWidth,
+          center.dy + dir.dy * 34 - perpendicular.dy * halfWidth,
+        )
+        ..lineTo(
+          center.dx - dir.dx * 26 - perpendicular.dx * halfWidth,
+          center.dy - dir.dy * 26 - perpendicular.dy * halfWidth,
+        )
+        ..close();
+      canvas.drawPath(path, paint);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFFFF7A33)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
+      // Inner hot core.
+      canvas.drawPath(
+        ui.Path()
+          ..moveTo(center.dx, center.dy)
+          ..lineTo(
+            center.dx + dir.dx * 24 + perpendicular.dx * halfWidth * 0.55,
+            center.dy + dir.dy * 24 + perpendicular.dy * halfWidth * 0.55,
+          )
+          ..lineTo(
+            center.dx + dir.dx * 24 - perpendicular.dx * halfWidth * 0.55,
+            center.dy + dir.dy * 24 - perpendicular.dy * halfWidth * 0.55,
+          )
+          ..close(),
+        Paint()..color = const Color(0x99FFD9A8),
+      );
+    }
+  }
+
+  /// Transient swing arcs and burst rings emitted by the world.
+  void _paintFx(Canvas canvas) {
+    for (final effect in world.fx) {
+      final age = (world.nowMs - effect.bornAtMs) / GameFx.lifetimeMs;
+      if (age > 1) continue;
+      final t = age.clamp(0.0, 1.0);
+      final color = Color(effect.color).withValues(alpha: 1 - t);
+      if (effect.kind == 'slash') {
+        final radius = effect.radius * (0.7 + 0.3 * t);
+        canvas.drawArc(
+          Rect.fromCircle(
+            center: effect.position - const Offset(0, 10),
+            radius: radius,
+          ),
+          _angleOf(effect.facing) - 1.15,
+          2.3,
+          false,
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 7 * (1 - t * 0.5)
+            ..strokeCap = StrokeCap.round,
+        );
+      } else if (effect.kind == 'burst') {
+        final radius = effect.radius * (0.35 + 0.65 * t);
+        canvas.drawCircle(
+          effect.position,
+          radius,
+          Paint()..color = Color(effect.color).withValues(alpha: 0.28 * (1 - t)),
+        );
+        canvas.drawCircle(
+          effect.position,
+          radius,
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 6 * (1 - t),
+        );
+      }
+    }
+  }
 
   void _paintGroundShadows(Canvas canvas) {
     final shadow = Paint()..color = const Color(0x66000000);
@@ -174,7 +272,7 @@ class ArenaPainter extends CustomPainter {
     for (final zone in world.zones) {
       final phase = zone.ticksLeft / 8;
       final paint = Paint()
-        ..color = const Color(0x3362E86C)
+        ..color = presentation.accent.withValues(alpha: 0.2)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(zone.center, zone.radius, paint);
       canvas.drawCircle(
@@ -182,8 +280,8 @@ class ArenaPainter extends CustomPainter {
         zone.radius,
         Paint()
           ..color = Color.lerp(
-            const Color(0xFF62E86C),
-            const Color(0x0062E86C),
+            presentation.accent,
+            presentation.accent.withValues(alpha: 0),
             1 - phase,
           )!
           ..style = PaintingStyle.stroke
@@ -274,6 +372,20 @@ class ArenaPainter extends CustomPainter {
             height: size * 0.55,
           ),
           Paint()..color = const Color(0x33000000),
+        );
+      }
+
+      // Burning indicator: small flames over a burning enemy.
+      if (enemy.burnTicksLeft > 0) {
+        final flicker = math.sin(world.nowMs / 90 + enemy.id.hashCode) * 2;
+        final base = enemy.position - Offset(0, 26 + size * 0.5);
+        final flame = Paint()..color = const Color(0xFFFF7A33);
+        canvas.drawCircle(base + Offset(-5, flicker * 0.4), 3.5, flame);
+        canvas.drawCircle(base + Offset(5, -flicker * 0.4), 3.0, flame);
+        canvas.drawCircle(
+          base + const Offset(0, -4),
+          2.4,
+          Paint()..color = const Color(0xFFFFD9A8),
         );
       }
 
@@ -374,7 +486,11 @@ class ArenaPainter extends CustomPainter {
 
     if (image == null || rect == null) {
       // Placeholder while the atlas decodes.
-      canvas.drawCircle(player.position, 18, Paint()..color = const Color(0x3362E86C));
+      canvas.drawCircle(
+        player.position,
+        18,
+        Paint()..color = presentation.accent.withValues(alpha: 0.2),
+      );
       return;
     }
 
@@ -429,6 +545,8 @@ class ArenaPainter extends CustomPainter {
       );
     }
   }
+
+  static double _angleOf(Offset v) => math.atan2(v.dy, v.dx);
 
   @override
   bool shouldRepaint(covariant ArenaPainter oldDelegate) => true;

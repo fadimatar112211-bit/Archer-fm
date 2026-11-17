@@ -52,9 +52,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `ranger_new` is the completed combat build; the other heroes are still
-    // asset-stage and launch their viewer instead of the battlefield.
-    const playableId = 'ranger_new';
+    // Heroes with a completed combat build; the rest launch their viewer
+    // instead of the battlefield.
+    const playableIds = {'ranger_new', 'flame'};
     return Scaffold(
       appBar: AppBar(
         title: const Text('Archer FM — الأبطال'),
@@ -68,7 +68,7 @@ class HomeScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final hero = heroCatalog[index];
             final kit = kitForHero(hero.id);
-            final playable = hero.id == playableId && kit.playable;
+            final playable = playableIds.contains(hero.id) && kit.playable;
             return Container(
               decoration: BoxDecoration(
                 color: hero.theme.stageMid.withValues(alpha: 0.7),

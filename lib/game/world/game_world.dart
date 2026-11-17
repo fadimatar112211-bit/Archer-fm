@@ -94,6 +94,11 @@ class EnemyState {
   double attackCooldownUntilMs = 0;
   int windupUntilMs = 0;
 
+  /// Burning damage-over-time state (Flame's flame_slash).
+  int burnTicksLeft = 0;
+  int burnNextTickAtMs = 0;
+  double burnTickDamage = 0;
+
   /// Visual hit flash timer (ms timestamp).
   int hitFlashUntilMs = 0;
   Offset facing = const Offset(0, 1);
@@ -147,6 +152,48 @@ class ZoneState {
   int nextTickAtMs;
 }
 
+/// Traveling ground wave (Flame's fire wave): damages every enemy in its
+/// moving band once as it crosses them.
+class WaveState {
+  WaveState({
+    required this.position,
+    required this.velocity,
+    required this.halfWidth,
+    required this.damage,
+    required this.maxTravel,
+  });
+
+  Offset position;
+  final Offset velocity;
+  final double halfWidth;
+  final double damage;
+  final double maxTravel;
+  double traveled = 0;
+  final Set<String> hitIds = {};
+}
+
+/// Transient combat effect for the painter: melee slash arcs, explosion rings.
+class GameFx {
+  GameFx({
+    required this.kind,
+    required this.position,
+    required this.facing,
+    required this.radius,
+    required this.bornAtMs,
+    required this.color,
+  });
+
+  /// `slash` (arc in front), `burst` (expanding ring around position).
+  final String kind;
+  final Offset position;
+  final Offset facing;
+  final double radius;
+  final int bornAtMs;
+  final int color;
+
+  static const lifetimeMs = 420;
+}
+
 /// The full battle simulation for one playable hero.
 ///
 /// The class is deliberately widget-free: input arrives as simple calls
@@ -176,6 +223,10 @@ class GameWorld {
   final List<EnemyState> enemies = [];
   final List<ProjectileState> projectiles = [];
   final List<ZoneState> zones = [];
+  final List<WaveState> waves = [];
+
+  /// Transient combat visuals (slash arcs, burst rings), world-managed.
+  final List<GameFx> fx = [];
 
   /// Movement input from the joystick, normalized (length ≤ 1).
   Offset moveInput = Offset.zero;
@@ -280,27 +331,35 @@ class GameWorld {
   }
 
   /// Spawns the ability payload on the weapon-event frame the sprite layer
-  /// forwards (`volley_release` for skill-clip abilities, `projectile_release`
-  /// for the piercing shot's focused draw).
+  /// forwards. [volley] true = the skill-clip's burst event (`volley_release`
+  /// for Ranger, `inferno_burst` for Flame); false = the primary clip's
+  /// release/impact event (`projectile_release` / `melee_impact`).
   void releaseWeaponPayload({required bool volley}) {
     if (player.dead) return;
     final ability = pendingAbilityId;
     if (ability == null) return;
-    if (volley && ability != 'piercing_shot') {
+    if (volley) {
+      if (ability == 'piercing_shot' || ability == 'flame_slash') return;
       pendingAbilityId = null;
       _fireAbilityVolley(ability);
-    } else if (!volley && ability == 'piercing_shot') {
-      pendingAbilityId = null;
-      spawnArrow(
-        origin: player.position,
-        direction: player.facing,
-        damage: kit.baseDamage * 2.2 * currentDamageMult(),
-        speed: 560,
-        range: 520,
-        tint: 0xFFB7FF7A,
-        pierceLeft: 99,
-        big: true,
-      );
+    } else {
+      switch (ability) {
+        case 'piercing_shot':
+          pendingAbilityId = null;
+          spawnArrow(
+            origin: player.position,
+            direction: player.facing,
+            damage: kit.baseDamage * 2.2 * currentDamageMult(),
+            speed: 560,
+            range: 520,
+            tint: 0xFFB7FF7A,
+            pierceLeft: 99,
+            big: true,
+          );
+        case 'flame_slash':
+          pendingAbilityId = null;
+          _meleeSwing(multiplier: 1.8, applyBurn: true);
+      }
     }
   }
 
@@ -337,6 +396,88 @@ class GameWorld {
       case 'gale_surge':
         player.buffUntilMs = nowMs + 6000;
         break;
+      case 'fire_wave':
+        waves.add(
+          WaveState(
+            position: player.position,
+            velocity: player.facing * 260,
+            halfWidth: 62,
+            damage: kit.baseDamage * 1.6 * currentDamageMult(),
+            maxTravel: 320,
+          ),
+        );
+        break;
+      case 'hell_burst':
+        final radius = 140.0;
+        for (final enemy in enemies) {
+          if (enemy.hp <= 0) continue;
+          if ((enemy.position - player.position).distance <= radius) {
+            _damageEnemy(
+              enemy,
+              kit.baseDamage * 2.2 * currentDamageMult(),
+            );
+          }
+        }
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: radius,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
+        break;
+      case 'inferno_rage':
+        player.buffUntilMs = nowMs + 6000;
+        break;
+    }
+  }
+
+  /// The primary melee swing: damages every enemy inside the swing arc on the
+  /// `melee_impact` animation frame. Called by the sprite layer for melee
+  /// heroes; [multiplierOverride] is used by the flame_slash ability.
+  void releaseMeleeSwing() {
+    if (player.dead) return;
+    _meleeSwing(multiplier: pendingHitMultiplier);
+  }
+
+  void _meleeSwing({required double multiplier, bool applyBurn = false}) {
+    final range = currentMeleeRange();
+    final halfArc = kit.meleeArcRadians;
+    var hits = 0;
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0) continue;
+      final delta = enemy.position - player.position;
+      final dist = delta.distance;
+      if (dist > range + 18) continue; // +18: enemy body radius grace
+      if (dist > 1) {
+        final facingDot =
+            (delta.dx * player.facing.dx + delta.dy * player.facing.dy) /
+                dist;
+        if (facingDot < math.cos(halfArc)) continue;
+      }
+      hits++;
+      _damageEnemy(enemy, kit.baseDamage * multiplier * currentDamageMult());
+      if (applyBurn && enemy.hp > 0) {
+        enemy.burnTicksLeft = 3;
+        enemy.burnTickDamage = kit.baseDamage * 0.25 * currentDamageMult();
+        enemy.burnNextTickAtMs = nowMs + 800;
+      }
+    }
+    fx.add(
+      GameFx(
+        kind: 'slash',
+        position: player.position,
+        facing: player.facing,
+        radius: range,
+        bornAtMs: nowMs,
+        color: kit.accentColor,
+      ),
+    );
+    if (hits > 0) {
+      player.energy = _clampD(player.energy + 3, 0, kit.baseMaxEnergy);
     }
   }
 
@@ -360,6 +501,9 @@ class GameWorld {
     _updateEnemies(deltaMs);
     _updateProjectiles(deltaMs);
     _updateZones();
+    _updateFireWaves(deltaMs);
+    _updateBurns();
+    _pruneFx();
     _updateWaves();
     _regenEnergy(deltaMs);
   }
@@ -372,10 +516,16 @@ class GameWorld {
 
   // ---- Internals ------------------------------------------------------------
 
-  double currentAttackRate() =>
-      player.buffUntilMs > nowMs ? kit.attackPace * 1.5 : kit.attackPace;
+  double currentAttackRate() => player.buffUntilMs > nowMs
+      ? kit.attackPace * kit.buffRateMult
+      : kit.attackPace;
 
-  double currentDamageMult() => player.buffUntilMs > nowMs ? 1.2 : 1.0;
+  double currentDamageMult() =>
+      player.buffUntilMs > nowMs ? kit.buffDamageMult : 1.0;
+
+  /// Melee reach, widened while the rage buff is active.
+  double currentMeleeRange() =>
+      kit.meleeRange * (player.buffUntilMs > nowMs ? 1.2 : 1.0);
 
   double currentMoveSpeed() {
     var speed = kit.moveSpeed;
@@ -515,6 +665,42 @@ class GameWorld {
       }
     }
     zones.removeWhere((zone) => zone.ticksLeft <= 0);
+  }
+
+  void _updateFireWaves(int deltaMs) {
+    for (final wave in waves) {
+      final step = wave.velocity * (deltaMs / 1000);
+      wave.position = wave.position + step;
+      wave.traveled += step.distance;
+      if (wave.traveled >= wave.maxTravel) continue;
+      for (final enemy in enemies) {
+        if (enemy.hp <= 0 || wave.hitIds.contains(enemy.id)) continue;
+        if ((enemy.position - wave.position).distance <= wave.halfWidth) {
+          wave.hitIds.add(enemy.id);
+          _damageEnemy(enemy, wave.damage);
+          if (enemy.hp > 0) {
+            enemy.burnTicksLeft = 2;
+            enemy.burnTickDamage = kit.baseDamage * 0.2 * currentDamageMult();
+            enemy.burnNextTickAtMs = nowMs + 800;
+          }
+        }
+      }
+    }
+    waves.removeWhere((wave) => wave.traveled >= wave.maxTravel);
+  }
+
+  void _updateBurns() {
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0 || enemy.burnTicksLeft <= 0) continue;
+      if (nowMs < enemy.burnNextTickAtMs) continue;
+      enemy.burnNextTickAtMs = nowMs + 800;
+      enemy.burnTicksLeft--;
+      _damageEnemy(enemy, enemy.burnTickDamage);
+    }
+  }
+
+  void _pruneFx() {
+    fx.removeWhere((effect) => nowMs - effect.bornAtMs > GameFx.lifetimeMs);
   }
 
   void _updateWaves() {

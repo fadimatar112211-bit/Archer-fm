@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Offset;
 
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
@@ -9,6 +10,18 @@ import 'package:flutter_test/flutter_test.dart';
 GameWorld makeWorld({int seed = 7}) {
   final world = GameWorld(
     kit: rangerNewKit,
+    random: math.Random(seed),
+    spawnWaves: false,
+  );
+  world.enemies.clear();
+  world.projectiles.clear();
+  return world;
+}
+
+/// Deterministic Flame world (melee kit, no wave spawns).
+GameWorld makeFlameWorld({int seed = 7}) {
+  final world = GameWorld(
+    kit: flameKit,
     random: math.Random(seed),
     spawnWaves: false,
   );
@@ -398,6 +411,155 @@ void main() {
       runFor(world, 20000);
       expect(world.enemies, isNotEmpty);
       expect(world.enemies.length, lessThanOrEqualTo(world.maxAliveEnemies));
+    });
+  });
+
+  group('Flame melee combat', () {
+    test('the swing hits enemies inside the front arc only', () {
+      final world = makeFlameWorld();
+      final origin = world.player.position;
+      world.player.facing = const Offset(1, 0);
+      final front = addEnemy(world, position: origin + const Offset(90, 0));
+      final behind = addEnemy(
+        world,
+        position: origin - const Offset(90, 0),
+        hp: 40,
+        xp: 14,
+      );
+      final outsideArc = addEnemy(
+        world,
+        position: origin + const Offset(40, 120),
+        hp: 40,
+        xp: 14,
+      );
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      expect(front.hp, 40 - flameKit.baseDamage);
+      expect(behind.hp, 40);
+      expect(outsideArc.hp, 40);
+    });
+
+    test('combo hits escalate the melee damage 100→110%', () {
+      final world = makeFlameWorld();
+      world.player.facing = const Offset(1, 0);
+      final enemy = addEnemy(
+        world,
+        position: world.player.position + const Offset(90, 0),
+        hp: 200,
+        xp: 40,
+      );
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      runFor(world, 1250); // attack cycle 1670/1.4 ≈ 1193 ms
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      expect(
+        200 - enemy.hp,
+        closeTo(flameKit.baseDamage * (1.0 + 1.1), 0.01),
+      );
+    });
+
+    test('flame_slash deals 180% and applies a 3-tick burn', () {
+      final world = makeFlameWorld();
+      world.player.facing = const Offset(1, 0);
+      final enemy = addEnemy(
+        world,
+        position: world.player.position + const Offset(90, 0),
+        hp: 100,
+        xp: 40,
+      );
+      expect(world.useAbility('flame_slash'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      final swing = 100 - enemy.hp;
+      expect(swing, closeTo(flameKit.baseDamage * 1.8, 0.01));
+      expect(enemy.burnTicksLeft, 3);
+      runFor(world, 3000);
+      expect(
+        100 - enemy.hp,
+        closeTo(flameKit.baseDamage * (1.8 + 0.25 * 3), 0.01),
+      );
+      expect(enemy.burnTicksLeft, 0);
+    });
+
+    test('fire_wave travels and burns every enemy in its path once', () {
+      final world = makeFlameWorld();
+      world.level = 10;
+      world.player.facing = const Offset(1, 0);
+      final ahead = addEnemy(world, hp: 100, xp: 40);
+      final behind = addEnemy(
+        world,
+        position: world.player.position - const Offset(150, 0),
+        hp: 100,
+        xp: 14,
+      );
+      expect(world.useAbility('fire_wave'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(world.waves.length, 1);
+      runFor(world, 2200); // wave flight + both burn ticks
+      // 160% contact + 2 burn ticks of 20%.
+      expect(
+        100 - ahead.hp,
+        closeTo(flameKit.baseDamage * (1.6 + 0.2 * 2), 0.01),
+      );
+      expect(behind.hp, 100);
+      expect(world.waves, isEmpty); // traveled past its 320 range
+    });
+
+    test('hell_burst hits only enemies within its radius', () {
+      final world = makeFlameWorld();
+      world.level = 20;
+      final origin = world.player.position;
+      final inside = addEnemy(world, position: origin + const Offset(100, 0));
+      final outside = addEnemy(
+        world,
+        position: origin + const Offset(220, 0),
+        hp: 100,
+        xp: 14,
+      );
+      expect(world.useAbility('hell_burst'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(
+        inside.maxHp - inside.hp,
+        closeTo(flameKit.baseDamage * 2.2, 0.01),
+      );
+      expect(outside.hp, outside.maxHp);
+      expect(world.fx.where((effect) => effect.kind == 'burst'), isNotEmpty);
+    });
+
+    test('inferno_rage buffs damage, pace and reach for 6 seconds', () {
+      final world = makeFlameWorld();
+      world.level = 30;
+      final rateBefore = world.currentAttackRate();
+      final rangeBefore = world.currentMeleeRange();
+      expect(world.useAbility('inferno_rage'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(world.currentDamageMult(), flameKit.buffDamageMult);
+      expect(world.currentAttackRate(), rateBefore * flameKit.buffRateMult);
+      expect(world.currentMeleeRange(), closeTo(rangeBefore * 1.2, 0.01));
+      runFor(world, 6100);
+      expect(world.currentDamageMult(), 1.0);
+      expect(world.currentMeleeRange(), closeTo(rangeBefore, 0.01));
+    });
+
+    test('ability levels gate the flame kit the same way', () {
+      final world = makeFlameWorld();
+      expect(world.useAbility('flame_slash'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      world.player.energy = flameKit.baseMaxEnergy;
+      expect(world.useAbility('fire_wave'), isNull);
+      world.level = 10;
+      expect(world.useAbility('fire_wave'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = flameKit.baseMaxEnergy;
+      expect(world.useAbility('hell_burst'), isNull);
+      world.level = 20;
+      expect(world.useAbility('hell_burst'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = flameKit.baseMaxEnergy;
+      expect(world.useAbility('inferno_rage'), isNull);
+      world.level = 30;
+      expect(world.useAbility('inferno_rage'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
     });
   });
 }

@@ -13,18 +13,31 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Combat-enabled fake manifest: 2-frame clips whose attack/skill clips carry
 /// the same weapon events as the production pipeline, so the game screen's
-/// event → arrow sync is exercised end to end.
+/// event → payload sync is exercised end to end.
 Map<String, dynamic> _combatManifest(String heroId) {
-  final eventsFor = <String, List<Map<String, dynamic>>>{
-    'attack': [
-      {'frame': 0, 'name': 'bow_draw'},
-      {'frame': 1, 'name': 'projectile_release'},
-    ],
-    'skill': [
-      {'frame': 0, 'name': 'volley_charge'},
-      {'frame': 1, 'name': 'volley_release'},
-    ],
+  final eventSets = <String, Map<String, List<Map<String, dynamic>>>>{
+    'ranger_new': {
+      'attack': [
+        {'frame': 0, 'name': 'bow_draw'},
+        {'frame': 1, 'name': 'projectile_release'},
+      ],
+      'skill': [
+        {'frame': 0, 'name': 'volley_charge'},
+        {'frame': 1, 'name': 'volley_release'},
+      ],
+    },
+    'flame': {
+      'attack': [
+        {'frame': 0, 'name': 'weapon_windup'},
+        {'frame': 1, 'name': 'melee_impact'},
+      ],
+      'skill': [
+        {'frame': 0, 'name': 'inferno_charge'},
+        {'frame': 1, 'name': 'inferno_burst'},
+      ],
+    },
   };
+  final eventsFor = eventSets[heroId] ?? eventSets['ranger_new']!;
   final animations = <String, dynamic>{};
   for (final state in const [
     'idle',
@@ -110,16 +123,24 @@ class _CombatFakeLoader extends HeroAssetLoader {
 }
 
 class _Harness {
-  _Harness({this.seedProgress});
+  _Harness({
+    this.seedProgress,
+    this.heroId = 'ranger_new',
+    HeroKit? kit,
+    this.dummyDistance = 150,
+  }) : kit = kit ?? kitForHero(heroId);
 
   final HeroProgress? seedProgress;
+  final String heroId;
+  final HeroKit kit;
+  final double dummyDistance;
   final store = MemoryProgressStore();
   GameWorld? world;
 
   Future<void> pump(WidgetTester tester) async {
     final harness = this;
     if (seedProgress != null) {
-      await store.save('ranger_new', seedProgress!);
+      await store.save(heroId, seedProgress!);
     }
     tester.view.physicalSize = const Size(1280, 720);
     tester.view.devicePixelRatio = 1;
@@ -128,8 +149,8 @@ class _Harness {
     await tester.pumpWidget(
       MaterialApp(
         home: GameScreen(
-          hero: heroById('ranger_new'),
-          kit: rangerNewKit,
+          hero: heroById(heroId),
+          kit: kit,
           loaderFactory: _CombatFakeLoader.new,
           store: store,
           worldFactory: (kit) {
@@ -144,7 +165,7 @@ class _Harness {
               EnemyState(
                 id: 'dummy',
                 kind: 'slime',
-                position: created.player.position + const Offset(150, 0),
+                position: created.player.position + Offset(dummyDistance, 0),
                 maxHp: 500,
                 speed: 0,
                 contactDamage: 8,
@@ -283,7 +304,7 @@ void main() {
     // Leaving the screen (dispose) saves the progress.
     await tester.pumpWidget(const SizedBox.shrink());
     await pumpFor(tester, 100);
-    final saved = await harness.store.load('ranger_new');
+    final saved = await harness.store.load(harness.heroId);
     expect(saved, isNotNull);
     expect(saved!.kills, 1);
   });
@@ -302,5 +323,59 @@ void main() {
     await pumpFor(tester, 100);
     expect(world.player.invulnerableUntilMs, greaterThan(world.nowMs));
     expect(world.combo.chainLength, 0);
+  });
+
+  testWidgets('Flame melee chain deals the real escalating damage', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      heroId: 'flame',
+      dummyDistance: 90, // inside the swing arc
+    );
+    await harness.pump(tester);
+    final world = harness.world!;
+    final enemy = world.enemies.single;
+    final base = flameKit.baseDamage;
+
+    var total = 0.0;
+    final multipliers = [1.00, 1.10, 1.20];
+    for (var hit = 0; hit < 3; hit++) {
+      await tester.tap(find.byKey(const ValueKey('btn_attack')));
+      // Damage lands on the melee_impact frame (~150 ms), then the cycle
+      // (1670/1.4 ≈ 1193 ms) elapses inside the 1800 ms combo window.
+      await pumpFor(tester, 1300);
+      final landed = 500 - enemy.hp >= total + base * multipliers[hit] - 0.01;
+      expect(landed, isTrue, reason: 'hit ${hit + 1} never landed');
+      total = 500 - enemy.hp;
+    }
+    expect(
+      total,
+      closeTo(base * (1.0 + 1.1 + 1.2), 0.05),
+    );
+  });
+
+  testWidgets('Flame hell_burst explodes for 220% on the burst frame', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      heroId: 'flame',
+      dummyDistance: 90,
+      seedProgress: const HeroProgress(level: 20, xp: 40, kills: 3),
+    );
+    await harness.pump(tester);
+    final world = harness.world!;
+    final enemy = world.enemies.single;
+    await tester.tap(find.byKey(const ValueKey('ability_hell_burst')));
+    final burst = await pumpUntil(
+      tester,
+      () => world.fx.any((effect) => effect.kind == 'burst') &&
+          enemy.hp < 500 - flameKit.baseDamage * 2.2 + 0.01,
+      timeoutMs: 1500,
+    );
+    expect(burst, isTrue);
+    expect(
+      500 - enemy.hp,
+      closeTo(flameKit.baseDamage * 2.2, 0.05),
+    );
   });
 }

@@ -7,6 +7,16 @@
 /// 1/10/20/30) live here and nowhere else.
 library;
 
+/// How a hero's primary attack deals damage.
+enum AttackStyle {
+  /// Spawns a flying projectile on the weapon-release event (Ranger's bow).
+  projectile,
+
+  /// Damages every enemy inside the melee arc on the impact event (Flame's
+  /// sword, and later Shadow's daggers / Storm's spear).
+  melee,
+}
+
 /// One step of the normal-attack combo chain.
 class ComboHit {
   const ComboHit({
@@ -33,6 +43,7 @@ class AbilityDef {
     required this.unlockLevel,
     required this.cooldownMs,
     required this.energyCost,
+    this.usesAttackClip = false,
   });
 
   final String id;
@@ -44,6 +55,11 @@ class AbilityDef {
 
   final int cooldownMs;
   final int energyCost;
+
+  /// Whether the ability is performed with the primary-attack clip (true) or
+  /// the skill clip (false). The payload always fires on that clip's weapon
+  /// event, so the motion and the damage stay synchronized.
+  final bool usesAttackClip;
 }
 
 /// Base combat statistics and chain definition for one hero.
@@ -62,7 +78,31 @@ class HeroKit {
     required this.abilities,
     required this.attackPace,
     required this.playable,
+    this.attackStyle = AttackStyle.projectile,
+    this.meleeRange = 0,
+    this.meleeArcRadians = 0,
+    this.accentColor = 0xFF62E86C,
+    this.buffDamageMult = 1.2,
+    this.buffRateMult = 1.5,
   });
+
+  /// How the hero's primary attack deals damage.
+  final AttackStyle attackStyle;
+
+  /// Reach of the primary melee swing in world units (melee style only).
+  final double meleeRange;
+
+  /// Half-angle of the primary melee swing in radians (melee style only).
+  final double meleeArcRadians;
+
+  /// UI/effect accent of the hero's weapon energy (ARGB).
+  final int accentColor;
+
+  /// Damage multiplier while the hero's stat buff is active.
+  final double buffDamageMult;
+
+  /// Attack-rate multiplier while the hero's stat buff is active.
+  final double buffRateMult;
 
   final String heroId;
   final String nameAr;
@@ -145,6 +185,7 @@ const HeroKit rangerNewKit = HeroKit(
       unlockLevel: 10,
       cooldownMs: 8000,
       energyCost: 30,
+      usesAttackClip: true,
     ),
     AbilityDef(
       id: 'arrow_rain',
@@ -165,8 +206,9 @@ const HeroKit rangerNewKit = HeroKit(
   ],
 );
 
-/// Kits for heroes still awaiting their combat build (assets are done or in
-/// progress, gameplay comes in later phases in roster order).
+/// Flame — flaming greatsword, close-range damage dealer. The full combat
+/// build: melee arc swings with burn damage-over-time, a traveling fire wave,
+/// a point-blank hell burst and a rage buff.
 const HeroKit flameKit = HeroKit(
   heroId: 'flame',
   nameAr: 'فارس اللهب',
@@ -179,8 +221,48 @@ const HeroKit flameKit = HeroKit(
   comboWindowMs: 1800,
   comboHits: standardCombo,
   attackPace: 1.4,
-  playable: false,
-  abilities: [],
+  playable: true,
+  attackStyle: AttackStyle.melee,
+  meleeRange: 100,
+  meleeArcRadians: 1.15, // ±66° in front of the swing
+  accentColor: 0xFFFF7A33,
+  buffDamageMult: 1.25,
+  buffRateMult: 1.4,
+  abilities: [
+    AbilityDef(
+      id: 'flame_slash',
+      nameAr: 'ضربة اللهب',
+      descAr: 'قطع وحشي بـ180% يضرم النار في الهدف: 3 موجات حريق إضافية بـ25%.',
+      unlockLevel: 1,
+      cooldownMs: 6000,
+      energyCost: 25,
+      usesAttackClip: true,
+    ),
+    AbilityDef(
+      id: 'fire_wave',
+      nameAr: 'موجة النار',
+      descAr: 'موجة لهب تتقدم على الأرض وتحرق كل عدو في طريقها بـ160%.',
+      unlockLevel: 10,
+      cooldownMs: 9000,
+      energyCost: 30,
+    ),
+    AbilityDef(
+      id: 'hell_burst',
+      nameAr: 'انفجار الجحيم',
+      descAr: 'انفجار ناري حول الفارس بضرر 220% لكل عدو داخل نطاقه.',
+      unlockLevel: 20,
+      cooldownMs: 12000,
+      energyCost: 40,
+    ),
+    AbilityDef(
+      id: 'inferno_rage',
+      nameAr: 'هياج اللهب',
+      descAr: '6 ثوانٍ من الغضب: وتربة أسرع، ضرر +25%، ومدى قطع أوسع.',
+      unlockLevel: 30,
+      cooldownMs: 20000,
+      energyCost: 35,
+    ),
+  ],
 );
 
 const HeroKit shadowKit = HeroKit(
@@ -196,6 +278,10 @@ const HeroKit shadowKit = HeroKit(
   comboHits: standardCombo,
   attackPace: 1.4,
   playable: false,
+  attackStyle: AttackStyle.melee,
+  meleeRange: 85,
+  meleeArcRadians: 1.3,
+  accentColor: 0xFFB57BFF,
   abilities: [],
 );
 
@@ -212,6 +298,10 @@ const HeroKit stormKit = HeroKit(
   comboHits: standardCombo,
   attackPace: 1.4,
   playable: false,
+  attackStyle: AttackStyle.melee,
+  meleeRange: 125,
+  meleeArcRadians: 0.7,
+  accentColor: 0xFFFFD54A,
   abilities: [],
 );
 

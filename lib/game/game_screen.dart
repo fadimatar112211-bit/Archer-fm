@@ -48,6 +48,8 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
+  /// Weapon-energy accent of the active hero's kit.
+  Color get accentColor => Color(kit.accentColor);
   late final HeroKit kit;
   late final GameWorld world;
   late final HeroAssetLoader loader;
@@ -166,7 +168,7 @@ class _GameScreenState extends State<GameScreen>
               text: '+$xpGained XP',
               worldPosition: world.player.position - const Offset(0, 40),
               bornAtMs: world.nowMs,
-              color: const Color(0xFF9BE845),
+              color: accentColor.withValues(alpha: 0.85),
             ),
           );
         case LevelUpEvent(:final newLevel, :final unlockedAbilityIds):
@@ -189,7 +191,7 @@ class _GameScreenState extends State<GameScreen>
             ),
           );
         case PlayerDiedEvent():
-          _showToast('سقط الرامي — عودة بعد لحظات');
+          _showToast('سقط البطل — عودة بعد لحظات');
           _persistProgress();
         case PlayerRespawnedEvent():
           _showToast('عدت إلى المعركة');
@@ -228,7 +230,7 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
     _playClip(
-      abilityId == 'piercing_shot' ? 'attack' : 'skill',
+      def.usesAttackClip ? 'attack' : 'skill',
       pace: world.currentAttackRate(),
     );
   }
@@ -319,16 +321,21 @@ class _GameScreenState extends State<GameScreen>
   void _handleSpriteEvent(AnimationEvent event) {
     switch (event.name) {
       case 'projectile_release':
-        if (world.pendingAbilityId == 'piercing_shot') {
+      case 'melee_impact':
+        if (world.pendingAbilityId == 'piercing_shot' ||
+            world.pendingAbilityId == 'flame_slash') {
           world.releaseWeaponPayload(volley: false);
+        } else if (kit.attackStyle == AttackStyle.melee) {
+          world.releaseMeleeSwing();
         } else {
           world.releaseArrow();
         }
       case 'volley_release':
+      case 'inferno_burst':
         world.releaseWeaponPayload(volley: true);
-      case 'bow_draw':
-      case 'volley_charge':
-        // Weapon draw cues; effects are painted from the weapon state.
+      default:
+        // Weapon draw cues (`bow_draw`, `volley_charge`, `weapon_windup`,
+        // `inferno_charge`); effects are painted from the weapon state.
         break;
     }
   }
@@ -478,7 +485,7 @@ class _GameScreenState extends State<GameScreen>
                         ? _stickCenter +
                             _clampStick(_moveRaw)
                         : Offset.zero,
-                    accent: const Color(0xFF62E86C),
+                    accent: accentColor,
                   ),
                 ),
               ),
@@ -608,8 +615,8 @@ class _GameScreenState extends State<GameScreen>
             children: [
               Text(
                 'المستوى ${world.level}${world.level >= 40 ? ' (الأقصى)' : ''}',
-                style: const TextStyle(
-                  color: Color(0xFF9BE845),
+                style: TextStyle(
+                  color: accentColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -621,9 +628,7 @@ class _GameScreenState extends State<GameScreen>
                   child: LinearProgressIndicator(
                     value: xpRatio.clamp(0.0, 1.0),
                     backgroundColor: const Color(0x22FFFFFF),
-                    valueColor: const AlwaysStoppedAnimation(
-                      Color(0xFF62E86C),
-                    ),
+                    valueColor: AlwaysStoppedAnimation(accentColor),
                     minHeight: 6,
                   ),
                 ),
@@ -673,8 +678,8 @@ class _GameScreenState extends State<GameScreen>
             const SizedBox(height: 4),
             Text(
               comboText,
-              style: const TextStyle(
-                color: Color(0xFF9BE845),
+              style: TextStyle(
+                color: accentColor,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -688,7 +693,7 @@ class _GameScreenState extends State<GameScreen>
   BoxDecoration _panelDecoration() => BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x3362E86C)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       );
 
   Widget _controlCluster(ThemeData theme) {
@@ -711,6 +716,7 @@ class _GameScreenState extends State<GameScreen>
                         world.abilityReadyAtMs[ability.id] ?? 0,
                     nowMs: world.nowMs,
                     energy: world.player.energy,
+                    accent: accentColor,
                     onTap: () => _onAbilityTap(ability.id),
                   ),
               ],
@@ -746,13 +752,19 @@ class _GameScreenState extends State<GameScreen>
         height: 88,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            colors: [Color(0xFF7BFF8E), Color(0xFF2FBF4E)],
+          gradient: RadialGradient(
+            colors: [
+              Color.lerp(accentColor, Colors.white, 0.25)!,
+              accentColor.withValues(alpha: 0.85),
+            ],
           ),
-          border: Border.all(color: const Color(0xFFB7FF7A), width: 3),
+          border: Border.all(
+            color: Color.lerp(accentColor, Colors.white, 0.45)!,
+            width: 3,
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0x6662E86C),
+              color: accentColor.withValues(alpha: 0.4),
               blurRadius: 18,
               spreadRadius: 2,
             ),
@@ -818,6 +830,7 @@ class _AbilityButton extends StatelessWidget {
     required this.readyAtMs,
     required this.nowMs,
     required this.energy,
+    required this.accent,
     required this.onTap,
   });
 
@@ -826,6 +839,7 @@ class _AbilityButton extends StatelessWidget {
   final int readyAtMs;
   final int nowMs;
   final double energy;
+  final Color accent;
   final VoidCallback onTap;
 
   @override
@@ -836,9 +850,7 @@ class _AbilityButton extends StatelessWidget {
         locked ? 0.0 : (cooldownMs / def.cooldownMs).clamp(0.0, 1.0);
     final noEnergy = !locked && energy < def.energyCost;
     final enabled = !locked && cooldownMs <= 0 && !noEnergy;
-    final color = locked
-        ? const Color(0xFF6B7263)
-        : const Color(0xFF62E86C);
+    final color = locked ? const Color(0xFF6B7263) : accent;
 
     return Padding(
       key: ValueKey('ability_${def.id}'),
