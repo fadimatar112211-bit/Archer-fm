@@ -300,3 +300,11 @@
 - Successful attack source IDs are now returned in `MonsterMatchTickResult.attackingUnitIds`; the layer starts one-shot attack animations and lets them finish after the attack pulse clears.
 - Death animation completion is reported to the host so defeated units can be removed from the visual list after being permanently removed from the simulation army.
 - `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` documents the complete host contract. Monster Army Checks run #200 passed format, analyze, and all configured monster tests. Actual match-screen mounting and final production art remain outstanding.
+
+
+## 34. Unified monster match runtime — 2026-11-17
+
+- Added `MonsterMatchRuntime` to coordinate all player armies and the authoritative combat loop. Each tick creates a fresh world snapshot, applies melee/ranged combat and projectiles, removes defeated units from simulation, and retains them for death presentation.
+- The runtime exposes `buildBattleLayer()` so the actual match screen can render live units, dying units, projectiles, and successful attack events without manually wiring each list. The layer reports completed death animations back to the runtime.
+- Added integration tests for multi-army unit identity, target damage, defeated-unit removal, visual retention, attack-event handoff, and death cleanup.
+- `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` now documents the runtime as the single match-host entry point. Monster Army Checks run #205 passed all configured checks and 118 tests. Actual match-screen mounting, real hero/crystal adapters, map/camera data, final production art, profile persistence, and device performance remain host-owned gates.
