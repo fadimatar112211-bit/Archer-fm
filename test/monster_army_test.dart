@@ -413,6 +413,13 @@ void main() {
       expect(resolver.resolve(
         intent: intent, attackerOwnerId: 'p1', target: self,
       ), MonsterDamageResult.selfTarget);
+      expect(resolver.resolve(
+        intent: const MonsterCombatIntent(
+          monsterId: 'attacker', targetId: 'different-target', damage: 12,
+        ),
+        attackerOwnerId: 'p1',
+        target: self,
+      ), MonsterDamageResult.selfTarget);
 
       final malformed = _FakeDamageTarget(
         id: 'target', ownerId: '',
