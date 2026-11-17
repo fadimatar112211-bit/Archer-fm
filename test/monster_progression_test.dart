@@ -138,6 +138,36 @@ void main() {
       expect(restored.levels, original.levels);
     });
 
+    test('versioned player save envelope restores permanent levels', () {
+      final original = _progression(
+        levels: {
+          MonsterType.runner: 4,
+          MonsterType.tank: 9,
+          MonsterType.stalker: 2,
+          MonsterType.ranged: 40,
+        },
+      );
+      final payload = original.toSaveData();
+      final restored = MonsterProgression.fromSaveData(
+        catalog: _catalog(),
+        growth: _growth(),
+        costForLevel: (_, nextLevel) => nextLevel * 10,
+        data: payload,
+      );
+
+      expect(payload['version'], MonsterProgression.saveSchemaVersion);
+      expect(restored.levels, original.levels);
+      expect(
+        () => MonsterProgression.fromSaveData(
+          catalog: _catalog(),
+          growth: _growth(),
+          costForLevel: (_, __) => 1,
+          data: {'version': 99, 'levels': original.toJson()},
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('rejects malformed saved levels and incomplete growth config', () {
       expect(
         () => MonsterProgression.fromJson(
