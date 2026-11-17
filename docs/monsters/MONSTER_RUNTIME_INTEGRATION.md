@@ -92,7 +92,7 @@ The runtime automatically passes live army units, dying presentation units, acti
 
 Incrementing the authoritative tick is handled by `runtime.tick`; rebuild the battle-layer widget after each tick. The layer derives movement from unit positions between ticks, sorts sprites by world Y, renders health bars and active homing projectiles, and uses one shared animation ticker for the whole monster layer. Successful melee/ranged attack IDs start one-shot attack animations; those animations finish even after the one-tick attack signal clears.
 
-## 6. Remaining host-owned acceptance work
+## 7. Remaining host-owned acceptance work
 
 - Supply actual hero/crystal adapters from the live match models and verify four-player damage authority/network replication.
 - Feed the real map navigation grid, obstacle geometry, and approved terrain speed factors each tick.
