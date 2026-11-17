@@ -68,8 +68,10 @@ class MonsterMatchCombatLoop {
     required MonsterPositionedLookup resolvePositionedTarget,
     required DateTime now,
     required Duration elapsed,
+    MonsterNavigationGrid? navigationGrid,
   }) {
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
+    final activeNavigationGrid = navigationGrid ?? this.navigationGrid;
 
     final unitSnapshot = units.toList(growable: false);
     final unitsByOwner = <String, List<MonsterUnit>>{};
@@ -151,7 +153,7 @@ class MonsterMatchCombatLoop {
         elapsed: elapsed,
         allies: nearbyAllies,
         obstacles: obstaclesFor(unit),
-        navigationGrid: navigationGrid,
+        navigationGrid: activeNavigationGrid,
         pathfinder: pathfinder,
         cohesionAnchor: cohesionAnchors[unit.ownerId],
         movementSpeedMultiplier: movementSpeedMultiplierFor(unit),
