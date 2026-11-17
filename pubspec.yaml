@@ -29,3 +29,5 @@ flutter:
     - assets/heroes/shadow/renders/atlases/
     - assets/heroes/ranger_new/renders/ranger_new_manifest.json
     - assets/heroes/ranger_new/renders/atlases/
+    # Real in-game 3D hero models (glTF binary: mesh + bones + animations).
+    - assets/heroes/ranger_new/ranger_animated.glb

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import '../hero/hero_assets.dart';
 import '../hero/hero_catalog.dart';
@@ -11,6 +12,9 @@ import '../hero/sprite_player.dart';
 import 'arena_painter.dart';
 import 'combat/hero_kit.dart';
 import 'progress/hero_progress.dart';
+import 'render3/glb.dart';
+import 'render3/hero3d_painter.dart';
+import 'render3/hero3d_controller.dart';
 import 'world/game_world.dart';
 
 /// Fixed simulation step of the game loop.
@@ -32,6 +36,8 @@ class GameScreen extends StatefulWidget {
     this.loaderFactory = defaultHeroLoaderFactory,
     this.store,
     this.worldFactory,
+    this.hero3dBytes,
+    this.hero3dController,
   });
 
   final HeroDefinition hero;
@@ -41,6 +47,16 @@ class GameScreen extends StatefulWidget {
 
   /// Injectable world constructor for tests (deterministic spawns).
   final GameWorld Function(HeroKit kit)? worldFactory;
+
+  /// Injectable GLB bytes for the in-game 3D hero (tests); when null the real
+  /// bundled model under `assets/heroes/<id>/model/` is used and the screen
+  /// falls back to the atlas sprite if it is missing.
+  final Future<Uint8List?> Function(HeroDefinition hero)? hero3dBytes;
+
+  /// Injectable pre-built 3D hero controller (tests): skips the async GLB
+  /// load entirely, which cannot complete inside a widget test's fake async
+  /// zone without `tester.runAsync`.
+  final Hero3DController? hero3dController;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -66,6 +82,10 @@ class _GameScreenState extends State<GameScreen>
 
   SpritePlayer? _player;
   String? _clipName;
+
+  /// In-game 3D hero controller; null until the GLB loads, in which case the
+  /// atlas sprite path is used instead.
+  Hero3DController? _hero3d;
 
   /// Clip currently authored as non-looping and still playing out.
   String? _busyClip;
@@ -93,7 +113,7 @@ class _GameScreenState extends State<GameScreen>
     store = widget.store ?? SharedPreferencesProgressStore();
     _restoreProgress();
     _loadManifest();
-    _ticker = createTicker(_tick);
+    _loadHero3D();    _ticker = createTicker(_tick);
     _ticker!.start();
   }
 
@@ -137,6 +157,51 @@ class _GameScreenState extends State<GameScreen>
       _showToast('تعذّر تحميل ملفات البطل: $error');
     }
   }
+
+  /// Loads the hero's real GLB (bones/rig/animations) and switches the hero's
+  /// in-arena visual to the 3D model. Falls back to the atlas sprite when no
+  /// model is bundled for this hero.
+  Future<void> _loadHero3D() async {
+    if (widget.hero3dController != null) {
+      _hero3d = widget.hero3dController;
+      return;
+    }
+    Uint8List? bytes;
+    try {
+      if (widget.hero3dBytes != null) {
+        bytes = await widget.hero3dBytes!(widget.hero);
+      } else {
+        for (final path in _glbCandidatePaths(widget.hero.id)) {
+          try {
+            final data = await rootBundle.load(path);
+            bytes = data.buffer.asUint8List();
+            break;
+          } catch (_) {
+            // Try the next candidate.
+          }
+        }
+      }
+    } catch (_) {
+      bytes = null;
+    }
+    if (!mounted || bytes == null) return; // atlas fallback stays active
+    try {
+      final model = await GlbModel.load(bytes);
+      if (!mounted) return;
+      setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
+    } catch (error) {
+      debugPrint('hero3d load failed: $error');
+    }
+  }
+
+  /// Candidate GLB locations per hero id, newest convention first.
+  static List<String> _glbCandidatePaths(String heroId) => [
+        'assets/heroes/$heroId/model/${heroId}_animated.glb',
+        'assets/heroes/$heroId/${heroId}_animated.glb',
+        // The reference ranger ships at its production path.
+        if (heroId == 'ranger_new')
+          'assets/heroes/ranger_new/ranger_animated.glb',
+      ];
 
   // ---- Game loop -----------------------------------------------------------
 
@@ -251,6 +316,28 @@ class _GameScreenState extends State<GameScreen>
     if (m == null) return;
     final player = world.player;
 
+    // In-game 3D hero path: drive the real model's pose from the same state
+    // machine, with identical gameplay-event timing.
+    final hero3d = _hero3d;
+    if (hero3d != null) {
+      final busy = _busyClip != null && !hero3d.completed;
+      if (busy) {
+        // The active non-loop clip keeps its own pace.
+        hero3d.advance(world.nowMs, onEvent: _handleCombatEvent);
+        return;
+      }
+      if (_busyClip != null) {
+        _busyClip = null;
+        _hitReactUntilMs = 0;
+      }
+      final desired = _desiredState();
+      if (hero3d.clipState != desired) {
+        _playClip(desired, pace: 1.0);
+      }
+      hero3d.advance(world.nowMs, onEvent: _handleCombatEvent);
+      return;
+    }
+
     final desired = _desiredState();
     final desiredDir = GameWorld.octantNames[
         GameWorld.octantIndexOf(player.facing)];
@@ -300,6 +387,23 @@ class _GameScreenState extends State<GameScreen>
     final dir = directionLocked ??
         GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
     final name = '${state}_$dir';
+
+    // In-game 3D hero: pose the real model instead of the sprite atlas.
+    final hero3d = _hero3d;
+    if (hero3d != null) {
+      final loop = _stateIsLooping(state);
+      hero3d.playClip(
+        state,
+        loop: loop,
+        pace: pace,
+        nowMs: world.nowMs,
+        events: Hero3DController.scheduleFor(m, state),
+      );
+      _clipName = name;
+      if (!loop) _busyClip = name;
+      return;
+    }
+
     final clip = m.clipFor(state, dir);
     if (clip == null) return;
     final player = _player;
@@ -318,8 +422,21 @@ class _GameScreenState extends State<GameScreen>
     if (!clip.loop) _busyClip = name;
   }
 
+  /// Whether [state] loops, per the manifest's atlas clips (same timing as the
+  /// GLB clips).
+  bool _stateIsLooping(String state) {
+    for (final clip in manifest?.clips.values ?? const <AnimationClip>[]) {
+      if (clip.name.startsWith('${state}_')) return clip.loop;
+    }
+    return state == 'idle' || state == 'run' || state == 'walk';
+  }
+
   void _handleSpriteEvent(AnimationEvent event) {
-    switch (event.name) {
+    _handleCombatEvent(event.name);
+  }
+
+  void _handleCombatEvent(String eventName) {
+    switch (eventName) {
       case 'projectile_release':
       case 'melee_impact':
         if (world.pendingAbilityId == 'piercing_shot' ||
@@ -430,6 +547,7 @@ class _GameScreenState extends State<GameScreen>
                       labels: _labels,
                       timeMs: world.nowMs,
                       comboText: comboText,
+                      hero3d: _hero3d,
                     ),
                   ),
                 ),

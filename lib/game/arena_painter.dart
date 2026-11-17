@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../hero/hero_assets.dart';
 import 'combat/hero_kit.dart';
+import 'render3/hero3d_controller.dart';
 import 'world/game_world.dart';
 
 /// One transient screen-space label ("+10 XP", "Level Up!", …).
@@ -38,6 +39,7 @@ class ArenaPresentation {
     required this.labels,
     required this.timeMs,
     required this.comboText,
+    this.hero3d,
   });
 
   final HeroKit kit;
@@ -53,6 +55,10 @@ class ArenaPresentation {
 
   /// e.g. "الضربة 3/5 · 120%"
   final String? comboText;
+
+  /// The in-game 3D hero; when non-null the hero is drawn as the real skinned
+  /// model instead of the atlas frame (enemies keep their sprites).
+  final Hero3DController? hero3d;
 
   Color get accent => Color(kit.accentColor);
 }
@@ -467,6 +473,34 @@ class ArenaPainter extends CustomPainter {
 
   void _paintHero(Canvas canvas) {
     final player = world.player;
+
+    // In-game 3D hero: draw the real skinned model (bones + animation),
+    // anchored at the gameplay position like the sprite was.
+    final hero3d = presentation.hero3d;
+    if (hero3d != null) {
+      // Invulnerability ring while dodging.
+      if (player.invulnerableUntilMs > world.nowMs && !player.dead) {
+        canvas.drawCircle(
+          player.position - const Offset(0, 14),
+          34,
+          Paint()
+            ..color = const Color(0x33FFFFFF)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3,
+        );
+      }
+      final veilActive = player.speedBoostUntilMs > world.nowMs;
+      hero3d.paint(
+        canvas,
+        anchor: player.position + const Offset(0, 14),
+        facing: player.facing,
+        scale: hero3d.scaleForPixelHeight(122),
+        alpha: veilActive ? 0.55 : 1,
+        tint: player.dead ? const Color(0xFF888888) : null,
+      );
+      return;
+    }
+
     final image = presentation.sheet?.image;
     final frameId = presentation.frameId;
     final rect =
