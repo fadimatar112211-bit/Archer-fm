@@ -105,7 +105,7 @@ void main() {
           attackCooldown: Duration(seconds: 1),
           purchaseCost: 1,
         ),
-      ), throwsArgumentError);
+      ), throwsAssertionError);
     });
 
     test('purchase returns exact debit and spawned unit', () {
