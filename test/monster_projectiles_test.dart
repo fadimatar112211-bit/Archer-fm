@@ -206,7 +206,7 @@ void main() {
     test('routes melee damage and ranged attacks through the projectile manager', () {
       final ranged = _ranged();
       final melee = MonsterArmy(
-        ownerId: 'p1',
+        ownerId: 'p1-melee',
         catalog: _catalog(),
         selection: InitialArmySelection({
           MonsterType.runner: 20, MonsterType.tank: 0,
