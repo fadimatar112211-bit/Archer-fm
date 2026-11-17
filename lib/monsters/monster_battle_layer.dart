@@ -13,6 +13,7 @@ class MonsterBattleLayer extends StatefulWidget {
   const MonsterBattleLayer({
     super.key,
     required this.units,
+    this.dyingUnits = const [],
     required this.projectiles,
     required this.worldToScreen,
     required this.simulationTick,
@@ -20,10 +21,13 @@ class MonsterBattleLayer extends StatefulWidget {
     this.unitSize = 64,
     this.projectileSize = 9,
     this.projectileColor = const Color(0xFF7DEBFF),
+    this.onDeathAnimationComplete,
   })  : assert(unitSize > 0),
         assert(projectileSize > 0);
 
+  /// Live units plus any recently defeated units retained for their death animation.
   final List<MonsterUnit> units;
+  final List<MonsterUnit> dyingUnits;
   final List<MonsterProjectile> projectiles;
   final MonsterWorldToScreen worldToScreen;
 
@@ -33,6 +37,7 @@ class MonsterBattleLayer extends StatefulWidget {
   final double unitSize;
   final double projectileSize;
   final Color projectileColor;
+  final ValueChanged<String>? onDeathAnimationComplete;
 
   @override
   State<MonsterBattleLayer> createState() => _MonsterBattleLayerState();
@@ -61,8 +66,10 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
     final currentIds = <String>{};
     final moving = detectMovement ? <String>{} : {..._movingUnitIds};
 
-    for (final unit in widget.units) {
-      currentIds.add(unit.id);
+    for (final unit in [...widget.units, ...widget.dyingUnits]) {
+      if (!currentIds.add(unit.id)) {
+        throw ArgumentError('Duplicate monster visual ID: ' + unit.id);
+      }
       final controller = _animations[unit.id];
       if (controller == null || controller.type != unit.type) {
         _animations[unit.id] =
@@ -86,7 +93,7 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
 
   @override
   Widget build(BuildContext context) {
-    final orderedUnits = widget.units.toList()
+    final orderedUnits = [...widget.units, ...widget.dyingUnits]
       ..sort((a, b) => a.positionY.compareTo(b.positionY));
     final children = <Widget>[];
 
@@ -107,8 +114,11 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
           size: widget.unitSize,
           alive: unit.isAlive,
           moving: _movingUnitIds.contains(unit.id),
-          attacking: widget.attackingUnitIds.contains(unit.id),
+          attacking: unit.isAlive && widget.attackingUnitIds.contains(unit.id),
           healthFraction: unit.health / unit.stats.maxHealth,
+          onDeathAnimationComplete: unit.isAlive
+              ? null
+              : () => widget.onDeathAnimationComplete?.call(unit.id),
         ),
       ));
     }
