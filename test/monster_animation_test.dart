@@ -72,6 +72,26 @@ void main() {
       expect(animation.frameIndex, 0);
     });
 
+    test('attack animation finishes after the one-tick attack signal ends', () {
+      final animation = MonsterAnimationController(
+        type: MonsterType.runner,
+        walkSheet: walk,
+        attackSheet: attack,
+      );
+      animation.synchronize(alive: true, moving: false, attacking: true);
+      animation.advance(const Duration(milliseconds: 85));
+      expect(animation.state, MonsterAnimationState.attack);
+      expect(animation.frameIndex, 1);
+
+      animation.synchronize(alive: true, moving: true, attacking: false);
+      expect(animation.state, MonsterAnimationState.attack);
+      animation.advance(const Duration(milliseconds: 255));
+      expect(animation.isAnimationFinished, isTrue);
+
+      animation.synchronize(alive: true, moving: true, attacking: false);
+      expect(animation.state, MonsterAnimationState.walk);
+    });
+
     test('death is terminal and plays once without looping', () {
       final animation = MonsterAnimationController(
         type: MonsterType.runner,
