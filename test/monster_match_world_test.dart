@@ -93,6 +93,33 @@ void main() {
       expect(heroHealth, 38);
     });
 
+    test('resolves damage between enemy monster units through the same world index',
+        () {
+      final attacker = _unit(
+        ownerId: 'p1',
+        idPrefix: 'p1-army',
+        type: MonsterType.runner,
+      );
+      final defender = _unit(
+        ownerId: 'p2',
+        idPrefix: 'p2-army',
+        type: MonsterType.tank,
+      );
+      final world = MonsterMatchWorldSnapshot(
+        units: [attacker, defender],
+      );
+
+      final result = world.step(
+        loop: _loop(MonsterProjectileManager(maxActiveProjectiles: 4)),
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(result.meleeHitsApplied, 2);
+      expect(attacker.health, 88);
+      expect(defender.health, 88);
+    });
+
     test('resolves homing ranged projectiles against fresh world snapshots',
         () {
       final ranged = _unit(
