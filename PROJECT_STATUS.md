@@ -266,6 +266,9 @@ Still to decide or test:
 - Next action: define the sprite-sheet technical specification and implement a small renderer/asset preview workflow; then produce the Ranger's final animation set. Android emulator testing remains the final completion gate.
 
 
+
+- Latest monster checkpoint (2026-11-17): on the isolated monster-army-work branch, all four monster types now have army/progression models, melee and ranged combat, live match-world adapters, A* navigation, obstacle/ally collision handling, automatic crystal defense, per-owner group cohesion with spatial hashing, attack-slot reservations, and an SVG sprite/health-bar component. The related test suites are committed and included in Monster Army Checks; no green CI result has been verified. Actual map/screen wiring and final approved 2.5D monster art remain open.
+
 ## 10. Latest work checkpoint — Sprite Atlas specification
 
 - Added `docs/heroes/SPRITE_ATLAS_SPEC.md` and committed the 2.5D asset contract.
