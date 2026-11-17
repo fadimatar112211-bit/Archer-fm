@@ -283,7 +283,7 @@
 - Duplicate entity IDs and non-finite positions are rejected. The same snapshot supplies damage lookup and positioned projectile lookup, and step() invokes one authoritative combat tick. External adapters can expose live health/position getters, so a second attacker in the same tick sees a target killed by the first hit instead of applying stale-snapshot overkill.
 - Added test/monster_match_world_test.dart for melee damage against a live hero adapter, homing ranged projectile impact against a fresh moving-target snapshot, friendly-crystal candidate inclusion, same-tick overkill prevention via live health callbacks, duplicate-ID rejection, and invalid-coordinate rejection. The existing Monster Army Checks workflow includes this test.
 - This is an integration bridge, not proof that the real hero/crystal systems are already connected. The match host must create MonsterExternalEntityAdapter values from the actual authoritative hero/crystal entities on each tick.
-- MonsterMatchWorldSnapshot.step and MonsterMatchCombatLoop.update accept the current navigation grid per tick. The loop also accepts a per-unit movementSpeedMultiplierFor callback and applies it to normal and defensive movement; the map host must supply actual grid/obstacles and surface factors (for example, a reduced factor on water). Green CI: Monster Army Checks #174, #176 and #182 passed. Remaining: connect actual hero/crystal adapters, render sprites/projectiles in the battle screen, approve original 2.5D art, connect versioned progression to player saves, and measure target-device performance.
+- MonsterMatchWorldSnapshot.step and MonsterMatchCombatLoop.update accept the current navigation grid per tick. The loop also accepts a per-unit movementSpeedMultiplierFor callback and applies it to normal and defensive movement; the map host must supply actual grid/obstacles and surface factors (for example, a reduced factor on water). Green CI: Monster Army Checks #174, #176 and #182 passed. Remaining: connect actual hero/crystal adapters, mount MonsterBattleLayer in the real battle screen, approve original 2.5D art, connect versioned progression to player saves, and measure target-device performance.
 
 
 ## 32. Terrain-aware monster movement — 2026-11-17
@@ -291,3 +291,12 @@
 - MonsterMatchCombatLoop exposes movementSpeedMultiplierFor per unit. The map layer can now express slow terrain such as water without hard-coding an unapproved multiplier into monster base stats.
 - The factor is validated and applied to both ordinary target pursuit and explicit defend-order return movement. Tests verify direct movement scaling and propagation through a full match tick.
 - Permanent progression now has a versioned save envelope (schema 1) with validated restore. Monster Army Checks run #182 passed formatting, static analysis, and all configured monster tests. The actual map still must provide terrain factors and navigation/collision geometry.
+
+
+## 33. Monster battle presentation layer — 2026-11-17
+
+- Added a reusable `MonsterBattleLayer` that draws live units, recently defeated visual-only units, health bars, and active projectile glows using a host-provided world-to-screen transform.
+- The layer depth-sorts by world Y, derives movement from simulation-tick position changes, and shares one animation ticker across the army for better scaling.
+- Successful attack source IDs are now returned in `MonsterMatchTickResult.attackingUnitIds`; the layer starts one-shot attack animations and lets them finish after the attack pulse clears.
+- Death animation completion is reported to the host so defeated units can be removed from the visual list after being permanently removed from the simulation army.
+- `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` documents the complete host contract. Monster Army Checks run #200 passed format, analyze, and all configured monster tests. Actual match-screen mounting and final production art remain outstanding.
