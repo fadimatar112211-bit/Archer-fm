@@ -170,15 +170,10 @@ void main() {
     });
 
     test('rejects non-finite movement tuning and corrupted unit positions', () {
-      final invalidTuning = MonsterFormationMovement(
-        separationWeight: double.nan,
+      expect(
+        () => MonsterFormationMovement(separationWeight: double.nan),
+        throwsAssertionError,
       );
-      expect(() => invalidTuning.moveGroup(
-        units: [_unit('a', 0, 0)],
-        targetX: 10,
-        targetY: 0,
-        elapsed: const Duration(seconds: 1),
-      ), throwsAssertionError);
 
       final corrupted = _unit('bad', 0, 0)..positionX = double.infinity;
       expect(() => movement.moveGroup(
