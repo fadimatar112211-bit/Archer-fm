@@ -128,12 +128,13 @@ void main() {
         type: MonsterType.ranged,
       );
       var heroHealth = 50.0;
+      var heroX = ranged.positionX + 5;
       MonsterExternalEntityAdapter hero() => MonsterExternalEntityAdapter(
             id: 'p2-moving-hero',
             ownerId: 'p2',
             kind: MonsterTargetKind.hero,
             isAlive: true,
-            positionX: ranged.positionX + 5,
+            positionX: heroX,
             positionY: ranged.positionY,
             applyDamage: (amount) {
               heroHealth -= amount;
@@ -154,6 +155,7 @@ void main() {
       expect(first.rangedProjectilesCreated, 1);
       expect(heroHealth, 50);
 
+      heroX = ranged.positionX + 10;
       final secondWorld = MonsterMatchWorldSnapshot(
         units: [ranged],
         externalEntities: [hero()],
