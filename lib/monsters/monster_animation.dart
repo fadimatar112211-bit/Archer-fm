@@ -146,6 +146,9 @@ class MonsterAnimationController {
       _switchTo(MonsterAnimationState.death);
     } else if (attacking && attackSheet != null) {
       _switchTo(MonsterAnimationState.attack);
+    } else if (_state == MonsterAnimationState.attack && !isAnimationFinished) {
+      // A one-tick attack event starts a full one-shot animation. Do not
+      // cancel it just because the authoritative attack pulse has ended.
     } else if (moving) {
       _switchTo(MonsterAnimationState.walk);
     } else {
