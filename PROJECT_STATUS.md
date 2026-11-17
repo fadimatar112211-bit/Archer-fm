@@ -442,4 +442,16 @@ Still to decide or test:
 - Added animation sheet metadata validation and negative frame-duration coverage.
 - Expanded unit tests for the above rejection and fallback cases.
 - GitHub Actions runs are being triggered by the commits; the latest observed runs were still in progress. Do not mark Flutter analyze/tests as passed until a completed successful run is observed.
-- Visual monster rendering and integration into the actual match screen remain outstanding. No hero files, assets, Blender tools, or hero render paths were modified.
+- A ticker-driven MonsterSpriteView now crops the audited SVG sheets, plays walk/attack/death states, and can show a unit health bar. It is a reusable visual component, not yet mounted in a live match screen. The four legacy SVGs remain provisional; ranged still has no dedicated attack/death sheets. No hero files, assets, Blender tools, or hero render paths were modified.
+
+
+## 28. Monster visual runtime and navigation hardening — 2026-11-17
+
+- Added MonsterAnimationCatalog to build per-type animation controllers from the audited four-type asset map. Walk loops; available attack/death sheets play once. Missing ranged attack/death sheets remain explicitly absent.
+- Upgraded MonsterSpriteView into a ticker-driven renderer that crops frames using each sheet's actual frame dimensions and optionally displays the unit's health fraction.
+- Added widget/catalog tests for walk cadence, idle stability, one-shot attack/death, all four asset mappings, missing ranged sheets, and health-bar values.
+- Added A* route-cache recovery when a unit is displaced away from its cached route; units that progress along their planned path advance the waypoint cursor instead of following stale waypoints.
+- Corrected A* heuristic world coordinates for grids with non-zero origins.
+- Added navigation tests for wall routing, diagonal corner blocking, map-revision invalidation, route displacement recovery, non-zero grid origins, stable attack slots, automatic crystal defense, collision safety, and technical army capacity.
+- The monster CI workflow now includes the animation catalog, sprite widget, and navigation/formation test suites. The latest run must complete successfully before checks are marked passed.
+- Remaining blockers: no live match screen or authoritative world renderer currently consumes the widget; runtime map geometry must be supplied to pathfinding; final production monster art is not approved, and ranged still lacks dedicated attack/death artwork.
