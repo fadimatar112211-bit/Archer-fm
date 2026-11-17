@@ -472,8 +472,8 @@ Still to decide or test:
 - أضيف MonsterAnimationCatalog وطور MonsterSpriteView لعرض إطارات SVG الأربعة لكل ورقة، تشغيل الحركة/الهجوم/الموت، وشريط صحة اختياري. ملفات ranged المفقودة للهجوم/الموت ما زالت null ولا نستخدم حركة melee مكانها.
 - أضيفت اختبارات A* والتفاف الجدران ومنع القطع القطري، إبطال المسارات عند تغيّر إصدار الخريطة، مواقع الهجوم، الدفاع التلقائي، تصادم الحركة، Spatial Hash، تماسك المجموعة، حد السعة، وتكامل الحركة مع دورة القتال.
 - اعتمدنا workflow الموجود .github/workflows/monster-army-checks.yml؛ وهو يشغّل dart format وflutter analyze واختبارات الوحوش، ويتضمن اختبارات الملاحة والأنيميشن وSpatial Hash.
-- بوابة التحقق: لا يوجد في أدوات GitHub المتاحة هنا سجل تشغيل ناجح مؤكد لهذه الدفعة، ولم تتوفر أوامر flutter/dart محلياً؛ لذلك لا نسجل الاختبارات على أنها ناجحة.
-- ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام ببيانات العوائق والشبكة ومضاعف سرعة الأرض من محرك الخريطة الفعلي، ربط MonsterMatchWorldSnapshot بمحولات الصحة/الموقع الحقيقية للأبطال والكريستالات في tick المباراة، دمج MonsterSpriteView والمقذوفات في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، واختبارات أداء على أجهزة مستهدفة ثم اجتياز CI.
+- بوابة التحقق: نجح workflow Monster Army Checks في التشغيلين #174 و#176، وشملا dart format وflutter analyze وجميع اختبارات الوحوش. التشغيل #176 يتضمن اختبار الحالة الحية ومنع الضرب الزائد داخل tick واحد.
+- ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام بالشبكة والعوائق ومضاعف سرعة السطح الفعلي من محرك الخريطة، إنشاء محولات MonsterMatchWorldSnapshot من كيانات الأبطال والكريستالات الحقيقية كل tick، دمج MonsterSpriteView والمقذوفات في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، وربط تقدم الترقية بنظام حفظ اللاعب واختبارات الأداء على الأجهزة المستهدفة.
 
 
 ## 30. Permanent monster progression — 2026-11-17
@@ -483,7 +483,7 @@ Still to decide or test:
 - Added atomic currency debit outcomes, insufficient-funds/max-level handling, stat scaling for health/damage/movement speed, and JSON-safe save/restore data for all four levels.
 - MonsterArmy can now receive a progression stats provider so each new match and each newly purchased unit spawns with the owner's permanent upgrades. Purchase prices remain the base catalog prices.
 - Added tests for independent upgrades, currency rejection, level cap, save/restore, stat scaling, and upgraded army spawning. CI now includes the progression test file.
-- The host still needs to connect the JSON snapshot to the permanent player-save system and provide approved balance growth/cost configuration.
+- MonsterArmy also supports an explicit idPrefix so multiple army instances cannot accidentally reuse unit IDs. The host still needs to connect the JSON snapshot to the permanent player-save system and provide approved balance growth/cost configuration.
 
 
 ## 31. جسر عالم المباراة للوحوش — 2026-11-17
@@ -494,3 +494,11 @@ Still to decide or test:
 - أضيفت اختبارات test/monster_match_world_test.dart لضربات melee على بطل حي، ومنع overkill عند موت الهدف خلال tick، ومقذوف ranged موجه إلى هدف متحرك، وإدراج الكريستال الصديق، ورفض المعرفات المكررة والإحداثيات غير الصالحة. الملف مدرج في workflow الحالي.
 - هذا جسر تكامل قابل للاستخدام، لكنه لا يعني أن أنظمة الأبطال والكريستالات الفعلية موصولة بعد؛ على مضيف المباراة إنشاء MonsterExternalEntityAdapter من الكيانات الحقيقية كل tick.
 - ما زال ربط خريطة اللعب وبيانات العوائق/الأرض، وعرض الوحوش والمقذوفات في شاشة المعركة، والأصول النهائية واختبارات الأداء ونتيجة CI الخضراء مطلوبة.
+
+
+## 32. Terrain-aware monster movement — 2026-11-17
+
+- Added movementSpeedMultiplierFor to MonsterMatchCombatLoop so the map host can supply a per-unit surface factor without changing permanent base stats or inventing a global water-speed value.
+- Normal pursuit and explicit return-to-crystal defense both pass the factor through MonsterCombatController into MonsterFormationMovement; invalid zero, negative, or non-finite factors are rejected.
+- Added tests proving a 0.5 surface factor halves travel distance, base moveSpeed remains unchanged, and the match loop applies a per-unit 0.25 factor. This is a hook for water/terrain behavior; the real map still supplies the approved factors.
+- CI verification: Monster Army Checks run #176 passed dart format, flutter analyze, and the complete configured monster test suite, including progression, world integration, navigation, animation, and combat.
