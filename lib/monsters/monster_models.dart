@@ -248,8 +248,14 @@ class MonsterTargeting {
         final unitDistance = _distanceSquared(
           unit.positionX, unit.positionY, crystal.x, crystal.y,
         );
-        if (enemyDistance >= unitDistance) continue;
-        final pressure = enemyDistance / mathMax(unitDistance, 1);
+        // A defender already standing on the crystal still reacts when an
+        // enemy enters its own attack radius around that crystal.
+        final defenseThreshold = mathMax(
+          unitDistance,
+          unit.stats.attackRange * unit.stats.attackRange,
+        );
+        if (enemyDistance >= defenseThreshold) continue;
+        final pressure = enemyDistance / mathMax(defenseThreshold, 1);
         final unitToEnemy = _distanceSquared(
           unit.positionX, unit.positionY, enemy.x, enemy.y,
         );
