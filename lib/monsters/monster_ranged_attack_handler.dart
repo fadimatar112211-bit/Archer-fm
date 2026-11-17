@@ -18,6 +18,8 @@ class MonsterRangedAttackHandler {
     if (!source.isAlive ||
         source.type != MonsterType.ranged ||
         source.ownerId.isEmpty ||
+        !source.positionX.isFinite ||
+        !source.positionY.isFinite ||
         intent.monsterId != source.id ||
         intent.targetId.isEmpty ||
         !intent.damage.isFinite ||
