@@ -43,28 +43,29 @@ class MonsterAnimationCatalog {
       type: type,
       walkSheet: MonsterSpriteSheet(
         asset: assets.idle,
-        frameWidth: frameWidth,
-        frameHeight: frameHeight,
-        frameCount: frameCount,
+        frameWidth: assets.frameWidth,
+        frameHeight: assets.frameHeight,
+        frameCount: assets.frameCount,
+        frameDuration: assets.walkFrameDuration,
       ),
       attackSheet: assets.attack == null
           ? null
           : MonsterSpriteSheet(
               asset: assets.attack!,
-              frameWidth: frameWidth,
-              frameHeight: frameHeight,
-              frameCount: frameCount,
-              frameDuration: const Duration(milliseconds: 90),
+              frameWidth: assets.frameWidth,
+              frameHeight: assets.frameHeight,
+              frameCount: assets.frameCount,
+              frameDuration: assets.attackFrameDuration,
               loop: false,
             ),
       deathSheet: assets.death == null
           ? null
           : MonsterSpriteSheet(
               asset: assets.death!,
-              frameWidth: frameWidth,
-              frameHeight: frameHeight,
-              frameCount: frameCount,
-              frameDuration: const Duration(milliseconds: 100),
+              frameWidth: assets.frameWidth,
+              frameHeight: assets.frameHeight,
+              frameCount: assets.frameCount,
+              frameDuration: assets.deathFrameDuration,
               loop: false,
             ),
     );
