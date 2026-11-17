@@ -503,3 +503,13 @@ Still to decide or test:
 - Added tests proving a 0.5 surface factor halves travel distance, base moveSpeed remains unchanged, and the match loop applies a per-unit 0.25 factor. This is a hook for water/terrain behavior; the real map still supplies the approved factors.
 - Permanent progression now exports a versioned save envelope (schema 1) and restores it with validation, while preserving independent type levels and the level-40 cap.
 - CI verification: Monster Army Checks run #182 passed dart format, flutter analyze, and the complete configured monster test suite, including versioned progression saves, world integration, navigation, animation, and combat.
+
+
+## 33. Monster battle presentation layer — 2026-11-17
+
+- Added `MonsterBattleLayer`, a world-space renderer for live monsters, recently defeated presentation-only units, and active homing projectiles. The host supplies the camera's `worldToScreen` transform.
+- The layer sorts monsters by world Y, renders health bars and projectile glow, detects movement once per authoritative `simulationTick`, and uses one shared animation ticker instead of one ticker per monster.
+- `MonsterMatchTickResult.attackingUnitIds` exposes successful melee/ranged attack events to the renderer. Attack animations finish their one-shot sequence after the event pulse clears.
+- `MonsterSpriteView`/`MonsterBattleLayer` provide a death-animation completion callback so the host can remove defeated units from the presentation list after the death animation, while the army has already removed them from simulation.
+- Added widget tests for sprite/projectile rendering, movement frames, one-shot attack completion, and death-animation lifecycle. Added `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` with profile, match-tick, world-snapshot, and renderer wiring contracts.
+- CI verification: Monster Army Checks run #200 passed `dart format`, `flutter analyze`, and all configured monster unit/widget/integration tests.
