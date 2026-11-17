@@ -70,6 +70,23 @@ void main() {
       expect(army.units.map((unit) => unit.id).toSet(), hasLength(20));
     });
 
+    test('level scaling rejects finite growth that overflows derived stats', () {
+      final base = MonsterStats(
+        maxHealth: 100,
+        damage: 10,
+        moveSpeed: 2,
+        attackRange: 20,
+        attackCooldown: const Duration(seconds: 1),
+        purchaseCost: 1,
+      );
+      expect(() => base.scaledForLevel(
+        40,
+        healthPerLevel: 1e308,
+        damagePerLevel: 0,
+        speedPerLevel: 0,
+      ), throwsArgumentError);
+    });
+
     test('catalog rejects non-finite or invalid monster statistics', () {
       final invalid = MonsterStats(
         maxHealth: double.infinity,
