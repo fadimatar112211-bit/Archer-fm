@@ -263,7 +263,7 @@ class MonsterFormationMovement {
     final startY = unit.positionY;
     var endX = startX + dx * step;
     var endY = startY + dy * step;
-    final minimumAllySpacing = math.max(1, desiredSpacing * 0.55);
+    final minimumAllySpacing = math.max(1, desiredSpacing * 0.55).toDouble();
 
     // Multiple passes handle cases where resolving one collision exposes
     // another nearby obstacle or ally. All geometry is resolved before commit.
@@ -340,7 +340,7 @@ class MonsterFormationMovement {
     final toCenterY = obstacle.y - startY;
     final closestT = ((toCenterX * moveX + toCenterY * moveY) /
             lengthSquared)
-        .clamp(0.0, 1.0);
+        .clamp(0.0, 1.0).toDouble();
     final closestX = startX + moveX * closestT;
     final closestY = startY + moveY * closestT;
     final closestDx = closestX - obstacle.x;
