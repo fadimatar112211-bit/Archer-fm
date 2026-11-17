@@ -89,7 +89,9 @@
 | الطاقة والـCooldown | `game_world_test.dart` → «ability costs energy and normal attacks refill some» + مجموعة «ability energy and cooldown work for every hero» (4 أبطال × قدرة المستوى 1) |
 | عدم التداخل مع كومبو الخمس ضربات | `game_world_test.dart` → مجموعة «special abilities stay independent of the five-hit combo» (Ranger/Flame/Shadow/Storm: القدرة لا تقدّم ولا تُصفّر السلسلة، والهجوم العادي مرفوض أثناء قدرة معلّقة، والسلسلة تصل 155% كما هي) |
 
-النتيجة النهائية: **115/115 اختبار ناجح** و`flutter analyze --no-pub`: **No issues found**.
+النتيجة النهائية: **116/116 اختبار ناجح** و`flutter analyze --no-pub`: **No issues found**.
+(زيادة اختبار واحد عن جولة التدقيق: حارس `test/hero_animation_test.dart` الذي
+يمنع رجوع كليبات الحركة المجمّدة — انظر القسم 24 في `PROJECT_STATUS.md`.)
 
 ## 5) إصلاحات هذه الجولة
 
