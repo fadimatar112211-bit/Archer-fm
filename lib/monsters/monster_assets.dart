@@ -1,3 +1,4 @@
+import 'monster_animation.dart';
 import 'monster_models.dart';
 
 class MonsterAnimationAssets {
@@ -5,11 +6,23 @@ class MonsterAnimationAssets {
     required this.idle,
     required this.attack,
     required this.death,
+    this.frameWidth = 96,
+    this.frameHeight = 96,
+    this.frameCount = 4,
+    this.walkFrameDuration = const Duration(milliseconds: 110),
+    this.attackFrameDuration = const Duration(milliseconds: 85),
+    this.deathFrameDuration = const Duration(milliseconds: 100),
   });
 
   final String idle;
   final String? attack;
   final String? death;
+  final int frameWidth;
+  final int frameHeight;
+  final int frameCount;
+  final Duration walkFrameDuration;
+  final Duration attackFrameDuration;
+  final Duration deathFrameDuration;
 }
 
 class MonsterAssetCatalog {
@@ -42,4 +55,46 @@ class MonsterAssetCatalog {
   };
 
   static MonsterAnimationAssets forType(MonsterType type) => assets[type]!;
+
+  /// Creates a correctly configured visual controller for one launch monster.
+  /// Ranged deliberately receives no fabricated melee/death sheets.
+  static MonsterAnimationController createAnimation(MonsterType type) {
+    final config = forType(type);
+    MonsterSpriteSheet sheet(
+      String asset,
+      Duration duration, {
+      required bool loop,
+    }) =>
+        MonsterSpriteSheet(
+          asset: asset,
+          frameWidth: config.frameWidth,
+          frameHeight: config.frameHeight,
+          frameCount: config.frameCount,
+          frameDuration: duration,
+          loop: loop,
+        );
+
+    return MonsterAnimationController(
+      type: type,
+      walkSheet: sheet(
+        config.idle,
+        config.walkFrameDuration,
+        loop: true,
+      ),
+      attackSheet: config.attack == null
+          ? null
+          : sheet(
+              config.attack!,
+              config.attackFrameDuration,
+              loop: false,
+            ),
+      deathSheet: config.death == null
+          ? null
+          : sheet(
+              config.death!,
+              config.deathFrameDuration,
+              loop: false,
+            ),
+    );
+  }
 }
