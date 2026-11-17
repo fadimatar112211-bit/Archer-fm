@@ -399,7 +399,7 @@ void main() {
 
     test('retains travelling projectiles and rejects invalid capacity', () {
       expect(() => MonsterProjectileManager(maxActiveProjectiles: 0),
-          throwsArgumentError);
+          throwsAssertionError);
       final manager = MonsterProjectileManager(maxActiveProjectiles: 1);
       manager.add(projectile('a'));
       final result = manager.update(
