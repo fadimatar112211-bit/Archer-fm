@@ -203,7 +203,7 @@ Still to decide or test:
 | # | النظام الرئيسي | ما يشمله | حالة Archer FM | فحص Archero_fm |
 |---|---|---|---|---|
 | 1 | الأبطال | الشخصيات الأربعة، الرسومات، الحركات، الأنيميشن، خصائص كل بطل، الاختيار | تم تدقيق الأصول ونسخ 16 ملف SVG؛ تم اعتماد اتجاه فني كرتوني 3D/2.5D؛ برمجة النظام لم تبدأ | اكتمل فحص الكتالوج والرسومات؛ راجع `docs/heroes/HEROES_AUDIT.md` |
-| 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | منطق الجيش والقتال والحركة المتقدمة ومكوّن عرض SVG وطبقة MonsterMatchWorldSnapshot موجودة على monster-army-work؛ لا يزال ربطها بكيانات الأبطال/الكريستالات الحقيقية والخريطة وشاشة المباراة والأصول الإنتاجية النهائية غير منفذ | فُحصت ونُقلت أوراق SVG المرجعية؛ أضيف A*، تفادي تصادمات، تماسك لكل مالك مع Spatial Hash للحلفاء القريبين، دفاع تلقائي، حجز مواقع هجوم، شراء بسعة تقنية اختيارية، مقذوفات، وعارض إطارات/شريط صحة. الاختبارات ونتيجة CI غير مؤكدة بعد. التفاصيل في docs/monsters/MONSTERS_ARMY_AUDIT.md |
+| 2 | الوحوش والجيش | الأنواع الأربعة، الرسومات والحركات، الذكاء الاصطناعي، التجمع، الاستهداف، الجيش الابتدائي والشراء | منطق الجيش والقتال والحركة المتقدمة ومكوّن عرض SVG وطبقة MonsterMatchWorldSnapshot موجودة على monster-army-work؛ لا يزال ربطها بكيانات الأبطال/الكريستالات الحقيقية والخريطة وشاشة المباراة والأصول الإنتاجية النهائية غير منفذ | فُحصت ونُقلت أوراق SVG المرجعية؛ أضيف A*، تفادي تصادمات، تماسك لكل مالك مع Spatial Hash للحلفاء القريبين، دفاع تلقائي، حجز مواقع هجوم، شراء بسعة تقنية اختيارية، مقذوفات، وعارض إطارات/شريط صحة. الاختبارات مضافة؛ يسجل ملف الحالة نجاح Monster Army Checks run #176، وأي تعديلات أحدث تحتاج إعادة تحقق. التفاصيل في docs/monsters/MONSTERS_ARMY_AUDIT.md |
 | 3 | القتال والأسلحة والقدرات | الهجوم اليدوي، الكومبو، الأسلحة، الضرر، المدى، الطاقة، القدرات والتأثيرات | لم يبدأ | لم يبدأ |
 | 4 | الخريطة والعالم | حجم الخريطة، المناطق الحيوية، العوائق، الأنهار والجسور والمياه، الضباب، الكاميرا | لم يبدأ | لم يبدأ |
 | 5 | القلاع والكريستالات | تصميم القلاع، الكريستالات، الصحة، التدمير، سقوط القلعة وإعادة البناء | لم يبدأ | لم يبدأ |
@@ -267,7 +267,7 @@ Still to decide or test:
 
 
 
-- Latest monster checkpoint (2026-11-17): on the isolated monster-army-work branch, all four monster types now have army/progression models, melee and ranged combat, live match-world adapters, A* navigation, obstacle/ally collision handling, automatic crystal defense, per-owner group cohesion with spatial hashing, attack-slot reservations, and an SVG sprite/health-bar component. The related test suites are committed and included in Monster Army Checks; no green CI result has been verified. Actual map/screen wiring and final approved 2.5D monster art remain open.
+- Latest monster checkpoint (2026-11-17): on the isolated monster-army-work branch, all four monster types now have army/progression models, melee and ranged combat, live match-world adapters, A* navigation, obstacle/ally collision handling, automatic crystal defense, per-owner group cohesion with spatial hashing, attack-slot reservations, and an SVG sprite/health-bar component. The related test suites are committed and included in Monster Army Checks; Monster Army Checks run #176 is recorded green; later commits still need a fresh verification. Actual map/screen wiring and final approved 2.5D monster art remain open.
 
 ## 10. Latest work checkpoint — Sprite Atlas specification
 
