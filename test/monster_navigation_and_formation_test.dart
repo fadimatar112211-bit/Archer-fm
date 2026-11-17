@@ -416,7 +416,8 @@ void main() {
     });
   });
 
-  group('Owner-group cohesion', () {\n    test('match loop keeps units cohesive while they pursue separate targets', () {
+  group('Owner-group cohesion', () {
+    test('match loop keeps units cohesive while they pursue separate targets', () {
       final first = _unit('cohesive-a', x: 0, y: 0, attackRange: 0, moveSpeed: 10);
       final second = _unit('cohesive-b', x: 0, y: 60, attackRange: 0, moveSpeed: 10);
       const firstTarget = MonsterTarget(
@@ -460,7 +461,9 @@ void main() {
       expect(second.positionY, lessThan(60));
     });
 
-  });\n\n  group('Runtime army safety budget', () {
+  });
+
+  group('Runtime army safety budget', () {
     test('optional technical capacity blocks purchases without debiting', () {
       final counts = {for (final type in MonsterType.values) type: 0};
       counts[MonsterType.runner] = 20;
