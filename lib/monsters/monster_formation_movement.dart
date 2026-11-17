@@ -116,8 +116,12 @@ class MonsterFormationMovement {
     required Duration elapsed,
     Iterable<MonsterMovementObstacle> obstacles = const [],
     (double, double)? cohesionAnchor,
+    double speedMultiplier = 1,
   }) {
     final obstacleList = _validate(targetX, targetY, elapsed, obstacles);
+    if (!speedMultiplier.isFinite || speedMultiplier <= 0) {
+      throw ArgumentError.value(speedMultiplier, 'speedMultiplier');
+    }
     if (!unit.isAlive || elapsed == Duration.zero) return false;
     if (!unit.positionX.isFinite || !unit.positionY.isFinite) {
       throw ArgumentError('Unit position must be finite.');
@@ -156,6 +160,7 @@ class MonsterFormationMovement {
       obstacles: obstacleList,
       allies: snapshots.skip(1).toList(growable: false),
       tieBreaker: 0,
+      speedMultiplier: speedMultiplier,
     );
     return unit.positionX != beforeX || unit.positionY != beforeY;
   }
@@ -276,12 +281,14 @@ class MonsterFormationMovement {
     required List<MonsterMovementObstacle> obstacles,
     required List<(double, double)> allies,
     required int tieBreaker,
+    double speedMultiplier = 1,
   }) {
-    if (!dx.isFinite || !dy.isFinite || !seconds.isFinite || seconds <= 0 ||
+    if (!speedMultiplier.isFinite || speedMultiplier <= 0 ||
+        !dx.isFinite || !dy.isFinite || !seconds.isFinite || seconds <= 0 ||
         !unit.stats.moveSpeed.isFinite || unit.stats.moveSpeed <= 0) {
       return;
     }
-    final maximumStep = unit.stats.moveSpeed * seconds;
+    final maximumStep = unit.stats.moveSpeed * speedMultiplier * seconds;
     if (maximumStep <= 0 || !maximumStep.isFinite) return;
     final step = maxDistance > 0 && maxDistance.isFinite
         ? math.min(maximumStep, maxDistance).toDouble()
