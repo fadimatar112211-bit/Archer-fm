@@ -1,5 +1,3 @@
-import 'dart:ui' show Color, Offset;
-
 import 'package:flutter/widgets.dart';
 
 import 'monster_animation.dart';
