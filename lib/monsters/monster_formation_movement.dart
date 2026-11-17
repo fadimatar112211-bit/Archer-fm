@@ -96,6 +96,9 @@ class MonsterFormationMovement {
         steer.$1,
         steer.$2,
         seconds,
+        maxDistance: math.sqrt(
+          (goalX - x) * (goalX - x) + (goalY - y) * (goalY - y),
+        ),
         obstacles: obstacleList,
         allies: allies,
         tieBreaker: i,
@@ -142,6 +145,10 @@ class MonsterFormationMovement {
       steer.$1,
       steer.$2,
       elapsed.inMicroseconds / Duration.microsecondsPerSecond,
+      maxDistance: math.sqrt(
+        (targetX - unit.positionX) * (targetX - unit.positionX) +
+            (targetY - unit.positionY) * (targetY - unit.positionY),
+      ),
       obstacles: obstacleList,
       allies: snapshots.skip(1).toList(growable: false),
       tieBreaker: 0,
@@ -249,6 +256,7 @@ class MonsterFormationMovement {
     double dx,
     double dy,
     double seconds, {
+    required double maxDistance,
     required List<MonsterMovementObstacle> obstacles,
     required List<(double, double)> allies,
     required int tieBreaker,
@@ -257,8 +265,11 @@ class MonsterFormationMovement {
         !unit.stats.moveSpeed.isFinite || unit.stats.moveSpeed <= 0) {
       return;
     }
-    final step = unit.stats.moveSpeed * seconds;
-    if (step <= 0 || !step.isFinite) return;
+    final maximumStep = unit.stats.moveSpeed * seconds;
+    if (maximumStep <= 0 || !maximumStep.isFinite) return;
+    final step = maxDistance > 0 && maxDistance.isFinite
+        ? math.min(maximumStep, maxDistance).toDouble()
+        : maximumStep;
     final startX = unit.positionX;
     final startY = unit.positionY;
     var endX = startX + dx * step;
