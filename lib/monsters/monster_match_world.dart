@@ -90,6 +90,7 @@ class MonsterMatchWorldSnapshot {
     required MonsterMatchCombatLoop loop,
     required DateTime now,
     required Duration elapsed,
+    MonsterNavigationGrid? navigationGrid,
   }) =>
       loop.update(
         units: units,
@@ -98,6 +99,7 @@ class MonsterMatchWorldSnapshot {
         resolvePositionedTarget: resolvePositionedTarget,
         now: now,
         elapsed: elapsed,
+        navigationGrid: navigationGrid,
       );
 
   static void _validateEntity(MonsterPositionedDamageTarget entity) {
