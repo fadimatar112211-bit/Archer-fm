@@ -84,6 +84,7 @@ class HeroKit {
     this.accentColor = 0xFF62E86C,
     this.buffDamageMult = 1.2,
     this.buffRateMult = 1.5,
+    this.buffMoveMult = 1.25,
   });
 
   /// How the hero's primary attack deals damage.
@@ -103,6 +104,9 @@ class HeroKit {
 
   /// Attack-rate multiplier while the hero's stat buff is active.
   final double buffRateMult;
+
+  /// Movement multiplier while the hero's stat buff is active.
+  final double buffMoveMult;
 
   final String heroId;
   final String nameAr;
@@ -228,6 +232,7 @@ const HeroKit flameKit = HeroKit(
   accentColor: 0xFFFF7A33,
   buffDamageMult: 1.25,
   buffRateMult: 1.4,
+  buffMoveMult: 1.0,
   abilities: [
     AbilityDef(
       id: 'flame_slash',
@@ -277,12 +282,49 @@ const HeroKit shadowKit = HeroKit(
   comboWindowMs: 1800,
   comboHits: standardCombo,
   attackPace: 1.4,
-  playable: false,
+  playable: true,
   attackStyle: AttackStyle.melee,
   meleeRange: 85,
-  meleeArcRadians: 1.3,
+  meleeArcRadians: 1.3, // ±74°: daggers cover a wide, short arc
   accentColor: 0xFFB57BFF,
-  abilities: [],
+  buffDamageMult: 1.15, // venom coat: every hit poisons, +15% damage
+  buffRateMult: 1.0, // venom does not change attack pace
+  buffMoveMult: 1.0,
+  abilities: [
+    AbilityDef(
+      id: 'twin_fangs',
+      nameAr: 'أنياب التوأم',
+      descAr: 'ثلاث طعنات سريعة بـ80% لكل واحدة تغطي قوساً واسعاً.',
+      unlockLevel: 1,
+      cooldownMs: 6000,
+      energyCost: 25,
+      usesAttackClip: true,
+    ),
+    AbilityDef(
+      id: 'shadow_veil',
+      nameAr: 'حجاب الظل',
+      descAr: '4 ثوانٍ من التخفي: مناعة كاملة وسرعة حركة +35%.',
+      unlockLevel: 10,
+      cooldownMs: 14000,
+      energyCost: 30,
+    ),
+    AbilityDef(
+      id: 'venom_coat',
+      nameAr: 'معطف السم',
+      descAr: '8 ثوانٍ: كل طعنة تسمّم الهدف (موجتا سم ×15%) وضرر +15%.',
+      unlockLevel: 20,
+      cooldownMs: 16000,
+      energyCost: 40,
+    ),
+    AbilityDef(
+      id: 'shadow_execute',
+      nameAr: 'إعدام الظل',
+      descAr: 'انتقال خاطف إلى أضعف عدو قريب وطعنة قاتلة بـ300%.',
+      unlockLevel: 30,
+      cooldownMs: 18000,
+      energyCost: 35,
+    ),
+  ],
 );
 
 const HeroKit stormKit = HeroKit(

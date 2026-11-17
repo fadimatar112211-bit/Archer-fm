@@ -155,6 +155,118 @@ void main() {
   );
 
   test(
+    'shadow battle scenes render through ArenaPainter with real atlases',
+    () async {
+      final hero = heroById('shadow');
+      final loader = _FileAtlasLoader(hero, hero.assetRoot);
+      final manifest = await loader.loadManifest();
+      final sheets = <String, AtlasSheet>{};
+      for (final animation in const ['idle_e', 'attack_e', 'skill_e']) {
+        sheets[animation] = await loader.loadSheet(manifest, animation);
+      }
+
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(11),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.enemies.addAll([
+        EnemyState(
+          id: 's1',
+          kind: 'slime',
+          position: world.player.position + const Offset(70, 0),
+          maxHp: 120,
+          speed: 0,
+          contactDamage: 8,
+          xpValue: 10,
+        ),
+        EnemyState(
+          id: 's2',
+          kind: 'archer',
+          position: world.player.position + const Offset(200, 60),
+          maxHp: 60,
+          speed: 0,
+          contactDamage: 6,
+          xpValue: 14,
+          ranged: true,
+        ),
+      ]);
+      world.player.facing = const Offset(1, 0);
+
+      AtlasSheet? activeSheet;
+      String? activeFrameId;
+
+      ui.Image capture(String frameId) {
+        activeFrameId = frameId;
+        final painter = ArenaPainter(
+          world: world,
+          presentation: ArenaPresentation(
+            kit: shadowKit,
+            theme: ThemeData(brightness: Brightness.dark),
+            sheet: activeSheet,
+            frameId: activeFrameId,
+            pivotX: manifest.pivotX,
+            pivotY: manifest.pivotY,
+            frameWidth: manifest.frameWidth,
+            frameHeight: manifest.frameHeight,
+            labels: const [],
+            timeMs: world.nowMs,
+            comboText: null,
+          ),
+        );
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        painter.paint(canvas, const Size(800, 450));
+        return recorder.endRecording().toImageSync(800, 450);
+      }
+
+      activeSheet = sheets['idle_e']!;
+      await _save('09_shadow_idle', capture('shadow_idle_e_000'));
+
+      // Dagger swing: wide short slash arc, enemy takes the 100% hit.
+      activeSheet = sheets['attack_e']!;
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      await _save('10_shadow_swing', capture('shadow_attack_e_004'));
+      expect(
+        world.enemies.first.maxHp - world.enemies.first.hp,
+        closeTo(shadowKit.baseDamage, 0.01),
+      );
+
+      // Veil: hero rendered translucent + burst ring.
+      world.level = 10;
+      world.player.energy = shadowKit.baseMaxEnergy;
+      expect(world.useAbility('shadow_veil'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      activeSheet = sheets['skill_e']!;
+      await _save('11_shadow_veil', capture('shadow_skill_e_004'));
+      expect(world.player.invulnerableUntilMs, greaterThan(world.nowMs));
+
+      // Execute: teleport to the weakest target + 300% stab burst.
+      world.level = 30;
+      world.player.energy = shadowKit.baseMaxEnergy;
+      world.player.invulnerableUntilMs = 0;
+      world.player.speedBoostUntilMs = 0;
+      expect(world.useAbility('shadow_execute'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      _runFor(world, 60);
+      await _save('12_shadow_execute', capture('shadow_skill_e_007'));
+      expect(world.fx.any((effect) => effect.kind == 'burst'), isTrue);
+      expect(
+        (world.player.position - world.enemies.last.position).distance,
+        lessThan(60),
+      );
+
+      for (final sheet in sheets.values) {
+        sheet.dispose();
+      }
+      loader.dispose();
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+
+  test(
     'flame battle scenes render through ArenaPainter with real atlases',
     () async {
       final hero = heroById('flame');

@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Heroes with a completed combat build; the rest launch their viewer
     // instead of the battlefield.
-    const playableIds = {'ranger_new', 'flame'};
+    const playableIds = {'ranger_new', 'flame', 'shadow'};
     return Scaffold(
       appBar: AppBar(
         title: const Text('Archer FM — الأبطال'),

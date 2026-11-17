@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' show Offset;
 
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
@@ -559,6 +558,148 @@ void main() {
       expect(world.useAbility('inferno_rage'), isNull);
       world.level = 30;
       expect(world.useAbility('inferno_rage'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+    });
+  });
+
+  group('Shadow dagger combat', () {
+    test('twin_fangs strikes three times at 80% each', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.facing = const Offset(1, 0);
+      final lone = addEnemy(
+        world,
+        position: world.player.position + const Offset(70, 0),
+        hp: 100,
+        xp: 14,
+      );
+      expect(world.useAbility('twin_fangs'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      // 3 × 80% on a lone target.
+      expect(
+        100 - lone.hp,
+        closeTo(shadowKit.baseDamage * 0.8 * 3, 0.01),
+      );
+    });
+
+    test('shadow_veil grants 4 seconds of immunity and a speed boost', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.level = 10;
+      final speedBefore = world.currentMoveSpeed();
+      expect(world.useAbility('shadow_veil'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(world.player.invulnerableUntilMs, greaterThan(world.nowMs));
+      expect(world.currentMoveSpeed(), closeTo(speedBefore * 1.35, 0.01));
+      // Enemy contact during the veil is fully ignored.
+      final brute = addEnemy(
+        world,
+        kind: 'brute',
+        position: world.player.position + const Offset(30, 0),
+        hp: 999,
+        xp: 25,
+      );
+      brute.windupUntilMs = world.nowMs + 10;
+      runFor(world, 600);
+      expect(world.player.hp, shadowKit.baseMaxHp);
+      runFor(world, 3900);
+      expect(world.currentMoveSpeed(), speedBefore);
+    });
+
+    test('venom_coat makes every swing poison the target', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.level = 20;
+      world.player.facing = const Offset(1, 0);
+      final enemy = addEnemy(
+        world,
+        position: world.player.position + const Offset(70, 0),
+        hp: 100,
+        xp: 40,
+      );
+      expect(world.useAbility('venom_coat'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(world.player.buffUntilMs, greaterThan(world.nowMs));
+      world.requestAttack();
+      world.releaseMeleeSwing();
+      // Swing 100% + two poison ticks of 15%.
+      runFor(world, 2000);
+      expect(
+        100 - enemy.hp,
+        closeTo(
+          shadowKit.baseDamage * (1.0 * 1.15 + 0.15 * 2 * 1.15),
+          0.01,
+        ),
+      );
+    });
+
+    test('shadow_execute teleports to the weakest enemy and deals 300%', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.level = 30;
+      world.player.position = const Offset(480, 300);
+      final weak = addEnemy(
+        world,
+        position: const Offset(600, 300),
+        hp: 100,
+        xp: 14,
+      );
+      addEnemy(world, position: const Offset(640, 300), hp: 100, xp: 14);
+      weak.hp = 45; // the lowest-HP target in reach
+      expect(world.useAbility('shadow_execute'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      // The player is now beside the weak target, which took 300%.
+      expect(
+        45 - weak.hp,
+        closeTo(shadowKit.baseDamage * 3.0, 0.01),
+      );
+      expect((weak.position - world.player.position).distance, lessThan(60));
+      expect(
+        world.fx.any((effect) => effect.kind == 'burst'),
+        isTrue,
+      );
+    });
+
+    test('ability levels gate the shadow kit the same way', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.player.energy = shadowKit.baseMaxEnergy;
+      expect(world.useAbility('twin_fangs'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      world.player.energy = shadowKit.baseMaxEnergy;
+      expect(world.useAbility('shadow_veil'), isNull);
+      world.level = 10;
+      expect(world.useAbility('shadow_veil'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = shadowKit.baseMaxEnergy;
+      expect(world.useAbility('venom_coat'), isNull);
+      world.level = 20;
+      expect(world.useAbility('venom_coat'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      world.player.energy = shadowKit.baseMaxEnergy;
+      expect(world.useAbility('shadow_execute'), isNull);
+      world.level = 30;
+      expect(world.useAbility('shadow_execute'), isNotNull);
       world.releaseWeaponPayload(volley: true);
     });
   });

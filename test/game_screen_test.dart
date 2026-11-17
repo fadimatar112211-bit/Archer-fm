@@ -36,6 +36,16 @@ Map<String, dynamic> _combatManifest(String heroId) {
         {'frame': 1, 'name': 'inferno_burst'},
       ],
     },
+    'shadow': {
+      'attack': [
+        {'frame': 0, 'name': 'weapon_windup'},
+        {'frame': 1, 'name': 'melee_impact'},
+      ],
+      'skill': [
+        {'frame': 0, 'name': 'shadow_charge'},
+        {'frame': 1, 'name': 'shadow_burst'},
+      ],
+    },
   };
   final eventsFor = eventSets[heroId] ?? eventSets['ranger_new']!;
   final animations = <String, dynamic>{};
@@ -377,5 +387,62 @@ void main() {
       500 - enemy.hp,
       closeTo(flameKit.baseDamage * 2.2, 0.05),
     );
+  });
+
+  testWidgets('Shadow dagger chain escalates 100→110→120% on the dummy', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      heroId: 'shadow',
+      dummyDistance: 70, // inside the wide, short dagger arc
+    );
+    await harness.pump(tester);
+    final world = harness.world!;
+    final enemy = world.enemies.single;
+    final base = shadowKit.baseDamage;
+
+    var total = 0.0;
+    final multipliers = [1.00, 1.10, 1.20];
+    for (var hit = 0; hit < 3; hit++) {
+      await tester.tap(find.byKey(const ValueKey('btn_attack')));
+      await pumpFor(tester, 1300);
+      final landed = 500 - enemy.hp >= total + base * multipliers[hit] - 0.01;
+      expect(landed, isTrue, reason: 'hit ${hit + 1} never landed');
+      total = 500 - enemy.hp;
+    }
+    expect(
+      total,
+      closeTo(base * (1.0 + 1.1 + 1.2), 0.05),
+    );
+  });
+
+  testWidgets('Shadow execute teleports to the dummy and stabs for 300%', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      heroId: 'shadow',
+      dummyDistance: 240, // beyond the dagger arc, inside the 320 reach
+      seedProgress: const HeroProgress(level: 30, xp: 60, kills: 5),
+    );
+    await harness.pump(tester);
+    final world = harness.world!;
+    final enemy = world.enemies.single;
+    final heroBefore = world.player.position;
+    final dummyBefore = enemy.hp;
+
+    await tester.tap(find.byKey(const ValueKey('ability_shadow_execute')));
+    final executed = await pumpUntil(
+      tester,
+      () => world.fx.any((effect) => effect.kind == 'burst') &&
+          dummyBefore - enemy.hp > 0.01,
+      timeoutMs: 1500,
+    );
+    expect(executed, isTrue);
+    expect(
+      dummyBefore - enemy.hp,
+      closeTo(shadowKit.baseDamage * 3.0, 0.05),
+    );
+    expect((world.player.position - heroBefore).distance, greaterThan(100));
+    expect((world.player.position - enemy.position).distance, lessThan(60));
   });
 }

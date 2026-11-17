@@ -62,6 +62,9 @@ class PlayerState {
   /// Temporary movement burst from dodging.
   int dodgeBurstUntilMs = 0;
 
+  /// Movement boost from Shadow's veil.
+  int speedBoostUntilMs = 0;
+
   /// Stat buff from `gale_surge`.
   int buffUntilMs = 0;
 }
@@ -359,6 +362,9 @@ class GameWorld {
         case 'flame_slash':
           pendingAbilityId = null;
           _meleeSwing(multiplier: 1.8, applyBurn: true);
+        case 'twin_fangs':
+          pendingAbilityId = null;
+          _twinFangsStrike();
       }
     }
   }
@@ -432,7 +438,114 @@ class GameWorld {
       case 'inferno_rage':
         player.buffUntilMs = nowMs + 6000;
         break;
+      case 'shadow_veil':
+        player.invulnerableUntilMs = nowMs + 4000;
+        player.speedBoostUntilMs = nowMs + 4000;
+        fx.add(
+          GameFx(
+            kind: 'burst',
+            position: player.position,
+            facing: player.facing,
+            radius: 70,
+            bornAtMs: nowMs,
+            color: kit.accentColor,
+          ),
+        );
+        break;
+      case 'venom_coat':
+        player.buffUntilMs = nowMs + 8000;
+        break;
+      case 'shadow_execute':
+        _shadowExecute();
+        break;
     }
+  }
+
+  /// Three rapid dagger stabs in the wide dagger arc: 80% each, so a lone
+  /// target takes 240% while a crowd gets spread across up to three hits.
+  void _twinFangsStrike() {
+    final range = currentMeleeRange();
+    final halfArc = kit.meleeArcRadians;
+    var hits = 0;
+    for (var i = 0; i < 3; i++) {
+      for (final enemy in enemies) {
+        if (enemy.hp <= 0) continue;
+        final delta = enemy.position - player.position;
+        final dist = delta.distance;
+        if (dist > range + 18) continue;
+        if (dist > 1) {
+          final facingDot =
+              (delta.dx * player.facing.dx + delta.dy * player.facing.dy) /
+                  dist;
+          if (facingDot < math.cos(halfArc)) continue;
+        }
+        hits++;
+        _damageEnemy(enemy, kit.baseDamage * 0.8 * currentDamageMult());
+        if (enemy.hp > 0 && player.buffUntilMs > nowMs) {
+          _applyDoT(enemy, ticks: 2, tickDamage: kit.baseDamage * 0.15);
+        }
+      }
+    }
+    fx.add(
+      GameFx(
+        kind: 'slash',
+        position: player.position,
+        facing: player.facing,
+        radius: range,
+        bornAtMs: nowMs,
+        color: kit.accentColor,
+      ),
+    );
+    if (hits > 0) {
+      player.energy = _clampD(player.energy + 3, 0, kit.baseMaxEnergy);
+    }
+  }
+
+  /// Teleports to the weakest (lowest current HP) enemy within reach and
+  /// stabs it for 300%. Assassination identity: finishers, not crowd damage.
+  void _shadowExecute() {
+    EnemyState? target;
+    var lowest = double.infinity;
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0) continue;
+      final dist = (enemy.position - player.position).distance;
+      if (dist > 320) continue;
+      if (enemy.hp < lowest) {
+        lowest = enemy.hp;
+        target = enemy;
+      }
+    }
+    if (target == null) {
+      // No target in reach: refund the energy so the button is not wasted.
+      final def = kit.abilityById('shadow_execute');
+      if (def != null) {
+        player.energy = _clampD(
+          player.energy + def.energyCost,
+          0,
+          kit.baseMaxEnergy,
+        );
+        abilityReadyAtMs['shadow_execute'] = 0;
+      }
+      return;
+    }
+    // Land behind the target, facing it.
+    player.position = Offset(
+      _clampD(target.position.dx - target.facing.dx * 30, 28, arenaWidth - 28),
+      _clampD(target.position.dy - target.facing.dy * 30, 70, arenaHeight - 28),
+    );
+    player.facing = target.facing;
+    _damageEnemy(target, kit.baseDamage * 3.0 * currentDamageMult());
+    fx.add(
+      GameFx(
+        kind: 'burst',
+        position: target.position,
+        facing: player.facing,
+        radius: 60,
+        bornAtMs: nowMs,
+        color: kit.accentColor,
+      ),
+    );
+    player.energy = _clampD(player.energy + 3, 0, kit.baseMaxEnergy);
   }
 
   /// The primary melee swing: damages every enemy inside the swing arc on the
@@ -461,9 +574,21 @@ class GameWorld {
       hits++;
       _damageEnemy(enemy, kit.baseDamage * multiplier * currentDamageMult());
       if (applyBurn && enemy.hp > 0) {
-        enemy.burnTicksLeft = 3;
-        enemy.burnTickDamage = kit.baseDamage * 0.25 * currentDamageMult();
-        enemy.burnNextTickAtMs = nowMs + 800;
+        _applyDoT(
+          enemy,
+          ticks: 3,
+          tickDamage: kit.baseDamage * 0.25 * currentDamageMult(),
+        );
+      }
+      // Venom coat: a buffed Shadow poisons everything it stabs.
+      if (kit.heroId == 'shadow' &&
+          enemy.hp > 0 &&
+          player.buffUntilMs > nowMs) {
+        _applyDoT(
+          enemy,
+          ticks: 2,
+          tickDamage: kit.baseDamage * 0.15 * currentDamageMult(),
+        );
       }
     }
     fx.add(
@@ -529,8 +654,9 @@ class GameWorld {
 
   double currentMoveSpeed() {
     var speed = kit.moveSpeed;
-    if (player.buffUntilMs > nowMs) speed *= 1.25;
+    if (player.buffUntilMs > nowMs) speed *= kit.buffMoveMult;
     if (player.dodgeBurstUntilMs > nowMs) speed *= 2.2;
+    if (player.speedBoostUntilMs > nowMs) speed *= 1.35;
     return speed;
   }
 
@@ -679,14 +805,36 @@ class GameWorld {
           wave.hitIds.add(enemy.id);
           _damageEnemy(enemy, wave.damage);
           if (enemy.hp > 0) {
-            enemy.burnTicksLeft = 2;
-            enemy.burnTickDamage = kit.baseDamage * 0.2 * currentDamageMult();
-            enemy.burnNextTickAtMs = nowMs + 800;
+            _applyDoT(
+              enemy,
+              ticks: 2,
+              tickDamage: kit.baseDamage * 0.2 * currentDamageMult(),
+            );
           }
         }
       }
     }
     waves.removeWhere((wave) => wave.traveled >= wave.maxTravel);
+  }
+
+  /// Applies a damage-over-time effect (Flame's burn, Shadow's venom): a few
+  /// ticks of [tickDamage] every 800 ms on [enemy].
+  void _applyDoT(
+    EnemyState enemy, {
+    required int ticks,
+    required double tickDamage,
+  }) {
+    if (enemy.burnTicksLeft > 0) {
+      // Refresh with the stronger source instead of stacking.
+      enemy.burnTickDamage =
+          enemy.burnTickDamage < tickDamage ? tickDamage : enemy.burnTickDamage;
+      enemy.burnTicksLeft =
+          enemy.burnTicksLeft < ticks ? ticks : enemy.burnTicksLeft;
+      return;
+    }
+    enemy.burnTicksLeft = ticks;
+    enemy.burnTickDamage = tickDamage;
+    enemy.burnNextTickAtMs = nowMs + 800;
   }
 
   void _updateBurns() {

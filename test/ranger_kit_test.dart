@@ -55,7 +55,7 @@ void main() {
 
     test('non-completed heroes are marked not playable', () {
       expect(flameKit.playable, isTrue); // completed combat build
-      expect(shadowKit.playable, isFalse);
+      expect(shadowKit.playable, isTrue); // completed combat build
       expect(stormKit.playable, isFalse);
     });
   });

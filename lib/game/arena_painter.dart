@@ -511,7 +511,15 @@ class ArenaPainter extends CustomPainter {
       dst,
       Paint()
         ..filterQuality = FilterQuality.medium
-        ..color = player.dead ? const Color(0xFF888888) : const Color(0xFFFFFFFF),
+        ..color = player.dead
+            ? const Color(0xFF888888)
+            // Shadow's veil: the hero renders translucent while hidden.
+            : Color.fromRGBO(
+                255,
+                255,
+                255,
+                world.player.speedBoostUntilMs > world.nowMs ? 0.55 : 1,
+              ),
     );
   }
 

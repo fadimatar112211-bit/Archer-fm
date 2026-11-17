@@ -323,7 +323,8 @@ class _GameScreenState extends State<GameScreen>
       case 'projectile_release':
       case 'melee_impact':
         if (world.pendingAbilityId == 'piercing_shot' ||
-            world.pendingAbilityId == 'flame_slash') {
+            world.pendingAbilityId == 'flame_slash' ||
+            world.pendingAbilityId == 'twin_fangs') {
           world.releaseWeaponPayload(volley: false);
         } else if (kit.attackStyle == AttackStyle.melee) {
           world.releaseMeleeSwing();
@@ -332,6 +333,7 @@ class _GameScreenState extends State<GameScreen>
         }
       case 'volley_release':
       case 'inferno_burst':
+      case 'shadow_burst':
         world.releaseWeaponPayload(volley: true);
       default:
         // Weapon draw cues (`bow_draw`, `volley_charge`, `weapon_windup`,
