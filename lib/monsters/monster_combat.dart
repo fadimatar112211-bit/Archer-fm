@@ -48,9 +48,13 @@ class MonsterCombatController {
     MonsterNavigationGrid? navigationGrid,
     MonsterPathfinder? pathfinder,
     (double, double)? cohesionAnchor,
+    double movementSpeedMultiplier = 1,
   }) {
     if (!unit.isAlive) return null;
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
+    if (!movementSpeedMultiplier.isFinite || movementSpeedMultiplier <= 0) {
+      throw ArgumentError.value(movementSpeedMultiplier, 'movementSpeedMultiplier');
+    }
     final target = selectedTargetProvided
         ? selectedTarget
         : selectTarget(unit: unit, candidates: candidates);
@@ -106,6 +110,7 @@ class MonsterCombatController {
       elapsed: elapsed,
       obstacles: obstacles,
       cohesionAnchor: cohesionAnchor,
+      speedMultiplier: movementSpeedMultiplier,
     );
     return null;
   }
