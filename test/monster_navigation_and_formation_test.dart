@@ -135,6 +135,54 @@ void main() {
       expect(planner.cachedRouteCount, 0);
     });
 
+    test('uses world-space coordinates when the grid has a non-zero origin',
+        () {
+      final unit = _unit('origin-unit', x: 105, y: 55);
+      final grid = MonsterNavigationGrid(
+        columns: 3,
+        rows: 2,
+        cellSize: 10,
+        originX: 100,
+        originY: 50,
+      );
+      final waypoint = MonsterPathfinder().nextWaypoint(
+        unit: unit,
+        grid: grid,
+        targetX: 125,
+        targetY: 55,
+      );
+
+      expect(waypoint, (115.0, 55.0));
+    });
+
+    test('replans when a unit is displaced away from its cached route', () {
+      final unit = _unit('displaced-unit', x: 5, y: 5);
+      final grid = MonsterNavigationGrid(
+        columns: 8,
+        rows: 4,
+        cellSize: 10,
+      );
+      final planner = MonsterPathfinder();
+      final first = planner.nextWaypoint(
+        unit: unit,
+        grid: grid,
+        targetX: 65,
+        targetY: 5,
+      );
+      expect(first, (15.0, 5.0));
+
+      unit.positionY = 35;
+      final recovered = planner.nextWaypoint(
+        unit: unit,
+        grid: grid,
+        targetX: 65,
+        targetY: 5,
+      );
+
+      expect(recovered, isNotNull);
+      expect(recovered!.$2, greaterThan(5));
+    });
+
     test('rejects invalid grid and pathfinder settings', () {
       expect(
         () => MonsterNavigationGrid(columns: 0, rows: 2, cellSize: 10),
