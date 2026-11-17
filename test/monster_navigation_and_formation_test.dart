@@ -512,6 +512,71 @@ void main() {
   });
 
   group('Monster match navigation integration', () {
+    test('match loop accepts revised map grids on later ticks', () {
+      final unit = _unit(
+        'dynamic-grid-unit',
+        x: 5,
+        y: 15,
+        attackRange: 1,
+        moveSpeed: 10,
+      );
+      const target = MonsterTarget(
+        id: 'dynamic-grid-target',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        x: 55,
+        y: 15,
+        isAlive: true,
+      );
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: MonsterProjectileManager(maxActiveProjectiles: 4),
+        projectileSpeed: 10,
+        projectileId: (_) => 'unused-projectile',
+      );
+      final openGrid = MonsterNavigationGrid(
+        columns: 8,
+        rows: 4,
+        cellSize: 10,
+        revision: 1,
+      );
+      loop.update(
+        units: [unit],
+        candidatesFor: (_) => [target],
+        resolveDamageTarget: (_) => null,
+        resolvePositionedTarget: (_) => null,
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: const Duration(seconds: 1),
+        navigationGrid: openGrid,
+      );
+      expect(loop.pathfinder.cachedRouteCount, 1);
+      final positionAfterOpenGrid = (unit.positionX, unit.positionY);
+
+      final closedGrid = MonsterNavigationGrid(
+        columns: 8,
+        rows: 4,
+        cellSize: 10,
+        revision: 2,
+        blocked: {
+          for (var y = 0; y < 4; y++) MonsterGridCell(3, y),
+        },
+      );
+      loop.update(
+        units: [unit],
+        candidatesFor: (_) => [target],
+        resolveDamageTarget: (_) => null,
+        resolvePositionedTarget: (_) => null,
+        now: DateTime.utc(2026, 11, 17, 0, 0, 1),
+        elapsed: const Duration(seconds: 1),
+        navigationGrid: closedGrid,
+      );
+
+      expect(loop.pathfinder.cachedRouteCount, 0);
+      expect((unit.positionX, unit.positionY), positionAfterOpenGrid);
+    });
+
     test('combat follows A* waypoints around blocked map cells', () {
       final unit = _unit(
         'route-unit',
