@@ -103,7 +103,7 @@ class MonsterMatchCombatLoop {
 
     final projectileResults = projectiles.update(
       elapsed: elapsed,
-      resolveTarget: resolveDamageTarget,
+      resolveTarget: resolvePositionedTarget,
     );
     return MonsterMatchTickResult(
       meleeHitsApplied: meleeApplied,
