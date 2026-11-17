@@ -327,6 +327,10 @@ const HeroKit shadowKit = HeroKit(
   ],
 );
 
+/// Storm: ready-to-wire gameplay data. NOT playable yet — the repo contains
+/// only 4 design SVGs (attack/death/idle/walk); the Blender source, GLB,
+/// 496 renders, 64 atlases and manifest do not exist. Flip `playable` to
+/// true only after the asset pipeline (docs/game/storm_combat.md §4) lands.
 const HeroKit stormKit = HeroKit(
   heroId: 'storm',
   nameAr: 'حامل العاصفة',
@@ -339,12 +343,49 @@ const HeroKit stormKit = HeroKit(
   comboWindowMs: 1800,
   comboHits: standardCombo,
   attackPace: 1.4,
-  playable: false,
+  playable: false, // blocked on missing renders/atlases/manifest
   attackStyle: AttackStyle.melee,
-  meleeRange: 125,
-  meleeArcRadians: 0.7,
+  meleeRange: 125, // longest melee reach: a spear, not a sword
+  meleeArcRadians: 0.7, // ±40°: narrow thrust line
   accentColor: 0xFFFFD54A,
-  abilities: [],
+  buffDamageMult: 1.2,
+  buffRateMult: 1.3,
+  buffMoveMult: 1.0,
+  abilities: [
+    AbilityDef(
+      id: 'thunder_thrust',
+      nameAr: 'طعنة الصاعقة',
+      descAr: 'طعنة رمح بـ160% تنقل جزءاً من ضررها كبرق متسلسل لعدو قريب (60%).',
+      unlockLevel: 1,
+      cooldownMs: 6000,
+      energyCost: 25,
+      usesAttackClip: true,
+    ),
+    AbilityDef(
+      id: 'chain_lightning',
+      nameAr: 'برق متسلسل',
+      descAr: 'صاعقة تقفز إلى أقرب 3 أعداء داخل 180 وتصيب كل منهم بـ130%.',
+      unlockLevel: 10,
+      cooldownMs: 9000,
+      energyCost: 30,
+    ),
+    AbilityDef(
+      id: 'static_field',
+      nameAr: 'حقل السكون',
+      descAr: '8 ثوانٍ: كل طعنة تحرر شحنة ثانية بنسبة 40% على الهدف نفسه.',
+      unlockLevel: 20,
+      cooldownMs: 15000,
+      energyCost: 40,
+    ),
+    AbilityDef(
+      id: 'tempest_rage',
+      nameAr: 'هيجان العاصفة',
+      descAr: '6 ثوانٍ: وتيرة ×1.3 وضرر ×1.2 ومدى طعن ×1.25.',
+      unlockLevel: 30,
+      cooldownMs: 20000,
+      energyCost: 35,
+    ),
+  ],
 );
 
 HeroKit kitForHero(String heroId) {
