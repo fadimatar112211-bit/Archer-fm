@@ -132,6 +132,11 @@ void main() {
         find.byType(MonsterSpriteView),
       );
       expect(sprite.moving, isTrue);
+      await tester.pump(const Duration(milliseconds: 110));
+      sprite = tester.widget<MonsterSpriteView>(
+        find.byType(MonsterSpriteView),
+      );
+      expect(sprite.animation.frameIndex, 1);
 
       await tester.pumpWidget(layer(2));
       sprite = tester.widget<MonsterSpriteView>(
