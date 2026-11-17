@@ -36,10 +36,14 @@ class MonsterArmy {
     required this.selection,
     required this.castleX,
     required this.castleY,
+    this.maxUnits,
   }) {
     if (ownerId.isEmpty) throw ArgumentError.value(ownerId, 'ownerId');
     if (!castleX.isFinite || !castleY.isFinite) {
       throw ArgumentError('Castle position must be finite.');
+    }
+    if (maxUnits != null && maxUnits! < 20) {
+      throw ArgumentError.value(maxUnits, 'maxUnits', 'Must allow the 20-unit starting army.');
     }
     for (final type in MonsterType.values) {
       final count = selection.counts[type] ?? 0;
@@ -55,6 +59,11 @@ class MonsterArmy {
   final InitialArmySelection selection;
   final double castleX;
   final double castleY;
+
+  /// Optional device/runtime safety budget, not a game-design army limit.
+  /// Leave unset until the target device profile has been measured.
+  final int? maxUnits;
+
   final List<MonsterUnit> _units = [];
   int _nextId = 0;
   int _spawnCursor = 0;
@@ -63,6 +72,7 @@ class MonsterArmy {
   int get aliveCount => _units.where((unit) => unit.isAlive).length;
   int countOf(MonsterType type) =>
       _units.where((unit) => unit.type == type && unit.isAlive).length;
+  bool get canPurchase => maxUnits == null || aliveCount < maxUnits!;
 
   MonsterUnit _createUnit(MonsterType type, int index) {
     final slot = index % 8;
@@ -70,7 +80,7 @@ class MonsterArmy {
     final angle = slot * (math.pi / 4);
     final radius = 34.0 + ring * 24.0;
     final stats = catalog[type].baseStats;
-    final unit = MonsterUnit(
+    return MonsterUnit(
       id: '$ownerId-monster-${_nextId++}',
       ownerId: ownerId,
       type: type,
@@ -78,7 +88,6 @@ class MonsterArmy {
       positionY: castleY + radius * math.sin(angle),
       stats: stats,
     );
-    return unit;
   }
 
   /// Returns the exact cost with the spawned unit; the economy must debit this
@@ -90,6 +99,7 @@ class MonsterArmy {
     if (currentResources < 0) {
       throw ArgumentError.value(currentResources, 'currentResources');
     }
+    if (!canPurchase) return null;
     final cost = catalog[type].baseStats.purchaseCost;
     if (currentResources < cost) return null;
     final unit = _createUnit(type, _spawnCursor++);
@@ -108,10 +118,11 @@ class MonsterArmy {
     if (currentResources < 0) {
       throw ArgumentError.value(currentResources, 'currentResources');
     }
+    if (!canPurchase) return null;
     final cost = catalog[type].baseStats.purchaseCost;
     if (currentResources < cost || !tryDebit(cost)) return null;
     try {
-      final result = this.purchase(
+      final result = purchase(
         type: type,
         currentResources: currentResources,
       );
