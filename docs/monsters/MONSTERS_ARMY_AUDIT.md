@@ -250,3 +250,16 @@
 - أضيفت اختبارات للمسار حول الجدران، ومنع قطع الزوايا، وإبطال المسار عند تغير نسخة الخريطة، والتعافي من الإزاحة، وأصل الخريطة، وحجوزات الهجوم والدفاع عن الكريستالات والتصادم وحد السعة التقني.
 - تم توسيع workflow ليشمل اختبارات عارض الوحوش والكتالوج والملاحة.
 - هذه خطوة عرض قابلة لإعادة الاستخدام وليست ربطاً نهائياً بشاشة مباراة حية. أصول SVG القديمة ما زالت مؤقتة وغير معتمدة إنتاجياً، وranged ما زال يفتقد ورقتي هجوم وموت مخصصتين. لا نعتبر CI ناجحاً قبل انتهاء التشغيل الحالي بنجاح.
+
+
+## 28. A* navigation, automatic defense, formation reservations and sprite component — 2026-11-17
+
+- Added MonsterNavigationGrid and MonsterPathfinder: bounded A* search, eight-way movement, diagonal corner blocking, per-unit cached routes, and map-revision invalidation. The map host must provide an immutable grid snapshot and increment its revision when obstacle geometry changes.
+- Movement now resolves swept-circle intersections against circular map obstacles and nearby allies, and clamps movement to the current waypoint so large ticks cannot skip route nodes.
+- Default MonsterOrder.auto prioritizes an enemy that is closer to an owned crystal than the defending unit is; advance ignores this defensive priority, while defend waits for a local threat. No unapproved fixed defense radius was introduced.
+- Added MonsterAttackSlotCoordinator: units targeting the same enemy reserve stable approach positions. Reservations are pruned when units die, disappear, or change targets; the match loop computes targets first and assigns slots before moving any unit.
+- Added an optional MonsterArmy.maxUnits technical budget. It is unset by default and must be configured from measured device/runtime capacity; it is not a design-level army cap.
+- Added MonsterAnimationCatalog and upgraded MonsterSpriteView to crop the four horizontal 96×96 frames from each audited SVG sheet, play available one-shot animations, and optionally show a health bar. Missing ranged attack/death sheets remain explicitly unavailable.
+- Added tests in test/monster_navigation_and_formation_test.dart and test/monster_animation_catalog_test.dart, plus a dedicated .github/workflows/monster-army-validation.yml workflow for formatting, analysis, and monster tests.
+- Verification is not confirmed: no successful GitHub Actions result was observable through the available repository status calls, and Flutter/Dart executables were not installed in the local execution environment. Do not mark these tests as passed until a completed green run is inspected.
+- Remaining integration gates: the actual map must supply the grid and collision geometry; a live match must supply fresh authoritative hero/crystal entities and call the combat loop; the match screen must position MonsterSpriteView; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
