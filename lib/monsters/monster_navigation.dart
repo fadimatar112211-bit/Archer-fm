@@ -183,8 +183,7 @@ class MonsterPathfinder {
         open.add(_PathNode(
           cell: next,
           cost: tentative,
-          estimate: tentative +
-              _heuristic(next, goal, grid.cellSize, goalX, goalY, goalRange),
+          estimate: _heuristic(next, goal, grid.cellSize, goalX, goalY, goalRange),
           sequence: sequence++,
         ));
       }
