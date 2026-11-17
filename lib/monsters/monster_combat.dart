@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'monster_models.dart';
 import 'monster_formation_movement.dart';
+import 'monster_navigation.dart';
 
 class MonsterCombatIntent {
   const MonsterCombatIntent({
@@ -26,6 +27,14 @@ class MonsterCombatController {
   final MonsterTargeting targeting;
   final MonsterFormationMovement movement;
 
+  MonsterTarget? selectTarget({
+    required MonsterUnit unit,
+    required Iterable<MonsterTarget> candidates,
+  }) {
+    if (!unit.isAlive) return null;
+    return targeting.selectCombatTarget(unit: unit, candidates: candidates);
+  }
+
   MonsterCombatIntent? updateUnit({
     required MonsterUnit unit,
     required Iterable<MonsterTarget> candidates,
@@ -33,18 +42,21 @@ class MonsterCombatController {
     required Duration elapsed,
     Iterable<MonsterUnit> allies = const [],
     Iterable<MonsterMovementObstacle> obstacles = const [],
+    MonsterTarget? selectedTarget,
+    bool selectedTargetProvided = false,
+    (double, double)? approachPoint,
+    MonsterNavigationGrid? navigationGrid,
+    MonsterPathfinder? pathfinder,
   }) {
     if (!unit.isAlive) return null;
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
-    final target = targeting.nearestEnemy(
-      ownerId: unit.ownerId,
-      fromX: unit.positionX,
-      fromY: unit.positionY,
-      candidates: candidates,
-    );
+    final target = selectedTargetProvided
+        ? selectedTarget
+        : selectTarget(unit: unit, candidates: candidates);
     if (target == null) {
       unit.targetId = null;
       unit.targetKind = null;
+      pathfinder?.release(unit.id);
       return null;
     }
 
@@ -65,11 +77,31 @@ class MonsterCombatController {
     }
 
     if (elapsed == Duration.zero || distance == 0) return null;
+    final destination = approachPoint ?? (target.x, target.y);
+    var moveX = destination.$1;
+    var moveY = destination.$2;
+    if (navigationGrid != null) {
+      final routePlanner = pathfinder;
+      if (routePlanner == null) {
+        throw ArgumentError('A pathfinder is required when a navigation grid is supplied.');
+      }
+      final waypoint = routePlanner.nextWaypoint(
+        unit: unit,
+        grid: navigationGrid,
+        targetX: moveX,
+        targetY: moveY,
+        goalRange: navigationGrid.cellSize * 0.2,
+      );
+      if (waypoint == null) return null;
+      moveX = waypoint.$1;
+      moveY = waypoint.$2;
+    }
+
     movement.moveUnitToward(
       unit: unit,
       allies: allies,
-      targetX: target.x,
-      targetY: target.y,
+      targetX: moveX,
+      targetY: moveY,
       elapsed: elapsed,
       obstacles: obstacles,
     );
