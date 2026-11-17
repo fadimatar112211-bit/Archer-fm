@@ -376,6 +376,69 @@ void main() {
     });
   });
 
+  group('Terrain-aware movement speed', () {
+    test('surface multiplier scales per-unit travel without changing base stats',
+        () {
+      final unit = _unit('slow-surface', x: 0, y: 0, attackRange: 0, moveSpeed: 100);
+      const movement = MonsterFormationMovement();
+
+      movement.moveUnitToward(
+        unit: unit,
+        allies: const [],
+        targetX: 100,
+        targetY: 0,
+        elapsed: const Duration(seconds: 1),
+        speedMultiplier: 0.5,
+      );
+
+      expect(unit.positionX, closeTo(50, 1e-9));
+      expect(unit.stats.moveSpeed, 100);
+      expect(
+        () => movement.moveUnitToward(
+          unit: unit,
+          allies: const [],
+          targetX: 100,
+          targetY: 0,
+          elapsed: const Duration(seconds: 1),
+          speedMultiplier: 0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('match host can apply a terrain multiplier per monster', () {
+      final unit = _unit('water-unit', x: 0, y: 0, attackRange: 0, moveSpeed: 100);
+      const target = MonsterTarget(
+        id: 'far-enemy',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        x: 100,
+        y: 0,
+        isAlive: true,
+      );
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: MonsterProjectileManager(maxActiveProjectiles: 2),
+        projectileSpeed: 10,
+        projectileId: (_) => 'unused',
+        movementSpeedMultiplierFor: (_) => 0.25,
+      );
+
+      loop.update(
+        units: [unit],
+        candidatesFor: (_) => [target],
+        resolveDamageTarget: (_) => null,
+        resolvePositionedTarget: (_) => null,
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(unit.positionX, closeTo(25, 1e-9));
+    });
+  });
+
   group('Monster match navigation integration', () {
     test('combat follows A* waypoints around blocked map cells', () {
       final unit = _unit(
