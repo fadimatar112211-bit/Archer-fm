@@ -68,6 +68,11 @@ void main() {
       animation.advance(const Duration(milliseconds: 80));
       expect(animation.frameIndex, 1);
       animation.synchronize(alive: true, moving: true);
+      expect(animation.state, MonsterAnimationState.attack);
+      expect(animation.frameIndex, 1);
+      animation.advance(const Duration(milliseconds: 240));
+      expect(animation.isAnimationFinished, isTrue);
+      animation.synchronize(alive: true, moving: true);
       expect(animation.state, MonsterAnimationState.walk);
       expect(animation.frameIndex, 0);
     });
