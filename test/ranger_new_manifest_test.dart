@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
-import 'package:archer_fm/hero/sprite_player.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// In-game loading verification for the merged Ranger

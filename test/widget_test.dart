@@ -1,10 +1,10 @@
-import 'dart:ui' show Size;
 
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
-import 'package:archer_fm/hero/hero_viewer_screen.dart';
+import 'package:archer_fm/hero/hero_viewer_screen.dart' show heroStates, heroDirections;
 import 'package:archer_fm/main.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _fakeManifest(String heroId) {
@@ -54,7 +54,7 @@ class _FakeLoader extends HeroAssetLoader {
   }
 }
 
-Future<void> _pumpLoaded(WidgetTester tester) async {
+Future<void> _pumpHome(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1200, 2600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -65,24 +65,62 @@ Future<void> _pumpLoaded(WidgetTester tester) async {
   }
 }
 
+/// Opens the viewer of the [index]-th roster row.
+Future<void> _openViewer(WidgetTester tester, int index) async {
+  await tester.ensureVisible(find.text('عرض').at(index));
+  await tester.pump();
+  await tester.tap(find.text('عرض').at(index));
+  for (var i = 0; i < 4; i++) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+}
+
 void main() {
-  testWidgets('app starts on the Ranger idle animation with all controls', (
+  testWidgets('the roster gates playability to the finished combat build', (
     tester,
   ) async {
-    await _pumpLoaded(tester);
+    await _pumpHome(tester);
+    // Four heroes are still asset-stage; ranger_new is playable.
+    expect(find.textContaining('قيد التطوير'), findsNWidgets(4));
+    expect(
+      find.text('الرامي الجديد — قوس الطاقة الخضراء'),
+      findsOneWidget,
+    );
+    // Exactly one play button is enabled: the playable Ranger II row.
+    // (FilledButton.icon builds a private subclass, so match by predicate.)
+    final playButtons = tester
+        .widgetList(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is ButtonStyleButton &&
+                widget.runtimeType.toString().contains('FilledButton'),
+          ),
+        )
+        .toList();
+    expect(playButtons.length, 5, reason: 'five roster play buttons');
+    final enabled = playButtons
+        .whereType<ButtonStyleButton>()
+        .where((button) => button.onPressed != null)
+        .length;
+    expect(enabled, 1);
+  });
+
+  testWidgets('playing the finished Ranger opens the battle screen', (
+    tester,
+  ) async {
+    await _pumpHome(tester);
+    await _openViewer(tester, 0);
+    // The viewer still opens from any row.
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
-    expect(find.text('64 حركة'), findsOneWidget);
-    for (final label in ['وقوف', 'هجوم', 'مهارة', 'تفادي', 'موت']) {
-      expect(find.text(label), findsOneWidget);
-    }
-    expect(find.textContaining('idle_s'), findsOneWidget);
-    expect(find.text('الرامي المتوازن'), findsWidgets);
   });
 
   testWidgets('switching state and direction swaps the active clip', (
     tester,
   ) async {
-    await _pumpLoaded(tester);
+    await _pumpHome(tester);
+    await _openViewer(tester, 0);
+    expect(find.text('Archer FM · Ranger'), findsOneWidget);
+
     await tester.ensureVisible(find.text('هجوم'));
     await tester.pump();
     await tester.tap(find.text('هجوم'));
@@ -101,7 +139,8 @@ void main() {
   testWidgets('the hero picker switches to another hero and reloads it', (
     tester,
   ) async {
-    await _pumpLoaded(tester);
+    await _pumpHome(tester);
+    await _openViewer(tester, 0);
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Flame'));

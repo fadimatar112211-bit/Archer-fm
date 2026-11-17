@@ -58,6 +58,8 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
 
   final Map<String, AtlasSheet> _cache = {};
 
+  HeroManifest? _manifestCache;
+
   @override
   String get heroId => hero.id;
 
@@ -67,12 +69,14 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
 
   @override
   Future<HeroManifest> loadManifest() async {
+    final cached = _manifestCache;
+    if (cached != null) return cached;
     final text = await rootBundle.loadString(manifestPath);
     final decoded = jsonDecode(text);
     if (decoded is! Map<String, dynamic>) {
       throw FormatException('${hero.id} manifest root must be an object');
     }
-    return HeroManifest.fromJson(decoded);
+    return _manifestCache = HeroManifest.fromJson(decoded);
   }
 
   @override
