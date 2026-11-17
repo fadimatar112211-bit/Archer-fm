@@ -327,6 +327,42 @@ void main() {
       );
     });
 
+    test('defend order returns to its owned crystal after a threat clears', () {
+      final unit = _unit(
+        'returning-guard',
+        x: 200,
+        y: 0,
+        order: MonsterOrder.defend,
+        moveSpeed: 10,
+      );
+      const home = MonsterTarget(
+        id: 'home-crystal',
+        ownerId: 'p1',
+        kind: MonsterTargetKind.crystal,
+        x: 0,
+        y: 0,
+        isAlive: true,
+      );
+      const distantEnemy = MonsterTarget(
+        id: 'distant-enemy',
+        ownerId: 'p2',
+        kind: MonsterTargetKind.hero,
+        x: 1000,
+        y: 0,
+        isAlive: true,
+      );
+
+      const MonsterCombatController().updateUnit(
+        unit: unit,
+        candidates: [home, distantEnemy],
+        now: DateTime.utc(2026, 11, 17),
+        elapsed: Duration(seconds: 1),
+      );
+
+      expect(unit.targetId, isNull);
+      expect(unit.positionX, lessThan(200));
+    });
+
     test('defend order stays home when there is no active threat', () {
       final unit = _unit('guard', order: MonsterOrder.defend);
       const crystal = MonsterTarget(
