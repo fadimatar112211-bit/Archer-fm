@@ -1,20 +1,31 @@
-import 'monster_projectiles.dart';
 import 'monster_models.dart';
+import 'monster_projectiles.dart';
 
 /// Adapter for authoritative hero/crystal state supplied by the match layer.
-/// The caller must construct it from current server-owned state each tick;
-/// this package intentionally has no dependency on hero or crystal modules.
+///
+/// Snapshot values are convenient for immutable entities. When an entity can
+/// move or die during the same simulation tick, provide the live getter
+/// callbacks so later attacks/projectiles observe its updated state.
 class MonsterExternalEntityAdapter
     implements MonsterPositionedDamageTarget {
   const MonsterExternalEntityAdapter({
     required this.id,
     required this.ownerId,
     required this.kind,
-    required this.isAlive,
-    required this.positionX,
-    required this.positionY,
+    required bool isAlive,
+    required double positionX,
+    required double positionY,
     required bool Function(double amount) applyDamage,
-  }) : _applyDamage = applyDamage;
+    bool Function()? isAliveNow,
+    double Function()? positionXNow,
+    double Function()? positionYNow,
+  })  : _isAliveSnapshot = isAlive,
+        _positionXSnapshot = positionX,
+        _positionYSnapshot = positionY,
+        _applyDamage = applyDamage,
+        _isAliveNow = isAliveNow,
+        _positionXNow = positionXNow,
+        _positionYNow = positionYNow;
 
   @override
   final String id;
@@ -22,14 +33,23 @@ class MonsterExternalEntityAdapter
   final String ownerId;
   @override
   final MonsterTargetKind kind;
-  @override
-  final bool isAlive;
-  @override
-  final double positionX;
-  @override
-  final double positionY;
 
+  final bool _isAliveSnapshot;
+  final double _positionXSnapshot;
+  final double _positionYSnapshot;
   final bool Function(double amount) _applyDamage;
+  final bool Function()? _isAliveNow;
+  final double Function()? _positionXNow;
+  final double Function()? _positionYNow;
+
+  @override
+  bool get isAlive => _isAliveNow?.call() ?? _isAliveSnapshot;
+
+  @override
+  double get positionX => _positionXNow?.call() ?? _positionXSnapshot;
+
+  @override
+  double get positionY => _positionYNow?.call() ?? _positionYSnapshot;
 
   @override
   bool applyDamage(double amount) => _applyDamage(amount);
