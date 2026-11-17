@@ -31,7 +31,6 @@ class MonsterCombatController {
     required Iterable<MonsterTarget> candidates,
     required DateTime now,
     required Duration elapsed,
-    double cohesion = 0,
     Iterable<MonsterUnit> allies = const [],
     Iterable<MonsterMovementObstacle> obstacles = const [],
   }) {
