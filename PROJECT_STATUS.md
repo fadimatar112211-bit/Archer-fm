@@ -456,8 +456,8 @@ Still to decide or test:
 - Added A* route-cache recovery when a unit is displaced away from its cached route; units that progress along their planned path advance the waypoint cursor instead of following stale waypoints.
 - Corrected A* heuristic world coordinates for grids with non-zero origins.
 - Added navigation tests for wall routing, diagonal corner blocking, map-revision invalidation, route displacement recovery, non-zero grid origins, stable attack slots, automatic crystal defense, collision safety, and technical army capacity.
-- The monster CI workflow now includes the animation catalog, sprite widget, and navigation/formation test suites. The latest run must complete successfully before checks are marked passed.
-- Remaining blockers: no live match screen or authoritative world renderer currently consumes the widget; runtime map geometry must be supplied to pathfinding; final production monster art is not approved, and ranged still lacks dedicated attack/death artwork.
+- The monster CI workflow includes animation, battle-layer, world integration, navigation/formation, spatial-index, progression, and combat tests. Monster Army Checks run #200 passed formatting, analysis, and all configured monster tests.
+- Remaining blockers: the actual match screen has not mounted MonsterBattleLayer yet; the host must supply live map geometry and authoritative hero/crystal adapters; final production monster art is not approved, and ranged still lacks dedicated attack/death artwork.
 
 
 ## 29. تقدم نظام الوحوش والجيش — 2026-11-17 (دفعة الحركة والتكامل والعرض)
@@ -472,8 +472,8 @@ Still to decide or test:
 - أضيف MonsterAnimationCatalog وطور MonsterSpriteView لعرض إطارات SVG الأربعة لكل ورقة، تشغيل الحركة/الهجوم/الموت، وشريط صحة اختياري. ملفات ranged المفقودة للهجوم/الموت ما زالت null ولا نستخدم حركة melee مكانها.
 - أضيفت اختبارات A* والتفاف الجدران ومنع القطع القطري، إبطال المسارات عند تغيّر إصدار الخريطة، مواقع الهجوم، الدفاع التلقائي، تصادم الحركة، Spatial Hash، تماسك المجموعة، حد السعة، وتكامل الحركة مع دورة القتال.
 - اعتمدنا workflow الموجود .github/workflows/monster-army-checks.yml؛ وهو يشغّل dart format وflutter analyze واختبارات الوحوش، ويتضمن اختبارات الملاحة والأنيميشن وSpatial Hash.
-- بوابة التحقق: نجح workflow Monster Army Checks في التشغيلين #174 و#176، وشملا dart format وflutter analyze وجميع اختبارات الوحوش. التشغيل #176 يتضمن اختبار الحالة الحية ومنع الضرب الزائد داخل tick واحد.
-- ما بقي قبل إعلان نظام الوحوش مكتملاً: تزويد النظام بالشبكة والعوائق ومضاعف سرعة السطح الفعلي من محرك الخريطة، إنشاء محولات MonsterMatchWorldSnapshot من كيانات الأبطال والكريستالات الحقيقية كل tick، دمج MonsterSpriteView والمقذوفات في شاشة اللعب، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، وربط تقدم الترقية بنظام حفظ اللاعب واختبارات الأداء على الأجهزة المستهدفة.
+- بوابة التحقق: نجحت تشغيلات Monster Army Checks #174 و#176 و#182 و#200. التشغيل #200 شمل dart format وflutter analyze وجميع اختبارات الوحوش، بما فيها العالم والأنيميشن وطبقة العرض.
+- ما بقي قبل إعلان نظام الوحوش مكتملاً: تمرير الشبكة والعوائق ومضاعفات سرعة السطح الفعلية من محرك الخريطة، إنشاء محولات MonsterMatchWorldSnapshot من كيانات الأبطال والكريستالات الحقيقية كل tick، تركيب MonsterBattleLayer في شاشة المباراة، إنتاج/اعتماد رسومات 2.5D أصلية نهائية للأنواع الأربعة، ربط تقدم الترقية بحفظ اللاعب، واختبارات الأداء على الأجهزة المستهدفة.
 
 
 ## 30. Permanent monster progression — 2026-11-17
