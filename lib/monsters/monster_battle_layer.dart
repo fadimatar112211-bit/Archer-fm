@@ -59,7 +59,7 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
 
   void _syncUnits({required bool detectMovement}) {
     final currentIds = <String>{};
-    final moving = <String>{};
+    final moving = detectMovement ? <String>{} : {..._movingUnitIds};
 
     for (final unit in widget.units) {
       currentIds.add(unit.id);
@@ -80,6 +80,7 @@ class _MonsterBattleLayerState extends State<MonsterBattleLayer> {
 
     _animations.removeWhere((id, _) => !currentIds.contains(id));
     _previousPositions.removeWhere((id, _) => !currentIds.contains(id));
+    moving.removeWhere((id) => !currentIds.contains(id));
     _movingUnitIds = moving;
   }
 
