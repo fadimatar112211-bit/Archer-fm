@@ -135,6 +135,24 @@ void main() {
       expect(projectile.isResolved, isTrue);
     });
 
+    test('cancels targets with infinite coordinates before moving', () {
+      final projectile = MonsterProjectile(
+        id: 'bolt-infinite-position',
+        source: _ranged(),
+        targetId: 'enemy',
+        projectileSpeed: 10,
+        positionX: 3,
+        positionY: 4,
+      );
+      expect(projectile.update(
+        elapsed: const Duration(seconds: 1),
+        target: _Target('enemy', 'p2', double.infinity, 0),
+      ), MonsterProjectileResult.targetMissing);
+      expect(projectile.positionX, 3);
+      expect(projectile.positionY, 4);
+      expect(projectile.isResolved, isTrue);
+    });
+
     test('rejects negative elapsed and requires a ranged living source', () {
       final projectile = MonsterProjectile(
         id: 'bolt', source: _ranged(), targetId: 'enemy', projectileSpeed: 10,
