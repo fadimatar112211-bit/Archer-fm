@@ -37,7 +37,7 @@ void main() {
       );
 
       expect(
-        index.nearbyUnits(source, radius: 24).map((unit) => unit.id),
+        index.nearbyUnits(source, radius: 24).map((unit) => unit.id).toList(),
         ['ally'],
       );
       expect(index.unitCount, 4);
