@@ -91,6 +91,38 @@ class MonsterProgression {
   }
 
   static const int maxLevel = 40;
+  static const int saveSchemaVersion = 1;
+
+  /// Restores the versioned progression envelope stored in a player profile.
+  factory MonsterProgression.fromSaveData({
+    required MonsterCatalog catalog,
+    required Map<MonsterType, MonsterUpgradeGrowth> growth,
+    required MonsterUpgradeCostForLevel costForLevel,
+    required Map<String, Object?> data,
+  }) {
+    if (data['version'] != saveSchemaVersion) {
+      throw FormatException(
+        'Unsupported monster progression save version: ${data['version']}.',
+      );
+    }
+    final rawLevels = data['levels'];
+    if (rawLevels is! Map) {
+      throw const FormatException('Monster progression save has no levels map.');
+    }
+    final levels = <String, Object?>{};
+    for (final entry in rawLevels.entries) {
+      if (entry.key is! String) {
+        throw const FormatException('Monster progression level keys must be strings.');
+      }
+      levels[entry.key as String] = entry.value;
+    }
+    return MonsterProgression.fromJson(
+      catalog: catalog,
+      growth: growth,
+      costForLevel: costForLevel,
+      json: levels,
+    );
+  }
 
   final MonsterCatalog catalog;
   final Map<MonsterType, MonsterUpgradeGrowth> growth;
@@ -176,5 +208,11 @@ class MonsterProgression {
   /// JSON-safe map with all four type names and their permanent levels.
   Map<String, int> toJson() => {
         for (final type in MonsterType.values) type.name: levelOf(type),
+      };
+
+  /// Versioned envelope suitable for storage inside a permanent player profile.
+  Map<String, Object?> toSaveData() => {
+        'version': saveSchemaVersion,
+        'levels': toJson(),
       };
 }
