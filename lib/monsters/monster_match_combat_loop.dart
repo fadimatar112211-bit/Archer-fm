@@ -132,6 +132,7 @@ class MonsterMatchCombatLoop {
     var meleeApplied = 0;
     var rangedCreated = 0;
     var rejected = 0;
+    final attackingUnitIds = <String>{};
 
     for (final unit in unitSnapshot) {
       if (!unit.isAlive) {
@@ -173,6 +174,7 @@ class MonsterMatchCombatLoop {
           rejected++;
         } else {
           rangedCreated++;
+          attackingUnitIds.add(intent.monsterId);
         }
       } else {
         final result = resolver.resolve(
@@ -182,6 +184,7 @@ class MonsterMatchCombatLoop {
         );
         if (result == MonsterDamageResult.applied) {
           meleeApplied++;
+          attackingUnitIds.add(intent.monsterId);
         } else {
           rejected++;
         }
@@ -193,6 +196,7 @@ class MonsterMatchCombatLoop {
       rangedProjectilesCreated: rangedCreated,
       rejectedAttacks: rejected,
       projectileResults: projectileResults,
+      attackingUnitIds: Set.unmodifiable(attackingUnitIds),
     );
   }
 
@@ -210,10 +214,12 @@ class MonsterMatchTickResult {
     required this.rangedProjectilesCreated,
     required this.rejectedAttacks,
     required this.projectileResults,
+    this.attackingUnitIds = const {},
   });
 
   final int meleeHitsApplied;
   final int rangedProjectilesCreated;
   final int rejectedAttacks;
   final Map<String, MonsterProjectileResult> projectileResults;
+  final Set<String> attackingUnitIds;
 }
