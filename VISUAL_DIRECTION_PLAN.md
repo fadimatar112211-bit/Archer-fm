@@ -88,3 +88,16 @@ A three-quarter/isometric camera and composition with enough screen space to rea
 ## Known starting point
 
 At the time this plan was added, the game uses a Flutter custom-painted 960×540 logical arena with a smoothed camera origin; the player has a 3D GLB render path, while monsters are currently rendered through the arena painter/procedural animation path. The four monster roles are defined in `lib/game/monsters/monster_models.dart`. This is why the plan starts with an audit and staged migration rather than assuming the whole game is already a full 3D scene.
+
+
+## Crystal visual specification — approved update (2026-11-18)
+
+All castle crystals must be **large, tall, prominent crystal pillars/spires** (the user's intended shape: a large elongated crystal column), never small loose gemstones or tiny floor decorations. Each of the seven crystals per player must:
+- Have a substantial vertical silhouette and be readable from the normal gameplay camera distance.
+- Use a faceted, sharp-edged crystal form with a visible grounded base; feel like a major castle objective, not a pickup.
+- Emit a strong but controlled internal glow and matching energy/light accents in the owning player's color.
+- Keep a clearly visible health bar and ownership/team color cue without obscuring the crystal.
+- Show progressive damage through visible cracks/energy disruption, then a distinctive large destruction/break-apart effect.
+- Remain visually distinct from mines, pickups, rocks, and decorative props.
+
+This is a visual specification only: preserve the seven-crystal count, current HP values (500, 700, 900, 1200, 1500, 1800, 2200), targeting rules, rebuild rules, and gameplay collision/balance unless separately approved. Apply the same large-pillar language consistently to all players and map placements. Validate visibility, screen-space size, occlusion, performance, and readability at mobile gameplay zoom.
