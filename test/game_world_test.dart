@@ -386,7 +386,13 @@ void main() {
       world.setMoveInput(const Offset(0, 1));
       runFor(world, 1000);
       expect(world.player.position.dy, greaterThan(400));
-      expect(world.player.position.dy, lessThanOrEqualTo(540 - 28));
+      // The arena is a camera window into a larger generated map, so the old
+      // fixed 540-unit border is replaced by the map's own border.
+      expect(
+        world.player.position.dy,
+        lessThanOrEqualTo(world.map.size.height - 24),
+      );
+      expect(world.map.isBlocked(world.player.position, 24), isFalse);
     });
 
     test('auto-aim turns the hero toward the nearest enemy', () {

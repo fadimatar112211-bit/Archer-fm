@@ -7,6 +7,7 @@ import '../hero/hero_assets.dart';
 import 'combat/hero_kit.dart';
 import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
+import 'world/arena_map.dart';
 import 'world/game_world.dart';
 
 /// One transient screen-space label ("+10 XP", "Level Up!", …).
@@ -91,17 +92,33 @@ class ArenaPainter extends CustomPainter {
 
     canvas.translate(origin.dx, origin.dy);
     canvas.scale(scale);
+    final camera = _cameraOrigin();
+    canvas.translate(-camera.dx, -camera.dy);
 
+    _paintTerrain(canvas);
     _paintZones(canvas);
     _paintFireWaves(canvas);
     _paintGroundShadows(canvas);
     _paintMonsters(canvas);
     _paintProjectiles(canvas);
     _paintFx(canvas);
+    _paintFog(canvas, camera);
     _paintHero(canvas);
     _paintLabels(canvas, scale);
 
     canvas.restore();
+  }
+
+  /// Top-left corner of the camera window in map coordinates, centered on the
+  /// hero and clamped to the map edges.
+  Offset _cameraOrigin() {
+    final map = world.map;
+    final maxX = math.max(0.0, map.size.width - arenaWidth);
+    final maxY = math.max(0.0, map.size.height - arenaHeight);
+    return Offset(
+      (world.player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
+      (world.player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
+    );
   }
 
   // ---- Backdrop ---------------------------------------------------------------
@@ -121,24 +138,251 @@ class ArenaPainter extends CustomPainter {
         const [0.0, 0.55, 1.0],
       );
     canvas.drawRect(rect, paint);
-    // Ground grid.
+    // Map border glow.
+    canvas.drawRect(
+      rect.deflate(1),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = presentation.accent.withValues(alpha: 0.25),
+    );
+  }
+
+  // ---- Terrain ----------------------------------------------------------------
+
+  static const Color _groundColor = Color(0xFF365231);
+  static const Color _waterColor = Color(0xFF2E6E8E);
+  static const Color _waterDeepColor = Color(0xFF22566F);
+  static const Color _treeColor = Color(0xFF1F4A2B);
+  static const Color _treeLightColor = Color(0xFF2C6236);
+  static const Color _trunkColor = Color(0xFF4A3220);
+  static const Color _rockColor = Color(0xFF6E7376);
+  static const Color _rockLightColor = Color(0xFF8C9194);
+  static const Color _bridgeColor = Color(0xFF7A5430);
+  static const Color _bridgePlankColor = Color(0xFF5C3E24);
+  static const Color _goldColor = Color(0xFFFFC845);
+  static const Color _chestColor = Color(0xFF8A5A2B);
+
+  Color _biomeColor(TerrainKind kind) => switch (kind) {
+        TerrainKind.forest => const Color(0xFF2E5A33),
+        TerrainKind.desert => const Color(0xFFB08A55),
+        TerrainKind.snow => const Color(0xFFD9E8F2),
+        TerrainKind.volcanic => const Color(0xFF6B3A34),
+      };
+
+  void _paintTerrain(Canvas canvas) {
+    final map = world.map;
+    // Base ground.
+    canvas.drawRect(Offset.zero & map.size, Paint()..color = _groundColor);
+
+    // Gentle grid so movement reads on the large map.
     final grid = Paint()
-      ..color = presentation.accent.withValues(alpha: 0.10)
+      ..color = const Color(0x14FFFFFF)
       ..strokeWidth = 1;
-    const spacing = 60.0;
-    for (var x = 0.0; x <= arenaWidth; x += spacing) {
-      canvas.drawLine(
-        origin + Offset(x * (width / arenaWidth), 0),
-        origin + Offset(x * (width / arenaWidth), height),
-        grid,
+    const spacing = 120.0;
+    for (var x = 0.0; x <= map.size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, map.size.height), grid);
+    }
+    for (var y = 0.0; y <= map.size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(map.size.width, y), grid);
+    }
+
+    // Biomes.
+    for (final patch in map.biomes) {
+      final color = _biomeColor(patch.kind);
+      canvas.drawCircle(
+        patch.center,
+        patch.radius,
+        Paint()
+          ..shader = ui.Gradient.radial(
+            patch.center,
+            patch.radius,
+            [color.withValues(alpha: 0.9), color.withValues(alpha: 0.0)],
+            const [0.45, 1.0],
+          ),
       );
     }
-    for (var y = 0.0; y <= arenaHeight; y += spacing) {
-      canvas.drawLine(
-        origin + Offset(0, y * (height / arenaHeight)),
-        origin + Offset(width, y * (height / arenaHeight)),
-        grid,
+
+    // River banks, water and bridges.
+    for (final river in map.rivers) {
+      final path = Path()
+        ..moveTo(river.points.first.dx, river.points.first.dy);
+      for (final point in river.points.skip(1)) {
+        path.lineTo(point.dx, point.dy);
+      }
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width + 18
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..color = const Color(0xFF24402C),
       );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..shader = ui.Gradient.linear(
+            river.points.first,
+            river.points.last,
+            const [_waterColor, _waterDeepColor, _waterColor],
+            const [0.0, 0.5, 1.0],
+          ),
+      );
+      // Moving highlights make the water read as water.
+      final shimmer = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0x66FFFFFF);
+      final phase = (presentation.timeMs / 900) % 1.0;
+      for (var i = 1; i < river.points.length - 1; i++) {
+        final a = river.points[i];
+        final b = river.points[i + 1];
+        final t = phase.clamp(0.0, 1.0);
+        final start = Offset(
+          a.dx + (b.dx - a.dx) * t,
+          a.dy + (b.dy - a.dy) * t,
+        );
+        canvas.drawLine(
+          start - Offset(0, 12),
+          start + Offset(0, 12),
+          shimmer,
+        );
+      }
+      for (final bridge in river.bridges) {
+        final rect = bridge.rect;
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(7)),
+          Paint()..color = _bridgeColor,
+        );
+        final planks = Paint()
+          ..color = _bridgePlankColor
+          ..strokeWidth = 2;
+        for (var x = rect.left + 8; x < rect.right; x += 12) {
+          canvas.drawLine(
+            Offset(x, rect.top + 4),
+            Offset(x, rect.bottom - 4),
+            planks,
+          );
+        }
+      }
+    }
+
+    // Pickups: loose resources and chests.
+    for (final pickup in map.pickups) {
+      if (pickup.kind == PickupKind.resource) {
+        for (var i = 0; i < 3; i++) {
+          canvas.drawCircle(
+            pickup.position + Offset((i - 1) * 8.0, i.isEven ? -3 : 3),
+            5,
+            Paint()..color = _goldColor,
+          );
+        }
+      } else {
+        final rect = Rect.fromCenter(
+          center: pickup.position,
+          width: 24,
+          height: 17,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(3)),
+          Paint()..color = _chestColor,
+        );
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: pickup.position + const Offset(0, -7),
+            width: 26,
+            height: 6,
+          ),
+          Paint()..color = const Color(0xFF5C3A1C),
+        );
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: pickup.position,
+            width: 5,
+            height: 8,
+          ),
+          Paint()..color = _goldColor,
+        );
+      }
+    }
+
+    // Indestructible trees and rocks.
+    for (final obstacle in map.obstacles) {
+      if (obstacle.kind == ObstacleKind.tree) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: obstacle.position + const Offset(0, 8),
+            width: obstacle.radius * 2.3,
+            height: obstacle.radius * 0.9,
+          ),
+          Paint()..color = const Color(0x33000000),
+        );
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: obstacle.position + Offset(0, obstacle.radius * 0.4),
+            width: obstacle.radius * 0.45,
+            height: obstacle.radius * 0.9,
+          ),
+          Paint()..color = _trunkColor,
+        );
+        canvas.drawCircle(
+          obstacle.position - Offset(0, obstacle.radius * 0.35),
+          obstacle.radius,
+          Paint()..color = _treeColor,
+        );
+        canvas.drawCircle(
+          obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
+          obstacle.radius * 0.55,
+          Paint()..color = _treeLightColor,
+        );
+      } else {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: obstacle.position + const Offset(0, 7),
+            width: obstacle.radius * 2.1,
+            height: obstacle.radius * 0.8,
+          ),
+          Paint()..color = const Color(0x33000000),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndCorners(
+            Rect.fromCenter(
+              center: obstacle.position,
+              width: obstacle.radius * 1.9,
+              height: obstacle.radius * 1.5,
+            ),
+            topLeft: Radius.circular(obstacle.radius * 0.5),
+            topRight: Radius.circular(obstacle.radius * 0.7),
+            bottomRight: Radius.circular(obstacle.radius * 0.4),
+            bottomLeft: Radius.circular(obstacle.radius * 0.6),
+          ),
+          Paint()..color = _rockColor,
+        );
+        canvas.drawCircle(
+          obstacle.position - Offset(obstacle.radius * 0.3, obstacle.radius * 0.25),
+          obstacle.radius * 0.35,
+          Paint()..color = _rockLightColor,
+        );
+      }
+    }
+  }
+
+  void _paintFog(Canvas canvas, Offset camera) {
+    final view = Rect.fromLTWH(
+      camera.dx,
+      camera.dy,
+      arenaWidth,
+      arenaHeight,
+    ).inflate(fogCellSize);
+    final fogPaint = Paint()..color = const Color(0xF007110A);
+    for (final cell in world.fog.hiddenCellsIn(view)) {
+      canvas.drawRect(cell.inflate(0.5), fogPaint);
     }
   }
 
@@ -297,7 +541,8 @@ class ArenaPainter extends CustomPainter {
     for (final corpse in world.corpses) {
       _paintCorpse(canvas, corpse);
     }
-    final monsters = [...world.enemies, ...world.army]
+    // Enemy monsters are only rendered when they are near the hero.
+    final monsters = [...world.visibleEnemies, ...world.army]
       ..sort((a, b) => a.position.dy.compareTo(b.position.dy));
     for (final monster in monsters) {
       if (monster.hp <= 0) continue;

@@ -4,8 +4,12 @@ import 'dart:ui' show Offset;
 import '../combat/combo.dart';
 import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
+import 'arena_map.dart';
+import 'fog_of_war.dart';
 
-/// Logical size of the battle arena in world units.
+/// Logical size of the camera window in world units. The match map itself is
+/// larger and generated per match (see [ArenaMap]); these constants only
+/// describe how much of it is visible at once.
 const double arenaWidth = 960;
 const double arenaHeight = 540;
 
@@ -282,6 +286,15 @@ class GameWorld {
         _startingArmy = startingArmy ?? MonsterCatalog.defaultStartingArmy {
     player.hp = kit.baseMaxHp;
     player.energy = kit.baseMaxEnergy * 0.5;
+    // One large map per match: randomized size, biomes, river/bridges,
+    // obstacle and objective placement.
+    map = ArenaMap.generate(math.Random(rng.nextInt(0x3fffffff)));
+    fog = FogOfWar(
+      worldWidth: map.size.width,
+      worldHeight: map.size.height,
+    );
+    player.position = map.playerSpawn;
+    fog.reveal(player.position, fogRevealRadius);
     if (spawnWaves) {
       _spawnStartingArmy();
       spawnWave(initial: true);
@@ -297,6 +310,13 @@ class GameWorld {
   final bool spawnWaves;
   final PlayerState player;
   final List<EnemyState> enemies = [];
+
+  /// Generated match world: size, biomes, rivers/bridges, obstacles, mines,
+  /// pickups and castle anchors.
+  late final ArenaMap map;
+
+  /// Permanently remembered explored cells of [map].
+  late final FogOfWar fog;
 
   /// The player's permanently-owned monster army. Dead members are removed and
   /// never respawn; the player must buy replacements.
@@ -786,9 +806,12 @@ class GameWorld {
       return;
     }
     // Land behind the target, facing it.
-    player.position = Offset(
-      _clampD(target.position.dx - target.facing.dx * 30, 28, arenaWidth - 28),
-      _clampD(target.position.dy - target.facing.dy * 30, 70, arenaHeight - 28),
+    player.position = map.clampToBounds(
+      Offset(
+        target.position.dx - target.facing.dx * 30,
+        target.position.dy - target.facing.dy * 30,
+      ),
+      24,
     );
     player.facing = target.facing;
     _damageEnemy(target, kit.baseDamage * 3.0 * currentDamageMult());
@@ -890,6 +913,7 @@ class GameWorld {
   void update(int deltaMs) {
     nowMs += deltaMs;
     _updatePlayer(deltaMs);
+    fog.reveal(player.position, fogRevealRadius);
     _updateEnemies(deltaMs);
     _updateArmy(deltaMs);
     _updateProjectiles(deltaMs);
@@ -908,6 +932,14 @@ class GameWorld {
     _events.clear();
     return drained;
   }
+
+  /// "Enemy monsters are shown only when nearby": true while [enemy] is within
+  /// [enemyVisibleRadius] of the hero.
+  bool isEnemyVisible(EnemyState enemy) =>
+      (enemy.position - player.position).distance <= enemyVisibleRadius;
+
+  /// Hostile monsters currently close enough to be rendered.
+  Iterable<EnemyState> get visibleEnemies => enemies.where(isEnemyVisible);
 
   // ---- Internals ------------------------------------------------------------
 
@@ -937,11 +969,10 @@ class GameWorld {
       return;
     }
     final speed = currentMoveSpeed();
-    final step = moveInput * (speed * deltaMs / 1000);
-    player.position = Offset(
-      _clampD(player.position.dx + step.dx, 28, arenaWidth - 28),
-      _clampD(player.position.dy + step.dy, 70, arenaHeight - 28),
-    );
+    // Shallow water slows the hero; bridges are dry.
+    final step = moveInput *
+        (speed * map.movementFactorAt(player.position) * deltaMs / 1000);
+    player.position = map.slideMove(player.position, step, 24);
     if (moveInput.distance > 0.01) {
       player.facing = _normalize(moveInput);
     }
@@ -1075,19 +1106,14 @@ class GameWorld {
 
       if (target == null) {
         // No enemy in range: walk back into formation around the hero.
-        final anchor = Offset(
-          _clampD(
+        final anchor = map.clampToBounds(
+          Offset(
             player.position.dx +
                 armyFormationOffset(ally.groupSlot, army.length).dx,
-            26,
-            arenaWidth - 26,
-          ),
-          _clampD(
             player.position.dy +
                 armyFormationOffset(ally.groupSlot, army.length).dy,
-            70,
-            arenaHeight - 26,
           ),
+          24,
         );
         final delta = anchor - ally.position;
         if (delta.distance > 16) {
@@ -1172,11 +1198,14 @@ class GameWorld {
     }
 
     final before = monster.position;
-    final step = dir * (monster.speed * speedMult * deltaMs / 1000);
-    monster.position = Offset(
-      _clampD(monster.position.dx + step.dx, 20, arenaWidth - 20),
-      _clampD(monster.position.dy + step.dy, 60, arenaHeight - 24),
-    );
+    final step = dir *
+        (monster.speed *
+            speedMult *
+            map.movementFactorAt(monster.position) *
+            deltaMs /
+            1000);
+    monster.position =
+        map.slideMove(monster.position, step, monster.radius * 0.9);
     final moved = (monster.position - before).distance;
     monster.moving = moved > 0.02;
     if (monster.moving) {
@@ -1326,15 +1355,20 @@ class GameWorld {
     var tries = 0;
     do {
       position = Offset(
-        60 + rng.nextDouble() * (arenaWidth - 120),
-        80 + rng.nextDouble() * (arenaHeight - 130),
+        60 + rng.nextDouble() * (map.size.width - 120),
+        80 + rng.nextDouble() * (map.size.height - 130),
       );
       tries++;
     } while (tries < 40 &&
         ((position - player.position).distance < 280 ||
+            map.isBlocked(position, 18) ||
+            map.isWater(position) ||
             army.any((ally) =>
                 (ally.position - position).distance <
                 ally.radius + 30)));
+    if (map.isBlocked(position, 16) || map.isWater(position)) {
+      position = map.clampToBounds(map.center, 40);
+    }
 
     // Weighted draft of the four approved types. Runners are the bulk,
     // stalkers flank, ranged pressure and tanks anchor the wave.
@@ -1398,9 +1432,9 @@ class GameWorld {
       (rng.nextDouble() - 0.5) * 16,
     );
     final offset = armyFormationOffset(formationSlot, math.max(army.length + 1, 20));
-    var position = Offset(
-      _clampD(base.dx + offset.dx + jitter.dx, 26, arenaWidth - 26),
-      _clampD(base.dy + offset.dy + jitter.dy, 70, arenaHeight - 26),
+    var position = map.clampToBounds(
+      Offset(base.dx + offset.dx + jitter.dx, base.dy + offset.dy + jitter.dy),
+      24,
     );
     // Never spawn inside an existing army monster: the ring layout is roomy,
     // but the per-spawn jitter can close a gap. Push the newcomer out along
@@ -1414,10 +1448,7 @@ class GameWorld {
         position += away / gap * (minGap - gap);
       }
     }
-    position = Offset(
-      _clampD(position.dx, 26, arenaWidth - 26),
-      _clampD(position.dy, 70, arenaHeight - 26),
-    );
+    position = map.clampToBounds(position, 24);
     final monster = EnemyState(
       id: 'army_${_armySeq++}',
       kind: type.name,
@@ -1573,7 +1604,7 @@ class GameWorld {
   void _respawn() {
     player.dead = false;
     player.hp = kit.baseMaxHp;
-    player.position = const Offset(arenaWidth / 2, arenaHeight * 0.62);
+    player.position = map.playerSpawn;
     player.invulnerableUntilMs = nowMs + 1500;
     combo.reset();
     // Clear enemies camping the spawn point.

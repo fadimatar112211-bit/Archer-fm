@@ -11,6 +11,7 @@ import '../hero/hero_manifest.dart';
 import '../hero/sprite_player.dart';
 import 'arena_painter.dart';
 import 'combat/hero_kit.dart';
+import 'minimap.dart';
 import 'monsters/monster_models.dart';
 import 'progress/hero_progress.dart';
 import 'render3/glb.dart';
@@ -598,6 +599,15 @@ class _GameScreenState extends State<GameScreen>
                     ],
                   ),
                 ),
+              ),
+            ),
+            // Minimap (bottom center, clear of both control zones).
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Center(child: ArenaMinimap(world: world)),
               ),
             ),
             // Joystick zone (left half, lower part).
