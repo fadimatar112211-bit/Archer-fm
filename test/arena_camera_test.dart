@@ -76,6 +76,30 @@ void main() {
       expect(tapWorldPoint.dy, closeTo(worldPoint.dy, 1e-9));
     });
 
+    test('oblique projection keeps camera center fixed and compresses depth', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(53),
+        spawnWaves: false,
+      );
+      const size = Size(2400, 1080);
+      final transform = ArenaCameraTransform.forViewport(size, world);
+      final centerWorld = world.cameraOrigin + const Offset(
+        arenaWidth / 2,
+        arenaHeight / 2,
+      );
+      final centerScreen = transform.worldToLocal(centerWorld);
+      expect(centerScreen.dx, closeTo(size.width / 2, 1e-9));
+      expect(centerScreen.dy, closeTo(size.height / 2, 1e-9));
+
+      final point = centerWorld + const Offset(0, 100);
+      final screen = transform.worldToLocal(point);
+      expect(screen.dy - centerScreen.dy, closeTo(100 * 0.82 * transform.scale, 1e-9));
+      final restored = transform.localToWorld(screen);
+      expect(restored.dx, closeTo(point.dx, 1e-9));
+      expect(restored.dy, closeTo(point.dy, 1e-9));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
