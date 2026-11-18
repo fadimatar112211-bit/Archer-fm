@@ -654,6 +654,7 @@ class _GameScreenState extends State<GameScreen>
     required double pace,
     String? directionLocked,
   }) {
+    final m = manifest;
     // A GLB has its own clip names and does not need atlas direction variants.
     // Manifest timings are optional; when absent the GLB duration is used.
     final hero3d = _hero3d;
@@ -672,7 +673,6 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
 
-    final m = manifest;
     if (m == null) return;
     final dir = directionLocked ??
         GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
