@@ -86,10 +86,10 @@ class ArenaWorldProjection {
     var maxX = double.negativeInfinity;
     var maxY = double.negativeInfinity;
     for (final point in corners) {
-      minX = math.min(minX, point.dx);
-      minY = math.min(minY, point.dy);
-      maxX = math.max(maxX, point.dx);
-      maxY = math.max(maxY, point.dy);
+      minX = math.min(minX, point.dx).toDouble();
+      minY = math.min(minY, point.dy).toDouble();
+      maxX = math.max(maxX, point.dx).toDouble();
+      maxY = math.max(maxY, point.dy).toDouble();
     }
     return Rect.fromLTRB(minX, minY, maxX, maxY);
   }
