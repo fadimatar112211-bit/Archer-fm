@@ -590,6 +590,9 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
+  /// Draws each objective as a tall crystal monolith, not a small pickup gem.
+  /// The visual footprint is intentionally larger while gameplay positions,
+  /// HP, targeting and collision rules remain unchanged.
   void _paintCrystal(
     Canvas canvas,
     CrystalState crystal,
@@ -597,73 +600,202 @@ class ArenaPainter extends CustomPainter {
     bool isLocal,
   ) {
     final base = crystal.position;
+    final pulse = 0.5 + 0.5 * math.sin(presentation.timeMs / 420);
     final body = crystal.exposed
         ? accent
         : Color.lerp(accent, const Color(0xFFFFFFFF), 0.35)!;
+    const halfWidth = 22.0;
+    const height = 88.0;
+    const topY = -height;
+    const barWidth = 54.0;
+
+    // Ground shadow and a substantial stone/metal plinth establish scale.
     canvas.drawOval(
       Rect.fromCenter(
-        center: base + const Offset(0, 18),
-        width: crystalRadius * 1.9,
-        height: crystalRadius * 0.8,
+        center: base + const Offset(0, 7),
+        width: 72,
+        height: 25,
       ),
-      Paint()..color = const Color(0x44000000),
+      Paint()..color = const Color(0x66000000),
     );
-    canvas.drawCircle(
-      base,
-      crystalRadius * 1.5,
-      Paint()
-        ..shader = ui.Gradient.radial(
-          base,
-          crystalRadius * 1.5,
-          [accent.withValues(alpha: 0.32), accent.withValues(alpha: 0.0)],
-        ),
-    );
-    final shape = Path()
-      ..moveTo(base.dx, base.dy - crystalRadius * 1.35)
-      ..lineTo(base.dx + crystalRadius * 0.72, base.dy)
-      ..lineTo(base.dx, base.dy + crystalRadius * 1.05)
-      ..lineTo(base.dx - crystalRadius * 0.72, base.dy)
+    final plinth = Path()
+      ..moveTo(base.dx - 31, base.dy - 1)
+      ..lineTo(base.dx - 24, base.dy - 13)
+      ..lineTo(base.dx + 24, base.dy - 13)
+      ..lineTo(base.dx + 31, base.dy - 1)
+      ..lineTo(base.dx + 24, base.dy + 8)
+      ..lineTo(base.dx - 24, base.dy + 8)
       ..close();
-    canvas.drawPath(shape, Paint()..color = body);
+    canvas.drawPath(plinth, Paint()..color = const Color(0xFF343F3B));
     canvas.drawPath(
-      shape,
+      plinth,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
-        ..color = const Color(0xCCFFFFFF),
+        ..strokeWidth = 2
+        ..color = accent.withValues(alpha: 0.8),
     );
-    // Facet.
-    canvas.drawLine(
-      base + Offset(0, -crystalRadius * 1.35),
-      base + Offset(0, crystalRadius * 1.05),
-      Paint()
-        ..strokeWidth = 1
-        ..color = const Color(0x55FFFFFF),
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: base + const Offset(0, -5),
+        width: 49,
+        height: 13,
+      ),
+      Paint()..color = accent.withValues(alpha: 0.22 + pulse * 0.12),
     );
 
-    if (crystal.hpRatio < 0.999) {
-      final bar = Rect.fromCenter(
-        center: base + Offset(0, -crystalRadius * 1.9),
-        width: 38,
-        height: 5,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(bar, const Radius.circular(2)),
-        Paint()..color = const Color(0x99000000),
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(bar.left, bar.top, bar.width * crystal.hpRatio, 5),
-          const Radius.circular(2),
+    // Tall internal energy bloom, visible at normal gameplay zoom.
+    canvas.drawCircle(
+      base + const Offset(0, -43),
+      65 + pulse * 5,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          base + const Offset(0, -43),
+          65 + pulse * 5,
+          [
+            accent.withValues(alpha: 0.42 + pulse * 0.10),
+            accent.withValues(alpha: 0.12),
+            accent.withValues(alpha: 0.0),
+          ],
+          const [0.0, 0.48, 1.0],
         ),
-        Paint()
-          ..color = Color.lerp(
-            const Color(0xFFFF5A4A),
-            const Color(0xFF7CFF6B),
-            crystal.hpRatio,
-          )!,
-      );
+    );
+
+    // Main faceted monolith silhouette.
+    final top = base + const Offset(0, topY);
+    final upperLeft = base + const Offset(-halfWidth * 0.58, -height * 0.72);
+    final upperRight = base + const Offset(halfWidth * 0.58, -height * 0.72);
+    final leftShoulder = base + const Offset(-halfWidth, -height * 0.43);
+    final rightShoulder = base + const Offset(halfWidth, -height * 0.43);
+    final lowerLeft = base + const Offset(-halfWidth * 0.62, -height * 0.12);
+    final lowerRight = base + const Offset(halfWidth * 0.62, -height * 0.12);
+    final crystalPath = Path()
+      ..moveTo(top.dx, top.dy)
+      ..lineTo(upperRight.dx, upperRight.dy)
+      ..lineTo(rightShoulder.dx, rightShoulder.dy)
+      ..lineTo(lowerRight.dx, lowerRight.dy)
+      ..lineTo(base.dx, base.dy - 4)
+      ..lineTo(lowerLeft.dx, lowerLeft.dy)
+      ..lineTo(leftShoulder.dx, leftShoulder.dy)
+      ..lineTo(upperLeft.dx, upperLeft.dy)
+      ..close();
+    canvas.drawPath(
+      crystalPath,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          top,
+          base,
+          [
+            Color.lerp(body, Colors.white, 0.68)!,
+            body,
+            Color.lerp(body, Colors.black, 0.42)!,
+          ],
+          const [0.0, 0.48, 1.0],
+        ),
+    );
+    canvas.drawPath(
+      crystalPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..color = const Color(0xE6FFFFFF),
+    );
+
+    // Large readable facets and a bright energy core.
+    final leftFacet = Path()
+      ..moveTo(top.dx, top.dy)
+      ..lineTo(upperLeft.dx, upperLeft.dy)
+      ..lineTo(leftShoulder.dx, leftShoulder.dy)
+      ..lineTo(base.dx, base.dy - 4)
+      ..close();
+    canvas.drawPath(
+      leftFacet,
+      Paint()..color = Colors.white.withValues(alpha: 0.22),
+    );
+    final rightFacet = Path()
+      ..moveTo(top.dx, top.dy)
+      ..lineTo(upperRight.dx, upperRight.dy)
+      ..lineTo(rightShoulder.dx, rightShoulder.dy)
+      ..lineTo(base.dx, base.dy - 4)
+      ..close();
+    canvas.drawPath(
+      rightFacet,
+      Paint()..color = const Color(0x55000000),
+    );
+    canvas.drawLine(
+      top,
+      base + const Offset(0, -5),
+      Paint()
+        ..strokeWidth = 2.4
+        ..color = Colors.white.withValues(alpha: 0.78),
+    );
+    canvas.drawLine(
+      base + const Offset(-halfWidth * 0.58, -height * 0.72),
+      base + const Offset(halfWidth * 0.62, -height * 0.12),
+      Paint()
+        ..strokeWidth = 1.4
+        ..color = Colors.white.withValues(alpha: 0.35),
+    );
+
+    // Damage cracks become progressively more visible as HP falls.
+    if (crystal.hpRatio < 0.72) {
+      final damage = ((0.72 - crystal.hpRatio) / 0.72).clamp(0.0, 1.0);
+      final crackPaint = Paint()
+        ..color = const Color(0xFFFFE6D8).withValues(alpha: 0.35 + damage * 0.6)
+        ..strokeWidth = 1.2 + damage
+        ..strokeCap = StrokeCap.round;
+      final crack = Path()
+        ..moveTo(base.dx + 2, base.dy - 58)
+        ..lineTo(base.dx - 7, base.dy - 48)
+        ..lineTo(base.dx + 1, base.dy - 39)
+        ..lineTo(base.dx - 5, base.dy - 27);
+      canvas.drawPath(crack, crackPaint);
+      if (crystal.hpRatio < 0.38) {
+        final secondCrack = Path()
+          ..moveTo(base.dx - 8, base.dy - 69)
+          ..lineTo(base.dx + 4, base.dy - 61)
+          ..lineTo(base.dx + 9, base.dy - 49);
+        canvas.drawPath(secondCrack, crackPaint);
+      }
     }
+
+    // HP is always visible so the crystal reads as a battle objective.
+    final bar = Rect.fromCenter(
+      center: base + const Offset(0, -height - 12),
+      width: barWidth,
+      height: 7,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bar.inflate(2), const Radius.circular(4)),
+      Paint()..color = const Color(0xCC101510),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bar, const Radius.circular(3)),
+      Paint()..color = const Color(0xFF242B26),
+    );
+    final hpColor = Color.lerp(
+      const Color(0xFFFF5148),
+      const Color(0xFF9CFF75),
+      crystal.hpRatio,
+    )!;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          bar.left,
+          bar.top,
+          bar.width * crystal.hpRatio,
+          bar.height,
+        ),
+        const Radius.circular(3),
+      ),
+      Paint()..color = hpColor,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bar, const Radius.circular(3)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = Colors.white.withValues(alpha: 0.8),
+    );
   }
 
   void _paintFog(Canvas canvas, Offset camera) {
