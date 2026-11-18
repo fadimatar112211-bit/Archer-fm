@@ -20,7 +20,7 @@
 - Branch HEAD at checkpoint creation: `51d98aa83ac1feb6b0c1a2581fa44fd7b6b22b16`.
 - Latest commit message: `Increase 3D hero on-screen prominence in arena`.
 - Latest change: `lib/game/arena_painter.dart` increased the in-arena 3D hero target height from 92 to 112 logical pixels. This changes presentation size only; it does not change collision size or damage.
-- GitHub Actions run for this commit: **44388255782**, workflow `Flutter Android Release APK`, was **in_progress** at the time this checkpoint was written. Recheck its final conclusion and jobs before treating this change as validated.
+- GitHub Actions run for this commit: **44388255782**, workflow `Flutter Android Release APK`, completed with **success** after the checkpoint was drafted. The 112px presentation-size change passed that workflow.
 - Previous CI run **44386356880**, commit `4c9cb2a9607416b69ac0a6e0aa12b4b1df45f15a`, completed successfully. Tests and capture-artifact upload succeeded. This is a prior commit, not the current HEAD.
 - Visual capture artifact from run 44386356880: `archer-fm-3d-hero-visual-captures`, artifact ID `14466477157`. It contains arena renders for four heroes across eight directions plus Ranger arena states. Automated triangle-count checks prove geometry was drawn; they do **not** prove faces look good or match the reference. Inspect captures visually before making a quality claim.
 - A previous verified APK belongs to commit `76d11b5d46fd03cc801a4bcf4e398a9095292457` (run `44385439264`), not the current HEAD. Do not present it as a build of current HEAD.
@@ -112,4 +112,6 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Increased in-arena 3D hero render target height from 92 to 112 in `lib/game/arena_painter.dart`.
 - Triggered Actions run `44388255782`; pending at checkpoint time.
 - Prior successful all-four-hero eight-direction capture run: `44386356880` at commit `4c9cb2a9607416b69ac0a6e0aa12b4b1df45f15a`.
+- The 112px hero-size change passed Actions run 44388255782.
 - Face-quality visual review and full ability-effects validation remain open.
+- Checkpoint file created in commit `37683674ee0b241569578d98cfe8f598abc94459`.
