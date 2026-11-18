@@ -368,8 +368,14 @@ class _GameScreenState extends State<GameScreen>
     if (!mounted || bytes == null) return; // atlas fallback stays active
     try {
       final model = await GlbModel.load(bytes);
-      if (!mounted) return;
-      setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
+      if (!mounted) {
+        model.baseColor?.dispose();
+        return;
+      }
+      // Measure the real idle pose before the first gameplay frame. This
+      // establishes a stable standing height for scaleForPixelHeight().
+      final heroModel = Hero3DModel(model)..calibrate();
+      setState(() => _hero3d = Hero3DController(heroModel));
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
