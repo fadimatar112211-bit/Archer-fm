@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - fix/menu-hero-repaint
       - ranger-reference-work
       - main
     paths:
