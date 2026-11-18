@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
+import 'package:archer_fm/game/progress/progression.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -241,8 +242,12 @@ void main() {
 
     test('upgraded types keep their level when purchased', () {
       final world = makeMonsterWorld(essence: 100000);
+      // Every upgrade category needs its own material, not currency alone.
+      expect(world.upgradeMonster(MonsterType.tank), isFalse);
+      world.materials[ProgressionMaterial.monster] = 1;
       expect(world.upgradeMonster(MonsterType.tank), isTrue);
       expect(world.upgrades.levelOf(MonsterType.tank), 2);
+      expect(world.materials[ProgressionMaterial.monster], 0);
       expect(world.essence, lessThan(100000));
       expect(world.buyMonster(MonsterType.tank), isTrue);
       final bought = world.army.last;
@@ -405,7 +410,14 @@ void main() {
       runFor(world, 800);
       expect(enemy.hp, lessThanOrEqualTo(0));
       expect(world.resources, greaterThan(0));
+      // Earnings are pending until the match is settled; a loss keeps them.
+      expect(world.essence, 0);
+      expect(world.pendingEssence, greaterThan(0));
+      expect(world.pendingMaterials[ProgressionMaterial.monster],
+          greaterThan(0));
+      world.settleMatch();
       expect(world.essence, greaterThan(0));
+      expect(world.materials[ProgressionMaterial.monster], greaterThan(0));
       expect(world.drainEvents().whereType<EnemyKilledEvent>(), isNotEmpty);
     });
   });

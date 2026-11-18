@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'game/combat/hero_kit.dart';
 import 'game/game_screen.dart';
+import 'game/progress/hero_progress.dart';
+import 'game/progress/progression_screen.dart';
 import 'hero/hero_assets.dart';
 import 'hero/hero_catalog.dart';
 import 'hero/hero_viewer_screen.dart';
@@ -46,19 +48,43 @@ class ArcherFmApp extends StatelessWidget {
 
 /// Main menu: pick a hero, inspect it in the viewer or take it into battle.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, this.loaderFactory});
+  const HomeScreen({super.key, this.loaderFactory, this.store});
 
   final HeroLoaderFactory? loaderFactory;
+
+  /// Injectable progress store (tests); the app uses shared preferences.
+  final ProgressStore? store;
 
   @override
   Widget build(BuildContext context) {
     // Heroes with a completed combat build; the rest launch their viewer
     // instead of the battlefield.
     const playableIds = {'ranger_new', 'flame', 'shadow', 'storm'};
+    final upgradeHero =
+        heroCatalog.firstWhere((hero) => hero.id == 'ranger_new');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Archer FM — الأبطال'),
         backgroundColor: Colors.black.withValues(alpha: 0.3),
+        actions: [
+          TextButton.icon(
+            key: const ValueKey('open_progression'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProgressionScreen(
+                  hero: upgradeHero,
+                  store: store,
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.upgrade, color: Colors.white),
+            label: const Text(
+              'التطوير',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: ListView.separated(
@@ -111,6 +137,20 @@ class HomeScreen extends StatelessWidget {
                       child: const Text('عرض'),
                     ),
                     const SizedBox(width: 4),
+                    TextButton(
+                      key: ValueKey('progress_${hero.id}'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ProgressionScreen(
+                            hero: hero,
+                            store: store,
+                            initialHeroId: playable ? hero.id : null,
+                          ),
+                        ),
+                      ),
+                      child: const Text('تطوير'),
+                    ),
+                    const SizedBox(width: 4),
                     FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: playable
@@ -126,6 +166,7 @@ class HomeScreen extends StatelessWidget {
                                     hero: hero,
                                     loaderFactory: loaderFactory ??
                                         defaultHeroLoaderFactory,
+                                    store: store,
                                   ),
                                 ),
                               )

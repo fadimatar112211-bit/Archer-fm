@@ -3,7 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/game_screen.dart';
+import 'package:archer_fm/game/progress/equipment.dart';
 import 'package:archer_fm/game/progress/hero_progress.dart';
+import 'package:archer_fm/game/progress/progression.dart';
+import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
@@ -138,12 +141,16 @@ class _Harness {
     this.heroId = 'ranger_new',
     HeroKit? kit,
     this.dummyDistance = 150,
+    this.configureWorld,
   }) : kit = kit ?? kitForHero(heroId);
 
   final HeroProgress? seedProgress;
   final String heroId;
   final HeroKit kit;
   final double dummyDistance;
+
+  /// Extra setup for the injected world (chests, pending rewards...).
+  final void Function(GameWorld world)? configureWorld;
   final store = MemoryProgressStore();
   GameWorld? world;
 
@@ -182,6 +189,7 @@ class _Harness {
                 xpValue: 10,
               ),
             );
+            harness.configureWorld?.call(created);
             harness.world = created;
             return created;
           },
@@ -444,5 +452,75 @@ void main() {
     );
     expect((world.player.position - heroBefore).distance, greaterThan(100));
     expect((world.player.position - enemy.position).distance, lessThan(60));
+  });
+
+  testWidgets('saved equipment, hero upgrades and capacity apply in battle', (
+    tester,
+  ) async {
+    const weapon = EquipmentItem(
+      id: 'saved_weapon',
+      slot: EquipmentSlot.weapon,
+      rarity: EquipmentRarity.epic,
+      level: 10,
+    );
+    final seed = HeroProgress(
+      level: 5,
+      xp: 0,
+      kills: 0,
+      essence: 100,
+      equipment: const [weapon],
+      equipped: const {'weapon': 'saved_weapon'},
+      capacityLevel: 3,
+      heroUpgradeLevel: 4,
+    );
+    final harness = _Harness(seedProgress: seed);
+    await harness.pump(tester);
+    final expected = ProgressionController.fromProgress('ranger_new', seed);
+    final world = harness.world!;
+    expect(world.maxHp, closeTo(rangerNewKit.baseMaxHp * expected.bonuses.hpMultiplier, 0.001));
+    expect(world.currentDamageMult(),
+        closeTo(expected.bonuses.damageMultiplier, 0.0001));
+    expect(world.mineSystem.carryCapacity, expected.carryCapacity);
+    expect(world.mineSystem.carryCapacity, 650);
+  });
+
+  testWidgets('touching a chest stores the item in the saved inventory', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      configureWorld: (world) {
+        world.map.pickups.clear();
+        world.map.pickups.add(
+          MapPickup(position: world.player.position, kind: PickupKind.chest),
+        );
+      },
+    );
+    await harness.pump(tester);
+    await tester.pump(const Duration(milliseconds: 64));
+    expect(
+      harness.world!.map.pickups.where((p) => p.kind == PickupKind.chest),
+      isEmpty,
+    );
+    final saved = await harness.store.load('ranger_new');
+    expect(saved, isNotNull);
+    expect(saved!.equipment.length, 1);
+    final stored = saved.equipment.single;
+    expect(EquipmentSlot.values, contains(stored.slot));
+    expect(EquipmentRarity.values, contains(stored.rarity));
+    expect(saved.equipped[stored.slot.name], stored.id);
+  });
+
+  testWidgets('leaving the match settles pending earnings into the profile', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.pump(tester);
+    harness.world!.pendingEssence = 90;
+    harness.world!.pendingMaterials[ProgressionMaterial.monster] = 3;
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+    final saved = await harness.store.load('ranger_new');
+    expect(saved!.essence, 90);
+    expect(saved.materials[ProgressionMaterial.monster.name], 3);
   });
 }

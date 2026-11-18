@@ -13,7 +13,9 @@ import 'arena_painter.dart';
 import 'combat/hero_kit.dart';
 import 'minimap.dart';
 import 'monsters/monster_models.dart';
+import 'progress/equipment.dart';
 import 'progress/hero_progress.dart';
+import 'progress/progression.dart';
 import 'render3/glb.dart';
 import 'render3/hero3d_controller.dart';
 import 'render3/hero3d_painter.dart';
@@ -76,6 +78,10 @@ class _GameScreenState extends State<GameScreen>
   late final HeroAssetLoader loader;
   late final ProgressStore store;
 
+  /// Permanent account progression (currency, materials, equipment, upgrades)
+  /// loaded from [store] at startup and saved back when the match ends.
+  late ProgressionController progression;
+
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   int _accumulatorMs = 0;
@@ -119,6 +125,7 @@ class _GameScreenState extends State<GameScreen>
         GameWorld(kit: kit);
     loader = widget.loaderFactory(widget.hero);
     store = widget.store ?? SharedPreferencesProgressStore();
+    progression = ProgressionController(heroId: widget.hero.id);
     _restoreProgress();
     _loadManifest();
     _loadHero3D();    _ticker = createTicker(_tick);
@@ -129,6 +136,10 @@ class _GameScreenState extends State<GameScreen>
   void dispose() {
     _ticker?.stop();
     _toastTimer?.cancel();
+    // Credit everything earned in this match (also when the player lost or
+    // left early) before saving the permanent profile.
+    world.settleMatch();
+    _syncWorldToProgression();
     _persistProgress();
     for (final sheet in _sheets.values) {
       sheet.dispose();
@@ -142,16 +153,39 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _restoreProgress() async {
     final saved = await store.load(widget.hero.id);
     if (saved == null) return;
+    if (!mounted) return;
     setState(() {
       world.level = saved.level.clamp(1, 40);
       world.xp = saved.xp;
       world.kills = saved.kills;
       world.upgrades.loadFromMap(saved.armyLevels);
-      world.essence = saved.essence;
+      progression = ProgressionController.fromProgress(widget.hero.id, saved);
+      _syncProgressionToWorld();
+      world.applyProgression(
+        bonuses: progression.bonuses,
+        carryCapacity: progression.carryCapacity,
+      );
     });
   }
 
+  /// The world's wallet is a working copy; the controller is authoritative
+  /// between matches.
+  void _syncProgressionToWorld() {
+    world.essence = progression.currency;
+    world.materials
+      ..clear()
+      ..addAll(progression.materials);
+  }
+
+  void _syncWorldToProgression() {
+    progression.currency = world.essence;
+    for (final entry in world.materials.entries) {
+      progression.materials[entry.key] = entry.value;
+    }
+  }
+
   Future<void> _persistProgress() async {
+    _syncWorldToProgression();
     await store.save(
       widget.hero.id,
       HeroProgress(
@@ -159,7 +193,18 @@ class _GameScreenState extends State<GameScreen>
         xp: world.xp,
         kills: world.kills,
         armyLevels: world.upgrades.toMap(),
-        essence: world.essence,
+        essence: progression.currency,
+        materials: {
+          for (final entry in progression.materials.entries)
+            entry.key.name: entry.value,
+        },
+        equipment: progression.equipment,
+        equipped: {
+          for (final entry in progression.equipped.entries)
+            entry.key.name: entry.value,
+        },
+        capacityLevel: progression.capacityLevel,
+        heroUpgradeLevel: progression.heroUpgradeLevel,
       ),
     );
   }
@@ -320,6 +365,37 @@ class _GameScreenState extends State<GameScreen>
           );
         case CrystalRebuiltEvent(:final cost):
           _showToast('أُعيد بناء كريستال مقابل $cost موارد');
+        case ChestOpenedEvent(:final item):
+          final outcome = progression.addEquipment(item);
+          _syncProgressionToWorld();
+          if (outcome.isDuplicate) {
+            _labels.add(
+              FloatLabel(
+                text: '+${outcome.materialGained} خامات معدات',
+                worldPosition: world.player.position - const Offset(0, 36),
+                bornAtMs: world.nowMs,
+                color: Color(item.rarity.color),
+              ),
+            );
+            _showToast(
+              'معدات مكررة: ${item.rarity.nameAr} ${item.slot.nameAr} '
+              '→ ${outcome.materialGained} خامات',
+            );
+          } else {
+            _labels.add(
+              FloatLabel(
+                text: '${item.rarity.nameAr} ${item.slot.nameAr}',
+                worldPosition: world.player.position - const Offset(0, 36),
+                bornAtMs: world.nowMs,
+                color: Color(item.rarity.color),
+              ),
+            );
+            _showToast(
+              'صندوق: ${item.rarity.nameAr} ${item.slot.nameAr} '
+              '(المستوى ${item.cappedLevel})',
+            );
+          }
+          _persistProgress();
       }
     }
   }
@@ -817,7 +893,7 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _statusPanel(ThemeData theme) {
     final player = world.player;
-    final hpRatio = (player.hp / kit.baseMaxHp).clamp(0.0, 1.0);
+    final hpRatio = (player.hp / world.maxHp).clamp(0.0, 1.0);
     final energyRatio = (player.energy / kit.baseMaxEnergy).clamp(0.0, 1.0);
     final xpNeeded = GameWorld.xpForLevel(world.level);
     final xpRatio = world.level >= 40 ? 1.0 : world.xp / xpNeeded;
@@ -838,7 +914,7 @@ class _GameScreenState extends State<GameScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                '${player.hp.round()}/${kit.baseMaxHp.round()}',
+                '${player.hp.round()}/${world.maxHp.round()}',
                 style: const TextStyle(color: Colors.white, fontSize: 11),
               ),
             ],
@@ -965,7 +1041,7 @@ class _GameScreenState extends State<GameScreen>
           ],
           const SizedBox(width: 2),
           Text(
-            'موارد ${world.resources} · جوهر ${world.essence}',
+            'موارد ${world.resources} · جوهر ${world.essence + world.pendingEssence}',
             style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
         ],
@@ -1215,6 +1291,10 @@ class _GameScreenState extends State<GameScreen>
     final level = world.upgrades.levelOf(type);
     final maxed = level >= MonsterUpgrades.maxLevel;
     final cost = world.upgrades.upgradeCost(type);
+    final materialCost = world.monsterUpgradeMaterialCostFor(type);
+    final materials =
+        world.materials[ProgressionMaterial.monster] ?? 0;
+    final affordable = world.essence >= cost && materials >= materialCost;
     final stats = MonsterStats.of(type, level);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -1244,6 +1324,17 @@ class _GameScreenState extends State<GameScreen>
                   '${def.roleAr} · HP ${stats.maxHp.round()} · ضرر ${stats.damage.round()}',
                   style: const TextStyle(fontSize: 10),
                 ),
+                Text(
+                  maxed
+                      ? 'الأنسجة: $materials'
+                      : 'الأنسجة: $materials/$materialCost',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: maxed || materials >= materialCost
+                        ? Colors.greenAccent
+                        : Colors.orangeAccent,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1261,10 +1352,18 @@ class _GameScreenState extends State<GameScreen>
                         '${world.upgrades.levelOf(type)}',
                       );
                     } else {
-                      _showToast('الجوهر غير كافٍ ($cost)');
+                      _showToast(
+                        'تحتاج $cost جوهر و$materialCost أنسجة وحوش '
+                        '(لديك ${world.essence} و$materials)',
+                      );
                     }
                   },
-            child: Text(maxed ? 'الأقصى' : 'ترقية ($cost)'),
+            child: Text(
+              maxed ? 'الأقصى' : 'ترقية ($cost + $materialCost)',
+              style: TextStyle(
+                color: maxed || affordable ? null : Colors.orangeAccent,
+              ),
+            ),
           ),
         ],
       ),

@@ -5,6 +5,8 @@ import '../combat/combo.dart';
 import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
 import 'arena_map.dart';
+import '../progress/equipment.dart';
+import '../progress/progression.dart';
 import 'castle_system.dart';
 import 'fog_of_war.dart';
 import 'mine_system.dart';
@@ -93,6 +95,13 @@ class CrystalRebuiltEvent extends WorldEvent {
   const CrystalRebuiltEvent({required this.slot, required this.cost});
   final int slot;
   final int cost;
+}
+
+/// The hero touched a map chest. The screen adds [item] to the persistent
+/// inventory (or converts a duplicate into equipment materials).
+class ChestOpenedEvent extends WorldEvent {
+  const ChestOpenedEvent(this.item);
+  final EquipmentItem item;
 }
 
 /// Simulation state of the playable hero.
@@ -318,10 +327,12 @@ class GameWorld {
     math.Random? random,
     this.spawnWaves = true,
     Map<MonsterType, int>? startingArmy,
+    this.bonuses = const EquipmentBonuses(),
+    int carryCapacity = baseCarryCapacity,
   })  : rng = random ?? math.Random(),
         player = PlayerState(),
         _startingArmy = startingArmy ?? MonsterCatalog.defaultStartingArmy {
-    player.hp = kit.baseMaxHp;
+    player.hp = maxHp;
     player.energy = kit.baseMaxEnergy * 0.5;
     // One large map per match: randomized size, biomes, river/bridges,
     // obstacle and objective placement.
@@ -334,7 +345,7 @@ class GameWorld {
     mineSystem = MineController(
       map: map,
       random: math.Random(rng.nextInt(0x3fffffff)),
-    );
+    )..carryCapacity = carryCapacity;
     // Four castles, seven crystals each, laid out from the map anchors.
     castleSystem = CastleController(map: map);
     player.position = map.playerSpawn;
@@ -349,6 +360,9 @@ class GameWorld {
 
   final HeroKit kit;
   final math.Random rng;
+
+  /// Hero max HP including equipped equipment and permanent hero upgrades.
+  double get maxHp => kit.baseMaxHp * bonuses.hpMultiplier;
 
   /// Disable to script exact enemy setups in tests.
   final bool spawnWaves;
@@ -389,9 +403,20 @@ class GameWorld {
   /// pickups stop at [MineController.carryCapacity].
   int resources = 320;
 
-  /// Permanent currency used to upgrade monster types between/inside
-  /// matches. Earned by defeating hostile monsters.
+  /// Permanent currency used to upgrade heroes, monster types, equipment and
+  /// carry capacity. The match's earnings stay pending until [settleMatch],
+  /// so a lost/disconnected match still credits what was earned.
   int essence = 0;
+
+  /// Permanent materials earned this match, pending until [settleMatch].
+  int pendingEssence = 0;
+  final Map<ProgressionMaterial, int> pendingMaterials = {};
+
+  /// Permanent materials wallet (spent by the shop and upgrade pages).
+  final Map<ProgressionMaterial, int> materials = {};
+
+  /// Equipment stats applied to this match (neutral by default).
+  EquipmentBonuses bonuses;
 
   final Map<MonsterType, int> _startingArmy;
   int _armySeq = 0;
@@ -990,6 +1015,7 @@ class GameWorld {
     _pruneFx();
     _pruneCorpses();
     _updateMines(deltaMs);
+    _updateChests();
     _updateWaves();
     _regenEnergy(deltaMs);
   }
@@ -1015,7 +1041,8 @@ class GameWorld {
       : kit.attackPace;
 
   double currentDamageMult() =>
-      player.buffUntilMs > nowMs ? kit.buffDamageMult : 1.0;
+      (player.buffUntilMs > nowMs ? kit.buffDamageMult : 1.0) *
+      bonuses.damageMultiplier;
 
   /// Melee reach, widened while the rage buff is active (Storm's tempest
   /// rage stretches the spear line the farthest).
@@ -1023,7 +1050,7 @@ class GameWorld {
       (player.buffUntilMs > nowMs ? (kit.heroId == 'storm' ? 1.25 : 1.2) : 1.0);
 
   double currentMoveSpeed() {
-    var speed = kit.moveSpeed;
+    var speed = kit.moveSpeed * bonuses.moveMultiplier;
     if (player.buffUntilMs > nowMs) speed *= kit.buffMoveMult;
     if (player.dodgeBurstUntilMs > nowMs) speed *= 2.2;
     if (player.speedBoostUntilMs > nowMs) speed *= 1.35;
@@ -1583,13 +1610,23 @@ class GameWorld {
       army.length < maxArmySize &&
       resources >= MonsterCatalog.def(type).price;
 
-  /// Permanent per-type upgrade, paid with monster essence. The new level is
-  /// applied to every future purchase (existing monsters keep their stats).
+  /// Material cost of the next level of [type] (its own category, as required).
+  int monsterUpgradeMaterialCostFor(MonsterType type) =>
+      1 + (upgrades.levelOf(type) - 1) ~/ 5;
+
+  /// Permanent per-type upgrade, paid with monster essence **and** monster
+  /// materials. The new level applies to every future purchase (existing
+  /// monsters keep their stats).
   bool upgradeMonster(MonsterType type) {
     final cost = upgrades.upgradeCost(type);
-    if (!upgrades.canUpgrade(type, essence)) return false;
+    final materialCost = monsterUpgradeMaterialCostFor(type);
+    final available = materials[ProgressionMaterial.monster] ?? 0;
+    if (!upgrades.canUpgrade(type, essence) || available < materialCost) {
+      return false;
+    }
     upgrades.upgrade(type, essence: essence);
     essence -= cost;
+    materials[ProgressionMaterial.monster] = available - materialCost;
     return true;
   }
 
@@ -1622,10 +1659,60 @@ class GameWorld {
       if (_announcedMineOwners[mine] == owner) continue;
       _announcedMineOwners[mine] = owner;
       _events.add(MineCapturedEvent(size: mine.size, ownerId: owner));
+      if (owner == MineController.localPlayerId) {
+        pendingMaterials[ProgressionMaterial.capacity] =
+            (pendingMaterials[ProgressionMaterial.capacity] ?? 0) + 1;
+      }
     }
   }
 
   final Map<MineState, String> _announcedMineOwners = {};
+
+  int _chestSeq = 0;
+
+  /// Chests are opened by touching them, like resource pickups. The screen
+  /// stores the rolled item in the persistent inventory (duplicates become
+  /// equipment materials).
+  void _updateChests() {
+    if (player.dead) return;
+    for (final pickup in List<MapPickup>.of(map.pickups)) {
+      if (pickup.kind != PickupKind.chest) continue;
+      if ((pickup.position - player.position).distance > 34) continue;
+      map.pickups.remove(pickup);
+      final item = rollChestItem(
+        rng,
+        id: 'chest_${nowMs}_${_chestSeq++}',
+      );
+      _events.add(ChestOpenedEvent(item));
+    }
+  }
+
+  /// Credits the match's permanent currency and materials after the match.
+  /// Players keep everything they earned even when they lose.
+  void settleMatch() {
+    essence = math.min(0x7fffffff, essence + pendingEssence);
+    pendingEssence = 0;
+    for (final entry in pendingMaterials.entries) {
+      materials[entry.key] = (materials[entry.key] ?? 0) + entry.value;
+    }
+    pendingMaterials.clear();
+  }
+
+  /// Applies the saved progression before/at the start of a match: equipment
+  /// stats, permanent hero upgrades and the upgraded carry capacity.
+  void applyProgression({
+    required EquipmentBonuses bonuses,
+    required int carryCapacity,
+  }) {
+    final wasFull = !player.dead && player.hp >= maxHp - 0.01;
+    this.bonuses = bonuses;
+    mineSystem.carryCapacity = carryCapacity;
+    if (wasFull) {
+      player.hp = maxHp;
+    } else {
+      player.hp = math.min(player.hp, maxHp);
+    }
+  }
 
   /// Mines owned by the local hero.
   int get ownedMineCount =>
@@ -1694,8 +1781,11 @@ class GameWorld {
       kills++;
       _addXp(enemy.xpValue);
       _addCorpse(enemy);
-      // Permanent currency for the kill, scaled with the monster's value.
-      essence += 1 + enemy.xpValue ~/ 12;
+      // Permanent currency/materials for the kill are credited after the
+      // match (a loss or disconnect still keeps them).
+      pendingEssence += 1 + enemy.xpValue ~/ 12;
+      pendingMaterials[ProgressionMaterial.monster] =
+          (pendingMaterials[ProgressionMaterial.monster] ?? 0) + 1;
       resources = math.min(
         9999,
         resources + 2 + MonsterCatalog.def(enemy.type).price ~/ 6,
@@ -1732,7 +1822,7 @@ class GameWorld {
 
   void _respawn() {
     player.dead = false;
-    player.hp = kit.baseMaxHp;
+    player.hp = maxHp;
     player.position = map.playerSpawn;
     player.invulnerableUntilMs = nowMs + 1500;
     combo.reset();
@@ -1819,6 +1909,11 @@ class GameWorld {
     final castle = castleSystem.castleOf(crystal.ownerId);
     final destroyed = castleSystem.damageCrystal(crystal, amount);
     if (!destroyed) return;
+    if (crystal.ownerId != castleSystem.localPlayerId) {
+      pendingEssence += 30 + crystal.slot * 10;
+      pendingMaterials[ProgressionMaterial.hero] =
+          (pendingMaterials[ProgressionMaterial.hero] ?? 0) + 1;
+    }
     _events.add(
       CrystalDestroyedEvent(ownerId: crystal.ownerId, slot: crystal.slot),
     );
