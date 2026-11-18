@@ -70,9 +70,23 @@ jobs:
           python3 tools/validate_hero_assets.py \
             assets/heroes/ranger/renders/ranger_manifest.json
 
+      # Upload before the Git push so the generated frames remain inspectable
+      # even if main protection or a concurrent update rejects the commit.
+      - name: Upload generated source and sprites
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranger-blender-source-and-sprites
+          path: |
+            assets/heroes/ranger/source/ranger_source.blend
+            assets/heroes/ranger/renders/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Commit validated Ranger runtime atlases
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
+          set -euo pipefail
           if [ "$(cat tools/blender/active_hero.txt)" != "ranger" ]; then
             echo "Active hero is not Ranger; runtime atlas commit is skipped."
             exit 0
@@ -81,6 +95,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/heroes/ranger/renders/ranger_manifest.json \
             assets/heroes/ranger/renders/atlases/
+          echo "Staged runtime asset changes:"
+          git status --short
+          git diff --cached --stat
           if git diff --cached --quiet; then
             echo "Validated Ranger runtime atlases are already current."
           else
@@ -89,13 +106,3 @@ jobs:
             git rebase origin/main
             git push origin HEAD:main
           fi
-
-      - name: Upload generated source and sprites
-        uses: actions/upload-artifact@v4
-        with:
-          name: ranger-blender-source-and-sprites
-          path: |
-            assets/heroes/ranger/source/ranger_source.blend
-            assets/heroes/ranger/renders/
-          if-no-files-found: error
-          retention-days: 14
