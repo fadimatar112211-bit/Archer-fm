@@ -1,21 +1,24 @@
 import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 
+import 'world/arena_projection.dart';
 import 'world/game_world.dart';
 
 /// One authoritative mapping between arena widget pixels and map-world units.
-///
-/// The same instance data drives canvas painting and pointer-to-world input,
-/// preventing camera smoothing, letterboxing, or viewport sizing from making
-/// taps land somewhere other than the point shown on screen.
+/// Painting and pointer input share the same projection and camera snapshot.
 class ArenaCameraTransform {
   const ArenaCameraTransform({
     required this.scale,
     required this.viewportOrigin,
     required this.cameraOrigin,
+    this.projection = const ArenaWorldProjection(),
   });
 
-  factory ArenaCameraTransform.forViewport(Size size, GameWorld world) {
+  factory ArenaCameraTransform.forViewport(
+    Size size,
+    GameWorld world, {
+    ArenaWorldProjection projection = const ArenaWorldProjection(),
+  }) {
     final scale = math.min(
       size.width / arenaWidth,
       size.height / arenaHeight,
@@ -29,31 +32,36 @@ class ArenaCameraTransform {
         (size.height - viewHeight) / 2,
       ),
       cameraOrigin: world.cameraOrigin,
+      projection: projection,
     );
   }
 
-  /// Logical arena-to-widget scale after aspect-ratio letterboxing.
   final double scale;
-
-  /// Top-left of the logical arena inside the widget (letterbox offset).
   final Offset viewportOrigin;
-
-  /// Smoothed top-left world coordinate currently rendered by the camera.
   final Offset cameraOrigin;
+  final ArenaWorldProjection projection;
+
+  Offset get _logicalCenter => const Offset(arenaWidth / 2, arenaHeight / 2);
 
   /// Converts a widget-local point to its exact map-world coordinate.
-  Offset localToWorld(Offset local) =>
-      (local - viewportOrigin) / scale + cameraOrigin;
+  Offset localToWorld(Offset local) {
+    final projected = (local - viewportOrigin) / scale - _logicalCenter;
+    return cameraOrigin + projection.unprojectGround(projected);
+  }
 
   /// Converts a map-world coordinate to its exact widget-local screen point.
-  Offset worldToLocal(Offset world) =>
-      (world - cameraOrigin) * scale + viewportOrigin;
+  Offset worldToLocal(Offset world) {
+    final projected = projection.projectGround(world - cameraOrigin);
+    return (projected + _logicalCenter) * scale + viewportOrigin;
+  }
 
-  /// Visible map-space rectangle for culling, minimap indicators and hit tests.
-  Rect get visibleWorldRect => Rect.fromLTWH(
-        cameraOrigin.dx,
-        cameraOrigin.dy,
-        arenaWidth,
-        arenaHeight,
-      );
+  /// Conservative world AABB for the inverse-projected viewport.
+  Rect get visibleWorldRect => projection.visibleWorldBounds(
+        Rect.fromLTRB(
+          -_logicalCenter.dx,
+          -_logicalCenter.dy,
+          _logicalCenter.dx,
+          _logicalCenter.dy,
+        ),
+      ).shift(cameraOrigin);
 }
