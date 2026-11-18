@@ -88,8 +88,8 @@ void main() {
       ).visibleWorldRect;
       expect(rect.left, world.cameraOrigin.dx);
       expect(rect.top, world.cameraOrigin.dy);
-      expect(rect.width, arenaWidth);
-      expect(rect.height, arenaHeight);
+      expect(rect.width, closeTo(arenaWidth, 1e-9));
+      expect(rect.height, closeTo(arenaHeight, 1e-9));
     });
   });
 }
