@@ -912,6 +912,7 @@ class _GameScreenState extends State<GameScreen>
               width: MediaQuery.sizeOf(context).width * 0.55,
               height: MediaQuery.sizeOf(context).height * 0.72,
               child: Listener(
+                key: const ValueKey('joystick_zone'),
                 behavior: HitTestBehavior.translucent,
                 onPointerDown: (event) {
                   _stickActive = true;
