@@ -43,19 +43,19 @@
 
 | المستوى | القدرة | الطاقة | التبريد | التأثير القتالي الفعلي | الأنيميشن/الحدث | دليل بصري |
 |---|---|---|---|---|---|---|
-| 1 | قطعة اللهب `flame_slash` | 25 | 6s | 180% قوس أمامي + حرق 3 نبضات × 25% | attack → `melee_impact@3` | `06_flame_slash.png` |
+| 1 | ضربة اللهب `flame_slash` | 25 | 6s | 180% قوس أمامي + حرق 3 نبضات × 25% | attack → `melee_impact@3` | `06_flame_slash.png` |
 | 10 | موجة النار `fire_wave` | 30 | 9s | موجة متحركة 160%، سرعة 260، مدى 320، تصيب كل من تعبره مرة | skill → `inferno_burst@4` | `08_flame_fire_wave.png` |
 | 20 | انفجار الجحيم `hell_burst` | 40 | 12s | 220% لكل عدو داخل نصف قطر 140 + شلل 700ms للناجين | skill → `inferno_burst@4` | `07_flame_hell_burst.png` |
-| 30 | غضب الجحيم `inferno_rage` | 35 | 20s | 6s: ضرر ×1.25، وتيرة ×1.4، مدى ×1.2 + حلقة انفجار | skill → `inferno_burst@4` | `15_flame_inferno_rage.png` |
+| 30 | هياج اللهب `inferno_rage` | 35 | 20s | 6s: ضرر ×1.25، وتيرة ×1.4، مدى ×1.2 + حلقة انفجار | skill → `inferno_burst@4` | `15_flame_inferno_rage.png` |
 
 ### Shadow — `shadow` (خناجر الظل، ضرر أساسي 14)
 
 | المستوى | القدرة | الطاقة | التبريد | التأثير القتالي الفعلي | الأنيميشن/الحدث | دليل بصري |
 |---|---|---|---|---|---|---|
-| 1 | نابا الظل `twin_fangs` | 25 | 6s | 3 طعنات × 80% على الهدف الأمامي | attack → `melee_impact@3` | `16_shadow_twin_fangs.png` |
+| 1 | أنياب التوأم `twin_fangs` | 25 | 6s | 3 طعنات × 80% على الهدف الأمامي | attack → `melee_impact@3` | `16_shadow_twin_fangs.png` |
 | 10 | حجاب الظل `shadow_veil` | 30 | 14s | 4s مناعة كاملة + سرعة ×1.35 + شفافية 0.55 للبطل | skill → `shadow_burst@4` | `11_shadow_veil.png` |
-| 20 | عباءة السم `venom_coat` | 40 | 16s | 8s: كل طعنة تسمم 2 × 15% + ضرر ×1.15 + حلقة سم | skill → `shadow_burst@4` | `17_shadow_venom_coat.png` |
-| 30 | تنفيذ الظل `shadow_execute` | 35 | 18s | انتقال فوري لأضعف عدو + 300% | skill → `shadow_burst@4` | `12_shadow_execute.png` |
+| 20 | معطف السم `venom_coat` | 40 | 16s | 8s: كل طعنة تسمم 2 × 15% + ضرر ×1.15 + حلقة سم | skill → `shadow_burst@4` | `17_shadow_venom_coat.png` |
+| 30 | إعدام الظل `shadow_execute` | 35 | 18s | انتقال فوري لأضعف عدو + 300% | skill → `shadow_burst@4` | `12_shadow_execute.png` |
 
 ### Storm — `storm` (رمح الصاعقة، ضرر أساسي 15)
 
