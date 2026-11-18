@@ -209,3 +209,11 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Commits: `46da550294f18cff170dad0739b77405ebcd7504`, `3faa207ad3af58cb5c4282d95eba98e870bf5a65`, `b7f599f64d7681168b2bc860b2c9ae58ecb07448`, `69b0a00a0a955b95fbf2f358f25eda99635fc474`, `a1ac049386a893cf602e7f6fcf58e53ad30bf2a8`, `61996ccb9dbbf31912b90967d31bd2fb15ad2fcb`.
 - CI caught and led to a fix for missing `dart:ui` geometry imports in the new test. The latest Actions run for `61996ccb` has not yet reported a final result; do not mark analyze/tests/build as passing until it completes.
 - No camera zoom, isometric projection, map layout, combat rules, or gameplay behavior was changed in this batch. Next: wait for the latest validation result; only after green validation proceed to the unified 2.5D/isometric projection prototype.
+
+## Camera transform regression follow-up — 2026-11-19
+
+- Verified branch head is still `163347fc166819ce131119eb30d64068e414242d`; no commits exist after this checkpoint.
+- GitHub Actions run `44423019949` completed with failure: 313 tests passed and 2 camera mapping tests failed. Analyze passed; APK build and verification were skipped.
+- Failure 1: `ArenaCameraTransform.visibleWorldRect` width comparison used exact floating-point equality (actual 960.0000000000001). Change the assertion to a tight tolerance.
+- Failure 2: castle screen-mapping test assumed the camera was instantly centered on a manually repositioned hero. Change it to round-trip known world points through `ArenaCameraTransform.worldToLocal` and `arenaToWorld`, preserving the smoothed camera behavior.
+- Next: run the full Flutter test suite and Android release workflow; only then proceed to the shared isometric projection prototype.
