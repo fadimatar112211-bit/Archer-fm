@@ -59,6 +59,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   Hero3DController? _hero3d;
   Ticker? _ticker;
   int _nowMs = 0;
+  final ValueNotifier<int> _heroFrame = ValueNotifier<int>(0);
   int _page = 1;
   late final PageController _pages;
 
@@ -79,6 +80,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   void dispose() {
     _ticker?.stop();
     _pages.dispose();
+    _heroFrame.dispose();
     super.dispose();
   }
 
@@ -97,7 +99,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       }
       controller.advance(_nowMs, onEvent: (_) {});
     }
-    if (mounted) setState(() {});
+    // Repaint only the animated hero. Rebuilding the entire menu at 60 FPS
+    // needlessly rebuilds the PageView, cards and controls on mobile devices.
+    if (mounted) _heroFrame.value++;
   }
 
   Future<void> _loadProgress() async {
@@ -235,11 +239,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
             child: SizedBox(
               width: size.width * 0.42,
               height: size.height * 0.7,
-              child: CustomPaint(
-                painter: _HomeHeroPainter(
-                  controller: _hero3d,
-                  color: _hero.theme.accent,
-                  icon: _hero.icon,
+              child: ValueListenableBuilder<int>(
+                valueListenable: _heroFrame,
+                builder: (context, frame, child) => CustomPaint(
+                  painter: _HomeHeroPainter(
+                    controller: _hero3d,
+                    color: _hero.theme.accent,
+                    icon: _hero.icon,
+                  ),
                 ),
               ),
             ),
