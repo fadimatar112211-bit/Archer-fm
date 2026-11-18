@@ -9,7 +9,7 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Target visual direction: polished Archero-like top-down action game, with true 3D chibi heroes, readable faces, visible weapons, clear attack poses, strong skill effects, and responsive combat.
+- **Current approved visual direction (2026-11-19):** large, explorable isometric MOBA-style world with a close smooth-follow camera. The hero and nearby ordinary monsters must have comparable, clearly readable on-screen scale. See `VISUAL_DIRECTION_PLAN.md`; this supersedes the earlier compact Archero-like camera/framing target.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
 - Prefer large coherent implementation batches, then run the full relevant test/build workflow.
 - Keep game UI Arabic-first.
@@ -200,3 +200,30 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Kept the existing seven crystal slots, positions, HP values, damage rules, rebuild logic, and gameplay hit/collision radius unchanged.
 - Commit: `c05605f62a7b387f390f98fc6e7a6a48b3afe65d`.
 - Validation status: source change is pushed; Flutter analyze/tests and Android release build are pending the GitHub Actions run. Visual scale/readability still needs an in-game capture review at normal mobile zoom.
+
+
+### 2026-11-19 — User approved closer MOBA camera and large-world direction
+
+- User approved the second concept image as the target: a large explorable isometric fantasy battlefield, with the camera closer to the controlled hero than the first wide concept.
+- Required readability: hero and nearby common monsters must be prominent and close in apparent screen scale; faces, weapons, movement and attacks must be easy to see on a phone.
+- Rewrote `VISUAL_DIRECTION_PLAN.md` as a complete new direction: large connected world, smooth close camera follow, paths/side areas/monster camps, full-world minimap, hero and monster scale, movement/combat integration, crystal/base placement, Arabic HUD, migration safety, evidence gates and acceptance criteria.
+- Explicitly superseded the earlier compact Archero-like framing target. This is a presentation/world-scale direction, not permission to add unapproved MOBA mechanics or change combat balance, crystal count/HP, controls, combo, Ultimate unlocks or multiplayer rules.
+- The concept image is a visual target only; it is not evidence that the implementation is complete.
+- Documentation branch: `docs/approved-moba-camera-direction`, based on `ranger-reference-work` HEAD `481140e635730dfa82dcae4666b40fd01176677f`.
+- Plan commit: `fa751513a928d0acd46e323e571efecd34a3de28`.
+- No gameplay code, assets, camera implementation or tests were changed in this documentation-only batch.
+- Next: review/merge the plan into `ranger-reference-work`, then implement in order: baseline audit, large-world/navigation prototype, close camera + actor scale, minimap/world-coordinate validation, hero/monster visual passes, and full mobile performance/release checks.
+
+
+### 2026-11-19 — Repository-wide gap audit for the approved MOBA direction
+
+- Audited the recursive `ranger-reference-work` tree at `481140e635730dfa82dcae4666b40fd01176677f` (3,206 tracked paths; recursive tree response was complete/not truncated), plus core camera/world/render/input/minimap/monster/hero/combat files, related tests, project status and Android workflow.
+- Added `docs/implementation/MOBA_DIRECTION_GAP_AUDIT.md` with verified current foundations, gaps, critical technical findings, expected files to change, phased implementation sequence and acceptance gates.
+- Confirmed the map is already larger than the viewport (1,920–2,400 × 1,080–1,440 world units against a 960×540 camera window), but still only about 4–6.2 viewport areas; it lacks designed lane/road/jungle-route/camp structure.
+- Confirmed the arena is primarily a 2D Canvas world. The player hero is a skinned GLB rendered with its own projection into the 2D canvas; terrain, castles, projectiles and monsters remain 2D Canvas presentation.
+- Confirmed all four monster roles have gameplay definitions and procedural Canvas animation, but no production `assets/monsters/**` GLB/model asset directory appears in the audited tree.
+- Confirmed the full-world minimap, fog, free joystick movement, smoothed camera follow, four castles, seven-crystal rules, mines, four hero GLBs and combat systems are existing foundations to preserve.
+- Critical issue identified for the first technical phase: painter uses smoothed `world.cameraOrigin`, while `arenaToWorld` currently derives an instant `arenaCameraOrigin(world)`; these can diverge during camera movement. Unify the camera transform before adding zoom/projection and add regression coverage.
+- Latest code workflow found: run `44398235818`, code commit `c05605f62a7b387f390f98fc6e7a6a48b3afe65d`, Android release workflow **success**. Current audited HEAD `481140e...` is a later documentation/checkpoint commit; the successful run does not validate the proposed MOBA visual changes.
+- No gameplay code/assets were changed during this audit. Audit docs and plan link are documentation-only.
+- Recommended first implementation batch: shared camera/projection + fix render/input coordinate alignment; add regression/capture tests; prototype one consistent isometric ground plane with hero/monsters/projectiles/crystals; prove actor screen-space scale at multiple phone aspect ratios; then design connected map routes and expand the world.
