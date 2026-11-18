@@ -115,3 +115,13 @@ The game should approach Archero's visual readability and feel, not merely conta
 - The 112px hero-size change passed Actions run 44388255782.
 - Face-quality visual review and full ability-effects validation remain open.
 - Checkpoint file created in commit `37683674ee0b241569578d98cfe8f598abc94459`.
+
+
+### 2026-11-18 — Ultimate ability capture coverage expansion
+- Current branch before this batch: `a554ec9ee5353791d6c6c13bb1fe044f5d722c1e`.
+- Extended `test/special_abilities_capture_test.dart` to capture the previously missing seven abilities: Ranger Multi Shot and Arrow Rain; Flame Flame Slash, Fire Wave, and Hell Burst; Shadow Shadow Veil and Shadow Execute.
+- Existing cases remain for the other nine abilities. The test now has explicit real-GameWorld arena capture scenarios for all 16 hero abilities (4 heroes × 4 abilities), with damage-state assertions.
+- New code commit: `50793bc0330b23089b5f4f91441a231ae7c1931a`.
+- GitHub Actions run `44389706091` was observed **in progress** immediately after push; do not treat the new coverage as passed until this run completes successfully.
+- This expands test/capture coverage; it does not by itself prove final visual polish or real-device performance.
+- Next: inspect run `44389706091`, fix any failures, inspect the new 16-ability capture artifact, then continue with face/animation visual review and targeted gameplay fixes.
