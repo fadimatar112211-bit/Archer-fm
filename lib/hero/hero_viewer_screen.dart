@@ -273,20 +273,26 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   };
   Future<void> _select(String state, String direction) async {
     final manifest = _manifest;
-    if (manifest == null) return;
-    if (state == _state && direction == _direction && _player != null) return;
-    final name = '${state}_$direction';
-    final clip = manifest.clipFor(state, direction);
-    if (clip == null) {
+    final hero3d = _hero3d;
+    if (manifest == null && hero3d == null) return;
+    if (state == _state &&
+        direction == _direction &&
+        (_player != null || hero3d != null)) {
+      return;
+    }
+
+    final name = '${state}_${direction}';
+    final clip = manifest?.clipFor(state, direction);
+    final has3DClip = hero3d?.model.model.clips.containsKey(state) ?? false;
+    if (clip == null && !has3DClip) {
       setState(() {
-        _error = 'لا توجد حركة مسماة $name في بيانات البطل';
+        _error = 'لا توجد حركة $name في بيانات الأطلس أو المجسم ثلاثي الأبعاد';
       });
       return;
     }
+
     final token = ++_loadToken;
-    final loader = _loader;
-    final hero3d = _hero3d;
-    if (hero3d != null) {
+    if (hero3d != null && has3DClip) {
       hero3d.playClip(
         state,
         loop: const ['idle', 'walk', 'run'].contains(state),
@@ -299,15 +305,28 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     setState(() {
       _state = state;
       _direction = direction;
-      _loadingSheet = true;
+      _loadingSheet = manifest != null && clip != null;
       _sheetError = null;
       _error = null;
       _errorDetail = null;
     });
+
+    // GLB-only previews must remain usable even when the optional atlas
+    // manifest or directional sprite clip is unavailable.
+    if (manifest == null || clip == null) {
+      setState(() {
+        _player?.dispose();
+        _player = null;
+        _sheet = null;
+        _loadingSheet = false;
+      });
+      return;
+    }
+
     AtlasSheet? sheet;
     String? sheetError;
     try {
-      sheet = await loader.loadSheet(manifest, name);
+      sheet = await _loader.loadSheet(manifest, name);
     } catch (error) {
       sheetError = 'تعذّر تحميل صورة الحركة: $error';
     }
