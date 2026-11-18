@@ -135,3 +135,13 @@ The game should approach Archero's visual readability and feel, not merely conta
 - New test commit: `a45d222e4b8e534d85092fbf656c2c40c4823e8e`.
 - The new contract test has been pushed after run `44389706091`; it still needs its own Actions run to pass.
 - Next: verify the prior APK workflow result, then verify the new contract-test run; improve visual readability/signature FX and inspect hero face captures against the reference sheet.
+
+
+### 2026-11-18 — First arena visual polish pass
+- Confirmed run `44390536499` on code commit `a45d222e4b8e534d85092fbf656c2c40c4823e8e` completed successfully: Analyze, all tests, 3D/Ultimate capture upload, Android Release APK build, APK signature verification, APK artifact upload, and GitHub Release publish all passed.
+- Verified APK artifact: `archer-fm-release-apk`, ID `14468161803`, approx. 100.3 MB. This APK belongs to commit `a45d222...`; it does **not** include the visual changes in this section.
+- Verified capture artifact for the same tested commit: `archer-fm-3d-hero-visual-captures`, ID `14467661313`.
+- Visual code change pushed to `ranger-reference-work`: commit `ef21d205d36b2ca187b3a73886fece2d49bfcaa8`, file `lib/game/arena_painter.dart`.
+- Changes: layered glow/edge/core rendering for slash arcs, burst rings and lightning; brighter multi-layer projectile trails/cores; subtle team-accent ground halo beneath the 3D hero; increased 3D in-arena hero target height from 112px to 120px.
+- These are code-level visual improvements only. They still require the new commit's CI, fresh captures, and visual review on different screen sizes before being accepted as final.
+- Next: verify Actions for `ef21d205...`; inspect fresh captures and tune the hero framing/face readability. Then address terrain depth, monster silhouettes/animation, HUD readability, and each Ultimate's signature VFX separately.
