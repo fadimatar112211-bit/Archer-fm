@@ -35,6 +35,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.35.7'
           channel: stable
           cache: true
 
@@ -59,7 +60,7 @@ jobs:
         run: flutter test
 
       - name: Build Release APK
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release
 
       - name: Verify APK
         run: |
