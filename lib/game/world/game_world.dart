@@ -19,6 +19,11 @@ import 'mine_system.dart';
 const double arenaWidth = 960;
 const double arenaHeight = 540;
 
+/// Camera follow smoothing. 0 = instant snap to hero, 1 = never moves.
+/// Values around 0.10–0.20 give a smooth Archero-style follow without
+/// feeling sluggish.
+const double cameraLerpFactor = 0.14;
+
 double _clampD(double value, double lo, double hi) =>
     value < lo ? lo : (value > hi ? hi : value);
 
@@ -442,6 +447,10 @@ class GameWorld {
     castleSystem = CastleController(map: map);
     player.position = map.playerSpawn;
     fog.reveal(player.position, fogRevealRadius);
+    // Initialise the smoothed camera at the hero's starting position so the
+    // first frame does not snap from (0,0).
+    _cameraTarget = _idealCameraOrigin();
+    _cameraPosition = _cameraTarget;
     if (spawnWaves) {
       _spawnStartingArmy();
       spawnWave(initial: true);
@@ -460,6 +469,19 @@ class GameWorld {
   final bool spawnWaves;
   final PlayerState player;
   final List<EnemyState> enemies = [];
+
+  /// Smoothed camera follow position in world units (top-left of the camera
+  /// window). Lerps toward the hero-centered target each frame so the camera
+  /// does not snap instantly when the player changes direction.
+  Offset _cameraPosition = Offset.zero;
+
+  /// Ideal (clamped) camera origin for the current frame, computed from the
+  /// hero position. Used as the lerp target for [_cameraPosition].
+  Offset _cameraTarget = Offset.zero;
+
+  /// Smoothed camera origin exposed to the renderer and to tap→world input
+  /// conversion so both see the same camera position.
+  Offset get cameraOrigin => _cameraPosition;
 
   /// Generated match world: size, biomes, rivers/bridges, obstacles, mines,
   /// pickups and castle anchors.
@@ -1179,6 +1201,18 @@ class GameWorld {
     nowMs += deltaMs;
     _updatePlayer(deltaMs);
     fog.reveal(player.position, fogRevealRadius);
+
+    // ---- Camera follow -------------------------------------------------------
+    // Lerp the smoothed camera position toward the hero-centered target so the
+    // camera follows smoothly instead of snapping instantly.
+    _cameraTarget = _idealCameraOrigin();
+    _cameraPosition = Offset(
+      _cameraPosition.dx +
+          (_cameraTarget.dx - _cameraPosition.dx) * cameraLerpFactor,
+      _cameraPosition.dy +
+          (_cameraTarget.dy - _cameraPosition.dy) * cameraLerpFactor,
+    );
+
     _updateEnemies(deltaMs);
     _updateArmy(deltaMs);
     _updateCrystalCombat();
@@ -1192,6 +1226,19 @@ class GameWorld {
     _updateChests();
     _updateWaves();
     _regenEnergy(deltaMs);
+  }
+
+  /// Ideal (clamped) camera origin derived from the hero position. The camera
+  /// window is centred on the hero and clamped so it never shows area outside
+  /// the map bounds.
+  Offset _idealCameraOrigin() {
+    final map = this.map;
+    final maxX = math.max(0.0, map.size.width - arenaWidth);
+    final maxY = math.max(0.0, map.size.height - arenaHeight);
+    return Offset(
+      (player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
+      (player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
+    );
   }
 
   List<WorldEvent> drainEvents() {

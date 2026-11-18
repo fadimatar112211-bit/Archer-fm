@@ -25,7 +25,9 @@ Offset arenaCameraOrigin(GameWorld world) {
   );
 }
 
-/// Converts a tap inside the arena widget to map coordinates.
+/// Converts a tap inside the arena widget to map coordinates. Uses the
+/// instant (unclamped-by-smoothing) camera origin so taps map back to the
+/// exact world point under the tap, matching what the renderer draws.
 Offset arenaToWorld(Offset local, Size size, GameWorld world) {
   final scale = math.min(
     size.width / arenaWidth,
@@ -137,7 +139,7 @@ class ArenaPainter extends CustomPainter {
     canvas.restore();
   }
 
-  Offset _cameraOrigin() => arenaCameraOrigin(world);
+  Offset _cameraOrigin() => world.cameraOrigin;
 
   // ---- Backdrop ---------------------------------------------------------------
 
@@ -1390,7 +1392,7 @@ class ArenaPainter extends CustomPainter {
         canvas,
         anchor: player.position + const Offset(0, 14),
         facing: player.facing,
-        scale: hero3d.scaleForPixelHeight(122),
+        scale: hero3d.scaleForPixelHeight(92),
         alpha: veilActive ? 0.55 : 1,
         tint: player.dead ? const Color(0xFF888888) : null,
       );
@@ -1424,7 +1426,7 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    const drawHeight = 116.0;
+    const drawHeight = 92.0;
     final drawWidth = drawHeight *
         presentation.frameWidth /
         presentation.frameHeight;
