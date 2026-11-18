@@ -16,6 +16,7 @@ import 'monsters/monster_models.dart';
 import 'progress/equipment.dart';
 import 'progress/hero_progress.dart';
 import 'progress/progression.dart';
+import 'settings.dart';
 import 'render3/glb.dart';
 import 'render3/hero3d_controller.dart';
 import 'render3/hero3d_painter.dart';
@@ -48,6 +49,9 @@ class GameScreen extends StatefulWidget {
     this.onNetworkTick,
     this.onWorldEvent,
     this.onNetworkAttack,
+    this.settingsStore,
+    this.startingArmy,
+    this.weaponId,
   });
 
   final HeroDefinition hero;
@@ -74,6 +78,16 @@ class GameScreen extends StatefulWidget {
   final void Function(WorldEvent event)? onWorldEvent;
   final VoidCallback? onNetworkAttack;
 
+  /// Injectable control settings store (tests); defaults to shared prefs.
+  final SettingsStore? settingsStore;
+
+  /// Optional free 20-monster starting army chosen before the match. When
+  /// omitted the balanced default is used, so all existing callers are intact.
+  final Map<MonsterType, int>? startingArmy;
+
+  /// Weapon chosen before the match from the hero's three options.
+  final String? weaponId;
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
@@ -94,6 +108,10 @@ class _GameScreenState extends State<GameScreen>
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   int _accumulatorMs = 0;
+
+  /// Player-adjusted control layout, loaded at startup and reapplied live.
+  GameSettings _settings = const GameSettings();
+  late final SettingsStore _settingsStore;
 
   HeroManifest? manifest;
   final Map<String, AtlasSheet> _sheets = {};
@@ -129,15 +147,19 @@ class _GameScreenState extends State<GameScreen>
   @override
   void initState() {
     super.initState();
-    kit = widget.kit ?? kitForHero(widget.hero.id);
+    kit = widget.kit ??
+        kitForHero(widget.hero.id).withWeapon(widget.weaponId);
     world = widget.worldFactory?.call(kit) ??
-        GameWorld(kit: kit);
+        GameWorld(kit: kit, startingArmy: widget.startingArmy);
     loader = widget.loaderFactory(widget.hero);
     store = widget.store ?? SharedPreferencesProgressStore();
+    _settingsStore = widget.settingsStore ?? SharedPreferencesSettingsStore();
     progression = ProgressionController(heroId: widget.hero.id);
     _restoreProgress();
+    _loadSettings();
     _loadManifest();
-    _loadHero3D();    _ticker = createTicker(_tick);
+    _loadHero3D();
+    _ticker = createTicker(_tick);
     _ticker!.start();
   }
 
@@ -157,6 +179,12 @@ class _GameScreenState extends State<GameScreen>
     loader.dispose();
     _player?.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSettings() async {
+    final loaded = await _settingsStore.load();
+    if (!mounted) return;
+    setState(() => _settings = loaded);
   }
 
   Future<void> _restoreProgress() async {
@@ -763,9 +791,10 @@ class _GameScreenState extends State<GameScreen>
                 child: Center(child: ArenaMinimap(world: world)),
               ),
             ),
-            // Joystick zone (left half, lower part).
+            // Joystick zone — always opposite the attack cluster.
             Positioned(
-              left: 0,
+              left: _settings.controlSide == ControlSide.right ? 0 : null,
+              right: _settings.controlSide == ControlSide.left ? 0 : null,
               bottom: 0,
               width: MediaQuery.sizeOf(context).width * 0.55,
               height: MediaQuery.sizeOf(context).height * 0.72,
@@ -792,14 +821,19 @@ class _GameScreenState extends State<GameScreen>
                             _clampStick(_moveRaw)
                         : Offset.zero,
                     accent: accentColor,
+                    scale: _settings.joystickScale,
                   ),
                 ),
               ),
             ),
-            // Controls (bottom-right).
+            // Controls — side and vertical offset follow the saved settings.
             Positioned(
-              right: 16,
-              bottom: 24,
+              right: _settings.controlSide == ControlSide.right ? 16 : null,
+              left: _settings.controlSide == ControlSide.left ? 16 : null,
+              bottom: (24 + _settings.verticalOffset).clamp(
+                8.0,
+                MediaQuery.sizeOf(context).height - 80,
+              ),
               child: _controlCluster(theme),
             ),
             // Exit button.
@@ -1403,6 +1437,7 @@ class _GameScreenState extends State<GameScreen>
                     nowMs: world.nowMs,
                     energy: world.player.energy,
                     accent: accentColor,
+                    scale: _settings.controlScale,
                     onTap: () => _onAbilityTap(ability.id),
                   ),
               ],
@@ -1411,7 +1446,7 @@ class _GameScreenState extends State<GameScreen>
             _roundButton(
               icon: Icons.airline_stops,
               label: 'مراوغة',
-              size: 56,
+              size: 56 * _settings.controlScale,
               color: const Color(0xFF6FE8FF),
               onTap: _onDodgeTap,
             ),
@@ -1434,8 +1469,8 @@ class _GameScreenState extends State<GameScreen>
       onPointerUp: (_) => _attackHeld = false,
       onPointerCancel: (_) => _attackHeld = false,
       child: Container(
-        width: 88,
-        height: 88,
+        width: 88 * _settings.controlScale,
+        height: 88 * _settings.controlScale,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
@@ -1518,6 +1553,7 @@ class _AbilityButton extends StatelessWidget {
     required this.energy,
     required this.accent,
     required this.onTap,
+    this.scale = 1.0,
   });
 
   final AbilityDef def;
@@ -1527,6 +1563,7 @@ class _AbilityButton extends StatelessWidget {
   final double energy;
   final Color accent;
   final VoidCallback onTap;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
@@ -1544,8 +1581,8 @@ class _AbilityButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: SizedBox(
-          width: 52,
-          height: 52,
+          width: 52 * scale,
+          height: 52 * scale,
           child: Stack(
             children: [
               Container(
@@ -1626,34 +1663,41 @@ class _JoystickPainter extends CustomPainter {
     required this.center,
     required this.knob,
     required this.accent,
+    this.scale = 1.0,
   });
 
   final bool active;
   final Offset center;
   final Offset knob;
   final Color accent;
+  final double scale;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (!active) return;
     canvas.drawCircle(
       center,
-      56,
+      56 * scale,
       Paint()
         ..color = accent.withValues(alpha: 0.14)
         ..style = PaintingStyle.fill,
     );
     canvas.drawCircle(
       center,
-      56,
+      56 * scale,
       Paint()
         ..color = accent.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
-    canvas.drawCircle(knob, 22, Paint()..color = accent.withValues(alpha: 0.45));
+    canvas.drawCircle(knob, 22 * scale,
+        Paint()..color = accent.withValues(alpha: 0.45));
   }
 
   @override
-  bool shouldRepaint(covariant _JoystickPainter old) => true;
+  bool shouldRepaint(covariant _JoystickPainter old) =>
+      old.active != active ||
+      old.center != center ||
+      old.knob != knob ||
+      old.scale != scale;
 }

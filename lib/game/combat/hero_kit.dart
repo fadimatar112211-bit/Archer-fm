@@ -7,6 +7,8 @@
 /// 1/10/20/30) live here and nowhere else.
 library;
 
+import 'hero_weapons.dart';
+
 /// How a hero's primary attack deals damage.
 enum AttackStyle {
   /// Spawns a flying projectile on the weapon-release event (Ranger's bow).
@@ -85,6 +87,7 @@ class HeroKit {
     this.buffDamageMult = 1.2,
     this.buffRateMult = 1.5,
     this.buffMoveMult = 1.25,
+    this.rangeMultiplier = 1.0,
   });
 
   /// How the hero's primary attack deals damage.
@@ -107,6 +110,10 @@ class HeroKit {
 
   /// Movement multiplier while the hero's stat buff is active.
   final double buffMoveMult;
+
+  /// Reach multiplier of the currently selected weapon. The starting weapon
+  /// leaves this at 1.0 so all pre-existing combat numbers stay unchanged.
+  final double rangeMultiplier;
 
   final String heroId;
   final String nameAr;
@@ -147,6 +154,53 @@ class HeroKit {
       if (ability.id == id) return ability;
     }
     return null;
+  }
+
+  /// The three selectable weapons of this hero (starting + two unlockable).
+  List<HeroWeapon> get weapons => heroWeapons[heroId] ?? const [];
+
+  HeroWeapon? weaponById(String id) {
+    for (final weapon in weapons) {
+      if (weapon.id == id) return weapon;
+    }
+    return null;
+  }
+
+  List<HeroWeapon> weaponsUnlockedAt(int level) =>
+      weapons.where((w) => w.unlockedAt(level)).toList();
+
+  /// Returns a kit that fights with [weaponId].
+  ///
+  /// The starting weapon (or an unknown id) returns this kit unchanged, so
+  /// every existing caller and test keeps the original combat numbers.
+  HeroKit withWeapon(String? weaponId) {
+    final weapon = weaponId == null ? null : weaponById(weaponId);
+    if (weapon == null || weapons.isEmpty || weapon.id == weapons.first.id) {
+      return this;
+    }
+    return HeroKit(
+      heroId: heroId,
+      nameAr: nameAr,
+      weaponAr: weapon.nameAr,
+      baseDamage: baseDamage * weapon.damageMultiplier,
+      baseMaxHp: baseMaxHp,
+      baseMaxEnergy: baseMaxEnergy,
+      energyRegenPerSec: energyRegenPerSec,
+      moveSpeed: moveSpeed,
+      comboWindowMs: comboWindowMs,
+      comboHits: comboHits,
+      abilities: abilities,
+      attackPace: attackPace * weapon.rateMultiplier,
+      playable: playable,
+      attackStyle: attackStyle,
+      meleeRange: meleeRange,
+      meleeArcRadians: meleeArcRadians,
+      accentColor: accentColor,
+      buffDamageMult: buffDamageMult,
+      buffRateMult: buffRateMult,
+      buffMoveMult: buffMoveMult,
+      rangeMultiplier: rangeMultiplier * weapon.rangeMultiplier,
+    );
   }
 }
 

@@ -463,10 +463,10 @@ class GameWorld {
 
   // ---- Tunables -------------------------------------------------------------
 
-  double get attackRange => 260;
+  double get attackRange => 260 * kit.rangeMultiplier;
   int get attackCycleMs => (1670 / kit.attackPace).round();
   double get projectileSpeed => 430;
-  double get projectileRange => 330;
+  double get projectileRange => 330 * kit.rangeMultiplier;
   int get respawnDelayMs => 2500;
   int get dodgeCooldownMs => 3000;
   int get waveIntervalMs => 8000;
@@ -1047,6 +1047,7 @@ class GameWorld {
   /// Melee reach, widened while the rage buff is active (Storm's tempest
   /// rage stretches the spear line the farthest).
   double currentMeleeRange() => kit.meleeRange *
+      kit.rangeMultiplier *
       (player.buffUntilMs > nowMs ? (kit.heroId == 'storm' ? 1.25 : 1.2) : 1.0);
 
   double currentMoveSpeed() {

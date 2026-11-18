@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'game/army_selection_screen.dart';
 import 'game/combat/hero_kit.dart';
-import 'game/game_screen.dart';
+import 'game/home_screen.dart' as menu;
+import 'game/settings_screen.dart';
 import 'game/net/lobby_screen.dart';
 import 'game/progress/hero_progress.dart';
 import 'game/progress/progression_screen.dart';
@@ -41,15 +43,18 @@ class ArcherFmApp extends StatelessWidget {
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: HomeScreen(loaderFactory: loaderFactory),
+        child: menu.MainMenuScreen(
+          loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+        ),
       ),
     );
   }
 }
 
-/// Main menu: pick a hero, inspect it in the viewer or take it into battle.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, this.loaderFactory, this.store});
+/// Legacy roster screen kept for its playability-gating tests; the running
+/// app now opens the horizontal [menu.MainMenuScreen] instead.
+class HeroRosterScreen extends StatelessWidget {
+  const HeroRosterScreen({super.key, this.loaderFactory, this.store});
 
   final HeroLoaderFactory? loaderFactory;
 
@@ -98,6 +103,23 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.upgrade, color: Colors.white),
             label: const Text(
               'التطوير',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            key: const ValueKey('open_settings'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: SettingsScreen(),
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.settings, color: Colors.white),
+            label: const Text(
+              'إعدادات',
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -180,11 +202,13 @@ class HomeScreen extends StatelessWidget {
                       onPressed: playable
                           ? () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => GameScreen(
-                                    hero: hero,
-                                    loaderFactory: loaderFactory ??
-                                        defaultHeroLoaderFactory,
-                                    store: store,
+                                  builder: (_) => Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: ArmySelectionScreen(
+                                      loaderFactory: loaderFactory ??
+                                          defaultHeroLoaderFactory,
+                                      store: store,
+                                    ),
                                   ),
                                 ),
                               )

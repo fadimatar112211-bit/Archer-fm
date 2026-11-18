@@ -59,7 +59,12 @@ Future<void> _pumpHome(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ArcherFmApp(loaderFactory: _FakeLoader.new));
+  await tester.pumpWidget(MaterialApp(
+    home: Directionality(
+      textDirection: TextDirection.rtl,
+      child: HeroRosterScreen(loaderFactory: _FakeLoader.new),
+    ),
+  ));
   for (var i = 0; i < 4; i++) {
     await tester.pump(const Duration(milliseconds: 20));
   }
