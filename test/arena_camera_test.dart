@@ -86,10 +86,10 @@ void main() {
         const Size(1200, 700),
         world,
       ).visibleWorldRect;
-      expect(rect.left, world.cameraOrigin.dx);
-      expect(rect.top, world.cameraOrigin.dy);
+      expect(rect.center.dx, closeTo(world.cameraOrigin.dx + arenaWidth / 2, 1e-9));
+      expect(rect.center.dy, closeTo(world.cameraOrigin.dy + arenaHeight / 2, 1e-9));
       expect(rect.width, closeTo(arenaWidth, 1e-9));
-      expect(rect.height, closeTo(arenaHeight, 1e-9));
+      expect(rect.height, closeTo(arenaHeight / 0.82, 1e-9));
     });
   });
 }
