@@ -34,6 +34,17 @@ class RenderedFrameValidatorTests(unittest.TestCase):
         self.assertEqual(components, 2)
         self.assertLess(ratio, 0.90)
 
+    def test_tiny_detached_glow_fragments_are_ignored(self):
+        alpha = Image.new("L", (32, 32), 0)
+        draw = ImageDraw.Draw(alpha)
+        draw.rectangle((6, 4, 25, 29), fill=255)
+        for point in ((1, 1), (30, 1), (1, 30), (30, 30)):
+            draw.point(point, fill=255)
+        components, ratio, largest = connected_component_metrics(alpha)
+        self.assertEqual(components, 1)
+        self.assertGreater(ratio, 0.99)
+        self.assertGreater(largest, 400)
+
     def test_static_clip_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             paths = []

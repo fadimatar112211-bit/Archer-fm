@@ -47,20 +47,22 @@ def ascii_preview(image, bbox, columns=40):
 def connected_component_metrics(alpha, threshold=32):
     """Measure whether a rendered hero remains one coherent silhouette.
 
-    A few tiny detached glow pixels are tolerated, but the main character must
-    own at least 90% of visible pixels. Eight-neighbour connectivity keeps
-    diagonal anti-aliased joins from being misclassified as broken parts.
+    Tiny detached glow fragments are ignored when counting components. A
+    component is significant only when it contains at least 12 pixels and at
+    least 0.5% of visible pixels. All pixels still count toward the largest-
+    component ratio, so a genuinely detached mesh part reduces that ratio.
+    Eight-neighbour connectivity preserves diagonal anti-aliased joins.
     """
     width, height = alpha.size
     pixels = alpha.tobytes()
     visited = bytearray(width * height)
     occupied = sum(value > threshold for value in pixels)
+    min_component_pixels = max(12, int(occupied * 0.005))
     largest = 0
-    components = 0
+    significant_components = 0
     for start, value in enumerate(pixels):
         if value <= threshold or visited[start]:
             continue
-        components += 1
         stack = [start]
         visited[start] = 1
         size = 0
@@ -77,7 +79,9 @@ def connected_component_metrics(alpha, threshold=32):
                         visited[neighbour] = 1
                         stack.append(neighbour)
         largest = max(largest, size)
-    return components, largest / max(1, occupied), largest
+        if size >= min_component_pixels:
+            significant_components += 1
+    return significant_components, largest / max(1, occupied), largest
 
 
 def frame_errors(path, image, state, resolution, hero, pivot_y):
