@@ -123,6 +123,26 @@ class ArenaPainter extends CustomPainter {
   }
 
 
+  /// Draws an upright actor at a ground-projected anchor. The global ground
+  /// plane compresses camera depth; this inverse local scale prevents bodies,
+  /// faces, weapons and health bars from being squashed with the terrain.
+  void _withUprightGroundActor(
+    Canvas canvas,
+    Offset anchor,
+    VoidCallback draw,
+  ) {
+    final depthScale = ArenaCameraTransform.forViewport(
+      const Size(arenaWidth, arenaHeight),
+      world,
+    ).projection.groundScaleY;
+    canvas.save();
+    canvas.translate(anchor.dx, anchor.dy);
+    canvas.scale(1, 1 / depthScale);
+    canvas.translate(-anchor.dx, -anchor.dy);
+    draw();
+    canvas.restore();
+  }
+
   // ---- Backdrop ---------------------------------------------------------------
 
   void _paintBackdrop(
@@ -1019,7 +1039,9 @@ class ArenaPainter extends CustomPainter {
   /// overlap higher ones naturally.
   void _paintMonsters(Canvas canvas) {
     for (final corpse in world.corpses) {
-      _paintCorpse(canvas, corpse);
+      _withUprightGroundActor(canvas, corpse.position, () {
+        _paintCorpse(canvas, corpse);
+      });
     }
     // Enemy monsters are only rendered when they are near the hero.
     final monsters = [...world.visibleEnemies, ...world.army]
