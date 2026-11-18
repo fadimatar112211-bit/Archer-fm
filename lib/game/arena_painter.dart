@@ -129,10 +129,9 @@ class ArenaPainter extends CustomPainter {
     Offset anchor,
     VoidCallback draw,
   ) {
-    final depthScale = ArenaCameraTransform.forViewport(
-      const Size(arenaWidth, arenaHeight),
-      world,
-    ).projection.groundScaleY;
+    // Reuse the painter's immutable projection; avoid constructing a
+    // viewport transform for every actor on every frame.
+    final depthScale = cameraProjection.groundScaleY;
     canvas.save();
     canvas.translate(anchor.dx, anchor.dy);
     canvas.scale(1, 1 / depthScale);
