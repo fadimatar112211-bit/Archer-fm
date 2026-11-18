@@ -5,7 +5,7 @@ void main() {
   test('the selectable roster contains exactly the four canonical heroes', () {
     expect(
       heroCatalog.map((hero) => hero.id).toList(),
-      ['ranger_new', 'flame', 'shadow', 'storm'],
+      ['flame', 'shadow', 'storm', 'ranger_new'],
     );
     expect(heroCatalog.map((hero) => hero.id).toSet(), hasLength(4));
     expect(heroCatalog.where((hero) => hero.nameEn == 'Ranger'), hasLength(1));
