@@ -16,12 +16,13 @@ import 'minimap.dart';
 import 'monsters/monster_models.dart';
 import 'progress/equipment.dart';
 import 'progress/hero_progress.dart';
+import 'progress/match_xp.dart';
 import 'progress/progression.dart';
+import 'progress/xp.dart';
 import 'settings.dart';
 import 'render3/glb.dart';
 import 'render3/hero3d_controller.dart';
 import 'render3/hero3d_painter.dart';
-import 'world/arena_map.dart';
 import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
@@ -53,6 +54,8 @@ class GameScreen extends StatefulWidget {
     this.settingsStore,
     this.startingArmy,
     this.weaponId,
+    this.worldSeed,
+    this.matchXpSession,
   });
 
   final HeroDefinition hero;
@@ -89,6 +92,15 @@ class GameScreen extends StatefulWidget {
   /// Weapon chosen before the match from the hero's three options.
   final String? weaponId;
 
+  /// Authoritative match seed (online/hotspot). When supplied, every device
+  /// generates the same map, mine and crystal layout.
+  final int? worldSeed;
+
+  /// Shared XP ledger/outcome for online matches. Local matches create one in
+  /// `initState`; passing the same session to a rebuilt network screen keeps a
+  /// single settlement even after the host seed arrives.
+  final MatchXpSession? matchXpSession;
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
@@ -101,6 +113,21 @@ class _GameScreenState extends State<GameScreen>
   late final GameWorld world;
   late final HeroAssetLoader loader;
   late final ProgressStore store;
+
+  /// XP accounting for this match. Created locally when no network session is
+  /// supplied, so every match (including offline) has one authoritative award.
+  late final MatchXpSession xpSession;
+
+  /// Last profile loaded from storage. All saves mutate a copy of this value,
+  /// which keeps XP history and settled match ids intact between settlement
+  /// and the many intermediate saves triggered by level-ups/deaths.
+  HeroProgress _profile = HeroProgress.initial;
+
+  /// Award shown in the exit dialog; set once when the match is finalized.
+  XpAward? _exitAward;
+
+  /// The exit summary is shown at most once per screen instance.
+  bool _summaryShown = false;
 
   /// Permanent account progression (currency, materials, equipment, upgrades)
   /// loaded from [store] at startup and saved back when the match ends.
@@ -137,7 +164,6 @@ class _GameScreenState extends State<GameScreen>
   Offset _moveRaw = Offset.zero;
   Offset _stickCenter = Offset.zero;
   bool _stickActive = false;
-  bool _attackHeld = false;
 
   /// World timestamp until which the hit-react clip should be respected.
   int _hitReactUntilMs = 0;
@@ -151,8 +177,18 @@ class _GameScreenState extends State<GameScreen>
     super.initState();
     kit = widget.kit ??
         kitForHero(widget.hero.id).withWeapon(widget.weaponId);
+    xpSession = widget.matchXpSession ??
+        MatchXpSession(
+          matchId: 'local_${DateTime.now().microsecondsSinceEpoch}',
+          heroId: widget.hero.id,
+        );
     world = widget.worldFactory?.call(kit) ??
-        GameWorld(kit: kit, startingArmy: widget.startingArmy);
+        GameWorld(
+          kit: kit,
+          seed: widget.worldSeed,
+          startingArmy: widget.startingArmy,
+        );
+    world.attachXpLedger(xpSession.ledger, savedTotalXp: 0);
     loader = widget.loaderFactory(widget.hero);
     store = widget.store ?? SharedPreferencesProgressStore();
     _settingsStore = widget.settingsStore ?? SharedPreferencesSettingsStore();
@@ -172,7 +208,10 @@ class _GameScreenState extends State<GameScreen>
     _toastTimer?.cancel();
     _audio.stopMusic();
     // Credit everything earned in this match (also when the player lost or
-    // left early) before saving the permanent profile.
+    // left early) before saving the permanent profile. Finalizing twice is a
+    // no-op, so the exit dialog and dispose can both call it safely.
+    if (!xpSession.outcome.decided) xpSession.outcome.setEarlyLeave();
+    _finalizeMatch();
     world.settleMatch();
     _syncWorldToProgression();
     _persistProgress();
@@ -183,6 +222,17 @@ class _GameScreenState extends State<GameScreen>
     loader.dispose();
     _player?.dispose();
     super.dispose();
+  }
+
+  /// Finalizes the XP ledger once and refreshes the live HUD from the same
+  /// award that will be persisted.
+  XpAward _finalizeMatch() {
+    final existing = _exitAward;
+    if (existing != null) return existing;
+    final award = xpSession.finalize();
+    world.refreshXpState();
+    _exitAward = award;
+    return award;
   }
 
   Future<void> _loadSettings() async {
@@ -200,8 +250,25 @@ class _GameScreenState extends State<GameScreen>
     if (saved == null) return;
     if (!mounted) return;
     setState(() {
-      world.level = saved.level.clamp(1, 40);
-      world.xp = saved.xp;
+      _profile = saved;
+      // Weapon mastery is persisted with the hero; apply it as soon as the
+      // saved profile arrives so a purchased upgrade affects this match too.
+      if (widget.weaponId != null && widget.kit == null) {
+        final mastery = saved.weaponLevels[widget.weaponId] ?? 0;
+        if (mastery > 0) {
+          kit = kitForHero(widget.hero.id).withWeapon(
+            widget.weaponId,
+            upgradeLevel: mastery,
+          );
+          world.setKit(kit);
+        }
+      }
+      // The ledger only stores XP earned in THIS match; the lifetime total
+      // comes from the profile so a hero switch never loses or duplicates XP.
+      world.attachXpLedger(
+        xpSession.ledger,
+        savedTotalXp: saved.heroXp.totalXp,
+      );
       world.kills = saved.kills;
       world.upgrades.loadFromMap(saved.armyLevels);
       progression = ProgressionController.fromProgress(widget.hero.id, saved);
@@ -231,27 +298,35 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _persistProgress() async {
     _syncWorldToProgression();
-    await store.save(
-      widget.hero.id,
-      HeroProgress(
-        level: world.level,
-        xp: world.xp,
-        kills: world.kills,
-        armyLevels: world.upgrades.toMap(),
-        essence: progression.currency,
-        materials: {
-          for (final entry in progression.materials.entries)
-            entry.key.name: entry.value,
-        },
-        equipment: progression.equipment,
-        equipped: {
-          for (final entry in progression.equipped.entries)
-            entry.key.name: entry.value,
-        },
-        capacityLevel: progression.capacityLevel,
-        heroUpgradeLevel: progression.heroUpgradeLevel,
-      ),
+    final finalized = xpSession.isFinalized;
+    var updated = _profile.copyWith(
+      level: finalized ? _profile.level : world.level,
+      xp: finalized ? _profile.xp : world.xp,
+      kills: world.kills,
+      armyLevels: world.upgrades.toMap(),
+      essence: progression.currency,
+      materials: {
+        for (final entry in progression.materials.entries)
+          entry.key.name: entry.value,
+      },
+      equipment: List<EquipmentItem>.of(progression.equipment),
+      equipped: {
+        for (final entry in progression.equipped.entries)
+          entry.key.name: entry.value,
+      },
+      capacityLevel: progression.capacityLevel,
+      heroUpgradeLevel: progression.heroUpgradeLevel,
     );
+    // Intermediate saves keep the loaded lifetime total. Only the finalized
+    // award is applied, and HeroProgress rejects a repeated match id.
+    if (finalized) {
+      updated = updated.applyXpAward(
+        xpSession.award!,
+        heroId: widget.hero.id,
+      );
+    }
+    _profile = updated;
+    await store.save(widget.hero.id, updated);
   }
 
   Future<void> _loadManifest() async {
@@ -325,7 +400,8 @@ class _GameScreenState extends State<GameScreen>
     if (stepped) {
       widget.onNetworkTick?.call(world.player.position, world.nowMs);
       _handleWorldEvents();
-      if (_attackHeld) _tryAttack();
+      // Spec §3:43: every basic attack is a separate player input. There is
+      // deliberately no held-button auto-repeat here.
       _updateSprite(deltaMs);
       _pruneLabels();
     }
@@ -335,16 +411,22 @@ class _GameScreenState extends State<GameScreen>
     for (final event in world.drainEvents()) {
       widget.onWorldEvent?.call(event);
       switch (event) {
-        case EnemyKilledEvent(:final xpGained):
+        case EnemyKilledEvent(:final killedBy):
           _audio.play(SoundCue.enemyKilled);
-          _labels.add(
-            FloatLabel(
-              text: '+$xpGained XP',
-              worldPosition: world.player.position - const Offset(0, 40),
-              bornAtMs: world.nowMs,
-              color: accentColor.withValues(alpha: 0.85),
-            ),
-          );
+          if (killedBy == DamageOrigin.hero) {
+            _labels.add(
+              FloatLabel(
+                text: '+${HeroXpRewards.monsterKill} XP',
+                worldPosition: world.player.position - const Offset(0, 40),
+                bornAtMs: world.nowMs,
+                color: accentColor.withValues(alpha: 0.85),
+              ),
+            );
+          }
+        case MonsterDamageEvent():
+          // The world ledger has already recorded this confirmed hit. The
+          // event exists so UI tests can observe real monster participation.
+          break;
         case ArmyMonsterLostEvent(:final type):
           _showToast('سقط ${MonsterCatalog.def(type).nameAr} — اشترِ بديلًا');
         case LevelUpEvent(:final newLevel, :final unlockedAbilityIds):
@@ -368,9 +450,13 @@ class _GameScreenState extends State<GameScreen>
               color: const Color(0xFFFF8A80),
             ),
           );
-        case PlayerDiedEvent():
+        case PlayerDiedEvent(:final lostResources):
           _audio.play(SoundCue.playerDeath);
-          _showToast('سقط البطل — عودة بعد لحظات');
+          _showToast(
+            lostResources > 0
+                ? 'سقط البطل — خسرت $lostResources موارد — عودة بعد 10 ثوانٍ'
+                : 'سقط البطل — عودة بعد 10 ثوانٍ',
+          );
           _persistProgress();
         case PlayerRespawnedEvent():
           _audio.play(SoundCue.respawn);
@@ -378,17 +464,10 @@ class _GameScreenState extends State<GameScreen>
         case AbilityReadyEvent(:final abilityId):
           final name = kit.abilityById(abilityId)?.nameAr;
           if (name != null) _showToast('القدرة "$name" متاحة الآن');
-        case MineCapturedEvent(:final size, :final ownerId):
-          final label = switch (size) {
-            MineSize.small => 'منجم صغير',
-            MineSize.medium => 'منجم متوسط',
-            MineSize.large => 'منجم كبير',
-          };
-          _showToast(
-            ownerId == MineController.localPlayerId
-                ? 'سيطرت على $label'
-                : 'خصم سيطر على $label',
-          );
+        // Mine captures are intentionally silent: the specification forbids
+        // capture alerts. Ownership is shown continuously on the minimap/HUD.
+        case MineCapturedEvent():
+          break;
         case MineResourceCollectedEvent(:final amount):
           _labels.add(
             FloatLabel(
@@ -419,6 +498,11 @@ class _GameScreenState extends State<GameScreen>
                 ? 'سقطت قلعتك — أعد بناء أول كريستال'
                 : 'سقطت قلعة خصم',
           );
+          if (!xpSession.outcome.decided) {
+            xpSession.outcome.setResult(
+              won: ownerId != MineController.localPlayerId,
+            );
+          }
         case CrystalRebuiltEvent(:final cost):
           _audio.play(SoundCue.crystalRebuilt);
           _showToast('أُعيد بناء كريستال مقابل $cost موارد');
@@ -711,7 +795,24 @@ class _GameScreenState extends State<GameScreen>
             '${(kit.comboHit(combo.chainLength).multiplier * 100).round()}%'
         : null;
 
-    return Scaffold(
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (_summaryShown) {
+          if (mounted) Navigator.of(context).pop();
+          return;
+        }
+        final navigator = Navigator.of(context);
+        _summaryShown = true;
+        if (!xpSession.outcome.decided) xpSession.outcome.setEarlyLeave();
+        _finalizeMatch();
+        await _persistProgress();
+        if (!mounted) return;
+        final leave = await _showXpSummary(_exitAward!);
+        if (leave ?? false) navigator.pop();
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFF07110A),
       body: Directionality(
         textDirection: TextDirection.rtl,
@@ -920,6 +1021,99 @@ class _GameScreenState extends State<GameScreen>
           ],
         ),
       ),
+      ),
+    );
+  }
+
+  /// Post-match XP report. Every source is shown with its Arabic label, even
+  /// when it paid zero, so the breakdown cannot hide missing rewards.
+  Future<bool?> _showXpSummary(XpAward award) async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            key: const ValueKey('xp_summary_dialog'),
+            title: Text(
+              award.earlyLeave
+                  ? 'انتهت المباراة — انسحاب'
+                  : award.won
+                      ? 'فزت بالمباراة!'
+                      : 'انتهت المباراة',
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'خبرة البطل: +${award.heroXp}',
+                      key: const ValueKey('xp_summary_total'),
+                      style: const TextStyle(
+                        color: Color(0xFF9BE845),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'مستوى البطل الآن: ${_profile.heroXp.level} '
+                      '(${_profile.heroXp.xp}/${_profile.heroXp.required})',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'تفصيل المكاسب',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    for (final source in XpSourceLabels.hero.entries)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text(source.value)),
+                            Text(
+                              '+${award.source(source.key)}',
+                              key: ValueKey('xp_summary_${source.key}'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const Divider(),
+                    const Text(
+                      'تطوير الوحوش',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    for (final type in MonsterType.values)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(MonsterCatalog.def(type).nameAr),
+                            ),
+                            Text('+${award.monsterXp[type] ?? 0}'),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              FilledButton(
+                key: const ValueKey('xp_summary_close'),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('عودة'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -953,8 +1147,8 @@ class _GameScreenState extends State<GameScreen>
     final player = world.player;
     final hpRatio = (player.hp / world.maxHp).clamp(0.0, 1.0);
     final energyRatio = (player.energy / kit.baseMaxEnergy).clamp(0.0, 1.0);
-    final xpNeeded = GameWorld.xpForLevel(world.level);
-    final xpRatio = world.level >= 40 ? 1.0 : world.xp / xpNeeded;
+    final xp = world.heroXp;
+    final xpRatio = xp.progress;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: _panelDecoration(),
@@ -995,7 +1189,7 @@ class _GameScreenState extends State<GameScreen>
           Row(
             children: [
               Text(
-                'المستوى ${world.level}${world.level >= 40 ? ' (الأقصى)' : ''}',
+                'المستوى ${xp.level}${xp.isMax ? ' (الأقصى)' : ''}',
                 style: TextStyle(
                   color: accentColor,
                   fontWeight: FontWeight.bold,
@@ -1016,9 +1210,9 @@ class _GameScreenState extends State<GameScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                world.level >= 40
-                    ? 'مكتمل'
-                    : '${world.xp}/${GameWorld.xpForLevel(world.level)}',
+                xp.isMax
+                    ? 'مكتمل · ${xp.totalXp} خبرة'
+                    : '${xp.xp}/${xp.required} · متبقي ${xp.remaining}',
                 style:
                     const TextStyle(color: Colors.white70, fontSize: 11),
               ),
@@ -1454,12 +1648,7 @@ class _GameScreenState extends State<GameScreen>
     return Listener(
       key: const ValueKey('btn_attack'),
       behavior: HitTestBehavior.opaque,
-      onPointerDown: (_) {
-        _attackHeld = true;
-        _tryAttack();
-      },
-      onPointerUp: (_) => _attackHeld = false,
-      onPointerCancel: (_) => _attackHeld = false,
+      onPointerDown: (_) => _tryAttack(),
       child: Container(
         width: 88 * _settings.controlScale,
         height: 88 * _settings.controlScale,

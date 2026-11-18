@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-18
-> Project status: Match map, mines/economy, castles/crystals, permanent progression, online rooms/friends, four-device hotspot, audited combat (freeze/stun and dodge gaps resolved), UI and music/SFX implemented; final release/perf work remains; cloud save/host migration and device testing remain
+> Project status: Match map, mines/economy, castles/crystals, progression/XP (heroes 1–40, monsters 1–40, abilities/weapons/save, Arabic UI, post-match XP summary), online rooms/friends, four-device hotspot, audited combat (freeze/stun and dodge gaps resolved), UI and music/SFX implemented; local Release APK/CI release verification pending in this environment; cloud save/host migration, Google/Apple sign-in, and real-device/LAN/audio/perf testing remain
 > Default branch: `main`
 
 ## 1. Project identity
@@ -172,21 +172,23 @@ Still to decide or test:
 - LAN host migration/host disconnect handling and secure account progression synchronization.
 - Final rendering direction: 2.5D sprite sheets rendered from a consistent 3D Chibi source model; runtime engine remains undecided.
 - Networking technology, backend, hosting, persistence schema, and anti-cheat architecture.
+- **Unresolved conflict requiring the user's decision (recorded 2026-11-18, not silently changed):** §9 fixes the rendering direction as pre-rendered 2.5D sprite sheets, but the shipped implementation (§19–§24) renders real-time skinned GLB heroes on Android. Both satisfy “colorful 3D/2.5D chibi”, but they are different runtime architectures. The working code was kept; switching it would be a visual/performance decision, not a bug fix.
+- **Not fulfilled, not claimed:** account-based cloud save across reinstall and Google/Apple sign-in (§3 “Accounts and social” / “Networking”). Only local username/password accounts and local persistence exist. An online authoritative server class exists, but no hosted backend is deployed (`127.0.0.1` default in the lobby).
 - Combat/spec gaps from the step-3 audit (2026-11-18) are now **resolved**: freeze and stun exist as real disables in `GameWorld` (movement/attacks/windups stop), and the dodge API/button/i-frames/combo-cancel were removed while the GLB dodge animation asset was left untouched. Durations/sources are documented balance placeholders (see §31). The third audit item — three weapons per hero unlocked by progression — was resolved in step 12 at the user's explicit clarification: they are chosen **before** the match, one starting plus two at hero levels 10 and 20 (see §32).
 
 ## 6. Implementation status
 
 | Area | Status | Notes |
 |---|---|---|
-| New private GitHub repository | Done | `Archer-fm`, branch `main` |
-| Product vision and core requirements | Documented | Based on confirmed planning decisions |
-| Preliminary balance design | Not finalized | Numbers require simulation and playtesting |
-| Legacy asset audit | Partial | Hero sprites audited and copied; other systems not audited |
-| Engine/architecture decision | Not started | Art direction approved as colorful 3D/2.5D chibi; rendering engine and gameplay dimensionality still need a mobile prototype |
-| Project scaffold | Not started | No game code committed yet |
-| Gameplay implementation | Not started | No gameplay systems implemented |
-| Backend/multiplayer | Not started | No networking code or services configured |
-| Automated tests/build verification | Not started | No tests run in this repository |
+| New private GitHub repository | Done | `Archer-fm`; gameplay work lives on `ranger-reference-work`, asset/CI work on `main` |
+| Product vision and core requirements | Documented | §3 is the confirmed spec; §5 keeps unresolved decisions explicit |
+| Preliminary balance design | Not finalized | Numbers require simulation and playtesting; implemented values are documented placeholders |
+| Legacy asset audit | Partial | Hero SVG/GLB assets audited and copied; legacy monster art was unavailable, procedural painter used |
+| Engine/architecture decision | Conflict recorded | Plan §9 fixed 2.5D sprite sheets; shipping code uses real-time skinned GLB heroes (§19–§24). Per user rule, no silent change — see §5 |
+| Project scaffold | Done | Flutter app, Android Gradle project, assets and CI workflows present |
+| Gameplay implementation | Done (pending device QA) | Systems 1–13 of §7 implemented plus XP/progression closure (§35); hero/monster XP, abilities, weapons, save, Arabic progression UI and post-match XP summary implemented and covered by tests |
+| Backend/multiplayer | Partial | Authoritative in-app server + LAN/hotspot implemented; no hosted backend and no Google/Apple sign-in or cloud save |
+| Automated tests/build verification | Partial | `flutter analyze --no-pub`: No issues found (RC=0). `flutter test --concurrency=2`: 295 passed, 0 failed (RC=0) on 2026-11-18. Local `flutter build apk --release` could not be verified in this environment (Gradle/AGP artifact resolution failed over proxy/network; stale Nov 17 APKs exist but were not produced by this pass). GitHub Actions release workflow configured but not yet triggered/verified in this pass (no artifact/Release URL) |
 
 ## 7. Main development roadmap — work one system at a time
 
@@ -215,7 +217,7 @@ Still to decide or test:
 | 8 | الأونلاين والغرف والأصدقاء | المطابقة، الغرف الخاصة، الدعوات، الأصدقاء، مزامنة اللاعبين وحالة المباراة | تم (2026-11-18): مطابقة بنفس المدة، غرف برموز دعوة، دعوة بالاسم، إزالة اللاعب من المالك، أصدقاء وطلبات وبحث، خادم حاسم يمنع الغش في الضرر/القتل/النقاط/الموارد/الصحة/الحركة — 12 اختباراً (انظر §30) | لا يوجد نظام شبكة قابل للنقل؛ بُني جديداً |
 | 9 | اللعب المحلي عبر Hotspot | استضافة جهاز، اتصال 4 أجهزة، مزامنة LAN، التعامل مع انقطاع المضيف | تم (2026-11-18): استضافة على شبكة الهاتف، اتصال 4 أجهزة بعنوان المضيف، نفس الخادم الحاسم ومزامنة اللقطات، حفظ النتائج محلياً عند الانقطاع — انظر §30 للحدود | لا يوجد نظام شبكة قابل للنقل |
 | 10 | الحسابات والحفظ | تسجيل الدخول، الملف الشخصي، الحفظ السحابي، استعادة التقدم | جزئي (2026-11-18): حسابات اسم/كلمة مرور محلية، ملف شخصي وإحصائيات، أصدقاء وطلبات، نتائج معلّقة تُزامن عند عودة الإنترنت؛ الحفظ السحابي عبر حساب (Google/Apple) لا يزال مفتوحاً في §5 | لا يوجد نظام حسابات قابل للنقل |
-| 11 | التطوير الدائم والمعدات والصناديق | مستويات الأبطال والوحوش والمعدات، الندرة، المواد، الصناديق والعملات | تم (2026-11-18): عملة دائمة منفصلة تُصرف بعد المباراة، 6 فتحات و5 ندرات، معدات حتى مستوى 40، مكررات→خامات وبيع، صناديق تُلحظ باللمس، صفحات الأبطال/الوحوش/المعدات/الأسلحة/الصناديق والقوة، خامات مستقلة لكل فئة، حفظ متوافق للخلف — 33 اختباراً جديداً | بُني بالكامل؛ المشروع القديم لا يضم نظام تطوير بمواد مستقلة (انظر §29) |
+| 11 | التطوير الدائم والمعدات والصناديق وخبرة الأبطال/الوحوش | مستويات الأبطال والوحوش والمعدات، الندرة، المواد، الصناديق والعملات، خبرة المباراة والحفظ والواجهات العربية | تم (2026-11-18): عملة دائمة منفصلة تُصرف بعد المباراة، 6 فتحات و5 ندرات، معدات حتى مستوى 40، مكررات→خامات وبيع، صناديق تُلحظ باللمس؛ **إغلاق فجوة XP (§35):** خبرة بطل مستقلة 1–40، خبرة وحش مستقلة 1–40 للأنواع الأربعة، 4 قدرات مفتوحة عند 1/10/20/30، 3 أسلحة لكل بطل بإتقان/فتح واضح، حفظ schema v2 (خبرة/قدرات/وحوش/أسلحة/آخر مكسب/منع التكرار) بصيغة JSON جاهزة للمزامنة السحابية دون مزامنة فعلية، واجهة عربية وملخص ما بعد المباراة بالمصادر والإجمالي — 295/295 اختباراً ناجحاً إجمالاً | بُني بالكامل؛ المشروع القديم لا يضم نظام XP/تطوير بمواد مستقلة (انظر §29 و§35) |
 | 12 | واجهات اللعبة وتجربة المستخدم | الرئيسية، اختيار البطل والجيش، التطوير، HUD، الخريطة المصغرة، الإعدادات | تم (2026-11-18): واجهة رئيسية أفقية مستوحاة من Archero ببطل 3D في المنتصف وتنقل بالسحب يميناً/يساراً بين المتجر والأبطال والتطوير؛ اختيار البطل والجيش والسلاح قبل المباراة (3 أسلحة لكل بطل بمستويات فتح 1/10/20)؛ شاشة إعدادات تحكم عربية محفوظة؛ HUD والخريطة المصغرة من الأنظمة السابقة — 13 اختباراً جديداً ولقطتان جديدتان (انظر §32) | بُنيت الواجهات جديداً؛ المشروع القديم يضم قائمة رأسية وHUD مبسطاً بلا بطل 3D أو PageView أو نظام أسلحة، فلم يُنقل كود واجهة (انظر §32) |
 | 13 | الصوت والمؤثرات | الموسيقى، مؤثرات القتال والقدرات والبيئة، إعدادات الصوت | تم (2026-11-18): خدمة صوت قابلة للحقن (`lib/audio_service.dart`) تشغّل موسيقى القائمة والمعركة وتُصدر مؤثرات الهجوم/القدرات/القتل/الضرر/الموت/الإحياء/المستوى/الكريستال/الصندوق؛ مفتاحان مستقلان للموسيقى والمؤثرات في الإعدادات؛ تنبيه تدمير الكريستال مطلوب، ولا تنبيه عند مهاجمة كريستالاتنا ولا صوت لالتماس المناجم — 9 اختبارات جديدة (انظر §34) | لا يوجد نظام صوت قابل للنقل؛ بُني جديداً بموجات WAV مولّدة محلياً وقناة Android أصلية (انظر §34) |
 | 14 | الأداء والأمان والاختبارات والإطلاق | تحسين الأجهزة الضعيفة، منع الغش، الاختبارات، البناء، التوافق والنشر | لم يبدأ | لم يبدأ |
@@ -964,3 +966,27 @@ Still to decide or test:
   التشغيل الفعلي يعتمد على توفّر `MediaPlayer`/`SoundPool` على الجهاز.
   لا ادّعاء باكتمال Google/Apple sign-in أو الحفظ السحابي أو الاستضافة أو
   مكافحة الغش (تقع في الخطوة 14 وما بعدها).
+
+
+## 35. إغلاق فجوة خبرة الأبطال/الوحوش والتطوير والحفظ والواجهات (2026-11-18, ranger-reference-work)
+
+- **النطاق المنفذ على `ranger-reference-work`**: اعتماد أيقونة التشغيل `assets/branding/archer_fm_app_icon_fourth.png` في موارد Android، وتنفيذ/إكمال خبرة البطل 1–40، خبرة الوحوش 1–40 (Runner/Tank/Stalker/Ranged) المستقلة عن `armyLevels` المدفوعة، فتح القدرات الأربع عند 1/10/20/30، إتقان/فتح الأسلحة الثلاثة لكل بطل بواجهة واضحة، حفظ دائم schema v2 (خبرة بطل/وحوش، قدرات مفتوحة، فتح/ترقية الأسلحة، آخر مكسب، ومنع احتساب المباراة نفسها مرتين) بصيغة JSON جاهزة للمزامنة السحابية **دون** ادعاء مزامنة سحابية فعلية، واجهة عربية للتطوير، وملخص ما بعد المباراة يعرض مصادر الخبرة والإجمالي.
+- **معادلات الخبرة (موحّدة في `lib/game/progress/xp.dart`)**:
+  - البطل: `heroXpRequired(L) = 100 + 25×(L−1) + 3×(L−1)²` لكل مستوى 1–40 (المستوى 40 حد أقصى ولا مستوى تالٍ). المجموع التراكمي للوصول إلى المستوى 40 (مجموع متطلبات 1–39) = **79482** خبرة.
+  - الوحوش: `monsterXpRequired(L) = 60 + 14×(L−1) + (L−1)²` لكل مستوى 1–40. المجموع التراكمي للوصول إلى المستوى 40 (مجموع متطلبات 1–39) = **31733** خبرة لكل نوع وحش.
+- **مصادر خبرة البطل وقواعدها (`lib/game/progress/match_xp.dart`, `lib/game/world/game_world.dart`, `lib/game/game_screen.dart`, `lib/game/net/*`)**: مشاركة **150** (≥3 أحداث حقيقية)، **75** (1–2)، **0** (خمول/مغادرة مبكرة)؛ فوز **100**؛ كريستال عدو **30**؛ تدمير قلعة عدو كاملة **100**؛ السيطرة على منجم محايد **40**؛ التقاط مورد منجم **5**؛ قتل وحش عدو **5**؛ ضرر لبطل منافس **1 خبرة لكل 2 ضرر مؤكد من الخادم/السلطة** بحد **100** لكل مباراة. حد الأداء **500** خبرة/مباراة (باستثناء المشاركة). لا خبرة للأفعال الوهمية/غير المؤكدة/المكررة؛ منع تكرار الفوز/الكريستال/المباراة المستقرة عبر `matchId` ودفتر أحداث مكرّر؛ لا خبرة للمكوث فقط؛ لا مكافأة فوز/كريستال مكررة لنفس الحدث.
+- **خبرة الوحوش**: مستقلة لكل نوع (Runner/Tank/Stalker/Ranged) من المشاركة القتالية الحقيقية/الضرر/القتل/المساهمة؛ لا خبرة للوحدات غير المشاركة؛ لا استغلال عبر إعادة الاستدعاء/إعادة القتل لنفس الحدث المؤكد؛ منحنى متوازن منفصل عن البطل وعن شراء/ترقية الجيش المدفوعة (`armyLevels`).
+- **القدرات**: أربع قدرات لكل بطل تفتح عند المستويات **1، 10، 20، 30** (منفصلة عن كومبو الخمس ضربات)، محفوظة دائماً؛ القدرات المقفلة تظهر مستوى الفتح المطلوب في الواجهة.
+- **الأسلحة/المعدات**: 3 أسلحة لكل بطل بنظام فتح/ترقية واضح وتظهر مستويات الفتح في الواجهة؛ الخبرة لا تستبدل العملات/المواد. **إتقان السلاح** (ترقية حقيقية 0–10، +2% ضرر لكل مستوى) يطبّق كمضاعف فوق إحصاءات السلاح الأساسية مع الحفاظ على مضاعفات السلاح الأساسية عند المستوى 0 لتجنب تغييرات إحصائية غير موثّقة.
+- **الشبكة/تأكيد الأحداث**: معرف مباراة ثابت (`matchId` من الخادم/العميل)، ورسالة `NetMessage.damageConfirmed` بمعرف ضرر فريد (`damageId`)؛ العملاء يمنحون خبرة ضرر الأبطال فقط من الأحداث المؤكدة وغير المكررة.
+- **الحفظ (schema v2, `lib/game/progress/hero_progress.dart`)**: مستوى/خبرة البطل، القدرات المفتوحة ضمن حالة البطل، خبرة مستوى الوحوش لكل نوع، فتح/ترقية الأسلحة (إتقان)، آخر سجل مكسب XP، ومعرفات المباريات المستقرة المحتسبة لمنع التكرار؛ تسلسل JSON متوافق مع التوسع وجاهز للمزامنة السحابية لاحقاً (لا مزامنة فعلية). توافق تحميل الإصدارات الأقدم محفوظ.
+- **الواجهة العربية**: شاشة التطوير (`lib/game/progress/progression_screen.dart`) تعرض مستوى البطل وخبرته الحالية/المطلوبة والمتبقي وشريط تقدم وإشعار تقدم/آخر مكسب، القدرات الأربع وحالة فتحها، تطوير الوحوش الأربعة (مستوى وخبرة)، والأسلحة الثلاثة لكل بطل مع الفتح/الترقية؛ شاشة نهاية المباراة المحلية (`lib/game/game_screen.dart`) تعرض ملخص خبرة ما بعد المباراة حسب المصدر والإجمالي (مع ملخص شبكة مطابق في تدفق الشبكة).
+- **الأيقونة/البناء/CI**: اعتماد أيقونة التشغيل الجديدة في mipmap/round icons وموارد Android؛ تحديث Gradle/CI (`.github/workflows/flutter-android.yml`) ليكون آمناً مع المستودعات الرسمية وJDK 17 مع دعم `workflow_dispatch` ودفع `ranger-reference-work`/`main`؛ إعداد توقيع الإصدار عبر `android/key.properties` محلياً وأسرار GitHub (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) دون رفع keystore.
+- **الاختبارات والتحقق (2026-11-18)**:
+  - `flutter analyze --no-pub` → **No issues found!** (RC=0).
+  - `flutter test --concurrency=2` → **295 passed, 0 failed** (RC=0، `All tests passed!`) في `/tmp/opencode/test_full_rrw_final.txt`.
+  - اختبارات مضافة/محدّثة: `test/xp_progression_test.dart` (معادلات/مجاميع البطل والوحش، سلوك `HeroXpState`/`MonsterXpState`، فتح القدرات 1/10/20/30، استقلال البطل/الوحش، حفظ/إعادة تحميل schema v2 وآخر مكسب والأسلحة وخبرة الوحوش، منع تكرار المباراة المستقرة، حدود/مشاركة/مغادرة مبكرة/منع الاستغلال، وفحوص واجهة عربية)، وتحديثات `test/progression_test.dart`, `test/game_world_test.dart`, `test/monster_system_test.dart`, `test/online_match_test.dart`, مع تحديث golden `test/goldens/progression.png`.
+- **بناء APK إصدار محلي**: محاولة `flutter build apk --release` فشلت في هذه البيئة بسبب تعذر حل/تنزيل توزيعة/اعتماديات Gradle وAGP عبر الوكيل/الشبكة (أخطاء اتصال/نفق و`Plugin [id: 'com.android.application', version: '8.9.1'] was not found...`). توجد ملفات APK قديمة بتاريخ 2025-11-17 في `build/app/outputs/flutter-apk/app-release.apk` و`build/app/outputs/apk/release/app-release.apk` لكنها **لا تمثل** هذا التمرير ولا تُعد نتيجة مُتحقق منها له.
+- **GitHub Actions/الإصدار**: لم يُشغَّل سير العمل ولم يُتحقق من Artifact/Release URL في هذا التمرير داخل البيئة الحالية (لا ادعاء بروابط).
+- **تعارض مسجّل غير محسوم**: خطة §9 تحدد sprite sheets ثنائية ونصف الأبعاد، بينما الشيفرة المشحونة تعرض أبطال GLB مجلدة في الزمن الحقيقي (§19–§24). لم يُغيَّر بصمت.
+- **عناصر غير قابلة للتحقق/غير منفذة هنا**: مزامنة سحابية فعلية، تسجيل دخول Google/Apple، خادم مستضاف، اختبارات 4 أجهزة حقيقية LAN/Hotspot، صوت/لمس/أداء على أجهزة حقيقية، وتثبيت محلي (adb معطّل وتحذير تراخيص Android).

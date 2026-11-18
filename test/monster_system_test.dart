@@ -147,7 +147,7 @@ void main() {
       }
     });
 
-    test('buying a monster spends resources and spawns it beside the hero', () {
+    test('buying a monster spends resources and spawns it beside the castle', () {
       final world = makeMonsterWorld(resources: 500);
       final before = world.army.length;
       final price = MonsterCatalog.def(MonsterType.tank).price;
@@ -156,8 +156,9 @@ void main() {
       expect(world.resources, 500 - price);
       final bought = world.army.last;
       expect(bought.type, MonsterType.tank);
-      expect((bought.position - world.player.position).distance,
-          lessThan(180));
+      // Spec §3:60: reinforcements spawn beside the owner's castle.
+      expect((bought.position - world.castleSystem.playerCastle.anchor).distance,
+          lessThan(320));
     });
 
     test('purchase is refused without resources and at the army cap', () {

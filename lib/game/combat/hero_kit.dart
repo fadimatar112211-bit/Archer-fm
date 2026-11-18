@@ -149,6 +149,10 @@ class HeroKit {
   List<AbilityDef> abilitiesUnlockedAt(int level) =>
       abilities.where((a) => a.unlockLevel <= level).toList();
 
+  /// Ids of the abilities permanently unlocked at [level].
+  List<String> unlockedAbilityIdsAt(int level) =>
+      abilitiesUnlockedAt(level).map((a) => a.id).toList();
+
   AbilityDef? abilityById(String id) {
     for (final ability in abilities) {
       if (ability.id == id) return ability;
@@ -173,16 +177,25 @@ class HeroKit {
   ///
   /// The starting weapon (or an unknown id) returns this kit unchanged, so
   /// every existing caller and test keeps the original combat numbers.
-  HeroKit withWeapon(String? weaponId) {
+  ///
+  /// `upgradeLevel` is the permanent weapon mastery level (0..10). Documented
+  /// reason for the stat change: the specification fixes the three base weapon
+  /// multipliers but asks for a real upgrade system, so each mastery level adds
+  /// +2% damage while leaving the documented multipliers untouched at level 0.
+  HeroKit withWeapon(String? weaponId, {int upgradeLevel = 0}) {
     final weapon = weaponId == null ? null : weaponById(weaponId);
-    if (weapon == null || weapons.isEmpty || weapon.id == weapons.first.id) {
+    final mastery = upgradeLevel.clamp(0, 10);
+    if (weapon == null || weapons.isEmpty || (weapon.id == weapons.first.id && mastery == 0)) {
       return this;
     }
+    final weaponDamage = weapon.damageMultiplier;
+    final weaponRate = weapon.rateMultiplier;
+    final weaponRange = weapon.rangeMultiplier;
     return HeroKit(
       heroId: heroId,
       nameAr: nameAr,
       weaponAr: weapon.nameAr,
-      baseDamage: baseDamage * weapon.damageMultiplier,
+      baseDamage: baseDamage * weaponDamage * (1 + mastery * 0.02),
       baseMaxHp: baseMaxHp,
       baseMaxEnergy: baseMaxEnergy,
       energyRegenPerSec: energyRegenPerSec,
@@ -190,7 +203,7 @@ class HeroKit {
       comboWindowMs: comboWindowMs,
       comboHits: comboHits,
       abilities: abilities,
-      attackPace: attackPace * weapon.rateMultiplier,
+      attackPace: attackPace * weaponRate,
       playable: playable,
       attackStyle: attackStyle,
       meleeRange: meleeRange,
@@ -199,7 +212,7 @@ class HeroKit {
       buffDamageMult: buffDamageMult,
       buffRateMult: buffRateMult,
       buffMoveMult: buffMoveMult,
-      rangeMultiplier: rangeMultiplier * weapon.rangeMultiplier,
+      rangeMultiplier: rangeMultiplier * weaponRange,
     );
   }
 }
@@ -272,7 +285,7 @@ const HeroKit flameKit = HeroKit(
   nameAr: 'فارس اللهب',
   weaponAr: 'سيف اللهب العظيم',
   baseDamage: 16,
-  baseMaxHp: 110,
+  baseMaxHp: 100,
   baseMaxEnergy: 100,
   energyRegenPerSec: 7,
   moveSpeed: 160,
@@ -329,7 +342,7 @@ const HeroKit shadowKit = HeroKit(
   nameAr: 'ظل الليل',
   weaponAr: 'خنجران توأمان',
   baseDamage: 14,
-  baseMaxHp: 95,
+  baseMaxHp: 100,
   baseMaxEnergy: 100,
   energyRegenPerSec: 7,
   moveSpeed: 178,

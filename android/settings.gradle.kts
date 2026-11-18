@@ -11,9 +11,7 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        // dl.google.com is unreachable in this build container; the Aliyun
-        // mirror serves the identical Google Maven artifacts.
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }

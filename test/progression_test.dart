@@ -560,9 +560,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('upgrade_hero')));
+      Finder vertical() => find.byWidgetPredicate(
+            (w) => w is Scrollable && w.axis == Axis.vertical,
+          ).last;
+      final heroUpgrade = find.byKey(const ValueKey('upgrade_hero'));
+      await tester.scrollUntilVisible(heroUpgrade, 200, scrollable: vertical());
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('upgrade_capacity')));
+      await tester.tap(heroUpgrade);
+      await tester.pumpAndSettle();
+      final capacityUpgrade = find.byKey(const ValueKey('upgrade_capacity'));
+      await tester.scrollUntilVisible(
+        capacityUpgrade,
+        200,
+        scrollable: vertical(),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(capacityUpgrade);
       await tester.pumpAndSettle();
       final saved = await store.load('ranger_new');
       expect(saved!.heroUpgradeLevel, 1);
@@ -598,15 +611,30 @@ void main() {
       // Switch to the weapons tab.
       await tester.tap(find.text('الأسلحة'));
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('equipment_row_w')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('upgrade_item_w')));
+      Finder verticalList() => find.byWidgetPredicate(
+            (w) => w is Scrollable && w.axis == Axis.vertical,
+          ).last;
+      final row = find.byKey(const ValueKey('equipment_row_w'));
+      await tester.scrollUntilVisible(row, 300, scrollable: verticalList());
+      await tester.pumpAndSettle();
+      expect(row, findsOneWidget);
+      final upgrade = find.byKey(const ValueKey('upgrade_item_w'));
+      await tester.scrollUntilVisible(upgrade, 200, scrollable: verticalList());
+      await tester.pumpAndSettle();
+      await tester.tap(upgrade);
       await tester.pumpAndSettle();
       var saved = await store.load('ranger_new');
       expect(saved!.equipment.single.cappedLevel, 4);
 
-      await tester.tap(find.byKey(const ValueKey('unequip_w')));
+      final unequip = find.byKey(const ValueKey('unequip_w'));
+      await tester.scrollUntilVisible(unequip, 200, scrollable: verticalList());
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('sell_w')));
+      await tester.tap(unequip);
+      await tester.pumpAndSettle();
+      final sell = find.byKey(const ValueKey('sell_w'));
+      await tester.scrollUntilVisible(sell, 200, scrollable: verticalList());
+      await tester.pumpAndSettle();
+      await tester.tap(sell);
       await tester.pumpAndSettle();
       saved = await store.load('ranger_new');
       expect(saved!.equipment, isEmpty);
@@ -670,9 +698,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('الوحوش'));
       await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey('progression_upgrade_runner')),
-      );
+      final list = find.byWidgetPredicate(
+        (w) => w is Scrollable && w.axis == Axis.vertical,
+      ).last;
+      final upgrade = find.byKey(const ValueKey('progression_upgrade_runner'));
+      await tester.scrollUntilVisible(upgrade, 200, scrollable: list);
+      await tester.pumpAndSettle();
+      await tester.tap(upgrade);
       await tester.pumpAndSettle();
       final saved = await store.load('ranger_new');
       expect(saved!.armyLevels['runner'], 2);

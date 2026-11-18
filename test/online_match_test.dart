@@ -11,7 +11,9 @@ import 'package:archer_fm/game/social/account_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
+/// Raw TCP/socket messages arrive asynchronously; a longer settle keeps the
+/// suite deterministic under parallel load and slow CI runners.
+Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 150));
 
 MatchPlayer player(String id,
         {int score = 0, int crystals = 7, String heroId = 'ranger_new'}) =>

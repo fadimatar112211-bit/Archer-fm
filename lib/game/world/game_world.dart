@@ -6,7 +6,9 @@ import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
 import 'arena_map.dart';
 import '../progress/equipment.dart';
+import '../progress/match_xp.dart';
 import '../progress/progression.dart';
+import '../progress/xp.dart';
 import 'castle_system.dart';
 import 'fog_of_war.dart';
 import 'mine_system.dart';
@@ -25,10 +27,38 @@ sealed class WorldEvent {
   const WorldEvent();
 }
 
+/// Which simulation system actually landed a hit. XP is only awarded for hero
+/// or owned-monster hits; hostile hits never generate rewards.
+enum DamageOrigin { hero, monster, enemy }
+
 class EnemyKilledEvent extends WorldEvent {
-  const EnemyKilledEvent(this.enemyKind, this.xpGained);
+  const EnemyKilledEvent(
+    this.enemyKind,
+    this.xpGained, {
+    this.enemyId = '',
+    this.killedBy = DamageOrigin.hero,
+    this.monsterType,
+  });
   final String enemyKind;
   final int xpGained;
+  final String enemyId;
+  final DamageOrigin killedBy;
+  final MonsterType? monsterType;
+}
+
+/// Real damage dealt by one of the player's monsters to a hostile unit. The
+/// XP ledger uses [unitId] to deduplicate the same unit across repeated hits.
+class MonsterDamageEvent extends WorldEvent {
+  const MonsterDamageEvent({
+    required this.type,
+    required this.unitId,
+    required this.amount,
+    this.isKill = false,
+  });
+  final MonsterType type;
+  final String unitId;
+  final double amount;
+  final bool isKill;
 }
 
 /// Emitted when one of the player's permanently-owned monsters dies. The
@@ -50,7 +80,8 @@ class PlayerDamagedEvent extends WorldEvent {
 }
 
 class PlayerDiedEvent extends WorldEvent {
-  const PlayerDiedEvent();
+  const PlayerDiedEvent({this.lostResources = 0});
+  final int lostResources;
 }
 
 class PlayerRespawnedEvent extends WorldEvent {
@@ -64,23 +95,48 @@ class AbilityReadyEvent extends WorldEvent {
 
 /// A player finished capturing a mine (neutral or taken from an opponent).
 class MineCapturedEvent extends WorldEvent {
-  const MineCapturedEvent({required this.size, required this.ownerId});
+  const MineCapturedEvent({
+    required this.size,
+    required this.ownerId,
+    this.mineKey = '',
+    this.neutral = false,
+  });
   final MineSize size;
   final String ownerId;
+
+  /// Stable identity of the mine, used by the XP ledger to pay once.
+  final String mineKey;
+
+  /// True when the mine was neutral before this capture.
+  final bool neutral;
 }
 
 /// Resource pickups were touched and added to the match wallet.
 class MineResourceCollectedEvent extends WorldEvent {
-  const MineResourceCollectedEvent({required this.amount, required this.total});
+  const MineResourceCollectedEvent({
+    required this.amount,
+    required this.total,
+    this.pickupIds = const [],
+  });
   final int amount;
   final int total;
+
+  /// Ids of the real pickups consumed by this touch.
+  final List<String> pickupIds;
 }
 
 /// One crystal of [ownerId] lost all its HP.
 class CrystalDestroyedEvent extends WorldEvent {
-  const CrystalDestroyedEvent({required this.ownerId, required this.slot});
+  const CrystalDestroyedEvent({
+    required this.ownerId,
+    required this.slot,
+    this.destroyedBy = DamageOrigin.hero,
+    this.monsterType,
+  });
   final String ownerId;
   final int slot;
+  final DamageOrigin destroyedBy;
+  final MonsterType? monsterType;
 }
 
 /// Every crystal of [ownerId] is destroyed: the castle disappears until its
@@ -245,6 +301,8 @@ class ProjectileState {
     required this.tint,
     required this.big,
     bool? hostile,
+    this.sourceMonsterId,
+    this.sourceMonsterType,
   }) : hostile = hostile ?? tint == 0xFFFF7A5A;
 
   final String id;
@@ -263,6 +321,11 @@ class ProjectileState {
   final bool hostile;
 
   bool get fromEnemy => hostile;
+
+  /// Set when a player-owned ranged monster fired the arrow, so its XP can be
+  /// attributed to the correct type.
+  final String? sourceMonsterId;
+  final MonsterType? sourceMonsterType;
   final Set<String> hitIds = {};
 }
 
@@ -339,18 +402,33 @@ class GameWorld {
   GameWorld({
     required this.kit,
     math.Random? random,
+    int? seed,
     this.spawnWaves = true,
     Map<MonsterType, int>? startingArmy,
     this.bonuses = const EquipmentBonuses(),
     int carryCapacity = baseCarryCapacity,
-  })  : rng = random ?? math.Random(),
+    MatchXpLedger? xpLedger,
+    String? matchId,
+    String heroId = 'ranger_new',
+    int savedTotalXp = 0,
+  })  : rng = random ?? (seed != null ? math.Random(seed) : math.Random()),
         player = PlayerState(),
+        xpLedger = xpLedger ??
+            MatchXpLedger(
+              matchId: matchId ??
+                  'local_${DateTime.now().microsecondsSinceEpoch}',
+              heroId: heroId,
+            ),
+        initialTotalXp = savedTotalXp < 0 ? 0 : savedTotalXp,
         _startingArmy = startingArmy ?? MonsterCatalog.defaultStartingArmy {
     player.hp = maxHp;
     player.energy = kit.baseMaxEnergy * 0.5;
-    // One large map per match: randomized size, biomes, river/bridges,
-    // obstacle and objective placement.
-    map = ArenaMap.generate(math.Random(rng.nextInt(0x3fffffff)));
+    this.xpLedger.onChange = refreshXpState;
+    // One large map per match. Networked matches pass the authoritative host's
+    // seed so every device simulates exactly the same world (spec §13/§14).
+    map = ArenaMap.generate(
+      math.Random(seed ?? rng.nextInt(0x3fffffff)),
+    );
     fog = FogOfWar(
       worldWidth: map.size.width,
       worldHeight: map.size.height,
@@ -372,7 +450,7 @@ class GameWorld {
     }
   }
 
-  final HeroKit kit;
+  HeroKit kit;
   final math.Random rng;
 
   /// Hero max HP including equipped equipment and permanent hero upgrades.
@@ -464,6 +542,15 @@ class GameWorld {
   int kills = 0;
   int level = 1;
   int xp = 0;
+
+  /// Lifetime XP of the selected hero, derived from the authoritative curve.
+  int totalXp = 0;
+
+  /// Event ledger for this match. Every gameplay reward is recorded here once;
+  /// the UI and the save layer consume the same finalized award.
+  MatchXpLedger xpLedger;
+  int initialTotalXp;
+
   double totalDamageDealt = 0;
 
   int _waveAtMs = 0;
@@ -480,7 +567,49 @@ class GameWorld {
   int get attackCycleMs => (1670 / kit.attackPace).round();
   double get projectileSpeed => 430;
   double get projectileRange => 330 * kit.rangeMultiplier;
-  int get respawnDelayMs => 2500;
+  /// Spec §3:50 — ten-second respawn and five seconds of spawn protection.
+  int get respawnDelayMs => 10000;
+  int get respawnProtectionMs => 5000;
+
+  /// Authoritative XP view of the selected hero inside this match.
+  HeroXpState get heroXp {
+    final cap = heroTotalXpToLevel(heroMaxLevel);
+    if (initialTotalXp >= cap) return HeroXpState.fromTotal(cap);
+    final total = initialTotalXp + xpLedger.currentHeroXp;
+    return HeroXpState.fromTotal(total >= cap ? cap : total);
+  }
+
+  /// Attaches the shared match ledger (network matches create it outside the
+  /// world) and refreshes the provisional HUD state from the saved total.
+  void attachXpLedger(MatchXpLedger ledger, {required int savedTotalXp}) {
+    xpLedger = ledger;
+    initialTotalXp = savedTotalXp < 0 ? 0 : savedTotalXp;
+    xpLedger.onChange = refreshXpState;
+    refreshXpState();
+  }
+
+  /// Recomputes level/XP after a confirmed reward. Level-up events are emitted
+  /// when the curve is crossed, so the HUD and audio stay in sync with the
+  /// persisted total.
+  void refreshXpState() {
+    final state = heroXp;
+    final previous = level;
+    level = state.level;
+    xp = state.xp;
+    totalXp = state.totalXp;
+    if (state.level > previous) {
+      for (var crossed = previous + 1; crossed <= state.level; crossed++) {
+        final unlocked = kit.abilities
+            .where((ability) => ability.unlockLevel == crossed)
+            .map((ability) => ability.id)
+            .toList();
+        _events.add(LevelUpEvent(crossed, unlocked));
+        for (final id in unlocked) {
+          _events.add(AbilityReadyEvent(id));
+        }
+      }
+    }
+  }
 
   /// Initial balance placeholders: the spec only says freeze/stun disable the
   /// target temporarily, without giving durations.
@@ -534,6 +663,7 @@ class GameWorld {
     } else if (moveInput.distance > 0.01) {
       player.facing = _normalize(moveInput);
     }
+    xpLedger.markActivity();
     return true;
   }
 
@@ -564,6 +694,7 @@ class GameWorld {
     abilityReadyAtMs[abilityId] = nowMs + def.cooldownMs;
     player.energy -= def.energyCost;
     pendingAbilityId = abilityId;
+    xpLedger.markActivity();
     return abilityId;
   }
 
@@ -1050,6 +1181,7 @@ class GameWorld {
     fog.reveal(player.position, fogRevealRadius);
     _updateEnemies(deltaMs);
     _updateArmy(deltaMs);
+    _updateCrystalCombat();
     _updateProjectiles(deltaMs);
     _updateZones();
     _updateFireWaves(deltaMs);
@@ -1281,9 +1413,16 @@ class GameWorld {
             speed: 300,
             range: 320,
             tint: def.accent,
+            sourceMonsterId: ally.id,
+            sourceMonsterType: ally.type,
           );
         } else {
-          _damageEnemy(target, ally.contactDamage);
+          _damageEnemy(
+            target,
+            ally.contactDamage,
+            origin: DamageOrigin.monster,
+            monsterType: ally.type,
+          );
         }
         continue;
       }
@@ -1309,6 +1448,98 @@ class GameWorld {
       }
     }
     army.removeWhere((ally) => ally.hp <= 0);
+  }
+
+  /// Spec §3:58 — monsters can attack enemy crystals and defend their owner's
+  /// crystals. Enemy monsters strike the local castle's crystals when the hero
+  /// is not close enough to distract them; the player's army strikes rival
+  /// crystals when no hostile monster is nearer. The army's existing aggro on
+  /// enemies approaching our crystals is what provides active defence.
+  void _updateCrystalCombat() {
+    const double crystalStrikeRange = 72 + crystalRadius;
+    const double heroDistractionRange = 260.0;
+
+    // Hostile monsters attacking the local player's crystals.
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0 || enemy.disabledAt(nowMs)) continue;
+      if (enemy.windupUntilMs > 0 || nowMs < enemy.attackCooldownUntilMs) {
+        continue;
+      }
+      if (!player.dead &&
+          (player.position - enemy.position).distance <
+              heroDistractionRange) {
+        continue;
+      }
+      CrystalState? target;
+      var best = crystalStrikeRange;
+      for (final crystal in castleSystem.playerCastle.alive) {
+        final d = (crystal.position - enemy.position).distance;
+        if (d < best) {
+          best = d;
+          target = crystal;
+        }
+      }
+      if (target == null) continue;
+      enemy.facing = _normalize(target.position - enemy.position);
+      enemy.attackAnimUntilMs = nowMs + 260;
+      enemy.attackCooldownUntilMs =
+          (nowMs + MonsterCatalog.def(enemy.type).attackCooldownMs).toDouble();
+      _damageCrystal(target, enemy.contactDamage, origin: DamageOrigin.enemy);
+      fx.add(
+        GameFx(
+          kind: 'slash',
+          position: target.position,
+          facing: enemy.facing,
+          radius: 36,
+          bornAtMs: nowMs,
+          color: 0xFFFF7A5A,
+        ),
+      );
+    }
+
+    // The player's army attacking rival crystals (and, by prioritising nearby
+    // hostile monsters, defending our own).
+    for (final ally in army) {
+      if (ally.hp <= 0 || ally.disabledAt(nowMs)) continue;
+      if (nowMs < ally.attackCooldownUntilMs) continue;
+      CrystalState? target;
+      var best = crystalStrikeRange;
+      for (final crystal in castleSystem.hostileCrystals) {
+        final d = (crystal.position - ally.position).distance;
+        if (d < best) {
+          best = d;
+          target = crystal;
+        }
+      }
+      if (target == null) continue;
+      var nearestFoe = double.infinity;
+      for (final enemy in enemies) {
+        if (enemy.hp <= 0) continue;
+        final d = (enemy.position - ally.position).distance;
+        if (d < nearestFoe) nearestFoe = d;
+      }
+      if (nearestFoe < best) continue;
+      ally.facing = _normalize(target.position - ally.position);
+      ally.attackAnimUntilMs = nowMs + 260;
+      ally.attackCooldownUntilMs =
+          (nowMs + MonsterCatalog.def(ally.type).attackCooldownMs).toDouble();
+      _damageCrystal(
+        target,
+        ally.contactDamage,
+        origin: DamageOrigin.monster,
+        monsterType: ally.type,
+      );
+      fx.add(
+        GameFx(
+          kind: 'slash',
+          position: target.position,
+          facing: ally.facing,
+          radius: 36,
+          bornAtMs: nowMs,
+          color: MonsterCatalog.def(ally.type).accent,
+        ),
+      );
+    }
   }
 
   /// Steps [monster] in [direction] with simple same-team separation so packs
@@ -1385,12 +1616,21 @@ class GameWorld {
         }
         continue;
       }
+      final projectileOrigin = projectile.sourceMonsterType == null
+          ? DamageOrigin.hero
+          : DamageOrigin.monster;
       for (final enemy in enemies) {
         if (enemy.hp <= 0 || projectile.hitIds.contains(enemy.id)) continue;
         if ((projectile.position - enemy.position).distance <
             enemy.radius + 8) {
           projectile.hitIds.add(enemy.id);
-          _damageEnemy(enemy, projectile.damage);
+          _damageEnemy(
+            enemy,
+            projectile.damage,
+            origin: projectileOrigin,
+            monsterType: projectile.sourceMonsterType,
+            unitId: projectile.sourceMonsterId,
+          );
           if (projectile.pierceLeft <= 0) {
             projectile.traveled = projectile.maxTravel;
             break;
@@ -1405,7 +1645,12 @@ class GameWorld {
         if ((projectile.position - crystal.position).distance <
             crystalRadius + 8) {
           projectile.hitIds.add(crystal.id);
-          _damageCrystal(crystal, projectile.damage);
+          _damageCrystal(
+            crystal,
+            projectile.damage,
+            origin: projectileOrigin,
+            monsterType: projectile.sourceMonsterType,
+          );
           if (projectile.pierceLeft <= 0) {
             projectile.traveled = projectile.maxTravel;
             break;
@@ -1639,16 +1884,21 @@ class GameWorld {
   }
 
   /// Buys one monster of [type] with match resources. Returns false when the
-  /// army is full or the player cannot afford it. Reinforcements appear beside
-  /// the player, the current stand-in for the castle spawn point.
+  /// army is full or the player cannot afford it. Spec §3:60: reinforcements
+  /// appear beside the owner's castle.
   bool buyMonster(MonsterType type) {
     final price = MonsterCatalog.def(type).price;
     if (army.length >= maxArmySize || resources < price) return false;
     resources -= price;
+    final anchor = castleSystem.playerCastle.anchor;
+    final angle = army.length * 0.9;
     _spawnArmyMonster(
       type,
       slot: army.length,
-      near: player.position + const Offset(0, 46),
+      near: map.clampToBounds(
+        anchor + Offset(math.cos(angle), math.sin(angle)) * 150,
+        28,
+      ),
     );
     return true;
   }
@@ -1681,6 +1931,9 @@ class GameWorld {
     final players = <String, Offset>{
       if (!player.dead) MineController.localPlayerId: player.position,
     };
+    final neutralBefore = {
+      for (final mine in mineSystem.mines) mine: mine.isNeutral,
+    };
     mineSystem.update(deltaMs: deltaMs, nowMs: nowMs, players: players);
 
     // Produced and loose resources are only credited by touching them, never
@@ -1691,9 +1944,15 @@ class GameWorld {
     );
     for (final pickup in collected) {
       resources += pickup.amount;
+      xpLedger.recordMineCollection(pickup.id);
       _events.add(
-        MineResourceCollectedEvent(amount: pickup.amount, total: resources),
+        MineResourceCollectedEvent(
+          amount: pickup.amount,
+          total: resources,
+          pickupIds: [pickup.id],
+        ),
       );
+      refreshXpState();
     }
 
     // Report newly captured mines once each.
@@ -1705,12 +1964,28 @@ class GameWorld {
       }
       if (_announcedMineOwners[mine] == owner) continue;
       _announcedMineOwners[mine] = owner;
-      _events.add(MineCapturedEvent(size: mine.size, ownerId: owner));
+      final neutral = neutralBefore[mine] ?? false;
       if (owner == MineController.localPlayerId) {
+        xpLedger.recordMineCapture(_mineKey(mine), neutral: neutral);
+        refreshXpState();
         pendingMaterials[ProgressionMaterial.capacity] =
             (pendingMaterials[ProgressionMaterial.capacity] ?? 0) + 1;
       }
+      _events.add(
+        MineCapturedEvent(
+          size: mine.size,
+          ownerId: owner,
+          mineKey: _mineKey(mine),
+          neutral: neutral,
+        ),
+      );
     }
+  }
+
+  String _mineKey(MineState mine) {
+    final site = mine.site;
+    return 'mine_${site.position.dx.toStringAsFixed(1)}_'
+        '${site.position.dy.toStringAsFixed(1)}_${site.size.name}';
   }
 
   final Map<MineState, String> _announcedMineOwners = {};
@@ -1743,6 +2018,15 @@ class GameWorld {
       materials[entry.key] = (materials[entry.key] ?? 0) + entry.value;
     }
     pendingMaterials.clear();
+  }
+
+  /// Swaps in a kit with a persisted weapon-mastery level. Stats are read
+  /// through [kit] everywhere, so this applies immediately without rebuilding
+  /// the world (and without losing in-match XP).
+  void setKit(HeroKit nextKit) {
+    kit = nextKit;
+    if (player.hp > maxHp) player.hp = maxHp;
+    if (player.energy > kit.baseMaxEnergy) player.energy = kit.baseMaxEnergy;
   }
 
   /// Applies the saved progression before/at the start of a match: equipment
@@ -1799,6 +2083,8 @@ class GameWorld {
     int pierceLeft = 0,
     bool big = false,
     bool? hostile,
+    String? sourceMonsterId,
+    MonsterType? sourceMonsterType,
   }) {
     projectiles.add(
       ProjectileState(
@@ -1811,22 +2097,45 @@ class GameWorld {
         tint: tint,
         big: big,
         hostile: hostile,
+        sourceMonsterId: sourceMonsterId,
+        sourceMonsterType: sourceMonsterType,
       ),
     );
   }
 
-  void _damageEnemy(EnemyState enemy, double amount) {
-    if (enemy.hp <= 0) return;
-    enemy.hp -= amount;
+  void _damageEnemy(
+    EnemyState enemy,
+    double amount, {
+    DamageOrigin origin = DamageOrigin.hero,
+    MonsterType? monsterType,
+    String? unitId,
+  }) {
+    if (enemy.hp <= 0 || amount <= 0) return;
+    final applied = amount > enemy.hp ? enemy.hp : amount;
+    enemy.hp -= applied;
     enemy.hitFlashUntilMs = nowMs + 160;
-    totalDamageDealt += amount;
-    if (!player.dead) {
+    if (origin != DamageOrigin.enemy) totalDamageDealt += applied;
+    if (!player.dead && origin == DamageOrigin.hero) {
       player.energy = _clampD(player.energy + 2, 0, kit.baseMaxEnergy);
+    }
+    if (origin == DamageOrigin.monster && monsterType != null) {
+      xpLedger.recordMonsterDamage(
+        type: monsterType,
+        unitId: unitId ?? enemy.id,
+        amount: applied,
+      );
     }
     if (enemy.hp <= 0) {
       enemy.hp = 0;
       kills++;
-      _addXp(enemy.xpValue);
+      if (origin == DamageOrigin.hero) {
+        xpLedger.recordEnemyKill(enemy.id);
+      } else if (origin == DamageOrigin.monster && monsterType != null) {
+        xpLedger.recordMonsterKill(
+          type: monsterType,
+          unitId: enemy.id,
+        );
+      }
       _addCorpse(enemy);
       // Permanent currency/materials for the kill are credited after the
       // match (a loss or disconnect still keeps them).
@@ -1837,7 +2146,16 @@ class GameWorld {
         9999,
         resources + 2 + MonsterCatalog.def(enemy.type).price ~/ 6,
       );
-      _events.add(EnemyKilledEvent(enemy.kind, enemy.xpValue));
+      _events.add(
+        EnemyKilledEvent(
+          enemy.kind,
+          enemy.xpValue,
+          enemyId: enemy.id,
+          killedBy: origin,
+          monsterType: monsterType,
+        ),
+      );
+      refreshXpState();
     }
   }
 
@@ -1862,8 +2180,11 @@ class GameWorld {
     if (player.hp <= 0) {
       player.hp = 0;
       player.dead = true;
+      // Spec §3:50: lose 20% of the resources carried in the current match.
+      final lost = (resources * 0.20).round();
+      resources -= lost;
       player.respawnAtMs = nowMs + respawnDelayMs;
-      _events.add(const PlayerDiedEvent());
+      _events.add(PlayerDiedEvent(lostResources: lost));
     }
   }
 
@@ -1871,7 +2192,7 @@ class GameWorld {
     player.dead = false;
     player.hp = maxHp;
     player.position = map.playerSpawn;
-    player.invulnerableUntilMs = nowMs + 1500;
+    player.invulnerableUntilMs = nowMs + respawnProtectionMs;
     combo.reset();
     // Clear enemies camping the spawn point.
     enemies.removeWhere(
@@ -1889,25 +2210,10 @@ class GameWorld {
     );
   }
 
-  void _addXp(int amount) {
-    if (level >= 40) return;
-    xp += amount;
-    while (level < 40 && xp >= xpForLevel(level)) {
-      xp -= xpForLevel(level);
-      level++;
-      final unlocked = kit.abilities
-          .where((ability) => ability.unlockLevel == level)
-          .map((ability) => ability.id)
-          .toList();
-      _events.add(LevelUpEvent(level, unlocked));
-      for (final id in unlocked) {
-        _events.add(AbilityReadyEvent(id));
-      }
-    }
-  }
-
-  /// XP required to advance from [level] to [level] + 1.
-  static int xpForLevel(int level) => 30 + level * 45;
+  /// XP required to advance from [level] to [level] + 1. Kept as a static
+  /// compatibility seam for older callers; the authoritative formula lives in
+  /// `progress/xp.dart`.
+  static int xpForLevel(int level) => heroXpRequired(level);
 
   /// The local hero's castle.
   CastleState get playerCastle => castleSystem.playerCastle;
@@ -1957,21 +2263,47 @@ class GameWorld {
   void debugDamageCrystal(CrystalState crystal, double amount) =>
       _damageCrystal(crystal, amount);
 
-  void _damageCrystal(CrystalState crystal, double amount) {
+  void _damageCrystal(
+    CrystalState crystal,
+    double amount, {
+    DamageOrigin origin = DamageOrigin.hero,
+    MonsterType? monsterType,
+  }) {
+    if (amount <= 0) return;
+    final applied = amount > crystal.hp ? crystal.hp : amount;
+    if (origin == DamageOrigin.monster && monsterType != null) {
+      xpLedger.recordMonsterObjective(
+        type: monsterType,
+        crystalId: crystal.id,
+        amount: applied,
+      );
+    }
     final castle = castleSystem.castleOf(crystal.ownerId);
     final destroyed = castleSystem.damageCrystal(crystal, amount);
     if (!destroyed) return;
+    if (origin == DamageOrigin.hero) {
+      xpLedger.recordCrystal(crystal.ownerId, crystal.slot);
+    }
     if (crystal.ownerId != castleSystem.localPlayerId) {
       pendingEssence += 30 + crystal.slot * 10;
       pendingMaterials[ProgressionMaterial.hero] =
           (pendingMaterials[ProgressionMaterial.hero] ?? 0) + 1;
     }
     _events.add(
-      CrystalDestroyedEvent(ownerId: crystal.ownerId, slot: crystal.slot),
+      CrystalDestroyedEvent(
+        ownerId: crystal.ownerId,
+        slot: crystal.slot,
+        destroyedBy: origin,
+        monsterType: monsterType,
+      ),
     );
     if (castle != null && castle.fallen) {
+      if (crystal.ownerId != castleSystem.localPlayerId) {
+        xpLedger.recordCastle(crystal.ownerId);
+      }
       _events.add(CastleFellEvent(crystal.ownerId));
     }
+    refreshXpState();
   }
 
   EnemyState? nearestEnemy(double maxRange) {

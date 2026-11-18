@@ -5,6 +5,20 @@ import 'dart:ui';
 import 'match_models.dart';
 import 'protocol.dart';
 
+/// One damage event accepted by the authoritative host. The server-generated
+/// id makes XP accounting replay-safe.
+class ConfirmedHeroDamage {
+  const ConfirmedHeroDamage({
+    required this.id,
+    required this.targetId,
+    required this.amount,
+  });
+
+  final String id;
+  final String targetId;
+  final double amount;
+}
+
 /// Client-side view of the room/match. Network events are surfaced to the UI
 /// through [onEvent] while the authoritative state is kept on the host.
 class OnlineMatchClient {
@@ -26,11 +40,15 @@ class OnlineMatchClient {
   String? playerId;
   MatchRoom? room;
   int? seed;
+  String? matchId;
   int elapsedMs = 0;
   List<MatchPlayer> players = const [];
   MatchResult? result;
   MatchDuration selectedDuration = MatchDuration.m10;
   MatchEndReason? pendingEnd;
+
+  /// Damage accepted by the host for the local player, in arrival order.
+  final List<ConfirmedHeroDamage> confirmedHeroDamage = [];
 
   bool get connected => _transport.connected;
   bool get isHost => room?.ownerId == playerId;
@@ -150,6 +168,10 @@ class OnlineMatchClient {
       case NetMessage.matchStart:
         final incomingSeed = message['seed'];
         if (incomingSeed is int) seed = incomingSeed;
+        final incomingMatchId = message['matchId'];
+        if (incomingMatchId is String && incomingMatchId.isNotEmpty) {
+          matchId = incomingMatchId;
+        }
         final minutes = message['duration'];
         if (minutes is int) {
           selectedDuration = MatchDuration.fromMinutes(minutes) ?? selectedDuration;
@@ -166,6 +188,26 @@ class OnlineMatchClient {
         // A leave during an active match is a loss; the host publishes the
         // final result immediately afterwards.
         pendingEnd = MatchEndReason.timeUp;
+      case NetMessage.damageConfirmed:
+        final attacker = message['attackerId'];
+        final damageId = message['damageId'];
+        final amount = message['amount'];
+        if (attacker == playerId &&
+            damageId is String &&
+            damageId.isNotEmpty &&
+            amount is num &&
+            amount.toDouble() > 0 &&
+            !confirmedHeroDamage.any((hit) => hit.id == damageId)) {
+          confirmedHeroDamage.add(
+            ConfirmedHeroDamage(
+              id: damageId,
+              targetId: message['targetId'] is String
+                  ? message['targetId'] as String
+                  : '',
+              amount: amount.toDouble(),
+            ),
+          );
+        }
       default:
         break;
     }

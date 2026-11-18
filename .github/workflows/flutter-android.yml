@@ -1,45 +1,100 @@
-name: Flutter Android validation
+name: Flutter Android Release APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - ranger-reference-work
+      - main
     paths:
       - 'lib/**'
       - 'test/**'
+      - 'assets/**'
+      - 'android/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/flutter-android.yml'
 
+permissions:
+  contents: write
+
 jobs:
-  flutter-test-and-apk:
+  build-release-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - run: flutter create --platforms=android --project-name archer_fm --org com.archerfm --no-pub .
-      - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
-      - run: flutter test
-      - run: flutter build apk --debug
-      - uses: reactivecircus/android-emulator-runner@v2
+
+      - name: Configure release signing from secrets
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+          test -s android/app/release.jks
+          cat > android/key.properties <<EOF
+          storeFile=app/release.jks
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run all tests
+        run: flutter test
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Verify APK
+        run: |
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          test -f "$APK"
+          ls -lh "$APK"
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          APKSIGNER="$(find "$SDK/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose "$APK"
+
+      - name: Upload APK as Actions artifact
+        uses: actions/upload-artifact@v4
         with:
-          api-level: 30
-          arch: x86_64
-          profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          disable-animations: true
-          script: |
-            adb install build/app/outputs/flutter-apk/app-debug.apk
-            adb shell am start -n com.archerfm.archer_fm/.MainActivity
-            sleep 5
-            adb shell pidof com.archerfm.archer_fm
-      - uses: actions/upload-artifact@v4
+          name: archer-fm-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Archer FM — Release ${{ github.run_number }}
+          generate_release_notes: true
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write build summary
         if: always()
-        with:
-          name: archer-fm-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 14
+        run: |
+          {
+            echo "### Archer FM Release APK"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- APK: \`build/app/outputs/flutter-apk/app-release.apk\`"
+            echo "- Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v1.0.${{ github.run_number }}"
+          } >> "$GITHUB_STEP_SUMMARY"

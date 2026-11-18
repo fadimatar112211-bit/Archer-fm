@@ -38,7 +38,9 @@ class OnlineMatchServer {
   MatchAuthority? _authority;
   MatchRoom? _activeRoom;
   int _matchStartedAt = 0;
+  int _damageSeq = 0;
   int _connectionCounter = 0;
+  String? _matchId;
   MatchResult? _lastResult;
 
   final List<String> errors = <String>[];
@@ -60,7 +62,7 @@ class OnlineMatchServer {
     _timer = null;
     await _serverSocket?.close();
     _serverSocket = null;
-    for (final transport in _transports.values) {
+    for (final transport in _transports.values.toList()) {
       await transport.close();
     }
     _transports.clear();
@@ -87,7 +89,7 @@ class OnlineMatchServer {
   }
 
   void _broadcastRoom(MatchRoom room) {
-    for (final entry in _transports.entries) {
+    for (final entry in _transports.entries.toList()) {
       if (_roomByPlayer[entry.key] != room.code) continue;
       _send(
         entry.value,
@@ -98,7 +100,7 @@ class OnlineMatchServer {
   }
 
   void _broadcast(String type, Map<String, dynamic> data) {
-    for (final transport in _transports.values) {
+    for (final transport in _transports.values.toList()) {
       _send(transport, type, data);
     }
   }
@@ -140,7 +142,7 @@ class OnlineMatchServer {
       case NetMessage.input:
         _input(id, message);
       case NetMessage.attack:
-        _attack(id, message);
+        _attack(id, transport, message);
       case NetMessage.crystal:
         _crystal(id, message);
       case NetMessage.pickup:
@@ -304,9 +306,11 @@ class OnlineMatchServer {
       }
     }
     _matchStartedAt = _now();
+    _matchId = '${room.code}_$_matchStartedAt';
     _broadcast(NetMessage.matchStart, {
       'seed': seed,
       'duration': room.duration.minutes,
+      'matchId': _matchId,
       'players': [
         for (final player in _authority!.snapshot()) player.toJson(),
       ],
@@ -359,20 +363,34 @@ class OnlineMatchServer {
     authority.move(id, Offset(x.toDouble(), y.toDouble()), at);
   }
 
-  void _attack(String id, Map<String, dynamic> message) {
+  void _attack(
+    String id,
+    NetTransport transport,
+    Map<String, dynamic> message,
+  ) {
     final authority = _authority;
     if (authority == null) return;
     final amount = message['amount'];
     final maximum = message['maxDamage'];
     final distance = message['distance'];
     if (amount is! num || maximum is! num) return;
-    authority.applyDamage(
+    final targetId = _string(message, 'targetId');
+    final accepted = authority.applyDamage(
       attackerId: id,
-      targetId: _string(message, 'targetId'),
+      targetId: targetId,
       amount: amount.toDouble(),
       maximumDamage: maximum.toDouble(),
       distance: distance is num ? distance.toDouble() : null,
     );
+    if (!accepted) return;
+    // Only the host confirms damage, and each confirmed hit gets a unique id
+    // so a replayed packet can never pay twice.
+    _send(transport, NetMessage.damageConfirmed, {
+      'attackerId': id,
+      'targetId': targetId,
+      'amount': amount.toDouble(),
+      'damageId': 'dmg_${_damageSeq++}',
+    });
   }
 
   void _crystal(String id, Map<String, dynamic> message) {

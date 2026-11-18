@@ -23,6 +23,10 @@ abstract final class NetMessage {
   static const matchStart = 'matchStart';
   static const input = 'input';
   static const attack = 'attack';
+
+  /// Sent by the host only after [MatchAuthority.applyDamage] accepts an
+  /// attack. Clients use it for XP, never for their own HP/score.
+  static const damageConfirmed = 'damageConfirmed';
   static const crystal = 'crystal';
   static const pickup = 'pickup';
   static const snapshot = 'snapshot';

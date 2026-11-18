@@ -7,6 +7,7 @@ import '../../hero/hero_catalog.dart';
 import '../game_screen.dart';
 import '../world/game_world.dart';
 import '../progress/hero_progress.dart';
+import '../progress/match_xp.dart';
 import '../social/account_service.dart';
 import 'hotspot_service.dart';
 import 'match_models.dart';
@@ -50,6 +51,8 @@ class _NetworkMatchScreenState extends State<NetworkMatchScreen> {
   Offset _localPosition = Offset.zero;
   int _lastMoveSent = 0;
   final Set<String> _destroyedCrystals = {};
+  final Set<String> _creditedDamageIds = {};
+  late final MatchXpSession _xpSession;
 
   @override
   void initState() {
@@ -57,11 +60,21 @@ class _NetworkMatchScreenState extends State<NetworkMatchScreen> {
     final client = widget.client;
     _result = client.result;
     _finished = _result != null;
+    _xpSession = MatchXpSession(
+      matchId: client.matchId ??
+          (client.seed == null
+              ? 'net_${DateTime.now().microsecondsSinceEpoch}'
+              : 'net_${client.seed}'),
+      heroId: widget.hero.id,
+    );
     _events = client.messages.listen((message) {
       if (!mounted) return;
       final type = message['type'];
       if (type == NetMessage.matchEnd && client.result != null) {
         _finish(client.result!);
+      } else if (type == NetMessage.damageConfirmed) {
+        _creditConfirmedDamage();
+        setState(() {});
       } else if (type == NetMessage.playerLeft) {
         setState(() => _status = 'لاعب غادر المباراة — تُحسب له خسارة');
       } else {
@@ -76,7 +89,9 @@ class _NetworkMatchScreenState extends State<NetworkMatchScreen> {
   void dispose() {
     _events?.cancel();
     if (!_finished) {
-      // Leaving an active match counts as a loss for this player.
+      // Leaving an active match counts as a loss for this player and grants no
+      // participation XP (only real actions still pay through the ledger).
+      _xpSession.outcome.setEarlyLeave();
       widget.client.leaveMatch();
       _saveResult(won: false, reason: 'left');
     }
@@ -96,8 +111,24 @@ class _NetworkMatchScreenState extends State<NetworkMatchScreen> {
   List<MatchPlayer> get rivals =>
       players.where((player) => player.id != widget.client.playerId).toList();
 
+  /// Feeds only host-confirmed damage into the XP ledger. The local set is a
+  /// second barrier against a replayed network message in the same session.
+  void _creditConfirmedDamage() {
+    for (final hit in widget.client.confirmedHeroDamage) {
+      if (!_creditedDamageIds.add(hit.id)) continue;
+      _xpSession.ledger.recordHeroDamage(
+        damageId: hit.id,
+        targetId: hit.targetId,
+        amount: hit.amount,
+      );
+    }
+  }
+
   void _finish(MatchResult result) {
     if (_finished) return;
+    _xpSession.outcome.setResult(
+      won: result.winner(widget.client.playerId ?? ''),
+    );
     setState(() {
       _finished = true;
       _result = result;
@@ -196,9 +227,14 @@ class _NetworkMatchScreenState extends State<NetworkMatchScreen> {
         children: [
           Positioned.fill(
             child: GameScreen(
+              // The host's seed arrives shortly after joining; changing the
+              // key rebuilds the world exactly once with the shared map.
+              key: ValueKey('net_world_${widget.client.seed ?? 'pending'}'),
               hero: widget.hero,
               loaderFactory: widget.loaderFactory,
               store: widget.store,
+              worldSeed: widget.client.seed,
+              matchXpSession: _xpSession,
               onNetworkTick: _sendMove,
               onWorldEvent: _handleEvent,
               onNetworkAttack: _sendAttack,

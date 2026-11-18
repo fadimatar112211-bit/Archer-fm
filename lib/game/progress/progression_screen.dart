@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../hero/hero_catalog.dart';
+import '../combat/hero_kit.dart';
+import '../combat/hero_weapons.dart';
 import '../monsters/monster_models.dart';
 import 'equipment.dart';
 import 'hero_progress.dart';
 import 'progression.dart';
+import 'xp.dart';
 
 /// Permanent progression hub: separate tabs for heroes, monsters, equipment,
 /// weapons and chests, plus the account power and the four material wallets.
@@ -59,6 +62,32 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
   HeroDefinition get hero => heroById(heroId);
 
   Color get accent => hero.theme.accent;
+
+  HeroKit get kit => kitForHero(heroId);
+
+  int weaponUpgradeLevel(String weaponId) =>
+      (_base.weaponLevels[weaponId] ?? 0).clamp(0, 10);
+
+  int weaponUpgradeCurrencyCost(int level) => 120 + level * 80;
+
+  int weaponUpgradeMaterialCost(int level) => 1 + level ~/ 3;
+
+  Future<void> _upgradeWeapon(String weaponId) async {
+    final current = controller;
+    if (current == null) return;
+    final level = weaponUpgradeLevel(weaponId);
+    if (level >= 10) return;
+    final currency = weaponUpgradeCurrencyCost(level);
+    final material = weaponUpgradeMaterialCost(level);
+    if (!current.spendCurrency(currency) ||
+        !current.spendMaterial(ProgressionMaterial.equipment, material)) {
+      _showInsufficient();
+      return;
+    }
+    final next = <String, int>{..._base.weaponLevels, weaponId: level + 1};
+    setState(() => _base = _base.copyWith(weaponLevels: next));
+    await _save();
+  }
 
   Future<void> _load(String id) async {
     final saved = await store.load(id);
@@ -145,7 +174,7 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
                           _heroTab(),
                           _monsterTab(),
                           _equipmentTab(weapons: false),
-                          _equipmentTab(weapons: true),
+                          _heroWeaponsTab(),
                           _chestsTab(),
                         ],
                       ),
@@ -229,6 +258,8 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
 
   Widget _heroTab() {
     final current = controller!;
+    final xp = _base.heroXp;
+    final last = _base.lastXpGain;
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -239,8 +270,67 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
           ),
           Text('${hero.weaponAr} · ${hero.skillAr}'),
           Text(
-            'المستوى ${_base.level} · الخبرة ${_base.xp} · الإصابات ${_base.kills}',
+            'المستوى ${xp.level}/$heroMaxLevel · الإصابات ${_base.kills}',
           ),
+          Text(
+            xp.isMax
+                ? 'الخبرة الإجمالية ${xp.totalXp} · وصل إلى المستوى الأقصى'
+                : 'الخبرة ${xp.xp}/${xp.required} · المتبقي ${xp.remaining} · '
+                    'الإجمالي ${xp.totalXp}',
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              key: const ValueKey('progression_hero_xp_bar'),
+              value: xp.progress,
+              minHeight: 8,
+              backgroundColor: Colors.white24,
+              color: accent,
+            ),
+          ),
+          if (last != null)
+            Text(
+              'آخر مكسب: ${last.heroXp} خبرة من ${last.matchId}',
+              style: const TextStyle(fontSize: 11, color: Colors.white70),
+            ),
+        ]),
+        _sectionTitle('القدرات الأربع'),
+        _infoCard([
+          for (final ability in kit.abilities)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Icon(
+                    xp.level >= ability.unlockLevel
+                        ? Icons.check_circle
+                        : Icons.lock,
+                    size: 15,
+                    color: xp.level >= ability.unlockLevel
+                        ? Colors.greenAccent
+                        : Colors.orangeAccent,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${ability.nameAr} — ${ability.descAr}',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+                  Text(
+                    xp.level >= ability.unlockLevel
+                        ? 'مفتوحة'
+                        : 'المستوى ${ability.unlockLevel}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: xp.level >= ability.unlockLevel
+                          ? Colors.greenAccent
+                          : Colors.orangeAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ]),
         _sectionTitle('تحسين البطل'),
         _upgradeRow(
@@ -319,6 +409,7 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
     final materials = current.materialOf(ProgressionMaterial.monster);
     final affordable = !maxed && current.currency >= cost && materials >= materialCost;
     final stats = MonsterStats.of(type, level);
+    final xp = _base.monsterXpState(type);
     return _card(
       key: ValueKey('monster_row_${type.name}'),
       child: Row(
@@ -344,6 +435,21 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
                   '${def.roleAr} · HP ${stats.maxHp.round()} · '
                   'ضرر ${stats.damage.round()}',
                   style: const TextStyle(fontSize: 11),
+                ),
+                Text(
+                  xp.isMax
+                      ? 'خبرة القتال ${xp.xp} · المستوى ${xp.level}/$monsterXpMaxLevel'
+                      : 'خبرة القتال ${xp.currentXp}/${xp.required} · '
+                          'المستوى ${xp.level}/$monsterXpMaxLevel · '
+                          'المتبقي ${xp.remaining}',
+                  key: ValueKey('monster_xp_${type.name}'),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFFFFB27A)),
+                ),
+                LinearProgressIndicator(
+                  value: xp.progress,
+                  minHeight: 5,
+                  backgroundColor: Colors.white24,
+                  color: Color(def.color),
                 ),
                 Text(
                   maxed
@@ -382,7 +488,112 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
 
   // ---- Equipment / weapons --------------------------------------------------
 
-  Widget _equipmentTab({required bool weapons}) {
+  /// The three hero-specific weapons are separate from random weapon drops in
+  /// the equipment inventory: their unlocks are tied to hero level and their
+  /// mastery levels are persisted in the cloud-ready save payload.
+  Widget _heroWeaponsTab() {
+    final current = controller!;
+    final xp = _base.heroXp;
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        _infoCard([
+          Text('أسلحة ${hero.nameAr} — ثلاثة أسلحة ثابتة'),
+          Text(
+            'المستوى الحالي ${xp.level} · خامات المعدات '
+            '${current.materialOf(ProgressionMaterial.equipment)}',
+          ),
+          const Text(
+            'إتقان السلاح: +2% ضرر لكل مستوى (0–10). '
+            'المضاعفات الأساسية للسلاح لا تتغير.',
+            style: TextStyle(fontSize: 11, color: Colors.white70),
+          ),
+        ]),
+        for (final weapon in kit.weapons)
+          _heroWeaponRow(weapon, xp.level),
+        _sectionTitle('أسلحة المعدات من الصناديق'),
+        ..._equipmentChildren(weapons: true),
+      ],
+    );
+  }
+
+  Widget _heroWeaponRow(HeroWeapon weapon, int heroLevel) {
+    final unlocked = weapon.unlockedAt(heroLevel);
+    final mastery = weaponUpgradeLevel(weapon.id);
+    final currency = weaponUpgradeCurrencyCost(mastery);
+    final material = weaponUpgradeMaterialCost(mastery);
+    final maxed = mastery >= 10;
+    final affordable = controller!.currency >= currency &&
+        controller!.materialOf(ProgressionMaterial.equipment) >= material;
+    return _card(
+      key: ValueKey('hero_weapon_${weapon.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                unlocked ? Icons.check_circle : Icons.lock,
+                size: 16,
+                color: unlocked ? Colors.greenAccent : Colors.orangeAccent,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  weapon.nameAr,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Text(
+                unlocked
+                    ? 'مفتوح · إتقان $mastery/10'
+                    : 'يُفتح في المستوى ${weapon.unlockLevel}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: unlocked ? Colors.greenAccent : Colors.orangeAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            weapon.descAr,
+            style: const TextStyle(fontSize: 11, color: Colors.white70),
+          ),
+          Text(
+            'ضرر ×${weapon.damageMultiplier.toStringAsFixed(2)} · '
+            'معدل ×${weapon.rateMultiplier.toStringAsFixed(2)} · '
+            'مدى ×${weapon.rangeMultiplier.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 11),
+          ),
+          const SizedBox(height: 6),
+          OutlinedButton(
+            key: ValueKey('upgrade_weapon_${weapon.id}'),
+            onPressed: !unlocked || maxed
+                ? null
+                : () => _upgradeWeapon(weapon.id),
+            child: Text(
+              maxed
+                  ? 'الإتقان الأقصى'
+                  : unlocked
+                      ? 'ترقية الإتقان ($currency + $material)'
+                      : 'مغلق — المستوى ${weapon.unlockLevel}',
+              style: TextStyle(
+                color: unlocked && affordable ? null : Colors.orangeAccent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ListView _equipmentTab({required bool weapons}) => ListView(
+        padding: const EdgeInsets.all(12),
+        children: _equipmentChildren(weapons: weapons),
+      );
+
+  List<Widget> _equipmentChildren({required bool weapons}) {
     final current = controller!;
     final items = current.equipment
         .where((item) =>
@@ -392,30 +603,27 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
         final bySlot = a.slot.index.compareTo(b.slot.index);
         return bySlot != 0 ? bySlot : b.rarity.index.compareTo(a.rarity.index);
       });
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        _infoCard([
-          Text(
-            weapons
-                ? 'الأسلحة: السلاح المجهّز يضيف ضرراً. السقف مستوى '
-                    '$equipmentMaxLevel.'
-                : 'المعدات: الخوذة والدرع والقلادة تضيف صحة، الحذاء سرعة، '
-                    'والخاتم ضرراً. السقف مستوى $equipmentMaxLevel.',
+    return [
+      _infoCard([
+        Text(
+          weapons
+              ? 'الأسلحة: السلاح المجهّز يضيف ضرراً. السقف مستوى '
+                  '$equipmentMaxLevel.'
+              : 'المعدات: الخوذة والدرع والقلادة تضيف صحة، الحذاء سرعة، '
+                  'والخاتم ضرراً. السقف مستوى $equipmentMaxLevel.',
+        ),
+        Text('المملوك: ${items.length} · خامات المعدات: '
+            '${current.materialOf(ProgressionMaterial.equipment)}'),
+      ]),
+      if (items.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: Center(
+            child: Text('لا يوجد شيء بعد — افتح الصناديق داخل المباراة.'),
           ),
-          Text('المملوك: ${items.length} · خامات المعدات: '
-              '${current.materialOf(ProgressionMaterial.equipment)}'),
-        ]),
-        if (items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(
-              child: Text('لا يوجد شيء بعد — افتح الصناديق داخل المباراة.'),
-            ),
-          ),
-        for (final item in items) _equipmentRow(item),
-      ],
-    );
+        ),
+      for (final item in items) _equipmentRow(item),
+    ];
   }
 
   Widget _equipmentRow(EquipmentItem item) {

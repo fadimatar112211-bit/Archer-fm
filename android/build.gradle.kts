@@ -1,7 +1,6 @@
 allprojects {
     repositories {
-        // Mirror of https://dl.google.com/dl/android/maven2 (unreachable here).
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        google()
         mavenCentral()
     }
 }

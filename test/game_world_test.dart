@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:archer_fm/game/combat/hero_kit.dart';
+import 'package:archer_fm/game/progress/match_xp.dart';
+import 'package:archer_fm/game/progress/xp.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -247,9 +249,11 @@ void main() {
   group('progression', () {
     test('kills grant xp and level-ups emit events with ability unlocks', () {
       final world = makeWorld();
-      // 2 slimes + 2 archers = 48 xp → level 1 needs 75… engineer levels:
-      world.level = 9;
-      world.xp = 0;
+      world.attachXpLedger(
+        MatchXpLedger(matchId: 'gw_levelup', heroId: 'ranger_new'),
+        savedTotalXp: heroTotalXpToLevel(9) + heroXpRequired(9) - 2,
+      );
+      world.drainEvents(); // drop level-up events emitted while restoring state
       final enemy = addEnemy(world, hp: 1, xp: 500);
       world.spawnArrow(
         origin: enemy.position - const Offset(60, 0),
@@ -262,18 +266,24 @@ void main() {
       runFor(world, 400);
       expect(enemy.hp, lessThanOrEqualTo(0));
       final events = world.drainEvents();
+      expect(events.whereType<EnemyKilledEvent>().single.killedBy,
+          DamageOrigin.hero);
+      final levelUps = events.whereType<LevelUpEvent>().toList();
+      expect(levelUps, isNotEmpty);
+      expect(world.level, greaterThanOrEqualTo(10));
       expect(
-        events.whereType<LevelUpEvent>().isNotEmpty,
+        levelUps.any((event) => event.unlockedAbilityIds.contains('piercing_shot')),
         isTrue,
       );
-      expect(world.level, greaterThan(9));
-      final leveled = events.whereType<LevelUpEvent>().first;
-      expect(leveled.unlockedAbilityIds, contains('piercing_shot'));
     });
 
     test('level cap 40 stops xp accumulation', () {
       final world = makeWorld();
-      world.level = 40;
+      world.attachXpLedger(
+        MatchXpLedger(matchId: 'gw_cap', heroId: 'ranger_new'),
+        savedTotalXp: heroTotalXpToLevel(heroMaxLevel),
+      );
+      world.drainEvents();
       final enemy = addEnemy(world, hp: 1, xp: 1000);
       world.spawnArrow(
         origin: enemy.position - const Offset(60, 0),
@@ -284,7 +294,8 @@ void main() {
         tint: 0xFF62E86C,
       );
       runFor(world, 400);
-      expect(world.level, 40);
+      expect(world.level, heroMaxLevel);
+      expect(world.heroXp.totalXp, heroTotalXpToLevel(heroMaxLevel));
     });
   });
 
@@ -303,11 +314,18 @@ void main() {
       );
       brute.windupUntilMs = world.nowMs + 10;
       world.kills = 7;
+      final resourcesBeforeDeath = world.resources;
       runFor(world, 500);
       expect(world.player.dead, isTrue);
       final diedEvents = world.drainEvents().whereType<PlayerDiedEvent>();
       expect(diedEvents, isNotEmpty);
-      runFor(world, 3000);
+      // Spec §3:50: 10-second respawn and a 20% match-resource loss.
+      expect(
+        diedEvents.first.lostResources,
+        (resourcesBeforeDeath * 0.20).round(),
+      );
+      expect(world.resources, resourcesBeforeDeath - diedEvents.first.lostResources);
+      runFor(world, 10200);
       expect(world.player.dead, isFalse);
       expect(world.player.hp, rangerNewKit.baseMaxHp);
       expect(world.kills, 7);
