@@ -746,26 +746,73 @@ class ArenaPainter extends CustomPainter {
       final color = Color(effect.color).withValues(alpha: 1 - t);
       if (effect.kind == 'slash') {
         final radius = effect.radius * (0.7 + 0.3 * t);
+        final arc = Rect.fromCircle(
+          center: effect.position - const Offset(0, 10),
+          radius: radius,
+        );
+        final start = _angleOf(effect.facing) - 1.15;
+        // Three-pass energy blade: soft bloom, saturated edge, bright core.
         canvas.drawArc(
-          Rect.fromCircle(
-            center: effect.position - const Offset(0, 10),
-            radius: radius,
-          ),
-          _angleOf(effect.facing) - 1.15,
+          arc,
+          start,
           2.3,
           false,
           Paint()
-            ..color = color
+            ..color = color.withValues(alpha: 0.22)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 7 * (1 - t * 0.5)
+            ..strokeWidth = 22 * (1 - t * 0.55)
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        );
+        canvas.drawArc(
+          arc,
+          start,
+          2.3,
+          false,
+          Paint()
+            ..color = color.withValues(alpha: 0.72)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 11 * (1 - t * 0.5)
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawArc(
+          arc,
+          start,
+          2.3,
+          false,
+          Paint()
+            ..color = Color.lerp(color, Colors.white, 0.58)!
+                .withValues(alpha: 0.95 * (1 - t))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.2 * (1 - t * 0.45)
             ..strokeCap = StrokeCap.round,
         );
       } else if (effect.kind == 'burst') {
         final radius = effect.radius * (0.35 + 0.65 * t);
+        final burstColor = Color(effect.color);
+        canvas.drawCircle(
+          effect.position,
+          radius * 1.12,
+          Paint()
+            ..shader = ui.Gradient.radial(
+              effect.position,
+              radius * 1.12,
+              [
+                burstColor.withValues(alpha: 0.30 * (1 - t)),
+                burstColor.withValues(alpha: 0.10 * (1 - t)),
+                burstColor.withValues(alpha: 0),
+              ],
+              const [0.0, 0.62, 1.0],
+            ),
+        );
         canvas.drawCircle(
           effect.position,
           radius,
-          Paint()..color = Color(effect.color).withValues(alpha: 0.28 * (1 - t)),
+          Paint()
+            ..color = burstColor.withValues(alpha: 0.18 * (1 - t))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 18 * (1 - t * 0.6)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
         );
         canvas.drawCircle(
           effect.position,
@@ -773,7 +820,16 @@ class ArenaPainter extends CustomPainter {
           Paint()
             ..color = color
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 6 * (1 - t),
+            ..strokeWidth = 5 * (1 - t),
+        );
+        canvas.drawCircle(
+          effect.position,
+          radius * 0.72,
+          Paint()
+            ..color = Color.lerp(burstColor, Colors.white, 0.65)!
+                .withValues(alpha: 0.52 * (1 - t))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.2 * (1 - t),
         );
       } else if (effect.kind == 'bolt') {
         // Lightning arc: a jagged line from the source toward [facing]
@@ -794,9 +850,26 @@ class ArenaPainter extends CustomPainter {
           canvas.drawPath(
             path,
             Paint()
+              ..color = color.withValues(alpha: 0.30 * (1 - t))
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 17 * (1 - t * 0.45)
+              ..strokeCap = StrokeCap.round
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+          );
+          canvas.drawPath(
+            path,
+            Paint()
               ..color = color
               ..style = PaintingStyle.stroke
-              ..strokeWidth = 5 * (1 - t * 0.5)
+              ..strokeWidth = 6 * (1 - t * 0.5)
+              ..strokeCap = StrokeCap.round,
+          );
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = Colors.white.withValues(alpha: 0.95 * (1 - t))
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.8 * (1 - t * 0.5)
               ..strokeCap = StrokeCap.round,
           );
         }
@@ -1332,18 +1405,25 @@ class ArenaPainter extends CustomPainter {
       final perpendicular = Offset(-dir.dy, dir.dx);
       final length = projectile.big ? 30.0 : 22.0;
       final tail = projectile.position - dir * length;
+      final tint = Color(projectile.tint);
       final glow = Paint()
-        ..color = Color(projectile.tint).withValues(alpha: 0.35)
-        ..strokeWidth = projectile.big ? 9 : 6
-        ..strokeCap = StrokeCap.round;
+        ..color = tint.withValues(alpha: 0.28)
+        ..strokeWidth = projectile.big ? 18 : 13
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
       canvas.drawLine(tail, projectile.position, glow);
+      final edge = Paint()
+        ..color = tint.withValues(alpha: 0.92)
+        ..strokeWidth = projectile.big ? 7 : 5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(tail, projectile.position, edge);
       final core = Paint()
-        ..color = Color(projectile.tint)
-        ..strokeWidth = projectile.big ? 4.5 : 3
+        ..color = Color.lerp(tint, Colors.white, 0.68)!
+        ..strokeWidth = projectile.big ? 2.8 : 2
         ..strokeCap = StrokeCap.round;
       canvas.drawLine(tail, projectile.position, core);
       // Arrow head.
-      final head = Paint()..color = Color(projectile.tint);
+      final head = Paint()..color = tint;
       final tip = projectile.position + dir * 5;
       final path = ui.Path()
         ..moveTo(tip.dx, tip.dy)
@@ -1376,6 +1456,19 @@ class ArenaPainter extends CustomPainter {
     // anchored at the gameplay position like the sprite was.
     final hero3d = presentation.hero3d;
     if (hero3d != null) {
+      // Soft team-colored ground halo helps the hero remain readable over
+      // bright biome patches without hiding the actual floor or enemies.
+      final heroHalo = Paint()
+        ..color = presentation.accent.withValues(alpha: 0.13)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: player.position + const Offset(0, 30),
+          width: 78,
+          height: 25,
+        ),
+        heroHalo,
+      );
       // Invulnerability ring while dodging.
       if (player.invulnerableUntilMs > world.nowMs && !player.dead) {
         canvas.drawCircle(
@@ -1392,7 +1485,7 @@ class ArenaPainter extends CustomPainter {
         canvas,
         anchor: player.position + const Offset(0, 14),
         facing: player.facing,
-        scale: hero3d.scaleForPixelHeight(112),
+        scale: hero3d.scaleForPixelHeight(120),
         alpha: veilActive ? 0.55 : 1,
         tint: player.dead ? const Color(0xFF888888) : null,
       );
