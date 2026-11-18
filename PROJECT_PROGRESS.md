@@ -9,7 +9,7 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Target visual direction: polished Archero-like top-down action game, with true 3D chibi heroes, readable faces, visible weapons, clear attack poses, strong skill effects, and responsive combat.
+- **Current approved visual direction (2026-11-19):** large, explorable isometric MOBA-style world with a close smooth-follow camera. The hero and nearby ordinary monsters must have comparable, clearly readable on-screen scale. See `VISUAL_DIRECTION_PLAN.md`; this supersedes the earlier compact Archero-like camera/framing target.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
 - Prefer large coherent implementation batches, then run the full relevant test/build workflow.
 - Keep game UI Arabic-first.
@@ -200,3 +200,16 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Kept the existing seven crystal slots, positions, HP values, damage rules, rebuild logic, and gameplay hit/collision radius unchanged.
 - Commit: `c05605f62a7b387f390f98fc6e7a6a48b3afe65d`.
 - Validation status: source change is pushed; Flutter analyze/tests and Android release build are pending the GitHub Actions run. Visual scale/readability still needs an in-game capture review at normal mobile zoom.
+
+
+### 2026-11-19 — User approved closer MOBA camera and large-world direction
+
+- User approved the second concept image as the target: a large explorable isometric fantasy battlefield, with the camera closer to the controlled hero than the first wide concept.
+- Required readability: hero and nearby common monsters must be prominent and close in apparent screen scale; faces, weapons, movement and attacks must be easy to see on a phone.
+- Rewrote `VISUAL_DIRECTION_PLAN.md` as a complete new direction: large connected world, smooth close camera follow, paths/side areas/monster camps, full-world minimap, hero and monster scale, movement/combat integration, crystal/base placement, Arabic HUD, migration safety, evidence gates and acceptance criteria.
+- Explicitly superseded the earlier compact Archero-like framing target. This is a presentation/world-scale direction, not permission to add unapproved MOBA mechanics or change combat balance, crystal count/HP, controls, combo, Ultimate unlocks or multiplayer rules.
+- The concept image is a visual target only; it is not evidence that the implementation is complete.
+- Documentation branch: `docs/approved-moba-camera-direction`, based on `ranger-reference-work` HEAD `481140e635730dfa82dcae4666b40fd01176677f`.
+- Plan commit: `fa751513a928d0acd46e323e571efecd34a3de28`.
+- No gameplay code, assets, camera implementation or tests were changed in this documentation-only batch.
+- Next: review/merge the plan into `ranger-reference-work`, then implement in order: baseline audit, large-world/navigation prototype, close camera + actor scale, minimap/world-coordinate validation, hero/monster visual passes, and full mobile performance/release checks.
