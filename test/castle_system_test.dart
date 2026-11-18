@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:archer_fm/game/arena_camera.dart';
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/minimap.dart';
@@ -405,30 +406,32 @@ void main() {
         world.map.size.width / 2,
         world.map.size.height / 2,
       );
+      const arenaSize = Size(arenaWidth, arenaHeight);
+      final arenaTransform =
+          ArenaCameraTransform.forViewport(arenaSize, world);
       final hero = arenaToWorld(
-        const Offset(arenaWidth / 2, arenaHeight / 2),
-        const Size(arenaWidth, arenaHeight),
+        arenaTransform.worldToLocal(world.player.position),
+        arenaSize,
         world,
       );
       expect((hero - world.player.position).distance, lessThan(0.001));
 
       // A taller, letterboxed widget keeps the same mapping.
+      const letterboxedSize = Size(1920, 1080);
+      final letterboxedTransform =
+          ArenaCameraTransform.forViewport(letterboxedSize, world);
       final letterboxed = arenaToWorld(
-        const Offset(960, 540),
-        const Size(1920, 1080),
+        letterboxedTransform.worldToLocal(world.player.position),
+        letterboxedSize,
         world,
       );
       expect((letterboxed - world.player.position).distance, lessThan(0.001));
 
       // Taps in map coordinates still land on the same crystal spot.
       final castle = world.playerCastle;
-      final origin = arenaCameraOrigin(world);
-      final local = (castle.anchor - origin) +
-          Offset(0, 0);
+      final local = arenaTransform.worldToLocal(castle.anchor);
       expect(
-        (arenaToWorld(local, const Size(arenaWidth, arenaHeight), world) -
-                castle.anchor)
-            .distance,
+        (arenaToWorld(local, arenaSize, world) - castle.anchor).distance,
         lessThan(0.001),
       );
     });
