@@ -581,12 +581,11 @@ class _GameScreenState extends State<GameScreen>
   // ---- Sprite control ---------------------------------------------------------
 
   void _updateSprite(int deltaMs) {
-    final m = manifest;
-    if (m == null) return;
     final player = world.player;
 
-    // In-game 3D hero path: drive the real model's pose from the same state
-    // machine, with identical gameplay-event timing.
+    // The real GLB contains its own clips and can animate without the optional
+    // atlas manifest. Keep this path independent so a missing atlas never
+    // freezes a successfully loaded 3D hero in its bind pose.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final busy = _busyClip != null && !hero3d.completed;
@@ -606,6 +605,10 @@ class _GameScreenState extends State<GameScreen>
       hero3d.advance(world.nowMs, onEvent: _handleCombatEvent);
       return;
     }
+
+    // Sprite playback still requires the atlas manifest.
+    final m = manifest;
+    if (m == null) return;
 
     final desired = _desiredState();
     final desiredDir = GameWorld.octantNames[
@@ -651,13 +654,8 @@ class _GameScreenState extends State<GameScreen>
     required double pace,
     String? directionLocked,
   }) {
-    final m = manifest;
-    if (m == null) return;
-    final dir = directionLocked ??
-        GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
-    final name = '${state}_$dir';
-
-    // In-game 3D hero: pose the real model instead of the sprite atlas.
+    // A GLB has its own clip names and does not need atlas direction variants.
+    // Manifest timings are optional; when absent the GLB duration is used.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final loop = _stateIsLooping(state);
@@ -669,11 +667,16 @@ class _GameScreenState extends State<GameScreen>
         events: Hero3DController.scheduleFor(m, state),
         durationMs: Hero3DController.durationFor(m, state),
       );
-      _clipName = name;
-      if (!loop) _busyClip = name;
+      _clipName = state;
+      if (!loop) _busyClip = state;
       return;
     }
 
+    final m = manifest;
+    if (m == null) return;
+    final dir = directionLocked ??
+        GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
+    final name = '${state}_$dir';
     final clip = m.clipFor(state, dir);
     if (clip == null) return;
     final player = _player;
