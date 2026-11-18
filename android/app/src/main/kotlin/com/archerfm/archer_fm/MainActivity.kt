@@ -72,7 +72,7 @@ class MainActivity : FlutterActivity() {
         result.success(null)
       }
       "dispose" -> {
-        release()
+        releaseAudio()
         result.success(null)
       }
       else -> result.notImplemented()
@@ -165,7 +165,7 @@ class MainActivity : FlutterActivity() {
     musicPlayer = null
   }
 
-  private fun release() {
+  private fun releaseAudio() {
     stopMusic()
     soundPool?.release()
     soundPool = null
@@ -174,7 +174,7 @@ class MainActivity : FlutterActivity() {
   }
 
   override fun onDestroy() {
-    release()
+    releaseAudio()
     super.onDestroy()
   }
 
