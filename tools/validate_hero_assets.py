@@ -170,11 +170,11 @@ def validate(manifest_path: Path) -> list[str]:
             atlas_frames = atlas_frames_by_animation.get(name)
             require(atlas_frames is not None,
                     f"{name}: no atlas is registered for this animation")
-            require(set(frames) == atlas_frames,
-                    f"{name}: atlas frame ids do not exactly match animation frames")
             for frame_id in frames:
                 require(isinstance(frame_id, str) and frame_id in frame_map,
                         f"{name}: missing atlas frame {frame_id}")
+            require(set(frames) == atlas_frames,
+                    f"{name}: atlas frame ids do not exactly match animation frames")
             events = animation.get("events", [])
             require(isinstance(events, list), f"{name}: events must be an array")
             event_names = [e.get("name") for e in events if isinstance(e, dict)]
