@@ -372,10 +372,8 @@ class _GameScreenState extends State<GameScreen>
         model.baseColor?.dispose();
         return;
       }
-      // Measure the real idle pose before the first gameplay frame. This
-      // establishes a stable standing height for scaleForPixelHeight().
-      final heroModel = Hero3DModel(model)..calibrate();
-      setState(() => _hero3d = Hero3DController(heroModel));
+      // The controller calibrates the idle pose for every construction path.
+      setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
