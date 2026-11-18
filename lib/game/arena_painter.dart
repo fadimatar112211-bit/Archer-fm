@@ -99,6 +99,10 @@ class ArenaPainter extends CustomPainter {
 
     canvas.translate(origin.dx, origin.dy);
     canvas.scale(scale);
+    final projectionCenter = const Offset(arenaWidth / 2, arenaHeight / 2);
+    canvas.translate(projectionCenter.dx, projectionCenter.dy);
+    canvas.scale(1, cameraTransform.projection.groundScaleY);
+    canvas.translate(-projectionCenter.dx, -projectionCenter.dy);
     final camera = cameraTransform.cameraOrigin;
     canvas.translate(-camera.dx, -camera.dy);
 
@@ -110,7 +114,9 @@ class ArenaPainter extends CustomPainter {
     _paintProjectiles(canvas);
     _paintFx(canvas);
     _paintFog(canvas, camera);
-    _paintHero(canvas);
+    _withUprightGroundActor(canvas, world.player.position, () {
+      _paintHero(canvas);
+    });
     _paintLabels(canvas, scale);
 
     canvas.restore();
@@ -1020,7 +1026,9 @@ class ArenaPainter extends CustomPainter {
       ..sort((a, b) => a.position.dy.compareTo(b.position.dy));
     for (final monster in monsters) {
       if (monster.hp <= 0) continue;
-      _paintMonster(canvas, monster);
+      _withUprightGroundActor(canvas, monster.position, () {
+        _paintMonster(canvas, monster);
+      });
     }
   }
 
