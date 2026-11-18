@@ -6,6 +6,7 @@ import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
 import 'arena_map.dart';
 import 'fog_of_war.dart';
+import 'mine_system.dart';
 
 /// Logical size of the camera window in world units. The match map itself is
 /// larger and generated per match (see [ArenaMap]); these constants only
@@ -56,6 +57,20 @@ class PlayerRespawnedEvent extends WorldEvent {
 class AbilityReadyEvent extends WorldEvent {
   const AbilityReadyEvent(this.abilityId);
   final String abilityId;
+}
+
+/// A player finished capturing a mine (neutral or taken from an opponent).
+class MineCapturedEvent extends WorldEvent {
+  const MineCapturedEvent({required this.size, required this.ownerId});
+  final MineSize size;
+  final String ownerId;
+}
+
+/// Resource pickups were touched and added to the match wallet.
+class MineResourceCollectedEvent extends WorldEvent {
+  const MineResourceCollectedEvent({required this.amount, required this.total});
+  final int amount;
+  final int total;
 }
 
 /// Simulation state of the playable hero.
@@ -293,6 +308,11 @@ class GameWorld {
       worldWidth: map.size.width,
       worldHeight: map.size.height,
     );
+    // Mines, their production and the collectable pickups on the ground.
+    mineSystem = MineController(
+      map: map,
+      random: math.Random(rng.nextInt(0x3fffffff)),
+    );
     player.position = map.playerSpawn;
     fog.reveal(player.position, fogRevealRadius);
     if (spawnWaves) {
@@ -318,6 +338,9 @@ class GameWorld {
   /// Permanently remembered explored cells of [map].
   late final FogOfWar fog;
 
+  /// Neutral/owned mines, production and resource pickups.
+  late final MineController mineSystem;
+
   /// The player's permanently-owned monster army. Dead members are removed and
   /// never respawn; the player must buy replacements.
   final List<EnemyState> army = [];
@@ -335,7 +358,8 @@ class GameWorld {
   /// Per-type permanent upgrade levels (1..40), shared with the save layer.
   final MonsterUpgrades upgrades = MonsterUpgrades();
 
-  /// Match currency used to buy monsters during the battle.
+  /// Match currency used to buy monsters during the battle. Collected
+  /// pickups stop at [MineController.carryCapacity].
   int resources = 320;
 
   /// Permanent currency used to upgrade monster types between/inside
@@ -344,7 +368,6 @@ class GameWorld {
 
   final Map<MonsterType, int> _startingArmy;
   int _armySeq = 0;
-  int _incomeCarryMs = 0;
 
   /// Performance-driven cap for the live army (the design leaves the exact
   /// number to device testing; 40 keeps the arena readable on phones).
@@ -922,7 +945,7 @@ class GameWorld {
     _updateBurns();
     _pruneFx();
     _pruneCorpses();
-    _updateEconomy(deltaMs);
+    _updateMines(deltaMs);
     _updateWaves();
     _regenEnergy(deltaMs);
   }
@@ -1499,14 +1522,49 @@ class GameWorld {
     return true;
   }
 
-  void _updateEconomy(int deltaMs) {
-    // Passive match income stands in for the mine system until it exists.
-    _incomeCarryMs += deltaMs;
-    while (_incomeCarryMs >= 1500) {
-      _incomeCarryMs -= 1500;
-      resources = math.min(9999, resources + 2);
+  void _updateMines(int deltaMs) {
+    final players = <String, Offset>{
+      if (!player.dead) MineController.localPlayerId: player.position,
+    };
+    mineSystem.update(deltaMs: deltaMs, nowMs: nowMs, players: players);
+
+    // Produced and loose resources are only credited by touching them, never
+    // automatically, and never beyond the carry capacity.
+    final collected = mineSystem.collectAt(
+      player.position,
+      currentResources: resources,
+    );
+    for (final pickup in collected) {
+      resources += pickup.amount;
+      _events.add(
+        MineResourceCollectedEvent(amount: pickup.amount, total: resources),
+      );
+    }
+
+    // Report newly captured mines once each.
+    for (final mine in mineSystem.mines) {
+      final owner = mine.ownerId;
+      if (owner == null) {
+        _announcedMineOwners.remove(mine);
+        continue;
+      }
+      if (_announcedMineOwners[mine] == owner) continue;
+      _announcedMineOwners[mine] = owner;
+      _events.add(MineCapturedEvent(size: mine.size, ownerId: owner));
     }
   }
+
+  final Map<MineState, String> _announcedMineOwners = {};
+
+  /// Mines owned by the local hero.
+  int get ownedMineCount =>
+      mineSystem.ownedMineCount(MineController.localPlayerId);
+
+  /// The mine the hero is standing in, if any (drives the HUD progress bar).
+  MineState? get currentMine => mineSystem.mineContaining(player.position);
+
+  /// Pickups currently lying on the ground.
+  List<ResourcePickup> get resourcePickups => mineSystem.pickups;
 
   void _pruneCorpses() {
     corpses.removeWhere(

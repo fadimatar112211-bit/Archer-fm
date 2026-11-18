@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'world/arena_map.dart';
 import 'world/game_world.dart';
+import 'world/mine_system.dart';
 
 /// A marker drawn on the minimap. Crystals and mines must stay visible even
 /// when they are far away; crystals are added by the castles/crystals step.
@@ -14,11 +15,15 @@ class MinimapMarker {
     this.kind,
     this.position, {
     this.radius = 0,
+    this.ownerId,
   });
 
   final MinimapMarkerKind kind;
   final Offset position;
   final double radius;
+
+  /// Owner of a mine marker; null while neutral.
+  final String? ownerId;
 }
 
 /// Markers that the minimap always renders: the hero, the four castles and
@@ -28,8 +33,13 @@ List<MinimapMarker> minimapMarkers(GameWorld world) {
     MinimapMarker(MinimapMarkerKind.player, world.player.position),
     for (final castle in world.map.castleAnchors)
       MinimapMarker(MinimapMarkerKind.castle, castle),
-    for (final mine in world.map.mines)
-      MinimapMarker(MinimapMarkerKind.mine, mine.position, radius: mine.radius),
+    for (final mine in world.mineSystem.mines)
+      MinimapMarker(
+        MinimapMarkerKind.mine,
+        mine.position,
+        radius: mine.radius,
+        ownerId: mine.ownerId,
+      ),
   ];
 }
 
@@ -147,13 +157,19 @@ class MinimapPainter extends CustomPainter {
       );
     }
 
-    // Mines stay visible at any distance, in their three sizes.
-    for (final mine in map.mines) {
+    // Mines stay visible at any distance, in their three sizes, colored by
+    // owner (neutral amber, local player green, opponent red).
+    for (final mine in world.mineSystem.mines) {
       final center = origin + mine.position * scale;
+      final color = mine.ownerId == null
+          ? const Color(0xFFFFB52E)
+          : mine.owns(MineController.localPlayerId)
+              ? const Color(0xFF9BE845)
+              : const Color(0xFFFF7A5A);
       canvas.drawCircle(
         center,
         math.max(2.2, mine.radius * scale * 0.55),
-        Paint()..color = const Color(0xFFFFB52E),
+        Paint()..color = color,
       );
     }
 

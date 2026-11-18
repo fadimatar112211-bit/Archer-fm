@@ -15,9 +15,11 @@ import 'minimap.dart';
 import 'monsters/monster_models.dart';
 import 'progress/hero_progress.dart';
 import 'render3/glb.dart';
-import 'render3/hero3d_painter.dart';
 import 'render3/hero3d_controller.dart';
+import 'render3/hero3d_painter.dart';
+import 'world/arena_map.dart';
 import 'world/game_world.dart';
+import 'world/mine_system.dart';
 
 /// Fixed simulation step of the game loop.
 const int _stepMs = 16;
@@ -275,6 +277,26 @@ class _GameScreenState extends State<GameScreen>
         case AbilityReadyEvent(:final abilityId):
           final name = kit.abilityById(abilityId)?.nameAr;
           if (name != null) _showToast('القدرة "$name" متاحة الآن');
+        case MineCapturedEvent(:final size, :final ownerId):
+          final label = switch (size) {
+            MineSize.small => 'منجم صغير',
+            MineSize.medium => 'منجم متوسط',
+            MineSize.large => 'منجم كبير',
+          };
+          _showToast(
+            ownerId == MineController.localPlayerId
+                ? 'سيطرت على $label'
+                : 'خصم سيطر على $label',
+          );
+        case MineResourceCollectedEvent(:final amount):
+          _labels.add(
+            FloatLabel(
+              text: '+$amount موارد',
+              worldPosition: world.player.position - const Offset(0, 30),
+              bornAtMs: world.nowMs,
+              color: const Color(0xFFFFD257),
+            ),
+          );
       }
     }
   }
@@ -596,6 +618,11 @@ class _GameScreenState extends State<GameScreen>
                           _monsterUpgradeButton(theme),
                         ],
                       ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [_minePanel(theme)],
+                      ),
                     ],
                   ),
                 ),
@@ -874,6 +901,61 @@ class _GameScreenState extends State<GameScreen>
             'موارد ${world.resources} · جوهر ${world.essence}',
             style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _minePanel(ThemeData theme) {
+    final mine = world.currentMine;
+    final capacity = world.mineSystem.carryCapacity;
+    final capturing = mine != null &&
+        mine.capturerId == MineController.localPlayerId &&
+        mine.captureProgressMs > 0;
+    final owned = mine != null && mine.owns(MineController.localPlayerId);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: _panelDecoration(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.terrain, size: 14, color: Color(0xFFFFD257)),
+          const SizedBox(width: 4),
+          Text(
+            'مناجم ${world.ownedMineCount}/${world.map.mines.length}',
+            style: const TextStyle(color: Colors.white, fontSize: 11),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'حمل ${world.resources.clamp(0, capacity)}/$capacity',
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+          if (capturing) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 70,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: mine.captureFraction,
+                  backgroundColor: const Color(0x22FFFFFF),
+                  valueColor: const AlwaysStoppedAnimation(Color(0xFF9BE845)),
+                  minHeight: 6,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'سيطرة ${(mine.captureFraction * 100).round()}%',
+              style: const TextStyle(color: Color(0xFF9BE845), fontSize: 10),
+            ),
+          ] else if (owned) ...[
+            const SizedBox(width: 8),
+            const Text(
+              'منجمك',
+              style: TextStyle(color: Color(0xFF9BE845), fontSize: 10),
+            ),
+          ],
         ],
       ),
     );

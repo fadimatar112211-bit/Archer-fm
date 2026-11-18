@@ -173,12 +173,6 @@ void main() {
       expect(rich.buyMonster(MonsterType.runner), isFalse);
     });
 
-    test('resources accumulate over time', () {
-      final world = makeMonsterWorld(resources: 0);
-      runFor(world, 3100);
-      expect(world.resources, greaterThan(0));
-    });
-
     test('dead army monsters are permanently lost, not respawned', () {
       final world = makeMonsterWorld();
       final ally = world.army.first;

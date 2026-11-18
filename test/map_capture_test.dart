@@ -8,6 +8,7 @@ import 'package:archer_fm/game/minimap.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/game_world.dart';
+import 'package:archer_fm/game/world/mine_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -72,6 +73,9 @@ void main() {
     );
     world.enemies.clear();
     world.army.clear();
+    // Show all three mine states: neutral, owned by the hero, enemy-owned.
+    world.mineSystem.mines[0].ownerId = MineController.localPlayerId;
+    world.mineSystem.mines[1].ownerId = 'enemy';
     // Explore a little so revealed terrain, rivers and markers all render.
     for (var step = 0; step < 10; step++) {
       world.fog.reveal(
@@ -88,6 +92,47 @@ void main() {
       captureSize.height.toInt(),
     );
     await _save('32_map_minimap.png', image);
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
+  test('paints owned, neutral and contested mines with pickups', () async {
+    final world = GameWorld(
+      kit: rangerNewKit,
+      random: math.Random(11),
+      spawnWaves: false,
+    );
+    world.enemies.clear();
+    world.army.clear();
+
+    final target = world.mineSystem.mines.firstWhere(
+      (mine) => mine.size == MineSize.large,
+    );
+    // Own one mine, let it produce, and stand in a neutral one mid-capture.
+    world.mineSystem.mines.first.ownerId = MineController.localPlayerId;
+    target.ownerId = null;
+    world.player.position =
+        target.position + Offset(0, target.radius * 0.2);
+    world.fog.reveal(world.player.position, fogRevealRadius);
+    world.mineSystem.update(
+      deltaMs: 5400,
+      nowMs: 5400,
+      players: {MineController.localPlayerId: world.player.position},
+    );
+    world.mineSystem.mines.last.ownerId = 'enemy';
+
+    // Put a few produced pickups next to the owned mine.
+    final owned = world.mineSystem.mines.first;
+    for (var i = 0; i < 3; i++) {
+      world.mineSystem.pickups.add(
+        ResourcePickup(
+          id: 'shot_$i',
+          position: owned.position + Offset(-20.0 + i * 20, owned.radius * 0.75),
+          amount: owned.size.pickupAmount,
+          bornAtMs: world.nowMs,
+        ),
+      );
+    }
+
+    await _save('33_mines.png', _paint(world));
   }, timeout: const Timeout(Duration(minutes: 5)));
 }
 
