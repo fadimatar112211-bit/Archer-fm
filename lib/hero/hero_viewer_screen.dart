@@ -181,7 +181,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     if (player != null && delta.inMilliseconds > 0) {
       player.advance((delta.inMilliseconds * _speed).round());
     }
-    _hero3d?.advance(elapsed.inMilliseconds, onEvent: _handle3DEvent);
+    _hero3d?.advance(elapsed.inMilliseconds, onEvent: (_) {});
     _clock.value = elapsed.inMilliseconds;
     _effects.removeWhere((effect) => !effect.isAlive(_clock.value));
   }
@@ -263,10 +263,6 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     }
   }
 
-  void _handle3DEvent(String event) {
-    _handleEvent(AnimationEvent(name: event, frame: 0));
-  }
-
   Offset _directionVector(String direction) => switch (direction) {
     'n' => const Offset(0, -1), 'ne' => const Offset(1, -1),
     'e' => const Offset(1, 0), 'se' => const Offset(1, 1),
@@ -288,6 +284,16 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     }
     final token = ++_loadToken;
     final loader = _loader;
+    final hero3d = _hero3d;
+    if (hero3d != null) {
+      hero3d.playClip(
+        state,
+        loop: const ['idle', 'walk', 'run'].contains(state),
+        pace: _speed,
+        nowMs: _clock.value,
+        events: const [],
+      );
+    }
     setState(() {
       _state = state;
       _direction = direction;
