@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:archer_fm/audio_service.dart';
 import 'package:archer_fm/game/home_screen.dart';
 import 'package:archer_fm/game/progress/hero_progress.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
@@ -47,7 +48,7 @@ class _MenuFakeLoader extends HeroAssetLoader {
 }
 
 void main() {
-  Future<void> pumpMenu(
+  Future<RecordingAudioService> pumpMenu(
     WidgetTester tester, {
     ProgressStore? store,
   }) async {
@@ -55,17 +56,22 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final audio = RecordingAudioService();
     await tester.pumpWidget(MaterialApp(
-      home: Directionality(
-        textDirection: TextDirection.rtl,
-        child: MainMenuScreen(
-          loaderFactory: _MenuFakeLoader.new,
-          store: store,
-          hero3dBytes: (hero) async => null,
+      home: AudioScope(
+        service: audio,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: MainMenuScreen(
+            loaderFactory: _MenuFakeLoader.new,
+            store: store,
+            hero3dBytes: (hero) async => null,
+          ),
         ),
       ),
     ));
     await tester.pumpAndSettle();
+    return audio;
   }
 
   testWidgets('horizontal menu keeps a 3D hero centered with three swipe cards',
@@ -161,5 +167,14 @@ void main() {
     final saved = await store.load(heroId);
     expect(saved!.heroUpgradeLevel, 1);
     expect(saved.essence, 440);
+  });
+
+  testWidgets('menu starts its music and taps play a UI cue', (tester) async {
+    final audio = await pumpMenu(tester);
+    expect(audio.musicPlayed, [MusicTrack.menu]);
+
+    await tester.tap(find.byKey(const ValueKey('home_play')));
+    await tester.pumpAndSettle();
+    expect(audio.cuesPlayed, contains(SoundCue.uiTap));
   });
 }

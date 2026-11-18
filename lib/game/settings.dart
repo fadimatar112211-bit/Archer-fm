@@ -23,9 +23,11 @@ class GameSettings {
     this.joystickScale = 1.0,
     this.controlSide = ControlSide.right,
     this.verticalOffset = 0.0,
+    this.musicEnabled = true,
+    this.sfxEnabled = true,
   });
 
-  /// Multiplier for the attack/dodge/ability button diameters (0.7–1.6).
+  /// Multiplier for the attack/ability button diameters (0.7–1.6).
   final double controlScale;
 
   /// Multiplier for the joystick base diameter (0.7–1.6).
@@ -38,6 +40,12 @@ class GameSettings {
   /// Vertical nudge of the attack cluster in logical pixels (−80…80).
   final double verticalOffset;
 
+  /// Independent background-music toggle (step 13).
+  final bool musicEnabled;
+
+  /// Independent combat/ability/environment effects toggle (step 13).
+  final bool sfxEnabled;
+
   static const double minScale = 0.7;
   static const double maxScale = 1.6;
   static const double maxVerticalOffset = 80;
@@ -47,12 +55,16 @@ class GameSettings {
     double? joystickScale,
     ControlSide? controlSide,
     double? verticalOffset,
+    bool? musicEnabled,
+    bool? sfxEnabled,
   }) {
     return GameSettings(
       controlScale: controlScale ?? this.controlScale,
       joystickScale: joystickScale ?? this.joystickScale,
       controlSide: controlSide ?? this.controlSide,
       verticalOffset: verticalOffset ?? this.verticalOffset,
+      musicEnabled: musicEnabled ?? this.musicEnabled,
+      sfxEnabled: sfxEnabled ?? this.sfxEnabled,
     );
   }
 
@@ -61,6 +73,8 @@ class GameSettings {
         'joystickScale': joystickScale,
         'controlSide': controlSide.name,
         'verticalOffset': verticalOffset,
+        'musicEnabled': musicEnabled,
+        'sfxEnabled': sfxEnabled,
       };
 
   static GameSettings fromJson(Map<String, dynamic> data) {
@@ -68,6 +82,8 @@ class GameSettings {
     final rawJoy = data['joystickScale'];
     final rawSide = data['controlSide'];
     final rawOffset = data['verticalOffset'];
+    final rawMusic = data['musicEnabled'];
+    final rawSfx = data['sfxEnabled'];
     return GameSettings(
       controlScale: _clamped(rawScale is num ? rawScale.toDouble() : 1.0,
           minScale, maxScale),
@@ -78,6 +94,8 @@ class GameSettings {
           rawOffset is num ? rawOffset.toDouble() : 0.0,
           -maxVerticalOffset,
           maxVerticalOffset),
+      musicEnabled: rawMusic is bool ? rawMusic : true,
+      sfxEnabled: rawSfx is bool ? rawSfx : true,
     );
   }
 

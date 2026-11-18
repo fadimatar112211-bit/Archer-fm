@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../audio_service.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_catalog.dart';
 import '../hero/hero_viewer_screen.dart';
@@ -68,6 +69,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     _pages = PageController(viewportFraction: 0.86, initialPage: _page);
     _loadProgress();
     _load3D();
+    AudioScope.of(context).playMusic(MusicTrack.menu);
     // The ticker only runs while a real skinned model is present, so the
     // icon-fallback menu stays idle (and widget tests can settle).
     _ticker = createTicker(_tick);
@@ -171,7 +173,12 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     setState(() => _progress = updated);
   }
 
+  void _tap() {
+    AudioScope.of(context).play(SoundCue.uiTap);
+  }
+
   void _openArmySelection() {
+    _tap();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => Directionality(
@@ -186,6 +193,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   void _openSettings() {
+    _tap();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => Directionality(
@@ -197,6 +205,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   }
 
   void _openLobby() {
+    _tap();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => Directionality(

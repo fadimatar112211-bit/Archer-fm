@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'audio_service.dart';
 import 'game/army_selection_screen.dart';
 import 'game/combat/hero_kit.dart';
 import 'game/home_screen.dart' as menu;
+import 'game/settings.dart';
 import 'game/settings_screen.dart';
 import 'game/net/lobby_screen.dart';
 import 'game/progress/hero_progress.dart';
@@ -18,33 +20,45 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  runApp(const ArcherFmApp());
+  final audio = MethodChannelAudioService();
+  await audio.initialize();
+  final settings = await SharedPreferencesSettingsStore().load();
+  await audio.setMusicEnabled(settings.musicEnabled);
+  await audio.setSfxEnabled(settings.sfxEnabled);
+  runApp(ArcherFmApp(audioService: audio));
 }
 
 class ArcherFmApp extends StatelessWidget {
-  const ArcherFmApp({super.key, this.loaderFactory});
+  const ArcherFmApp({super.key, this.loaderFactory, this.audioService});
 
   /// Tests inject fake loaders; the running game decodes the bundled atlases.
   final HeroLoaderFactory? loaderFactory;
 
+  /// Injected by `main()` so playback uses the native channel. Tests that
+  /// omit it get a silent service through [AudioScope].
+  final AudioService? audioService;
+
   @override
   Widget build(BuildContext context) {
     final hero = heroCatalog.first;
-    return MaterialApp(
-      title: 'Archer FM',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: hero.theme.accent,
-          brightness: Brightness.dark,
+    return AudioScope(
+      service: audioService ?? const NoOpAudioService(),
+      child: MaterialApp(
+        title: 'Archer FM',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: hero.theme.accent,
+            brightness: Brightness.dark,
+          ),
+          scaffoldBackgroundColor: hero.theme.stageBottom,
+          useMaterial3: true,
         ),
-        scaffoldBackgroundColor: hero.theme.stageBottom,
-        useMaterial3: true,
-      ),
-      home: Directionality(
-        textDirection: TextDirection.rtl,
-        child: menu.MainMenuScreen(
-          loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: menu.MainMenuScreen(
+            loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+          ),
         ),
       ),
     );

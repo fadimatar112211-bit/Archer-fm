@@ -1952,6 +1952,11 @@ class GameWorld {
     return best;
   }
 
+  /// Test seam: applies real crystal damage so the destruction event/cue path
+  /// can be exercised without waiting for a wave to reach the castle.
+  void debugDamageCrystal(CrystalState crystal, double amount) =>
+      _damageCrystal(crystal, amount);
+
   void _damageCrystal(CrystalState crystal, double amount) {
     final castle = castleSystem.castleOf(crystal.ownerId);
     final destroyed = castleSystem.damageCrystal(crystal, amount);

@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:archer_fm/audio_service.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/game_screen.dart';
 import 'package:archer_fm/game/progress/equipment.dart';
 import 'package:archer_fm/game/progress/hero_progress.dart';
 import 'package:archer_fm/game/progress/progression.dart';
+import 'package:archer_fm/game/settings.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
@@ -142,6 +144,7 @@ class _Harness {
     HeroKit? kit,
     this.dummyDistance = 150,
     this.configureWorld,
+    this.settingsStore,
   }) : kit = kit ?? kitForHero(heroId);
 
   final HeroProgress? seedProgress;
@@ -151,7 +154,9 @@ class _Harness {
 
   /// Extra setup for the injected world (chests, pending rewards...).
   final void Function(GameWorld world)? configureWorld;
+  final SettingsStore? settingsStore;
   final store = MemoryProgressStore();
+  final RecordingAudioService audio = RecordingAudioService();
   GameWorld? world;
 
   Future<void> pump(WidgetTester tester) async {
@@ -165,34 +170,38 @@ class _Harness {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
-        home: GameScreen(
-          hero: heroById(heroId),
-          kit: kit,
-          loaderFactory: _CombatFakeLoader.new,
-          store: store,
-          worldFactory: (kit) {
-            final created = GameWorld(
-              kit: kit,
-              random: math.Random(7),
-              spawnWaves: false,
-            );
-            created.enemies.clear();
-            // A scripted stationary training dummy east of the hero.
-            created.enemies.add(
-              EnemyState(
-                id: 'dummy',
-                kind: 'slime',
-                position: created.player.position + Offset(dummyDistance, 0),
-                maxHp: 500,
-                speed: 0,
-                contactDamage: 8,
-                xpValue: 10,
-              ),
-            );
-            harness.configureWorld?.call(created);
-            harness.world = created;
-            return created;
-          },
+        home: AudioScope(
+          service: audio,
+          child: GameScreen(
+            hero: heroById(heroId),
+            kit: kit,
+            loaderFactory: _CombatFakeLoader.new,
+            store: store,
+            settingsStore: settingsStore ?? MemorySettingsStore(),
+            worldFactory: (kit) {
+              final created = GameWorld(
+                kit: kit,
+                random: math.Random(7),
+                spawnWaves: false,
+              );
+              created.enemies.clear();
+              // A scripted stationary training dummy east of the hero.
+              created.enemies.add(
+                EnemyState(
+                  id: 'dummy',
+                  kind: 'slime',
+                  position: created.player.position + Offset(dummyDistance, 0),
+                  maxHp: 500,
+                  speed: 0,
+                  contactDamage: 8,
+                  xpValue: 10,
+                ),
+              );
+              harness.configureWorld?.call(created);
+              harness.world = created;
+              return created;
+            },
+          ),
         ),
       ),
     );
@@ -529,5 +538,50 @@ void main() {
     final saved = await harness.store.load('ranger_new');
     expect(saved!.essence, 90);
     expect(saved.materials[ProgressionMaterial.monster.name], 3);
+  });
+
+  testWidgets('battle starts music and plays attack and ability cues', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.pump(tester);
+    expect(harness.audio.musicPlayed, [MusicTrack.battle]);
+
+    await tester.tap(find.byKey(const ValueKey('btn_attack')));
+    await pumpFor(tester, 200);
+    expect(harness.audio.cuesPlayed, contains(SoundCue.attack));
+
+    harness.world!.player.energy = 100;
+    await tester.tap(find.byKey(const ValueKey('ability_multi_shot')));
+    await pumpFor(tester, 200);
+    expect(harness.audio.cuesPlayed, contains(SoundCue.ability));
+  });
+
+  testWidgets('disabled sound settings silence both music and cues', (
+    tester,
+  ) async {
+    final harness = _Harness(
+      settingsStore: MemorySettingsStore(
+        const GameSettings(musicEnabled: false, sfxEnabled: false),
+      ),
+    );
+    await harness.pump(tester);
+    expect(harness.audio.musicPlayed, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('btn_attack')));
+    await pumpFor(tester, 200);
+    expect(harness.audio.cuesPlayed, isEmpty);
+  });
+
+  testWidgets('crystal destruction plays its required notification cue', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.pump(tester);
+    final world = harness.world!;
+    final crystal = world.castleSystem.playerCastle.crystals.first;
+    world.debugDamageCrystal(crystal, crystal.maxHp + 1);
+    await pumpFor(tester, 100);
+    expect(harness.audio.cuesPlayed, contains(SoundCue.crystalDestroyed));
   });
 }

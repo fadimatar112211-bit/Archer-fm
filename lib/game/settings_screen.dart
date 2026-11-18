@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../audio_service.dart';
 import 'settings.dart';
 
 /// Arabic settings screen: control button size, joystick size, control side
@@ -36,7 +37,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _update(GameSettings next) async {
+    final previous = _settings;
     setState(() => _settings = next);
+    final audio = AudioScope.of(context);
+    if (next.musicEnabled != previous.musicEnabled) {
+      await audio.setMusicEnabled(next.musicEnabled);
+    }
+    if (next.sfxEnabled != previous.sfxEnabled) {
+      await audio.setSfxEnabled(next.sfxEnabled);
+      if (next.sfxEnabled) audio.play(SoundCue.uiTap);
+    }
     await store.save(next);
   }
 
@@ -112,6 +122,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: _settings.verticalOffset.round().toString(),
                       onChanged: (v) =>
                           _update(_settings.copyWith(verticalOffset: v)),
+                    ),
+                  ),
+                  _card(
+                    title: 'الموسيقى',
+                    child: SwitchListTile(
+                      key: const ValueKey('toggle_music'),
+                      title: const Text('موسيقى الخلفية'),
+                      value: _settings.musicEnabled,
+                      onChanged: (value) =>
+                          _update(_settings.copyWith(musicEnabled: value)),
+                    ),
+                  ),
+                  _card(
+                    title: 'المؤثرات الصوتية',
+                    child: SwitchListTile(
+                      key: const ValueKey('toggle_sfx'),
+                      title: const Text('مؤثرات القتال والقدرات والبيئة'),
+                      value: _settings.sfxEnabled,
+                      onChanged: (value) =>
+                          _update(_settings.copyWith(sfxEnabled: value)),
                     ),
                   ),
                   const SizedBox(height: 8),

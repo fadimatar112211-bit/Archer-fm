@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../audio_service.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_catalog.dart';
 import '../hero/hero_manifest.dart';
@@ -112,6 +113,7 @@ class _GameScreenState extends State<GameScreen>
   /// Player-adjusted control layout, loaded at startup and reapplied live.
   GameSettings _settings = const GameSettings();
   late final SettingsStore _settingsStore;
+  late final AudioService _audio;
 
   HeroManifest? manifest;
   final Map<String, AtlasSheet> _sheets = {};
@@ -154,6 +156,7 @@ class _GameScreenState extends State<GameScreen>
     loader = widget.loaderFactory(widget.hero);
     store = widget.store ?? SharedPreferencesProgressStore();
     _settingsStore = widget.settingsStore ?? SharedPreferencesSettingsStore();
+    _audio = AudioScope.of(context);
     progression = ProgressionController(heroId: widget.hero.id);
     _restoreProgress();
     _loadSettings();
@@ -167,6 +170,7 @@ class _GameScreenState extends State<GameScreen>
   void dispose() {
     _ticker?.stop();
     _toastTimer?.cancel();
+    _audio.stopMusic();
     // Credit everything earned in this match (also when the player lost or
     // left early) before saving the permanent profile.
     world.settleMatch();
@@ -185,6 +189,10 @@ class _GameScreenState extends State<GameScreen>
     final loaded = await _settingsStore.load();
     if (!mounted) return;
     setState(() => _settings = loaded);
+    // The user may have changed the toggles from the menu since app startup.
+    await _audio.setMusicEnabled(loaded.musicEnabled);
+    await _audio.setSfxEnabled(loaded.sfxEnabled);
+    if (loaded.musicEnabled) _audio.playMusic(MusicTrack.battle);
   }
 
   Future<void> _restoreProgress() async {
@@ -328,6 +336,7 @@ class _GameScreenState extends State<GameScreen>
       widget.onWorldEvent?.call(event);
       switch (event) {
         case EnemyKilledEvent(:final xpGained):
+          _audio.play(SoundCue.enemyKilled);
           _labels.add(
             FloatLabel(
               text: '+$xpGained XP',
@@ -339,6 +348,7 @@ class _GameScreenState extends State<GameScreen>
         case ArmyMonsterLostEvent(:final type):
           _showToast('سقط ${MonsterCatalog.def(type).nameAr} — اشترِ بديلًا');
         case LevelUpEvent(:final newLevel, :final unlockedAbilityIds):
+          _audio.play(SoundCue.levelUp);
           _showToast('المستوى $newLevel!');
           if (unlockedAbilityIds.isNotEmpty) {
             final names = unlockedAbilityIds
@@ -348,6 +358,7 @@ class _GameScreenState extends State<GameScreen>
           }
           _persistProgress();
         case PlayerDamagedEvent(:final amount):
+          _audio.play(SoundCue.playerHit);
           _hitReactUntilMs = world.nowMs + 320;
           _labels.add(
             FloatLabel(
@@ -358,9 +369,11 @@ class _GameScreenState extends State<GameScreen>
             ),
           );
         case PlayerDiedEvent():
+          _audio.play(SoundCue.playerDeath);
           _showToast('سقط البطل — عودة بعد لحظات');
           _persistProgress();
         case PlayerRespawnedEvent():
+          _audio.play(SoundCue.respawn);
           _showToast('عدت إلى المعركة');
         case AbilityReadyEvent(:final abilityId):
           final name = kit.abilityById(abilityId)?.nameAr;
@@ -386,6 +399,10 @@ class _GameScreenState extends State<GameScreen>
             ),
           );
         case CrystalDestroyedEvent(:final ownerId, :final slot):
+          // Required notification cue. There is deliberately no separate
+          // warning when one of our crystals is merely attacked, and no cue
+          // for mine captures (both forbidden by the specification).
+          _audio.play(SoundCue.crystalDestroyed);
           _labels.add(
             FloatLabel(
               text: 'كريستال ${slot + 1} تحطم',
@@ -403,8 +420,10 @@ class _GameScreenState extends State<GameScreen>
                 : 'سقطت قلعة خصم',
           );
         case CrystalRebuiltEvent(:final cost):
+          _audio.play(SoundCue.crystalRebuilt);
           _showToast('أُعيد بناء كريستال مقابل $cost موارد');
         case ChestOpenedEvent(:final item):
+          _audio.play(SoundCue.chestOpened);
           final outcome = progression.addEquipment(item);
           _syncProgressionToWorld();
           if (outcome.isDuplicate) {
@@ -451,6 +470,7 @@ class _GameScreenState extends State<GameScreen>
     if (_busyClip != null || manifest == null) return;
     if (!world.requestAttack()) return;
     widget.onNetworkAttack?.call();
+    _audio.play(SoundCue.attack);
     _playClip('attack', pace: world.currentAttackRate());
   }
 
@@ -467,6 +487,7 @@ class _GameScreenState extends State<GameScreen>
       }
       return;
     }
+    _audio.play(SoundCue.ability);
     _playClip(
       def.usesAttackClip ? 'attack' : 'skill',
       pace: world.currentAttackRate(),
