@@ -355,3 +355,15 @@ Still to decide or test:
 - أداة معاينة جديدة `tools/blender/preview_hero.py` تنتج أربع زوايا (أمام/ثلاثة أرباع/جانب/خلف) في جلسة Blender واحدة بنفس إسقاط الإنتاج؛ المعاينات المعتمدة في `docs/heroes/ranger_review/`.
 - الرندر الإنتاجي الكامل (8 حالات × 8 اتجاهات = 496 إطاراً، 192px) قيد التنفيذ؛ الأطالس والـ manifest والتحقق النهائي تأتي بعد اكتماله.
 - Flame/Shadow/Storm: البناء موجود في شجرة العمل لكنه لم يُرفَع بعد؛ بانتظار مراجعة المستخدم لـ Ranger واعتماده.
+
+
+## 10. Ranger pipeline checkpoint — 2026-11-18
+
+- Current Ranger work remains on the private main branch. The latest implementation commit for the visual-gate corrections is f9d4e3a38555c869ecdd63e6483d323516df4805.
+- The source builder now deliberately leaves every mesh unparented, assigns one rigid 1.0-weight vertex group per mesh, and adds one Armature modifier targeting the hero rig. validate_ranger_source.py checks those invariants in Blender.
+- Ranger pipeline run #60 (44285518377) failed in the Python unit-test step before Blender source generation or rendering. The eight failures were stale test fixtures that omitted the required atlas animation field, a missing-frame diagnostic being masked by the frame-set mismatch, and a detached-part fixture whose detached region was smaller than the documented 10% threshold. Its uploaded artifact therefore contained the checked-in render set, not a fresh render from that run.
+- Corrected the manifest test fixtures to build valid transparent PNG atlases and matching source frames; reordered missing-frame validation so it reports the actual missing frame; made the Ranger workflow run when tools/tests/** changes; and adjusted the detached-part fixture to exceed the documented threshold.
+- Independently inspected the checked-in render snapshot from run #60: 496 PNG frames, 64 atlas PNG/JSON pairs, 64 animation clips, 192×192 frames, normalized pivot (0.5, 0.86), and transparent backgrounds. Contact sheets were reviewed for all frames in idle, walk, attack, and death across eight directions. A death/ne frame contained four tiny detached alpha fragments; the visual gate now ignores insignificant fragments below 12 pixels or 0.5% of visible pixels while still penalizing large detached parts. A regression test covers this case.
+- Latest Ranger run #63 (44287669888) is running on commit f9d4e3a; its Blender installation step is still in progress. No fresh render, atlas pack, or manifest result is claimed yet.
+- Flutter Android run #29 (44283315224) passed analyze, tests, debug APK build, and emulator validation on commit 417bfd0384aadc204193dd099a4c00aadfc497cb. The logs confirm the emulator came online, installed the APK, launched MainActivity, and reported it as mResumedActivity. This is not yet a verification of the new Ranger render output.
+- Ranger is not complete. Required remaining gates: finish a fresh Blender render and atlas/manifest validation; inspect the newly generated artifact images; ensure validated assets are committed to main; then rerun Flutter/Android and emulator validation against those exact assets. Only after that should work proceed to the next roadmap system.
