@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Offset, Size;
+import 'dart:ui' show Offset, Rect, Size;
 
 import 'world/game_world.dart';
 
