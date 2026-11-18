@@ -9,7 +9,7 @@
     "y": 0.86
   },
   "source": {
-    "blend_file": "assets/heroes/flame/source/flame_source.blend",
+    "blend_file": "assets/heroes/storm/source/storm_source.blend",
     "fps": 12,
     "render_engine": "BLENDER_EEVEE",
     "orthographic_scale": 4.675253
