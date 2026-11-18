@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'game/combat/hero_kit.dart';
 import 'game/game_screen.dart';
+import 'game/net/lobby_screen.dart';
 import 'game/progress/hero_progress.dart';
 import 'game/progress/progression_screen.dart';
 import 'hero/hero_assets.dart';
@@ -67,6 +68,23 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Archer FM — الأبطال'),
         backgroundColor: Colors.black.withValues(alpha: 0.3),
         actions: [
+          TextButton.icon(
+            key: const ValueKey('open_lobby'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: LobbyScreen(loaderFactory: loaderFactory, store: store),
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.groups, color: Colors.white),
+            label: const Text(
+              'جماعي',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
           TextButton.icon(
             key: const ValueKey('open_progression'),
             onPressed: () => Navigator.of(context).push(

@@ -45,6 +45,9 @@ class GameScreen extends StatefulWidget {
     this.worldFactory,
     this.hero3dBytes,
     this.hero3dController,
+    this.onNetworkTick,
+    this.onWorldEvent,
+    this.onNetworkAttack,
   });
 
   final HeroDefinition hero;
@@ -64,6 +67,12 @@ class GameScreen extends StatefulWidget {
   /// load entirely, which cannot complete inside a widget test's fake async
   /// zone without `tester.runAsync`.
   final Hero3DController? hero3dController;
+
+  /// Optional multiplayer hooks. The local simulation always runs; these
+  /// forward intent and events to the authoritative host when present.
+  final void Function(Offset position, int atMs)? onNetworkTick;
+  final void Function(WorldEvent event)? onWorldEvent;
+  final VoidCallback? onNetworkAttack;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -278,6 +287,7 @@ class _GameScreenState extends State<GameScreen>
       stepped = true;
     }
     if (stepped) {
+      widget.onNetworkTick?.call(world.player.position, world.nowMs);
       _handleWorldEvents();
       if (_attackHeld) _tryAttack();
       _updateSprite(deltaMs);
@@ -287,6 +297,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _handleWorldEvents() {
     for (final event in world.drainEvents()) {
+      widget.onWorldEvent?.call(event);
       switch (event) {
         case EnemyKilledEvent(:final xpGained):
           _labels.add(
@@ -411,6 +422,7 @@ class _GameScreenState extends State<GameScreen>
   void _tryAttack() {
     if (_busyClip != null || manifest == null) return;
     if (!world.requestAttack()) return;
+    widget.onNetworkAttack?.call();
     _playClip('attack', pace: world.currentAttackRate());
   }
 
