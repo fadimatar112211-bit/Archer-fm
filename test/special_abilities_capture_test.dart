@@ -170,6 +170,18 @@ void main() {
         switch (hero.key) {
           case 'ranger_new':
             await captureAbility(
+              abilityId: 'multi_shot',
+              fileName: '34_ranger_multi_shot',
+              dummies: const [Offset(150, -35), Offset(165, 0), Offset(150, 35)],
+              afterReleaseMs: 700,
+            );
+            await captureAbility(
+              abilityId: 'arrow_rain',
+              fileName: '35_ranger_arrow_rain',
+              dummies: const [Offset(150, 0)],
+              afterReleaseMs: 2300,
+            );
+            await captureAbility(
               abilityId: 'piercing_shot',
               fileName: '13_ranger_piercing_shot',
               dummies: const [Offset(160, 10), Offset(300, 10)],
@@ -184,12 +196,43 @@ void main() {
             );
           case 'flame':
             await captureAbility(
+              abilityId: 'flame_slash',
+              fileName: '36_flame_slash',
+              dummies: const [Offset(65, 0)],
+              afterReleaseMs: 350,
+            );
+            await captureAbility(
+              abilityId: 'fire_wave',
+              fileName: '37_flame_fire_wave',
+              dummies: const [Offset(170, 0)],
+              afterReleaseMs: 900,
+            );
+            await captureAbility(
+              abilityId: 'hell_burst',
+              fileName: '38_flame_hell_burst',
+              dummies: const [Offset(70, 0), Offset(100, 25)],
+              afterReleaseMs: 350,
+            );
+            await captureAbility(
               abilityId: 'inferno_rage',
               fileName: '15_flame_inferno_rage',
               dummies: const [Offset(70, 0)],
               followUpSwing: true,
             );
           case 'shadow':
+            await captureAbility(
+              abilityId: 'shadow_veil',
+              fileName: '39_shadow_veil',
+              dummies: const [Offset(60, 0)],
+              followUpSwing: true,
+              afterReleaseMs: 400,
+            );
+            await captureAbility(
+              abilityId: 'shadow_execute',
+              fileName: '40_shadow_execute',
+              dummies: const [Offset(180, 0)],
+              afterReleaseMs: 350,
+            );
             await captureAbility(
               abilityId: 'twin_fangs',
               fileName: '16_shadow_twin_fangs',
