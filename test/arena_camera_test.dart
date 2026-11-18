@@ -76,6 +76,42 @@ void main() {
       expect(tapWorldPoint.dy, closeTo(worldPoint.dy, 1e-9));
     });
 
+    test('round-trips viewport corners while the smoothed camera moves', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(67),
+        spawnWaves: false,
+      );
+      final initialOrigin = world.cameraOrigin;
+      world.player.position += const Offset(360, 210);
+
+      for (var frame = 0; frame < 8; frame++) {
+        world.update(16);
+        expect(world.cameraOrigin, isNot(initialOrigin));
+        for (final size in const [
+          Size(1280, 800),
+          Size(1920, 1080),
+          Size(2400, 1080),
+        ]) {
+          final transform = ArenaCameraTransform.forViewport(size, world);
+          final inset = transform.viewportOrigin;
+          final points = [
+            inset + const Offset(1, 1),
+            Offset(size.width - inset.dx - 1, inset.dy + 1),
+            Offset(inset.dx + 1, size.height - inset.dy - 1),
+            Offset(size.width - inset.dx - 1, size.height - inset.dy - 1),
+            Offset(size.width / 2, size.height / 2),
+          ];
+          for (final screen in points) {
+            final worldPoint = transform.localToWorld(screen);
+            final restored = transform.worldToLocal(worldPoint);
+            expect(restored.dx, closeTo(screen.dx, 1e-8));
+            expect(restored.dy, closeTo(screen.dy, 1e-8));
+          }
+        }
+      }
+    });
+
     test('oblique projection keeps camera center fixed and compresses depth', () {
       final world = GameWorld(
         kit: rangerNewKit,
