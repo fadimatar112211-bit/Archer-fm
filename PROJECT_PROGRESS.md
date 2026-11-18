@@ -156,3 +156,13 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Camera follows the player through the smoothed `world.cameraOrigin` and the painter uses that same origin for rendering; arena taps are converted through the camera origin so touch coordinates remain aligned.
 - No gameplay/control redesign was made. Preserve the Archero-like camera, joystick and manual attack model.
 - Next implementation batch: inspect the full fresh captures hero-by-hero against `heroes_reference_sheet.jpg`; check 3D face/weapon readability and animation direction; add/verify explicit touch interaction tests (one pointer-down = one attack, held pointer does not repeat, joystick cancel resets movement); then make targeted visual/control refinements and run the full workflow again.
+
+
+### 2026-11-18 — Manual combat and joystick interaction regression coverage
+- Added a stable widget key to the joystick touch zone without changing its layout or control behavior.
+- Added widget regression test: holding the attack control for 1.4 seconds must register exactly one combo hit; this guards against held-button auto-repeat.
+- Added widget regression test: dragging the joystick moves the hero, and pointer cancellation clears the movement vector and stops continued movement.
+- Changes pushed to `ranger-reference-work`: game-screen hook commit `281212be42716dfb9f0cadc57be885fe853c4788`; tests commit `a29e507a554688a892add5cb5ef756e3d43826b0`.
+- Tests are committed but not yet verified by Actions at the time of this note. Do not call them passing until the workflow run for the latest HEAD completes.
+- This batch intentionally preserves the Archero-style camera, left joystick, tap-to-attack control, four separate Ultimate buttons, and five-hit combo.
+- Next: inspect the new Actions run and fix any test/build failure. Then improve hero face/readability only after inspecting close-up reference captures for all four heroes; current wide arena captures are too small to judge face fidelity.
