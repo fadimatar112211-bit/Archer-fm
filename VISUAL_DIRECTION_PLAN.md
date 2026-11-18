@@ -101,3 +101,13 @@ All castle crystals must be **large, tall, prominent crystal pillars/spires** (t
 - Remain visually distinct from mines, pickups, rocks, and decorative props.
 
 This is a visual specification only: preserve the seven-crystal count, current HP values (500, 700, 900, 1200, 1500, 1800, 2200), targeting rules, rebuild rules, and gameplay collision/balance unless separately approved. Apply the same large-pillar language consistently to all players and map placements. Validate visibility, screen-space size, occlusion, performance, and readability at mobile gameplay zoom.
+
+
+## Crystal visual standard — mandatory (2026-11-18)
+
+- All seven crystals belonging to each player must be **large, tall, prominent crystal pillars/columns**, not small loose crystal stones or tiny shards.
+- Each crystal has a strong vertical silhouette, multiple sharp faceted planes, a clearly visible planted base, internal glow/energy and a distinct player/team color.
+- Each must be easy to identify from normal gameplay camera distance and at mobile resolution; its health bar must be readable without obscuring combat.
+- Damage feedback: visible cracks and unstable energy. Destruction: a clear collapse/shatter sequence with a strong but brief effect.
+- Preserve the existing seven-crystal count and HP values (500, 700, 900, 1200, 1500, 1800, 2200), exposed/walled placement rules, direct-targeting rules and rebuild gameplay. This is a visual specification only; do not silently alter balance or rules.
+- Apply the same large-pillar visual language to original and rebuilt crystals. Validate scale against heroes, monsters, walls and camera framing so the crystals feel monumental without hiding objectives or blocking the battlefield.
