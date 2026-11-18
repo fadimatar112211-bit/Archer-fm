@@ -111,13 +111,10 @@ class ArenaPainter extends CustomPainter {
     _paintZones(canvas);
     _paintFireWaves(canvas);
     _paintGroundShadows(canvas);
-    _paintMonsters(canvas);
+    _paintActors(canvas);
     _paintProjectiles(canvas);
     _paintFx(canvas);
     _paintFog(canvas, camera);
-    _withUprightGroundActor(canvas, world.player.position, () {
-      _paintHero(canvas);
-    });
     _paintLabels(canvas, scale);
 
     canvas.restore();
@@ -1036,27 +1033,56 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
-  /// Draws corpses, then both armies sorted by depth so lower monsters
-  /// overlap higher ones naturally.
+  /// Draw every ground actor in one depth order. The hero, hostile units,
+  /// owned units and corpses therefore occlude one another consistently as
+  /// they cross on the projected ground plane.
   ArenaWorldProjection get cameraProjection =>
       const ArenaWorldProjection(groundScaleY: 0.82);
 
-  void _paintMonsters(Canvas canvas) {
+  void _paintActors(Canvas canvas) {
+    final actors = <({double depth, int order, VoidCallback draw})>[];
+    var order = 0;
+
     for (final corpse in world.corpses) {
-      _withUprightGroundActor(canvas, corpse.position, () {
-        _paintCorpse(canvas, corpse);
-      });
-    }
-    // Enemy monsters are only rendered when they are near the hero.
-    final monsters = [...world.visibleEnemies, ...world.army]
-      ..sort((a, b) => cameraProjection.depthOf(a.position).compareTo(
-        cameraProjection.depthOf(b.position),
+      final currentOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(corpse.position),
+        order: currentOrder,
+        draw: () => _withUprightGroundActor(canvas, corpse.position, () {
+          _paintCorpse(canvas, corpse);
+        }),
       ));
-    for (final monster in monsters) {
+    }
+
+    // Enemy monsters are only rendered when they are near the hero.
+    for (final monster in [...world.visibleEnemies, ...world.army]) {
       if (monster.hp <= 0) continue;
-      _withUprightGroundActor(canvas, monster.position, () {
-        _paintMonster(canvas, monster);
-      });
+      final currentOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(monster.position),
+        order: currentOrder,
+        draw: () => _withUprightGroundActor(canvas, monster.position, () {
+          _paintMonster(canvas, monster);
+        }),
+      ));
+    }
+
+    final playerPosition = world.player.position;
+    final heroOrder = order++;
+    actors.add((
+      depth: cameraProjection.depthOf(playerPosition),
+      order: heroOrder,
+      draw: () => _withUprightGroundActor(canvas, playerPosition, () {
+        _paintHero(canvas);
+      }),
+    ));
+
+    actors.sort((a, b) {
+      final byDepth = a.depth.compareTo(b.depth);
+      return byDepth != 0 ? byDepth : a.order.compareTo(b.order);
+    });
+    for (final actor in actors) {
+      actor.draw();
     }
   }
 
