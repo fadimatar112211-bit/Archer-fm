@@ -573,6 +573,43 @@ void main() {
     expect(harness.audio.cuesPlayed, isEmpty);
   });
 
+
+  testWidgets('holding the attack button does not auto-repeat combo hits', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.pump(tester);
+    final attack = find.byKey(const ValueKey('btn_attack'));
+    final gesture = await tester.startGesture(tester.getCenter(attack));
+    await pumpFor(tester, 1400);
+    expect(harness.world!.combo.chainLength, 1);
+    expect(harness.world!.combo.hitIndex, 2);
+    await gesture.up();
+    await pumpFor(tester, 100);
+    expect(harness.world!.combo.chainLength, 1);
+  });
+
+  testWidgets('joystick cancel clears movement input and stops the hero', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.pump(tester);
+    final world = harness.world!;
+    final start = world.player.position;
+    final zone = find.byKey(const ValueKey('joystick_zone'));
+    final gesture = await tester.startGesture(
+      tester.getTopLeft(zone) + const Offset(140, 220),
+    );
+    await gesture.moveBy(const Offset(110, 0));
+    await pumpFor(tester, 300);
+    expect(world.player.position.dx, greaterThan(start.dx));
+    await gesture.cancel();
+    expect(world.moveInput, Offset.zero);
+    final stoppedAt = world.player.position;
+    await pumpFor(tester, 300);
+    expect(world.player.position.dx, closeTo(stoppedAt.dx, 0.5));
+  });
+
   testWidgets('crystal destruction plays its required notification cue', (
     tester,
   ) async {
