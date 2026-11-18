@@ -136,22 +136,22 @@ void main() {
     expect(landed, isTrue, reason: 'arrow never damaged the dummy');
   });
 
-  testWidgets('dodge plays the non-loop clip through the 3D controller and '
+  testWidgets('skill plays the non-loop clip through the 3D controller and '
       'returns to idle', (tester) async {
     final harness = _Harness3D();
     await harness.pump(tester);
     final hero3d = _arenaPainter(tester)!.presentation.hero3d!;
 
-    await tester.tap(find.byKey(const ValueKey('btn_dodge')));
+    await tester.tap(find.byKey(const ValueKey('ability_multi_shot')));
     await pumpFor(tester, 100);
-    expect(hero3d.clipState, 'dodge');
-    // The GLB dodge clip is 1167 ms; afterwards the state machine resumes idle.
+    expect(hero3d.clipState, 'skill');
+    // The skill clip is non-looping; afterwards the state machine resumes idle.
     final back = await pumpUntil(
       tester,
       () => hero3d.clipState == 'idle',
       timeoutMs: 2500,
     );
-    expect(back, isTrue, reason: 'dodge never returned to idle');
+    expect(back, isTrue, reason: 'skill never returned to idle');
   });
 
   testWidgets('hit reaction and death advance through the 3D controller',

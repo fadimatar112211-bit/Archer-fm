@@ -327,20 +327,27 @@ void main() {
     expect(saved!.kills, 1);
   });
 
-  testWidgets('dodge button triggers i-frames and resets the combo',
-      (tester) async {
+  testWidgets('gameplay exposes no dodge control', (tester) async {
     final harness = _Harness();
-      await harness.pump(tester);
+    await harness.pump(tester);
+    expect(find.byKey(const ValueKey('btn_dodge')), findsNothing);
+    expect(find.text('مراوغة'), findsNothing);
+    // Damage still resets the combo; there is no dodge-cancel path.
     final world = harness.world!;
     await tester.tap(find.byKey(const ValueKey('btn_attack')));
     await pumpFor(tester, 1300);
     await tester.tap(find.byKey(const ValueKey('btn_attack')));
     await pumpFor(tester, 1300);
     expect(world.combo.chainLength, 2);
-    await tester.tap(find.byKey(const ValueKey('btn_dodge')));
-    await pumpFor(tester, 100);
-    expect(world.player.invulnerableUntilMs, greaterThan(world.nowMs));
-    expect(world.combo.chainLength, 0);
+    world.player.invulnerableUntilMs = 0;
+    world.enemies.single.position = world.player.position + const Offset(20, 0);
+    world.enemies.single.windupUntilMs = world.nowMs + 10;
+    final damaged = await pumpUntil(
+      tester,
+      () => world.combo.chainLength == 0,
+      timeoutMs: 800,
+    );
+    expect(damaged, isTrue);
   });
 
   testWidgets('Flame melee chain deals the real escalating damage', (

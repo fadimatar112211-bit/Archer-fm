@@ -317,48 +317,103 @@ void main() {
       );
     });
 
-    test('dodge grants invulnerability against enemy arrows', () {
-      final world = makeWorld();
+    test('hell_burst stun cancels a started enemy swing', () {
+      final world = makeFlameWorld();
+      world.level = 20;
       world.player.invulnerableUntilMs = 0;
-      world.player.position = const Offset(480, 300);
-      final archer = addEnemy(
+      final attacker = addEnemy(
         world,
-        kind: 'archer',
-        position: world.player.position + const Offset(200, 0),
-        hp: 999,
-        xp: 14,
-        ranged: true,
+        position: world.player.position + const Offset(50, 0),
+        hp: 500,
+        xp: 20,
       );
-      archer.attackCooldownUntilMs = world.nowMs + 10000;
-      expect(world.requestDodge(), isTrue);
-      expect(world.player.invulnerableUntilMs, greaterThan(world.nowMs));
-      // Enemy arrow lands during the i-frames.
-      world.spawnArrow(
-        origin: archer.position,
-        direction: const Offset(-1, 0),
-        damage: 6,
-        speed: 800,
-        range: 300,
-        tint: 0xFFFF7A5A,
-      );
-      runFor(world, 700);
-      expect(world.player.hp, rangerNewKit.baseMaxHp);
+      attacker.windupUntilMs = world.nowMs + 50;
+      expect(world.useAbility('hell_burst'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(attacker.stunnedUntilMs, greaterThan(world.nowMs));
+      expect(attacker.disabledAt(world.nowMs), isTrue);
+      // Starting a swing before the blast must not land during the stun.
+      expect(attacker.windupUntilMs, 0);
+      runFor(world, 300);
+      expect(world.player.hp, world.maxHp);
     });
 
-    test('dodge resets the combo chain', () {
-      final world = makeWorld();
+    test('stunned monsters stop moving until the disable expires', () {
+      final world = makeFlameWorld();
+      world.level = 20;
+      final origin = world.player.position;
+      final stunned = addEnemy(
+        world,
+        position: origin + const Offset(100, 0),
+        hp: 500,
+        xp: 20,
+      );
+      stunned.speed = 90;
+      final outside = addEnemy(
+        world,
+        position: origin + const Offset(220, 0),
+        hp: 500,
+        xp: 20,
+      );
+      outside.speed = 0;
+      expect(world.useAbility('hell_burst'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      final frozenAt = stunned.position;
+      runFor(world, 400);
+      expect(stunned.position, frozenAt);
+      expect(outside.disabledAt(world.nowMs), isFalse);
+
+      runFor(world, 400);
+      expect(stunned.disabledAt(world.nowMs), isFalse);
+      // Once it recovers, the same monster closes in again.
+      expect(
+        (stunned.position - origin).distance,
+        lessThan((frozenAt - origin).distance),
+      );
+    });
+
+    test('static_field freezes on activation and on every charged thrust', () {
+      final world = GameWorld(
+        kit: stormKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
       world.player.facing = const Offset(1, 0);
-      addEnemy(world, hp: 500, xp: 40);
-      world.requestAttack();
-      world.releaseArrow();
-      runFor(world, 1100);
-      world.requestAttack();
-      world.releaseArrow();
-      runFor(world, 1100);
-      expect(world.combo.chainLength, 2);
-      expect(world.requestDodge(), isTrue);
-      expect(world.combo.chainLength, 0);
-      expect(world.combo.hitIndex, 1);
+      final primary = addEnemy(
+        world,
+        position: world.player.position + const Offset(100, 0),
+        hp: 500,
+        xp: 30,
+      );
+      primary.speed = 80;
+      final chained = addEnemy(
+        world,
+        position: world.player.position + const Offset(240, 0),
+        hp: 500,
+        xp: 30,
+      );
+      world.level = 20;
+      expect(world.useAbility('static_field'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+      expect(primary.frozenUntilMs, greaterThan(world.nowMs));
+      expect(primary.disabledAt(world.nowMs), isTrue);
+      // The chained monster is outside the field radius on activation.
+      expect(chained.disabledAt(world.nowMs), isFalse);
+
+      final holdAt = primary.position;
+      runFor(world, 500);
+      expect(primary.position, holdAt);
+      expect(primary.disabledAt(world.nowMs), isTrue);
+      runFor(world, 600);
+      expect(primary.disabledAt(world.nowMs), isFalse);
+
+      // The field is still active: a charged thrust re-freezes its victims.
+      world.player.energy = stormKit.baseMaxEnergy;
+      expect(world.useAbility('thunder_thrust'), isNotNull);
+      world.releaseWeaponPayload(volley: false);
+      expect(primary.disabledAt(world.nowMs), isTrue);
+      expect(chained.disabledAt(world.nowMs), isTrue);
     });
   });
 

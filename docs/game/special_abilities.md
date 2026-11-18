@@ -23,6 +23,11 @@
 **لا تداخل مع الكومبو**: `useAbility` لا يلمس `combo` إطلاقاً، و`requestAttack`
 يُرفض أثناء `pendingAbilityId != null` — مثبت باختبارات مخصصة (القسم 4).
 
+**حالتا التعطيل**: `hell_burst` يشلّ الناجين 700ms، و`static_field` يجمّد
+الأهداف 900ms (عند التفعيل وعلى كل طعنة مشحونة). كلتاهما تمنع الحركة والهجوم
+وتُلغي أي استعداد `windup` جارٍ، دون مقاومة حالات أو ضرر إضافي. المدد أرقام
+موازنة مبدئية لأن المواصفة حددت «تعطيلاً مؤقتاً» دون مدة.
+
 ## 2) القدرات الـ16 — الجدول الكامل
 
 ### Ranger II — `ranger_new` (قوس الطاقة الخضراء، ضرر أساسي 12)
@@ -40,7 +45,7 @@
 |---|---|---|---|---|---|---|
 | 1 | قطعة اللهب `flame_slash` | 25 | 6s | 180% قوس أمامي + حرق 3 نبضات × 25% | attack → `melee_impact@3` | `06_flame_slash.png` |
 | 10 | موجة النار `fire_wave` | 30 | 9s | موجة متحركة 160%، سرعة 260، مدى 320، تصيب كل من تعبره مرة | skill → `inferno_burst@4` | `08_flame_fire_wave.png` |
-| 20 | انفجار الجحيم `hell_burst` | 40 | 12s | 220% لكل عدو داخل نصف قطر 140 | skill → `inferno_burst@4` | `07_flame_hell_burst.png` |
+| 20 | انفجار الجحيم `hell_burst` | 40 | 12s | 220% لكل عدو داخل نصف قطر 140 + شلل 700ms للناجين | skill → `inferno_burst@4` | `07_flame_hell_burst.png` |
 | 30 | غضب الجحيم `inferno_rage` | 35 | 20s | 6s: ضرر ×1.25، وتيرة ×1.4، مدى ×1.2 + حلقة انفجار | skill → `inferno_burst@4` | `15_flame_inferno_rage.png` |
 
 ### Shadow — `shadow` (خناجر الظل، ضرر أساسي 14)
@@ -58,7 +63,7 @@
 |---|---|---|---|---|---|---|
 | 1 | طعنة الصاعقة `thunder_thrust` | 25 | 6s | 160% طعنة + سلسلة 60% من الضرر لأقرب جار ≤200 مع رسم برق | attack → `melee_impact@3` | `18_storm_thunder_thrust.png` |
 | 10 | برق متسلسل `chain_lightning` | 30 | 9s | 3 أقرب أعداء ≤180 بـ130% لكل واحد + برق متعرج `bolt` لكل هدف | skill → `storm_burst@4` | `19_storm_chain_lightning.png` |
-| 20 | حقل السكون `static_field` | 40 | 15s | 8s: كل طعنة تطلق شحنة ثانية 40% على الهدف + حلقة صدمة | skill → `storm_burst@4` | `32_storm_static_field.png` |
+| 20 | حقل السكون `static_field` | 40 | 15s | 8s: كل طعنة تطلق شحنة ثانية 40% وتجمّد الهدف 900ms + تجميد فوري للقريبين + حلقة صدمة | skill → `storm_burst@4` | `32_storm_static_field.png` |
 | 30 | غضب العاصفة `tempest_rage` | 35 | 20s | 6s: ضرر ×1.2، وتيرة ×1.3، مدى الرمح ×1.25 (125→156) + حلقة | skill → `storm_burst@4` | `33_storm_tempest_rage.png` |
 
 ## 3) الإثبات البصري داخل اللعبة
@@ -85,7 +90,7 @@
 | الفتح عند المستوى الصحيح | `test/game_world_test.dart` → «locked ability is rejected…» + «ability levels gate the flame/shadow/storm kit the same way» |
 | القدرة المغلقة مرفوضة | نفس الاختبارات أعلاه (`useAbility` == null قبل الفتح) |
 | تأثير قتالي حقيقي | مجموعات Flame/Shadow/Storm في `game_world_test.dart` + «multi_shot fires five arrows» + «arrow_rain ticks AoE damage» + لقطات القسم 3 |
-| احتساب الضرر والتأثيرات بدقة | اختبارات النسب: 5×60%، 220% اختراق، 8×35%، 180%+حرق 3×25%، 160% موجة، 220% انفجار، 3×80%، 300% تنفيذ، 160%+60% سلسلة، 3×130% برق، شحنة 40%، buffs ×1.2/1.3/1.25 |
+| احتساب الضرر والتأثيرات بدقة | اختبارات النسب: 5×60%، 220% اختراق، 8×35%، 180%+حرق 3×25%، 160% موجة، 220% انفجار + شلل 700ms، 3×80%، 300% تنفيذ، 160%+60% سلسلة، 3×130% برق، شحنة 40% + تجميد 900ms، buffs ×1.2/1.3/1.25 |
 | الطاقة والـCooldown | `game_world_test.dart` → «ability costs energy and normal attacks refill some» + مجموعة «ability energy and cooldown work for every hero» (4 أبطال × قدرة المستوى 1) |
 | عدم التداخل مع كومبو الخمس ضربات | `game_world_test.dart` → مجموعة «special abilities stay independent of the five-hit combo» (Ranger/Flame/Shadow/Storm: القدرة لا تقدّم ولا تُصفّر السلسلة، والهجوم العادي مرفوض أثناء قدرة معلّقة، والسلسلة تصل 155% كما هي) |
 

@@ -45,7 +45,7 @@ class ComboTracker {
     return registered;
   }
 
-  /// Force-restarts the chain (used on death, dodge-cancel or long pauses).
+  /// Force-restarts the chain (used on death, damage or long pauses).
   void reset() {
     hitIndex = 1;
     lastHitAtMs = null;

@@ -114,17 +114,24 @@ class PlayerState {
   bool dead = false;
   int respawnAtMs = 0;
 
-  /// Invulnerability window (dodge) end time.
+  /// Invulnerability window (Shadow's veil / respawn) end time.
   int invulnerableUntilMs = 0;
-
-  /// Temporary movement burst from dodging.
-  int dodgeBurstUntilMs = 0;
 
   /// Movement boost from Shadow's veil.
   int speedBoostUntilMs = 0;
 
-  /// Stat buff from `gale_surge`.
+  /// Stat buff from `gale_surge` / `inferno_rage` / `static_field` / etc.
   int buffUntilMs = 0;
+
+  /// Extra charge window from Storm's `static_field` (separate from the
+  /// generic stat buff so `tempest_rage` does not freeze on its own).
+  int staticFieldUntilMs = 0;
+
+  /// Freeze (Storm) and stun (Flame) disable a target temporarily.
+  int frozenUntilMs = 0;
+  int stunnedUntilMs = 0;
+
+  bool disabledAt(int now) => now < frozenUntilMs || now < stunnedUntilMs;
 }
 
 /// Simulation state of one monster.
@@ -185,6 +192,13 @@ class EnemyState {
   /// Visual hit flash timer (ms timestamp).
   int hitFlashUntilMs = 0;
   Offset facing = const Offset(0, 1);
+
+  /// Temporary disable effects. The spec requires freeze and stun to stop a
+  /// target for a short time; neither grants damage resistance.
+  int frozenUntilMs = 0;
+  int stunnedUntilMs = 0;
+
+  bool disabledAt(int now) => now < frozenUntilMs || now < stunnedUntilMs;
 
   // ---- Animation / behaviour state -----------------------------------------
 
@@ -316,7 +330,7 @@ class GameFx {
 /// The full battle simulation for one playable hero.
 ///
 /// The class is deliberately widget-free: input arrives as simple calls
-/// (`setMoveInput`, `requestAttack`, `useAbility`, `requestDodge`), and the
+/// (`setMoveInput`, `requestAttack`, `useAbility`) and the
 /// sprite layer forwards weapon events at the exact frames the animations
 /// define (`projectile_release`, `volley_release`). Damage is only ever dealt
 /// through those weapon-event driven spawns, so the bow motion and the damage
@@ -444,7 +458,6 @@ class GameWorld {
   String? pendingAbilityId;
 
   int attackReadyAtMs = 0;
-  int dodgeReadyAtMs = 0;
   final Map<String, int> abilityReadyAtMs = {};
 
   // Progression.
@@ -468,9 +481,29 @@ class GameWorld {
   double get projectileSpeed => 430;
   double get projectileRange => 330 * kit.rangeMultiplier;
   int get respawnDelayMs => 2500;
-  int get dodgeCooldownMs => 3000;
+
+  /// Initial balance placeholders: the spec only says freeze/stun disable the
+  /// target temporarily, without giving durations.
+  static const int freezeDurationMs = 900;
+  static const int stunDurationMs = 700;
+
   int get waveIntervalMs => 8000;
   int get maxAliveEnemies => maxAliveEnemiesCap;
+
+  /// Applies a temporary disable to one monster. Freeze and stun behave the
+  /// same for movement and attacks; they only differ in duration/source.
+  /// An in-progress windup is cancelled so it cannot land after the effect.
+  void _disableEnemy(EnemyState enemy, {required bool freeze}) {
+    if (enemy.hp <= 0) return;
+    final until = nowMs + (freeze ? freezeDurationMs : stunDurationMs);
+    if (freeze) {
+      enemy.frozenUntilMs = math.max(enemy.frozenUntilMs, until);
+    } else {
+      enemy.stunnedUntilMs = math.max(enemy.stunnedUntilMs, until);
+    }
+    enemy.windupUntilMs = 0;
+    enemy.moving = false;
+  }
 
   // ---- Input ----------------------------------------------------------------
 
@@ -480,7 +513,9 @@ class GameWorld {
   }
 
   /// Whether a normal attack can start right now.
-  bool canAttack() => !player.dead && nowMs >= attackReadyAtMs;
+  bool canAttack() => !player.dead &&
+      !player.disabledAt(nowMs) &&
+      nowMs >= attackReadyAtMs;
 
   /// Starts a normal attack: registers the combo hit and captures its damage
   /// multiplier. The arrow itself spawns when the animation reaches its
@@ -504,7 +539,7 @@ class GameWorld {
 
   /// Spawns the arrow at the `projectile_release` animation frame.
   void releaseArrow() {
-    if (player.dead) return;
+    if (player.dead || player.disabledAt(nowMs)) return;
     spawnArrow(
       origin: player.position,
       direction: player.facing,
@@ -519,7 +554,7 @@ class GameWorld {
   /// Attempts one of the hero's abilities. Returns the ability id on success,
   /// `null` when the ability is locked, on cooldown, or energy is short.
   String? useAbility(String abilityId) {
-    if (player.dead) return null;
+    if (player.dead || player.disabledAt(nowMs)) return null;
     if (pendingAbilityId != null) return null;
     final def = kit.abilityById(abilityId);
     if (def == null) return null;
@@ -537,7 +572,7 @@ class GameWorld {
   /// for Ranger, `inferno_burst` for Flame); false = the primary clip's
   /// release/impact event (`projectile_release` / `melee_impact`).
   void releaseWeaponPayload({required bool volley}) {
-    if (player.dead) return;
+    if (player.dead || player.disabledAt(nowMs)) return;
     final ability = pendingAbilityId;
     if (ability == null) return;
     if (volley) {
@@ -606,7 +641,9 @@ class GameWorld {
       return;
     }
     final primaryDamage = kit.baseDamage * 1.6 * currentDamageMult();
+    final fieldActive = nowMs < player.staticFieldUntilMs;
     _damageEnemy(primary, primaryDamage);
+    if (fieldActive) _disableEnemy(primary, freeze: true);
     fx.add(
       GameFx(
         kind: 'slash',
@@ -630,6 +667,7 @@ class GameWorld {
     }
     if (chain != null && chainDist <= 200) {
       _damageEnemy(chain, primaryDamage * 0.6);
+      if (fieldActive) _disableEnemy(chain, freeze: true);
       fx.add(
         GameFx(
           kind: 'bolt',
@@ -706,6 +744,8 @@ class GameWorld {
               enemy,
               kit.baseDamage * 2.2 * currentDamageMult(),
             );
+            // The blast also stuns survivors for a short, fixed window.
+            _disableEnemy(enemy, freeze: false);
           }
         }
         fx.add(
@@ -781,8 +821,18 @@ class GameWorld {
         }
         break;
       case 'static_field':
-        // 8 s: every thrust releases a second 40% charge on its target.
+        // 8 s: every thrust releases a second 40% charge on its target and
+        // freezes the spear's victims. The field also freezes nearby monsters
+        // on activation so the disable has an immediate effect.
         player.buffUntilMs = nowMs + 8000;
+        player.staticFieldUntilMs = nowMs + 8000;
+        final fieldRadius = currentMeleeRange() + 30;
+        for (final enemy in enemies) {
+          if (enemy.hp <= 0) continue;
+          if ((enemy.position - player.position).distance <= fieldRadius) {
+            _disableEnemy(enemy, freeze: true);
+          }
+        }
         fx.add(
           GameFx(
             kind: 'burst',
@@ -908,7 +958,7 @@ class GameWorld {
   /// `melee_impact` animation frame. Called by the sprite layer for melee
   /// heroes; [multiplierOverride] is used by the flame_slash ability.
   void releaseMeleeSwing() {
-    if (player.dead) return;
+    if (player.dead || player.disabledAt(nowMs)) return;
     _meleeSwing(multiplier: pendingHitMultiplier);
   }
 
@@ -946,8 +996,8 @@ class GameWorld {
           tickDamage: kit.baseDamage * 0.15 * currentDamageMult(),
         );
       }
-      // Static field: a buffed Storm releases a second 40% charge on the
-      // thrust's target (first enemy hit).
+      // Static field: a buffed Storm releases a second 40% charge and freezes
+      // every enemy caught in the charged swing.
       if (kit.heroId == 'storm' &&
           enemy.hp > 0 &&
           player.buffUntilMs > nowMs) {
@@ -955,6 +1005,9 @@ class GameWorld {
           enemy,
           kit.baseDamage * 0.4 * currentDamageMult(),
         );
+        if (nowMs < player.staticFieldUntilMs) {
+          _disableEnemy(enemy, freeze: true);
+        }
       }
     }
     // Crystals are attacked directly, in any order, from the same swing.
@@ -986,17 +1039,6 @@ class GameWorld {
     if (hits > 0) {
       player.energy = _clampD(player.energy + 3, 0, kit.baseMaxEnergy);
     }
-  }
-
-  /// Starts the dodge: i-frames + a short movement burst. Resets the combo,
-  /// because a dodge interrupts the attack chain.
-  bool requestDodge() {
-    if (player.dead || nowMs < dodgeReadyAtMs) return false;
-    dodgeReadyAtMs = nowMs + dodgeCooldownMs;
-    player.invulnerableUntilMs = nowMs + 500;
-    player.dodgeBurstUntilMs = nowMs + 320;
-    combo.reset();
-    return true;
   }
 
   // ---- Simulation -----------------------------------------------------------
@@ -1053,7 +1095,6 @@ class GameWorld {
   double currentMoveSpeed() {
     var speed = kit.moveSpeed * bonuses.moveMultiplier;
     if (player.buffUntilMs > nowMs) speed *= kit.buffMoveMult;
-    if (player.dodgeBurstUntilMs > nowMs) speed *= 2.2;
     if (player.speedBoostUntilMs > nowMs) speed *= 1.35;
     return speed;
   }
@@ -1063,6 +1104,8 @@ class GameWorld {
       if (nowMs >= player.respawnAtMs) _respawn();
       return;
     }
+    // Freeze/stun stop the hero too if a future effect ever targets the player.
+    if (player.disabledAt(nowMs)) return;
     final speed = currentMoveSpeed();
     // Shallow water slows the hero; bridges are dry.
     final step = moveInput *
@@ -1077,6 +1120,8 @@ class GameWorld {
     for (final enemy in enemies) {
       if (enemy.hp <= 0) continue;
       enemy.moving = false;
+      // A frozen/stunned monster neither moves nor finishes an attack.
+      if (enemy.disabledAt(nowMs)) continue;
 
       // Target the nearest of the player's monsters; fall back to the hero.
       EnemyState? armyTarget;
@@ -1187,6 +1232,7 @@ class GameWorld {
     for (final ally in army) {
       if (ally.hp <= 0) continue;
       ally.moving = false;
+      if (ally.disabledAt(nowMs)) continue;
 
       EnemyState? target;
       var best = double.infinity;

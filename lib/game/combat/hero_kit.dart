@@ -308,7 +308,7 @@ const HeroKit flameKit = HeroKit(
     AbilityDef(
       id: 'hell_burst',
       nameAr: 'انفجار الجحيم',
-      descAr: 'انفجار ناري حول الفارس بضرر 220% لكل عدو داخل نطاقه.',
+      descAr: 'انفجار ناري حول الفارس بضرر 220% لكل عدو داخل نطاقه، ويشُلّ الناجين 700ms.',
       unlockLevel: 20,
       cooldownMs: 12000,
       energyCost: 40,
@@ -426,7 +426,7 @@ const HeroKit stormKit = HeroKit(
     AbilityDef(
       id: 'static_field',
       nameAr: 'حقل السكون',
-      descAr: '8 ثوانٍ: كل طعنة تحرر شحنة ثانية بنسبة 40% على الهدف نفسه.',
+      descAr: '8 ثوانٍ: كل طعنة تحرر شحنة ثانية بنسبة 40% وتجمّد الهدف 900ms.',
       unlockLevel: 20,
       cooldownMs: 15000,
       energyCost: 40,

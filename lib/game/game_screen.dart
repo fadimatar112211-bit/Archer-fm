@@ -473,15 +473,6 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  void _onDodgeTap() {
-    if (_busyClip != null || manifest == null) return;
-    if (world.requestDodge()) {
-      _playClip('dodge', pace: 1.0);
-    } else {
-      _showToast('المراوغة قيد الانتظار');
-    }
-  }
-
   // ---- Sprite control ---------------------------------------------------------
 
   void _updateSprite(int deltaMs) {
@@ -543,7 +534,7 @@ class _GameScreenState extends State<GameScreen>
     final player = world.player;
     if (player.dead) return 'death';
     if (world.nowMs < _hitReactUntilMs) return 'hit';
-    if (player.dodgeBurstUntilMs > world.nowMs) return 'dodge';
+    if (player.disabledAt(world.nowMs)) return 'hit';
     if (_moveRaw.distance > 0.15) {
       return _moveRaw.distance > 0.72 ? 'run' : 'walk';
     }
@@ -1421,37 +1412,17 @@ class _GameScreenState extends State<GameScreen>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final ability in kit.abilities)
-                  _AbilityButton(
-                    def: ability,
-                    level: world.level,
-                    readyAtMs:
-                        world.abilityReadyAtMs[ability.id] ?? 0,
-                    nowMs: world.nowMs,
-                    energy: world.player.energy,
-                    accent: accentColor,
-                    scale: _settings.controlScale,
-                    onTap: () => _onAbilityTap(ability.id),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 10),
-            _roundButton(
-              icon: Icons.airline_stops,
-              label: 'مراوغة',
-              size: 56 * _settings.controlScale,
-              color: const Color(0xFF6FE8FF),
-              onTap: _onDodgeTap,
-            ),
-          ],
-        ),
+        for (final ability in kit.abilities)
+          _AbilityButton(
+            def: ability,
+            level: world.level,
+            readyAtMs: world.abilityReadyAtMs[ability.id] ?? 0,
+            nowMs: world.nowMs,
+            energy: world.player.energy,
+            accent: accentColor,
+            scale: _settings.controlScale,
+            onTap: () => _onAbilityTap(ability.id),
+          ),
         const SizedBox(height: 10),
         _attackButton(),
       ],
@@ -1511,37 +1482,6 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Widget _roundButton({
-    required IconData icon,
-    required String label,
-    required double size,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      key: const ValueKey('btn_dodge'),
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.5),
-          border: Border.all(color: color, width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: size * 0.4),
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: size * 0.16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _AbilityButton extends StatelessWidget {

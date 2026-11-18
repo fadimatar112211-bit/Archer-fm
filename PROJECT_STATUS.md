@@ -172,7 +172,7 @@ Still to decide or test:
 - LAN host migration/host disconnect handling and secure account progression synchronization.
 - Final rendering direction: 2.5D sprite sheets rendered from a consistent 3D Chibi source model; runtime engine remains undecided.
 - Networking technology, backend, hosting, persistence schema, and anti-cheat architecture.
-- Combat/spec gaps found during the step-3 audit (2026-11-18): the text requires freeze and stun to temporarily disable a target, but neither effect exists in `GameWorld`; the text explicitly says there is no dodge system, yet `requestDodge()` and a dodge button exist. These two are recorded as open design decisions, not claimed as complete (see §31). The third audit item — three weapons per hero unlocked by progression — was resolved in step 12 at the user's explicit clarification: they are chosen **before** the match, one starting plus two at hero levels 10 and 20 (see §32).
+- Combat/spec gaps from the step-3 audit (2026-11-18) are now **resolved**: freeze and stun exist as real disables in `GameWorld` (movement/attacks/windups stop), and the dodge API/button/i-frames/combo-cancel were removed while the GLB dodge animation asset was left untouched. Durations/sources are documented balance placeholders (see §31). The third audit item — three weapons per hero unlocked by progression — was resolved in step 12 at the user's explicit clarification: they are chosen **before** the match, one starting plus two at hero levels 10 and 20 (see §32).
 
 ## 6. Implementation status
 
@@ -228,7 +228,7 @@ Still to decide or test:
 |---|---|---|---|---|---|
 | الأبطال | لم يُفحص بعد | — | — | — | بانتظار التدقيق |
 | الوحوش | كتالوج الأنواع الأربعة وإحصاءاتها النسبية من المشروع القديم (لم تُنزّل الأصول هنا) | الأدوار، التدرّج النسبي، فكرة الجيش الابتدائي والشراء | أسماء/أرقام لتناسب مقياس Archer FM | رسم وحركة إجرائية + ذكاء اصطناعي كامل | منفّذ ومُختبر داخل المعركة الحالية |
-| القتال والأسلحة | `lib/game/combat/combo.dart`, `hero_kit.dart`, `lib/game/world/game_world.dart`, `lib/game/game_screen.dart`, `docs/game/ranger_combat.md`, `docs/game/flame_combat.md`, `docs/game/shadow_combat.md`, `docs/game/storm_combat.md`, `docs/game/special_abilities.md` | هجوم يدوي، كومبو 100/110/120/135/155% (1800ms)، 4 أسلحة بضرر/مدى/سرعة/عدد أهداف مختلفة وتهاجم أثناء الحركة، طاقة/تبريد لكل قدرة، 16 قدرة بأقفال 1/10/20/30، حرق وسم (DoT)، مزامنة الضرر مع أحداث weapon-release، بدون هجوم تلقائي أو مقاومات حالة | لا يوجد نظام قتال/قدرات قابل للنقل في المشروع القديم | منفّذ ومُختبر في Archer FM؛ فُحص مقابل المواصفات فظهرت فجوتان مفتوحتان: «تجميد/شلل» غير منفّذين، ووجود زر/آلية مراوغة رغم نفيها في النص. «ثلاثة أسلحة لكل بطل يفتحها التقدم» لم تُبنَ كسلسلة أسلحة قابلة للتبديل أثناء المباراة بعد (انظر §31). أُضيفت ثلاثة أسلحة لكل بطل تُختار قبل المباراة في الخطوة 12 (§32)، وبقيت فجوتا التجميد/الشلل والمراوغة مفتوحتين. |
+| القتال والأسلحة | `lib/game/combat/combo.dart`, `hero_kit.dart`, `lib/game/world/game_world.dart`, `lib/game/game_screen.dart`, `docs/game/ranger_combat.md`, `docs/game/flame_combat.md`, `docs/game/shadow_combat.md`, `docs/game/storm_combat.md`, `docs/game/special_abilities.md` | هجوم يدوي، كومبو 100/110/120/135/155% (1800ms)، 4 أسلحة بضرر/مدى/سرعة/عدد أهداف مختلفة وتهاجم أثناء الحركة، طاقة/تبريد لكل قدرة، 16 قدرة بأقفال 1/10/20/30، حرق وسم (DoT)، مزامنة الضرر مع أحداث weapon-release، بدون هجوم تلقائي أو مقاومات حالة | لا يوجد نظام قتال/قدرات قابل للنقل في المشروع القديم | منفّذ ومُختبر في Archer FM؛ فُحص مقابل المواصفات. ثلاثة أسلحة لكل بطل تُختار قبل المباراة (الخطوة 12، §32). فجوتا التجميد/الشلل والمراوغة حُسمتا بعد ذلك: `hell_burst` يشل 700ms، و`static_field` يجمّد 900ms، وكلاهما يوقف الحركة والهجوم ويلغي الاستعداد؛ ولا يوجد زر أو API للمراوغة (§31). |
 | الخريطة | `lib/world_theme.dart`, `lib/player_movement.dart`, `ROADMAP.md`, `PROJECT_FILE_INVENTORY.md` | ألوان 6 عوالم في `world_theme.dart` كمرجع بصري فقط | لا شيء قابل للنقل | حجم الخريطة والبيومات والأنهار/الجسور والماء والعوائق والضباب والكاميرا والخريطة المصغرة | تم الفحص؛ لا نظام خرائط/مناجم/قلاع في المشروع القديم، فبُنيت الخريطة من الصفر (تفاصيل §26) |
 | القلاع والكريستالات | `assets/wall.svg`, `lib/combat_painters.dart` | `wall.svg` (جدار حجري 64×64) ورسم جدران حجرية خلفية في المشروع القديم، وكريستال سهم بعيد (ليس كريستال قلعة) | لا شيء قابل للنقل كنظام | القلاع السبعة، HP، التدمير، السقوط، الإقليم، إعادة البناء المتصاعدة | تم الفحص؛ لا نظام قلاع/كريستالات في المشروع القديم، فبُني جديداً برسم إجرائي (تفاصيل §28) |
 | المناجم والموارد | `lib/coin_pickup_resolver.dart`, `test/coin_pickup_resolver_test.dart`, `assets/coin.svg` | فحص تقارب بسيط للالتقاط بنصف قطر 34 | لا شيء قابل للنقل كبنية | المناجم والسيطرة والإنتاج والسعة والاقتصاد | تم الفحص؛ أُعيد استخدام قاعدة الالتقاط (34) داخل نظام المناجم دون نسخ الملف، والباقي بُني جديداً (§27) |
@@ -825,23 +825,27 @@ Still to decide or test:
   إثبات: `test/combo_test.dart`، اختبارات `*_kit_test.dart` الأربعة،
   `test/game_world_test.dart`، `test/special_abilities_capture_test.dart`،
   ولقطات `ArenaPainter` بضرر محسوب من فرق HP فعلي.
-- **الفجوات المفتوحة (لا يُدعى إنجازها)**:
-  1. «التجميد والشلل يعطّلان الهدف مؤقتاً» — لا يوجد أي تأثير freeze/stun في
-     `GameWorld`؛ الحالة الحالية تضم حرقاً/سماً فقط. لم نخترع أي قدرة أو رقم
-     لأن النص لا يحدد أي مهارة تسبّبهما.
-  2. «لا توجد آلية مراوغة» — يوجد فعلياً `requestDodge()` بنافذة مناعة 320ms
-     وتبريد 3000ms وزر «مراوغة» في HUD، ويُستخدم في اختبارات كسر الكومبو.
-     إزالته قرار تصميمي يمس الأنيميشن والاختبارات، فسُجّل مفتوحاً في §5.
+- **الفجوات بعد الحسم**:
+  1. ~~«التجميد والشلل يعطّلان الهدف مؤقتاً»~~ **حُسمت**: `PlayerState` و
+     `EnemyState` يحملان `frozenUntilMs` / `stunnedUntilMs` و`disabledAt(now)`.
+     `hell_burst` يشل الناجين 700ms، و`static_field` يجمّد القريبين عند
+     التفعيل ثم أهداف كل طعنة مشحونة 900ms. أثناء التعطيل تتوقف الحركة
+     والهجوم، ويُلغى `windup` الجاري. لا مقاومة حالات ولا ضرر إضافي؛ المدد
+     موازنة مبدئية لأن المواصفة لم تعطِ أرقاماً.
+  2. ~~«لا توجد آلية مراوغة»~~ **حُسمت**: أُزيل `requestDodge()` وكل حقوله
+     ومناعته وتسارعه وتبريده، وأُزيل زر «مراوغة» وحالتها من آلة الحركات.
+     أصل `dodge` في الـmanifest/GLB بقي كما هو دون استخدام قتالي. الكومبو
+     يُصفّر الآن عند الضرر أو انتهاء النافذة فقط.
   3. ~~«لكل بطل ثلاثة أسلحة، واحد متاح واثنان يُفتحان بالتقدم»~~ **حُسمت في
      الخطوة 12**: أوضح المستخدم أن الاختيار يكون قبل الدخول للعبة، فبُنيت
      ثلاثة أسلحة لكل بطل (أساسي + بديل سريع عند المستوى 10 + بديل ثقيل عند
-     المستوى 20) وتُختار في شاشة اختيار الجيش قبل المباراة. الأسماء والأرقام
+     المستوى 20) وتُختار في شاشة اخтиار الجيش قبل المباراة. الأسماء والأرقام
      موازنة مبدئية موثّقة في §32 لأن النص لم يحددها.
-- **النتيجة**: الجوهر المبني سليم ومُختبر (الحزمة الكاملة 246/246 ناجحة،
-  `flutter analyze --no-pub` = No issues found)، لكن يُصنَّف «تم التدقيق» لا
-  «مكتمل نهائياً» إلى أن تُحسم فجوتا التجميد/الشلل والمراوغة في §5؛ أما فجوة
-  الأسلحة الثلاثة فقد حُسمت في الخطوة 12 (§32). بعد الخطوة 12 أصبحت الحزمة
-  الكاملة 269/269 ناجحة. لا بناء APK ولا اختبار لمس على جهاز في هذه المرحلة.
+- **النتيجة**: الجوهر المبني سليم ومُختبر. بعد حسم فجوات القتال وُسّعت الحزمة
+  إلى **270/270 ناجحة** و`flutter analyze --no-pub` = **No issues found!**.
+  فجوات §31 الثلاث (الأسلحة، التجميد/الشلل، المراوغة) أصبحت محسومة؛ بقية
+  عناصر §5 (الخلفية/النسخ المكتمل، المقاومات، أرقام الموازنة، الشبكة …) ما زالت
+  مفتوحة ولا يُدعى إنجازها. لا بناء APK ولا اختبار لمس على جهاز في هذه المرحلة.
 
 ## 32. واجهات اللعبة وتجربة المستخدم (الخطوة 12، 2026-11-18)
 
@@ -892,6 +896,32 @@ Still to decide or test:
   لقطة القائمة تستخدم بديل الأيقونة لأن اختبارات Flutter لا تحمّل GLB؛
   مسار التحميل الحقيقي مُختبر في `hero3d_screen_test.dart`.
 - **الحدود**: لا بناء APK ولا اختبار لمس على جهاز حقيقي في هذه المرحلة؛
-  أرقام الأسلحة قابلة للتعديل بعد موازنة اللعب؛ فجوتا freeze/stun والمراوغة
-  في §5 ما زالتا مفتوحتين. لم تُلَمس أصول الأبطال؛ حجم
+  أرقام الأسلحة ومدد freeze/stun قابلة للتعديل بعد موازنة اللعب. فجوتا
+  freeze/stun والمراوغة حُسمتا في §31. لم تُلَمس أصول الأبطال؛ حجم
   `assets/heroes/storm/storm.glb` ما زال 21,599,708 بايت.
+
+## 33. حسم فجوات القتال (بعد الخطوة 12، 2026-11-18)
+
+- **طلب المستخدم**: «نفّذ الفجوات وصلّحها كلها» في إشارة إلى فجوتي §31
+  المتبقيتين: تجميد/شلل، ووجود آلية مراوغة رغم نفيها في المواصفة.
+- **التجميد والشلل**: `PlayerState` و`EnemyState` أصبحا يحملان
+  `frozenUntilMs` / `stunnedUntilMs` و`disabledAt(now)`؛ تغطّي الحالتان
+  اللاعب والأعداء والجيش. أثناء التعطيل تتوقف الحركة والهجوم، ويُلغى أي
+  `windup` جارٍ. `hell_burst` (Flame، مستوى 20) يشلّ الناجين داخل نصف قطر
+  140 لمدة 700ms؛ `static_field` (Storm، مستوى 20) يجمّد القريبين عند
+  التفعيل ثم أهداف كل طعنة مشحونة 900ms داخل نافذته البالغة 8 ثوانٍ. نافذة
+  `staticFieldUntilMs` منفصلة عن الـbuff العام حتى لا يجمّد `tempest_rage`
+  وحده. المدد أرقام موازنة مبدئية لأن النص حدد «تعطيلاً مؤقتاً» دون مدة.
+- **المراوغة**: أُزيلت بالكامل من `GameWorld` (`requestDodge`، الحقول،
+  المناعة، التسارع، التبريد، وتصفير الكومبو) ومن HUD (`btn_dodge`) ومن آلة
+  الحركات. مقطع `dodge` في الـmanifest وملف GLB بقي كما هو كأصل أنيميشن فقط،
+  دون أي تأثير لعبي. اختبار الشاشة يؤكد غياب الزر والنص.
+- **الاختبارات**: استُبدلت اختبارات المراوغة بثلاثة اختبارات وهي: إلغاء
+  استعداد عدو بـ`hell_burst`، توقف حركة عدو حتى انتهاء الشلل، وتجميد
+  `static_field` عند التفعيل وعلى الطعنة المشحونة. أُضيف اختبار غياب زر
+  المراوغة في `game_screen_test.dart`، واختبار كليب المهارة في
+  `hero3d_screen_test.dart` بدل كليب المراوغة. الحزمة الكاملة
+  **270/270 ناجحة**، و`flutter analyze --no-pub` = **No issues found!**.
+- **الوثائق**: `hero_kit.dart`، `docs/game/ranger_combat.md`،
+  `flame_combat.md`، `storm_combat.md`، `special_abilities.md`، و§5/§31
+  تحدّثت كلها لتعكس الحالة الجديدة. لا بناء APK ولا لمس على جهاز حقيقي.
