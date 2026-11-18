@@ -44,7 +44,43 @@ def ascii_preview(image, bbox, columns=40):
             for y in range(crop.height)]
 
 
-def frame_errors(path, image, state, resolution):
+def connected_component_metrics(alpha, threshold=32):
+    """Measure whether a rendered hero remains one coherent silhouette.
+
+    A few tiny detached glow pixels are tolerated, but the main character must
+    own at least 90% of visible pixels. Eight-neighbour connectivity keeps
+    diagonal anti-aliased joins from being misclassified as broken parts.
+    """
+    width, height = alpha.size
+    pixels = alpha.tobytes()
+    visited = bytearray(width * height)
+    occupied = sum(value > threshold for value in pixels)
+    largest = 0
+    components = 0
+    for start, value in enumerate(pixels):
+        if value <= threshold or visited[start]:
+            continue
+        components += 1
+        stack = [start]
+        visited[start] = 1
+        size = 0
+        while stack:
+            current = stack.pop()
+            size += 1
+            x, y = current % width, current // width
+            for ny in range(max(0, y - 1), min(height, y + 2)):
+                row = ny * width
+                for nx in range(max(0, x - 1), min(width, x + 2)):
+                    neighbour = row + nx
+                    if (neighbour != current and not visited[neighbour]
+                            and pixels[neighbour] > threshold):
+                        visited[neighbour] = 1
+                        stack.append(neighbour)
+        largest = max(largest, size)
+    return components, largest / max(1, occupied), largest
+
+
+def frame_errors(path, image, state, resolution, hero, pivot_y):
     """Return every violation for one rendered frame plus its metrics."""
     errors = []
     if image.size != (resolution, resolution):
@@ -64,6 +100,25 @@ def frame_errors(path, image, state, resolution):
         "occupied": occupied,
         "transparent_ratio": transparent_ratio,
     }
+    if hero == "ranger":
+        components, largest_ratio, largest_pixels = connected_component_metrics(alpha)
+        metrics.update({
+            "components": components,
+            "largest_component_ratio": largest_ratio,
+            "largest_component_pixels": largest_pixels,
+        })
+        if largest_ratio < 0.90:
+            errors.append(
+                f"{path}: fragmented silhouette; largest connected component is "
+                f"only {largest_ratio:.1%} of visible pixels")
+        if components > 4:
+            errors.append(
+                f"{path}: too many disconnected visible components ({components})")
+        pivot_bottom = pivot_y * resolution
+        if abs(bbox[3] - pivot_bottom) > resolution * 0.12:
+            errors.append(
+                f"{path}: visible ground edge drifted from pivot "
+                f"({bbox[3]:.1f}px vs {pivot_bottom:.1f}px)")
     if occupied < 350:
         errors.append(f"{path}: too few visible pixels ({occupied})")
     corners = (
@@ -132,7 +187,7 @@ def pixel_change_ratio(first, second, threshold=16):
     return changed / max(1, total)
 
 
-def sequence_errors(paths, state, animation_name):
+def sequence_errors(paths, state, animation_name, hero):
     """Reject static or nearly static clips even when their PNGs are non-empty."""
     errors = []
     images = []
@@ -147,14 +202,31 @@ def sequence_errors(paths, state, animation_name):
     if unique_count < minimum_unique:
         errors.append(
             f"{animation_name}: only {unique_count} unique frames; expected at least {minimum_unique}")
-    motion = max(
-        (pixel_change_ratio(first, second) for first, second in zip(images, images[1:])),
-        default=0.0,
-    )
+    changes = [
+        pixel_change_ratio(first, second)
+        for first, second in zip(images, images[1:])
+    ]
+    motion = max(changes, default=0.0)
     minimum_motion = 0.003 if state == "idle" else 0.01
     if motion < minimum_motion:
         errors.append(
             f"{animation_name}: animation motion is too small ({motion:.2%} changed pixels)")
+    if hero == "ranger" and changes:
+        changed_transitions = sum(value >= 0.01 for value in changes)
+        required_transitions = (
+            (len(changes) + 1) // 2 if state == "idle"
+            else (len(changes) * 3 + 3) // 4
+        )
+        mean_motion = sum(changes) / len(changes)
+        required_mean = 0.02 if state == "idle" else 0.03
+        if changed_transitions < required_transitions:
+            errors.append(
+                f"{animation_name}: only {changed_transitions}/{len(changes)} "
+                f"transitions move; expected at least {required_transitions}")
+        if mean_motion < required_mean:
+            errors.append(
+                f"{animation_name}: average motion is too small "
+                f"({mean_motion:.2%}, expected {required_mean:.2%})")
     return errors
 
 
@@ -181,6 +253,23 @@ def configured_event_frame(hero, state, event_name):
                for index in range(count)]
     source_frame = int(event["frame"])
     return min(range(len(sampled)), key=lambda index: abs(sampled[index] - source_frame))
+
+
+def configured_pivot(hero):
+    """Return the normalized pivot authored in render_config.json."""
+    config_path = Path(__file__).resolve().parents[2] / "assets/heroes/ranger/source/render_config.json"
+    if not config_path.is_file():
+        return None
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    config = dict(raw.get("defaults", {}))
+    config.update(raw.get("heroes", {}).get(hero, {}))
+    pivot = config.get("pivot")
+    if not isinstance(pivot, dict):
+        return None
+    try:
+        return float(pivot["x"]), float(pivot["y"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def main() -> int:
@@ -212,6 +301,21 @@ def main() -> int:
                     continue
                 expected_by[(state, direction)] = set(animation.get("frames", []))
                 animations_by[(state, direction)] = animation
+    pivot_y = 0.86
+    if manifest is not None:
+        pivot = manifest.get("pivot", {})
+        if isinstance(pivot, dict) and isinstance(pivot.get("y"), (int, float)):
+            pivot_y = float(pivot["y"])
+        expected_pivot = configured_pivot(hero)
+        if expected_pivot is None:
+            errors.append("render_config.json does not define the Ranger pivot")
+        else:
+            actual_pivot = (float(pivot.get("x", -1)), float(pivot.get("y", -1)))
+            if (abs(actual_pivot[0] - expected_pivot[0]) > 0.001
+                    or abs(actual_pivot[1] - expected_pivot[1]) > 0.001):
+                errors.append(
+                    f"manifest pivot {actual_pivot} differs from configured pivot "
+                    f"{expected_pivot}")
     if hero == "ranger" and manifest is not None:
         expected_release = configured_event_frame(hero, "attack", "projectile_release")
         if expected_release is None:
@@ -230,6 +334,37 @@ def main() -> int:
                     errors.append(
                         f"attack_{direction}: projectile_release is at frame "
                         f"{releases[0].get('frame')}, expected configured frame {expected_release}")
+                else:
+                    release_index = releases[0]["frame"]
+                    attack_frames = animation.get("frames", [])
+                    idle_frames = animations_by.get(("idle", direction), {}).get("frames", [])
+                    if not (0 < release_index < len(attack_frames) - 1):
+                        errors.append(
+                            f"attack_{direction}: projectile_release must be between "
+                            "the wind-up and recovery frames")
+                    elif idle_frames:
+                        release_path = args.root / "attack" / direction / f"{attack_frames[release_index]}.png"
+                        previous_path = args.root / "attack" / direction / f"{attack_frames[release_index - 1]}.png"
+                        idle_path = args.root / "idle" / direction / f"{idle_frames[0]}.png"
+                        if all(path.is_file() for path in (release_path, previous_path, idle_path)):
+                            with Image.open(release_path) as source:
+                                release_image = source.convert("RGBA")
+                            with Image.open(previous_path) as source:
+                                previous_image = source.convert("RGBA")
+                            with Image.open(idle_path) as source:
+                                idle_image = source.convert("RGBA")
+                            release_motion = pixel_change_ratio(previous_image, release_image)
+                            release_pose = pixel_change_ratio(idle_image, release_image)
+                            if release_motion < 0.03 or release_pose < 0.05:
+                                errors.append(
+                                    f"attack_{direction}: projectile_release frame is not "
+                                    f"a clearly visible release pose "
+                                    f"(from previous={release_motion:.2%}, "
+                                    f"from idle={release_pose:.2%})")
+                        else:
+                            errors.append(
+                                f"attack_{direction}: missing PNG needed to inspect "
+                                "the projectile_release pose")
 
                 death = animations_by.get(("death", direction), {})
                 death_events = [
@@ -271,13 +406,13 @@ def main() -> int:
                     ]
                     if all(path.is_file() for path in ordered_paths):
                         errors.extend(sequence_errors(
-                            ordered_paths, state, f"{state}_{direction}"))
+                            ordered_paths, state, f"{state}_{direction}", hero))
             for path in frames:
                 checked += 1
                 try:
                     with Image.open(path) as source:
                         image = source.convert("RGBA")
-                    found, metrics = frame_errors(path, image, state, args.resolution)
+                    found, metrics = frame_errors(path, image, state, args.resolution, hero, pivot_y)
                     if hero == "ranger" and state == "idle" and direction == "s" and metrics:
                         # The reference holds a bright energy bow on screen-left.
                         # Require a measurable green silhouette outside the body.
@@ -357,9 +492,11 @@ def main() -> int:
                 continue
             with Image.open(first_path) as source:
                 signatures.append(hashlib.sha1(source.convert("RGBA").tobytes()).digest())
-        if len(signatures) == len(DIRECTIONS) and len(set(signatures)) < 6:
+        required_directions = len(DIRECTIONS) if hero == "ranger" else 6
+        if len(signatures) == len(DIRECTIONS) and len(set(signatures)) < required_directions:
             errors.append(
-                f"{state}: only {len(set(signatures))}/8 distinct direction silhouettes")
+                f"{state}: only {len(set(signatures))}/8 distinct direction silhouettes; "
+                f"expected at least {required_directions}")
 
     if errors:
         for error in errors[:80]:
