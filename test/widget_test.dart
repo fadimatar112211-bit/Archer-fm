@@ -81,18 +81,15 @@ Future<void> _openViewer(WidgetTester tester, int index) async {
 }
 
 void main() {
-  testWidgets('the roster gates playability to the finished combat build', (
+  testWidgets('the roster exposes exactly four playable heroes', (
     tester,
   ) async {
     await _pumpHome(tester);
-    // Every finished hero is playable: Ranger II, Flame, Shadow, Storm.
-    expect(find.textContaining('قيد التطوير'), findsNWidgets(1));
-    expect(
-      find.text('الرامي الجديد — قوس الطاقة الخضراء'),
-      findsOneWidget,
-    );
-    // Exactly one play button is enabled: the playable Ranger II row.
-    // (FilledButton.icon builds a private subclass, so match by predicate.)
+    expect(find.textContaining('قيد التطوير'), findsNothing);
+    expect(find.text('فارس اللهب — سيف اللهب العظيم'), findsOneWidget);
+    expect(find.text('ظل الليل — خنجران توأمان'), findsOneWidget);
+    expect(find.text('حامل العاصفة — رمح الصاعقة'), findsOneWidget);
+    expect(find.text('الرامي — قوس الطاقة الخضراء'), findsOneWidget);
     final playButtons = tester
         .widgetList(
           find.byWidgetPredicate(
@@ -101,20 +98,17 @@ void main() {
                 widget.runtimeType.toString().contains('FilledButton'),
           ),
         )
-        .toList();
-    expect(playButtons.length, 5, reason: 'five roster play buttons');
-    final enabled = playButtons
         .whereType<ButtonStyleButton>()
-        .where((button) => button.onPressed != null)
-        .length;
-    expect(enabled, 4);
+        .toList();
+    expect(playButtons, hasLength(4));
+    expect(playButtons.where((button) => button.onPressed != null), hasLength(4));
   });
 
   testWidgets('playing the finished Ranger opens the battle screen', (
     tester,
   ) async {
     await _pumpHome(tester);
-    await _openViewer(tester, 0);
+    await _openViewer(tester, 3);
     // The viewer still opens from any row.
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
   });
@@ -123,7 +117,7 @@ void main() {
     tester,
   ) async {
     await _pumpHome(tester);
-    await _openViewer(tester, 0);
+    await _openViewer(tester, 3);
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
 
     await tester.ensureVisible(find.text('هجوم'));
@@ -145,7 +139,7 @@ void main() {
     tester,
   ) async {
     await _pumpHome(tester);
-    await _openViewer(tester, 0);
+    await _openViewer(tester, 3);
     expect(find.text('Archer FM · Ranger'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Flame'));
