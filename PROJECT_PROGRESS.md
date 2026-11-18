@@ -166,3 +166,16 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Tests are committed but not yet verified by Actions at the time of this note. Do not call them passing until the workflow run for the latest HEAD completes.
 - This batch intentionally preserves the Archero-style camera, left joystick, tap-to-attack control, four separate Ultimate buttons, and five-hit combo.
 - Next: inspect the new Actions run and fix any test/build failure. Then improve hero face/readability only after inspecting close-up reference captures for all four heroes; current wide arena captures are too small to judge face fidelity.
+
+
+### 2026-11-18 — New whole-game visual direction approved and documented
+
+- User-approved direction: bring the **entire game presentation** (heroes, monsters, attacks, abilities, terrain and camera) toward a polished League of Legends-inspired elevated/isometric 3D look, while retaining Archer FM's simple Archero-like mobile action controls.
+- Added `VISUAL_DIRECTION_PLAN.md` in commit `ee2cca0215f8aa7c77a3b2c6c00d3eea5dddcc6a`.
+- The plan explicitly preserves landscape play, left joystick, manual one-press/one-attack behavior, dodge, five-hit combo, four separate Ultimates at levels 1/10/20/30, current hero/monster roles, match rules, Arabic-first HUD and the existing asset fallback strategy.
+- The plan calls for an evidence-first staged upgrade: baseline capture audit; camera/composition; hero readability; monster presentation migration; combat/VFX; arena/environment; HUD; Android performance and same-commit release validation.
+- Architecture fact checked from current source: the arena is a Flutter custom-painted 960×540 logical view with smoothed camera origin; heroes have a GLB render path, while monster presentation is still driven by the arena painter/procedural animation path. Monster roles are defined in `lib/game/monsters/monster_models.dart`. Therefore, a whole-scene 3D look requires staged monster/environment work; it is not already present.
+- Latest branch HEAD before this plan: `489a01dd9eff25302e3b44412491d457127fea37`.
+- Verified Actions run `44393936891` for code commit `a29e507a554688a892add5cb5ef756e3d43826b0`: **success**. Analyze, all tests, 3D capture upload, Android release APK build, APK verification, artifact upload and GitHub Release all completed successfully.
+- Artifacts from that tested code commit: capture artifact `14469518505`; release APK artifact `14468594555` (~100.27 MB). These artifacts predate the new plan commit and are not builds of the current documentation HEAD.
+- Next implementation task: inspect the latest hero/monster/arena capture artifacts and relevant painter code; write a concrete visual defect audit, then implement the first camera/composition pass with capture and coordinate-regression tests. Do not start mass 3D asset replacement before auditing the current monster renderer and assets.
