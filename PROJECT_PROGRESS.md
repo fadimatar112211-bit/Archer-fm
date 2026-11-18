@@ -217,3 +217,12 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Failure 1: `ArenaCameraTransform.visibleWorldRect` width comparison used exact floating-point equality (actual 960.0000000000001). Change the assertion to a tight tolerance.
 - Failure 2: castle screen-mapping test assumed the camera was instantly centered on a manually repositioned hero. Change it to round-trip known world points through `ArenaCameraTransform.worldToLocal` and `arenaToWorld`, preserving the smoothed camera behavior.
 - Next: run the full Flutter test suite and Android release workflow; only then proceed to the shared isometric projection prototype.
+
+
+### 2026-11-19 — Camera regression gate passed; unified projection scoped
+- Branch checkpoint before this entry: `45d31a21994c237689e0288fc31c106aed5bd9fd`; camera test fixes were already present.
+- Workflow run `44423577850` on commit `8ce14b2c89768fffb16f70b7ddbc929bf44ae21f`: Analyze **success**, all Flutter tests **success**, 3D hero capture upload **success**. Release APK build was still `in_progress` at last check; APK verification/artifact publication were pending. This is not an APK success claim.
+- Earlier run `44423574351` failed on the preceding commit and is superseded by the later run's passing test result.
+- Inspected current renderer: `ArenaCameraTransform` is top-down scale/letterbox/translation; `ArenaPainter` draws world content in 2D; `Hero3DModel` independently applies a 0.9-radian tilt and perspective. This confirms the main visual mismatch is a split camera/projection, not simply hero scale.
+- Added `docs/implementation/UNIFIED_WORLD_CAMERA_PROTOTYPE.md` in commit `481f3468e0e0fff47e1e9f6a1275042919d00d83`. It defines a staged, testable shared ground-projection migration, preserves world simulation coordinates and gameplay rules, and sets visual/performance rollback gates.
+- Next implementation gate: implement and test projection math + inverse input mapping first; then migrate ground, one monster, hero, and combat/objective passes in order. Do not generate all monster GLBs until one actor prototype proves projection, depth sorting, touch mapping and Android performance.
