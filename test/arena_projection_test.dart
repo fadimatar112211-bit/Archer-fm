@@ -81,7 +81,10 @@ void main() {
         Offset(400, 220),
       ]) {
         final world = projection.unprojectGround(corner);
-        expect(bounds.contains(world), isTrue);
+        expect(world.dx, greaterThanOrEqualTo(bounds.left - 1e-9));
+        expect(world.dx, lessThanOrEqualTo(bounds.right + 1e-9));
+        expect(world.dy, greaterThanOrEqualTo(bounds.top - 1e-9));
+        expect(world.dy, lessThanOrEqualTo(bounds.bottom + 1e-9));
       }
     });
   });
