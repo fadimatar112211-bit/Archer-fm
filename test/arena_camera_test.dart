@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Offset, Size;
 
 import 'package:archer_fm/game/arena_camera.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
