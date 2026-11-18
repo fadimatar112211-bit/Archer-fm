@@ -1,225 +1,161 @@
+"""Unit tests for strict hero atlas/manifest validation."""
 import json
-import struct
+import math
+import sys
 import tempfile
 import unittest
-import zlib
-import sys
 from pathlib import Path
+
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from validate_hero_assets import validate
 
 
-def png_header(width: int, height: int) -> bytes:
-    def chunk(kind: bytes, data: bytes) -> bytes:
-        return (struct.pack(">I", len(data)) + kind + data +
-                struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff))
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
+def write_fixture(root: Path, animation_name="idle_sw", frame_ids=None,
+                  events=None, entry_overrides=None):
+    """Write a real transparent atlas and matching source PNGs for a manifest."""
+    frame_ids = list(frame_ids or [f"ranger_{animation_name}_000"])
+    state, direction = animation_name.rsplit("_", 1)
+    frame_w = frame_h = 32
+    padding = 2
+    columns = 2
+    rows = max(1, math.ceil(len(frame_ids) / columns))
+    atlas_w = columns * frame_w + (columns + 1) * padding
+    atlas_h = rows * frame_h + (rows + 1) * padding
+    atlas = Image.new("RGBA", (atlas_w, atlas_h), (0, 0, 0, 0))
+    frames = {}
 
+    for index, frame_id in enumerate(frame_ids):
+        column, row = index % columns, index // columns
+        x = padding + column * (frame_w + padding)
+        y = padding + row * (frame_h + padding)
+        source = Image.new("RGBA", (frame_w, frame_h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(source)
+        draw.rectangle((6, 4, 25, 28), fill=(30 + index, 190, 60, 255))
+        atlas.alpha_composite(source, (x, y))
 
-def make_png(width: int, height: int, color: tuple = (255, 0, 0, 255)) -> bytes:
-    """Create a solid-color PNG for testing."""
-    def chunk(kind: bytes, data: bytes) -> bytes:
-        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    r, g, b, a = color
-    row = bytes([r, g, b, a] * width)
-    raw = b"".join(b"\x00" + row for _ in range(height))
-    idat = zlib.compress(raw)
-    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b"")
+        entry = {
+            "frame": {"x": x, "y": y, "w": frame_w, "h": frame_h},
+            "rotated": False,
+            "trimmed": False,
+            "sourceSize": {"w": frame_w, "h": frame_h},
+        }
+        if entry_overrides and frame_id in entry_overrides:
+            entry.update(entry_overrides[frame_id])
+        frames[frame_id] = entry
+
+        source_path = root / state / direction / f"{frame_id}.png"
+        source_path.parent.mkdir(parents=True, exist_ok=True)
+        source.save(source_path)
+
+    atlas.save(root / "atlas.png")
+    (root / "atlas.json").write_text(json.dumps({
+        "frames": frames,
+        "meta": {
+            "size": {"w": atlas_w, "h": atlas_h},
+            "padding": padding,
+            "frame_size": {"w": frame_w, "h": frame_h},
+        },
+    }), encoding="utf-8")
+
+    manifest = {
+        "schema_version": 1,
+        "hero_id": "ranger",
+        "frame_size": {"width": frame_w, "height": frame_h},
+        "pivot": {"x": 0.5, "y": 0.86},
+        "atlases": [{
+            "animation": animation_name,
+            "image": "atlas.png",
+            "meta": "atlas.json",
+        }],
+        "animations": {
+            animation_name: {
+                "loop": not animation_name.startswith("attack_"),
+                "frame_duration_ms": 75,
+                "frames": frame_ids,
+                "events": list(events or []),
+            }
+        },
+    }
+    manifest_path = root / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    return manifest_path
 
 
 class HeroAssetValidatorTests(unittest.TestCase):
     def test_valid_minimal_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "atlas.png").write_bytes(png_header(64, 64))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_idle_sw_000": {
-                        "frame": {"x": 0, "y": 0, "w": 32, "h": 32},
-                        "rotated": False,
-                        "sourceSize": {"w": 32, "h": 32}
-                    }
-                },
-                "meta": {"size": {"w": 64, "h": 64}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1,
-                "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {
-                    "idle_sw": {
-                        "loop": True,
-                        "frame_duration_ms": 160,
-                        "frames": ["ranger_idle_sw_000"]
-                    }
-                }
-            }), encoding="utf-8")
-            self.assertEqual(validate(root / "manifest.json"), [])
+            manifest = write_fixture(root)
+            self.assertEqual(validate(manifest), [])
 
     def test_rejects_missing_frame_reference(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "atlas.png").write_bytes(png_header(64, 64))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {}, "meta": {"size": {"w": 64, "h": 64}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"idle_sw": {
-                    "loop": True, "frame_duration_ms": 100,
-                    "frames": ["not_in_atlas"]
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
-            self.assertTrue(any("missing atlas frame" in error for error in errors))
+            manifest = write_fixture(
+                root, frame_ids=["not_in_atlas"], entry_overrides={}
+            )
+            atlas_meta = json.loads((root / "atlas.json").read_text())
+            atlas_meta["frames"] = {}
+            (root / "atlas.json").write_text(json.dumps(atlas_meta))
+            errors = validate(manifest)
+            self.assertTrue(any("missing atlas frame" in error for error in errors),
+                            f"Expected missing-frame error, got: {errors}")
 
     def test_rejects_missing_projectile_release(self):
-        """Attack animation must have exactly one projectile_release event."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            # 5 frames in 2 cols x 3 rows with 2px padding: width=2*32+3*2=70, height=3*32+4*2=104
-            (root / "atlas.png").write_bytes(make_png(70, 104))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_attack_sw_000": {"frame": {"x": 2, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_001": {"frame": {"x": 36, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_002": {"frame": {"x": 2, "y": 36, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_003": {"frame": {"x": 36, "y": 36, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_004": {"frame": {"x": 2, "y": 70, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                },
-                "meta": {"size": {"w": 70, "h": 104}, "padding": 2, "frame_size": {"w": 32, "h": 32}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"attack_sw": {
-                    "loop": False, "frame_duration_ms": 75,
-                    "frames": ["ranger_attack_sw_000", "ranger_attack_sw_001",
-                               "ranger_attack_sw_002", "ranger_attack_sw_003",
-                               "ranger_attack_sw_004"],
-                    "events": []  # Missing projectile_release
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
+            frames = [f"ranger_attack_sw_{index:03d}" for index in range(5)]
+            manifest = write_fixture(root, "attack_sw", frames, events=[])
+            errors = validate(manifest)
             self.assertTrue(any("exactly one projectile_release" in error for error in errors),
-                          f"Expected error about missing projectile_release, got: {errors}")
+                            f"Expected missing projectile_release error, got: {errors}")
 
     def test_rejects_duplicate_projectile_release(self):
-        """Attack animation must not have multiple projectile_release events."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            # 2 frames in 2 cols x 1 row with 2px padding: width=2*32+3*2=70, height=1*32+2*2=36
-            (root / "atlas.png").write_bytes(make_png(70, 36))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_attack_sw_000": {"frame": {"x": 2, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_001": {"frame": {"x": 36, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                },
-                "meta": {"size": {"w": 70, "h": 36}, "padding": 2, "frame_size": {"w": 32, "h": 32}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"attack_sw": {
-                    "loop": False, "frame_duration_ms": 75,
-                    "frames": ["ranger_attack_sw_000", "ranger_attack_sw_001"],
-                    "events": [
-                        {"frame": 0, "name": "projectile_release"},
-                        {"frame": 1, "name": "projectile_release"}  # Duplicate!
-                    ]
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
+            frames = [f"ranger_attack_sw_{index:03d}" for index in range(2)]
+            manifest = write_fixture(root, "attack_sw", frames, events=[
+                {"frame": 0, "name": "projectile_release"},
+                {"frame": 1, "name": "projectile_release"},
+            ])
+            errors = validate(manifest)
             self.assertTrue(any("exactly one projectile_release" in error for error in errors),
-                          f"Expected error about duplicate projectile_release, got: {errors}")
+                            f"Expected duplicate projectile_release error, got: {errors}")
 
     def test_accepts_valid_attack_with_projectile_release(self):
-        """Attack animation with exactly one projectile_release should pass."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            # 3 frames in 2 cols x 2 rows with 2px padding: width=2*32+3*2=70, height=2*32+3*2=70
-            (root / "atlas.png").write_bytes(make_png(70, 70))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_attack_sw_000": {"frame": {"x": 2, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_001": {"frame": {"x": 36, "y": 2, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                    "ranger_attack_sw_002": {"frame": {"x": 2, "y": 36, "w": 32, "h": 32}, "rotated": False, "sourceSize": {"w": 32, "h": 32}},
-                },
-                "meta": {"size": {"w": 70, "h": 70}, "padding": 2, "frame_size": {"w": 32, "h": 32}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"attack_sw": {
-                    "loop": False, "frame_duration_ms": 75,
-                    "frames": ["ranger_attack_sw_000", "ranger_attack_sw_001", "ranger_attack_sw_002"],
-                    "events": [{"frame": 1, "name": "projectile_release"}]
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
-            self.assertEqual(errors, [], f"Expected no errors, got: {errors}")
+            frames = [f"ranger_attack_sw_{index:03d}" for index in range(3)]
+            manifest = write_fixture(root, "attack_sw", frames, events=[
+                {"frame": 1, "name": "projectile_release"},
+            ])
+            self.assertEqual(validate(manifest), [])
 
     def test_rejects_trimmed_frames(self):
-        """Frames with trimmed=true should be rejected."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "atlas.png").write_bytes(make_png(64, 64))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_idle_sw_000": {"frame": {"x": 0, "y": 0, "w": 32, "h": 32}, "rotated": False, "trimmed": True, "sourceSize": {"w": 32, "h": 32}},
-                },
-                "meta": {"size": {"w": 64, "h": 64}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"idle_sw": {
-                    "loop": True, "frame_duration_ms": 160,
-                    "frames": ["ranger_idle_sw_000"]
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
-            self.assertTrue(any("trimmed frame" in error for error in errors))
+            frame_id = "ranger_idle_sw_000"
+            manifest = write_fixture(
+                root, frame_ids=[frame_id],
+                entry_overrides={frame_id: {"trimmed": True}},
+            )
+            errors = validate(manifest)
+            self.assertTrue(any("trimmed frame" in error for error in errors),
+                            f"Expected trimmed-frame error, got: {errors}")
 
     def test_rejects_rotated_frames(self):
-        """Frames with rotated=true should be rejected."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "atlas.png").write_bytes(make_png(64, 64))
-            (root / "atlas.json").write_text(json.dumps({
-                "frames": {
-                    "ranger_idle_sw_000": {"frame": {"x": 0, "y": 0, "w": 32, "h": 32}, "rotated": True, "sourceSize": {"w": 32, "h": 32}},
-                },
-                "meta": {"size": {"w": 64, "h": 64}}
-            }), encoding="utf-8")
-            (root / "manifest.json").write_text(json.dumps({
-                "schema_version": 1, "hero_id": "ranger",
-                "frame_size": {"width": 32, "height": 32},
-                "pivot": {"x": 0.5, "y": 0.86},
-                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
-                "animations": {"idle_sw": {
-                    "loop": True, "frame_duration_ms": 160,
-                    "frames": ["ranger_idle_sw_000"]
-                }}
-            }), encoding="utf-8")
-            errors = validate(root / "manifest.json")
-            self.assertTrue(any("rotated frame" in error for error in errors))
+            frame_id = "ranger_idle_sw_000"
+            manifest = write_fixture(
+                root, frame_ids=[frame_id],
+                entry_overrides={frame_id: {"rotated": True}},
+            )
+            errors = validate(manifest)
+            self.assertTrue(any("rotated frame" in error for error in errors),
+                            f"Expected rotated-frame error, got: {errors}")
 
 
 if __name__ == "__main__":
