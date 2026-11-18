@@ -74,3 +74,17 @@ Automated tests and non-empty render captures are not proof of visual quality by
 - `Hero3DModel` applies a separate 0.9-radian tilt and perspective divide internally. Its comment explicitly describes a separate tilted top-down camera.
 - The current map bounds are 1920–2400 × 1080–1440 world units, while the logical arena viewport is 960 × 540.
 - The latest camera regression run has passed all tests and hero capture generation; the release APK build was still running at the time this document was written. Do not call the APK verified until the workflow's verify step succeeds.
+
+## Initial capture review (run 44423577850)
+
+Artifact `archer-fm-3d-hero-visual-captures` (artifact ID `14482777856`) was downloaded and inspected. These are automated test captures, not a live-device play session.
+
+Observed in `71_game_3d_hero_idle.png` and `72_game_3d_hero_attack.png`:
+- The hero is rendered as a real 3D model and is distinguishable in the arena capture.
+- The view is still essentially top-down/flat 2D terrain; it is not yet the requested coherent oblique 3D world camera.
+- The hero, monsters and objectives do not yet share a unified projection. The hero is composited over the 2D arena.
+- Nearby monsters remain small compared with the large crystal structures; their silhouettes and attack readability need a closer gameplay camera and a consistent actor scale.
+- The current crystal objectives are visible and have readable health bars in this capture. Preserve their prominence during camera changes.
+- `30_map_world.png` and `31_map_fog.png` show a map rendered as a flat 2D layout with hard-edged fog regions; they do not demonstrate the larger connected, angled world direction.
+
+These observations justify starting with the shared projection prototype. They do not establish that all four hero faces match the reference or that all combat effects are visually polished.
