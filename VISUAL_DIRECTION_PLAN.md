@@ -180,3 +180,8 @@ The concept image is a direction reference, not evidence that the current game a
 - Do not add unapproved minion waves, shops, towers, lane economy, new classes, new monster roles or new win conditions.
 - Do not change hero balance, crystal count/HP, attack semantics, combo, Ultimate unlocks or multiplayer rules as a side effect of visual work.
 - Do not claim that concept art proves implementation.
+
+
+## Repository audit and concrete implementation roadmap (2026-11-19)
+
+The complete file/code gap audit is maintained in [`docs/implementation/MOBA_DIRECTION_GAP_AUDIT.md`](docs/implementation/MOBA_DIRECTION_GAP_AUDIT.md). Read it before implementation. It records the audited branch HEAD, existing foundations, technical blockers, exact file areas expected to change, phased work order and evidence gates. The audit clarifies that the current map is already larger than the viewport but still modest, the battlefield is predominantly 2D with a GLB hero composited into it, and all four monsters are currently procedural Canvas drawings with no production monster GLB directory in the audited tree. The first implementation batch must unify camera/projection and input coordinates, then prove one isometric prototype and actor scale before expanding the map or mass-producing monster assets.
