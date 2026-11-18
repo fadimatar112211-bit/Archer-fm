@@ -9,6 +9,7 @@ import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
 import 'arena_camera.dart';
 import 'world/arena_map.dart';
+import 'world/arena_projection.dart';
 import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
@@ -1037,6 +1038,9 @@ class ArenaPainter extends CustomPainter {
 
   /// Draws corpses, then both armies sorted by depth so lower monsters
   /// overlap higher ones naturally.
+  ArenaWorldProjection get cameraProjection =>
+      const ArenaWorldProjection(groundScaleY: 0.82);
+
   void _paintMonsters(Canvas canvas) {
     for (final corpse in world.corpses) {
       _withUprightGroundActor(canvas, corpse.position, () {
@@ -1045,7 +1049,9 @@ class ArenaPainter extends CustomPainter {
     }
     // Enemy monsters are only rendered when they are near the hero.
     final monsters = [...world.visibleEnemies, ...world.army]
-      ..sort((a, b) => a.position.dy.compareTo(b.position.dy));
+      ..sort((a, b) => cameraProjection.depthOf(a.position).compareTo(
+        cameraProjection.depthOf(b.position),
+      ));
     for (final monster in monsters) {
       if (monster.hp <= 0) continue;
       _withUprightGroundActor(canvas, monster.position, () {
@@ -1710,10 +1716,12 @@ class ArenaPainter extends CustomPainter {
         ..addText(label.text);
       final paragraph = builder.build()
         ..layout(ui.ParagraphConstraints(width: 160));
-      canvas.drawParagraph(
-        paragraph,
-        position - const Offset(80, 0),
-      );
+      _withUprightGroundActor(canvas, position, () {
+        canvas.drawParagraph(
+          paragraph,
+          position - const Offset(80, 0),
+        );
+      });
     }
   }
 
