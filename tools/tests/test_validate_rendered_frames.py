@@ -29,7 +29,7 @@ class RenderedFrameValidatorTests(unittest.TestCase):
         alpha = Image.new("L", (32, 32), 0)
         draw = ImageDraw.Draw(alpha)
         draw.rectangle((2, 4, 18, 28), fill=255)
-        draw.rectangle((25, 4, 29, 9), fill=255)
+        draw.rectangle((23, 4, 30, 12), fill=255)
         components, ratio, _ = connected_component_metrics(alpha)
         self.assertEqual(components, 2)
         self.assertLess(ratio, 0.90)
