@@ -229,3 +229,10 @@ The game should approach Archero's visual readability and feel, not merely conta
 
 - Downloaded and visually inspected capture artifact `14482777856`. Gameplay captures show the 3D hero over a still-flat 2D arena; monsters are small relative to crystal objectives, and map/fog renders remain flat. These findings are recorded in `docs/implementation/UNIFIED_WORLD_CAMERA_PROTOTYPE.md`. This is automated-capture review, not device playtesting or a face-reference sign-off.
 - Latest documentation-only commit: `2e0179140891f6cac16a78af083245dea13fd88b`.
+
+### 2026-11-19 — First shared oblique camera integration
+- Added `ArenaWorldProjection` and integrated its reversible ground transform into `ArenaCameraTransform`; pointer-to-world and world-to-screen now use the same centered projection.
+- Enabled a conservative initial ground-depth compression of 0.82. The painter applies that projection to the world canvas, while hero, monsters, corpses and floating labels receive inverse local scaling so their bodies/text remain upright.
+- Monster depth ordering now uses the projection's depth key (currently equivalent to map Y because yaw is 0). World simulation, collision, movement, combat ranges and stored map coordinates remain unchanged.
+- Added camera tests for centered projection, depth compression, inverse pointer mapping and expanded visible-world bounds, plus standalone projection math tests.
+- This is the first rendering prototype, not final MOBA camera approval. Need CI on the newest head, visual captures at narrow/16:9/wide landscape ratios, actor overlap/occlusion review, and Android performance measurement before increasing the angle or migrating more world systems.
