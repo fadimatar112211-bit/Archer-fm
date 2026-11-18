@@ -8,8 +8,35 @@ import 'combat/hero_kit.dart';
 import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
 import 'world/arena_map.dart';
+import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
+
+/// Top-left corner of the camera window in map coordinates, centered on the
+/// hero and clamped to the map edges. Shared by the painter and tap input so a
+/// tap maps back to the same world point the player sees.
+Offset arenaCameraOrigin(GameWorld world) {
+  final map = world.map;
+  final maxX = math.max(0.0, map.size.width - arenaWidth);
+  final maxY = math.max(0.0, map.size.height - arenaHeight);
+  return Offset(
+    (world.player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
+    (world.player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
+  );
+}
+
+/// Converts a tap inside the arena widget to map coordinates.
+Offset arenaToWorld(Offset local, Size size, GameWorld world) {
+  final scale = math.min(
+    size.width / arenaWidth,
+    size.height / arenaHeight,
+  );
+  final origin = Offset(
+    (size.width - arenaWidth * scale) / 2,
+    (size.height - arenaHeight * scale) / 2,
+  );
+  return (local - origin) / scale + arenaCameraOrigin(world);
+}
 
 /// One transient screen-space label ("+10 XP", "Level Up!", …).
 class FloatLabel {
@@ -110,17 +137,7 @@ class ArenaPainter extends CustomPainter {
     canvas.restore();
   }
 
-  /// Top-left corner of the camera window in map coordinates, centered on the
-  /// hero and clamped to the map edges.
-  Offset _cameraOrigin() {
-    final map = world.map;
-    final maxX = math.max(0.0, map.size.width - arenaWidth);
-    final maxY = math.max(0.0, map.size.height - arenaHeight);
-    return Offset(
-      (world.player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
-      (world.player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
-    );
-  }
+  Offset _cameraOrigin() => arenaCameraOrigin(world);
 
   // ---- Backdrop ---------------------------------------------------------------
 
@@ -275,6 +292,7 @@ class ArenaPainter extends CustomPainter {
     }
 
     _paintMines(canvas);
+    _paintCastles(canvas);
 
     // Pickups: mine output, loose resources and chests.
     for (final pickup in world.mineSystem.pickups) {
@@ -466,6 +484,183 @@ class ArenaPainter extends CustomPainter {
             ..color = ringColor,
         );
       }
+    }
+  }
+
+  void _paintCastles(Canvas canvas) {
+    for (final castle in world.castleSystem.castles) {
+      if (!castle.standing) continue; // A fallen castle disappears.
+      final accent = castle.isLocal
+          ? const Color(0xFF9BE845)
+          : const Color(0xFFFF7A5A);
+      final anchor = castle.anchor;
+
+      // Courtyard.
+      canvas.drawCircle(
+        anchor,
+        castleWallRadius + 36,
+        Paint()..color = const Color(0x55304A33),
+      );
+      canvas.drawCircle(
+        anchor,
+        castleWallRadius + 30,
+        Paint()..color = const Color(0xFF3C4B3E),
+      );
+
+      // Stone wall arcs with four gates (one per exposed crystal).
+      for (final wall in castle.walls) {
+        final rect = Rect.fromCircle(center: wall.center, radius: wall.radius);
+        canvas.drawArc(
+          rect,
+          wall.startAngle,
+          wall.sweep,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 18
+            ..strokeCap = StrokeCap.round
+            ..color = const Color(0xFF6E7376),
+        );
+        canvas.drawArc(
+          rect,
+          wall.startAngle,
+          wall.sweep,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 6
+            ..strokeCap = StrokeCap.round
+            ..color = const Color(0xFF8C9194),
+        );
+        // Crenellations.
+        final steps = math.max(2, (wall.sweep / 0.24).floor());
+        for (var i = 0; i <= steps; i++) {
+          final angle = wall.startAngle + wall.sweep * (i / steps);
+          final point = wall.center +
+              Offset(
+                math.cos(angle) * (wall.radius + 9),
+                math.sin(angle) * (wall.radius + 9),
+              );
+          canvas.drawCircle(
+            point,
+            3,
+            Paint()..color = const Color(0xFF9AA0A3),
+          );
+        }
+      }
+
+      // Keep and banner.
+      final keep = Rect.fromCenter(center: anchor, width: 56, height: 46);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(keep, const Radius.circular(6)),
+        Paint()..color = const Color(0xFF4D5A50),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(keep.deflate(6), const Radius.circular(4)),
+        Paint()..color = const Color(0xFF5E6C60),
+      );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: anchor + const Offset(0, -6),
+          width: 10,
+          height: 20,
+        ),
+        Paint()..color = const Color(0xFF20261F),
+      );
+      canvas.drawLine(
+        anchor + const Offset(0, -26),
+        anchor + const Offset(0, -52),
+        Paint()
+          ..color = const Color(0xFFD8DED9)
+          ..strokeWidth = 2,
+      );
+      final flag = Path()
+        ..moveTo(anchor.dx, anchor.dy - 52)
+        ..lineTo(anchor.dx + 22, anchor.dy - 46)
+        ..lineTo(anchor.dx, anchor.dy - 38)
+        ..close();
+      canvas.drawPath(flag, Paint()..color = accent);
+
+      // Crystals: diamonds with a glow, owner color and an HP bar when hurt.
+      for (final crystal in castle.alive) {
+        _paintCrystal(canvas, crystal, accent, castle.isLocal);
+      }
+    }
+  }
+
+  void _paintCrystal(
+    Canvas canvas,
+    CrystalState crystal,
+    Color accent,
+    bool isLocal,
+  ) {
+    final base = crystal.position;
+    final body = crystal.exposed
+        ? accent
+        : Color.lerp(accent, const Color(0xFFFFFFFF), 0.35)!;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: base + const Offset(0, 18),
+        width: crystalRadius * 1.9,
+        height: crystalRadius * 0.8,
+      ),
+      Paint()..color = const Color(0x44000000),
+    );
+    canvas.drawCircle(
+      base,
+      crystalRadius * 1.5,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          base,
+          crystalRadius * 1.5,
+          [accent.withValues(alpha: 0.32), accent.withValues(alpha: 0.0)],
+        ),
+    );
+    final shape = Path()
+      ..moveTo(base.dx, base.dy - crystalRadius * 1.35)
+      ..lineTo(base.dx + crystalRadius * 0.72, base.dy)
+      ..lineTo(base.dx, base.dy + crystalRadius * 1.05)
+      ..lineTo(base.dx - crystalRadius * 0.72, base.dy)
+      ..close();
+    canvas.drawPath(shape, Paint()..color = body);
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = const Color(0xCCFFFFFF),
+    );
+    // Facet.
+    canvas.drawLine(
+      base + Offset(0, -crystalRadius * 1.35),
+      base + Offset(0, crystalRadius * 1.05),
+      Paint()
+        ..strokeWidth = 1
+        ..color = const Color(0x55FFFFFF),
+    );
+
+    if (crystal.hpRatio < 0.999) {
+      final bar = Rect.fromCenter(
+        center: base + Offset(0, -crystalRadius * 1.9),
+        width: 38,
+        height: 5,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bar, const Radius.circular(2)),
+        Paint()..color = const Color(0x99000000),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(bar.left, bar.top, bar.width * crystal.hpRatio, 5),
+          const Radius.circular(2),
+        ),
+        Paint()
+          ..color = Color.lerp(
+            const Color(0xFFFF5A4A),
+            const Color(0xFF7CFF6B),
+            crystal.hpRatio,
+          )!,
+      );
     }
   }
 

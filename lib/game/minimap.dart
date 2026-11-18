@@ -3,12 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'world/arena_map.dart';
+import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
 
-/// A marker drawn on the minimap. Crystals and mines must stay visible even
-/// when they are far away; crystals are added by the castles/crystals step.
-enum MinimapMarkerKind { player, castle, mine }
+/// A marker drawn on the minimap. Crystals and mines stay visible even when
+/// they are far away.
+enum MinimapMarkerKind { player, castle, mine, crystal }
 
 class MinimapMarker {
   const MinimapMarker(
@@ -22,7 +23,7 @@ class MinimapMarker {
   final Offset position;
   final double radius;
 
-  /// Owner of a mine marker; null while neutral.
+  /// Owner of a mine/crystal marker; null for mines while neutral.
   final String? ownerId;
 }
 
@@ -31,14 +32,24 @@ class MinimapMarker {
 List<MinimapMarker> minimapMarkers(GameWorld world) {
   return [
     MinimapMarker(MinimapMarkerKind.player, world.player.position),
-    for (final castle in world.map.castleAnchors)
-      MinimapMarker(MinimapMarkerKind.castle, castle),
+    for (final castle in world.castleSystem.standingCastles)
+      MinimapMarker(
+        MinimapMarkerKind.castle,
+        castle.anchor,
+        ownerId: castle.ownerId,
+      ),
     for (final mine in world.mineSystem.mines)
       MinimapMarker(
         MinimapMarkerKind.mine,
         mine.position,
         radius: mine.radius,
         ownerId: mine.ownerId,
+      ),
+    for (final crystal in world.castleSystem.mappedCrystals)
+      MinimapMarker(
+        MinimapMarkerKind.crystal,
+        crystal.position,
+        ownerId: crystal.ownerId,
       ),
   ];
 }
@@ -146,14 +157,16 @@ class MinimapPainter extends CustomPainter {
       canvas.drawPath(path, water);
     }
 
-    // Castles (same design; the local player's castle is highlighted).
-    for (var i = 0; i < map.castleAnchors.length; i++) {
-      final castle = map.castleAnchors[i];
-      final center = origin + castle * scale;
-      final isHome = i == 0;
+    // Castles (same design; the local player's castle is highlighted). A
+    // fallen castle disappears here too, like it does in the world.
+    for (final castle in world.castleSystem.standingCastles) {
+      final center = origin + castle.anchor * scale;
       canvas.drawRect(
         Rect.fromCenter(center: center, width: 7, height: 7),
-        Paint()..color = isHome ? const Color(0xFFFFD257) : const Color(0xFFB9D3BF),
+        Paint()
+          ..color = castle.isLocal
+              ? const Color(0xFFFFD257)
+              : const Color(0xFFB9D3BF),
       );
     }
 
@@ -169,6 +182,24 @@ class MinimapPainter extends CustomPainter {
       canvas.drawCircle(
         center,
         math.max(2.2, mine.radius * scale * 0.55),
+        Paint()..color = color,
+      );
+    }
+
+    // Crystals stay visible at any distance, seven per standing castle.
+    for (final crystal in world.castleSystem.mappedCrystals) {
+      final center = origin + crystal.position * scale;
+      final color = crystal.ownerId == world.castleSystem.localPlayerId
+          ? const Color(0xFF9BE845)
+          : const Color(0xFFFF7A5A);
+      final size = math.max(1.6, crystalRadius * scale * 0.9);
+      canvas.drawPath(
+        Path()
+          ..moveTo(center.dx, center.dy - size)
+          ..lineTo(center.dx + size * 0.7, center.dy)
+          ..lineTo(center.dx, center.dy + size)
+          ..lineTo(center.dx - size * 0.7, center.dy)
+          ..close(),
         Paint()..color = color,
       );
     }

@@ -4,6 +4,7 @@ import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/minimap.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
+import 'package:archer_fm/game/world/castle_system.dart';
 import 'package:archer_fm/game/world/fog_of_war.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter/material.dart';
@@ -308,10 +309,19 @@ void main() {
       expect(world.visibleEnemies.toList(), [near]);
     });
 
-    test('minimap always lists the hero, four castles and eight mines', () {
+    test('minimap always lists the hero, castles, crystals and mines', () {
       final world = makeWorld();
       final markers = minimapMarkers(world);
-      expect(markers, hasLength(1 + mapCastleCount + mapMineCount));
+      expect(
+        markers,
+        hasLength(
+          1 + mapCastleCount + mapMineCount + mapCastleCount * castleCrystalCount,
+        ),
+      );
+      expect(
+        markers.where((m) => m.kind == MinimapMarkerKind.crystal).length,
+        mapCastleCount * castleCrystalCount,
+      );
       expect(
         markers.where((m) => m.kind == MinimapMarkerKind.castle).length,
         mapCastleCount,

@@ -5,6 +5,7 @@ import '../combat/combo.dart';
 import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
 import 'arena_map.dart';
+import 'castle_system.dart';
 import 'fog_of_war.dart';
 import 'mine_system.dart';
 
@@ -71,6 +72,27 @@ class MineResourceCollectedEvent extends WorldEvent {
   const MineResourceCollectedEvent({required this.amount, required this.total});
   final int amount;
   final int total;
+}
+
+/// One crystal of [ownerId] lost all its HP.
+class CrystalDestroyedEvent extends WorldEvent {
+  const CrystalDestroyedEvent({required this.ownerId, required this.slot});
+  final String ownerId;
+  final int slot;
+}
+
+/// Every crystal of [ownerId] is destroyed: the castle disappears until its
+/// first rebuild.
+class CastleFellEvent extends WorldEvent {
+  const CastleFellEvent(this.ownerId);
+  final String ownerId;
+}
+
+/// A crystal was rebuilt during combat.
+class CrystalRebuiltEvent extends WorldEvent {
+  const CrystalRebuiltEvent({required this.slot, required this.cost});
+  final int slot;
+  final int cost;
 }
 
 /// Simulation state of the playable hero.
@@ -313,6 +335,8 @@ class GameWorld {
       map: map,
       random: math.Random(rng.nextInt(0x3fffffff)),
     );
+    // Four castles, seven crystals each, laid out from the map anchors.
+    castleSystem = CastleController(map: map);
     player.position = map.playerSpawn;
     fog.reveal(player.position, fogRevealRadius);
     if (spawnWaves) {
@@ -340,6 +364,9 @@ class GameWorld {
 
   /// Neutral/owned mines, production and resource pickups.
   late final MineController mineSystem;
+
+  /// All castles, their crystals and the rebuild rules.
+  late final CastleController castleSystem;
 
   /// The player's permanently-owned monster army. Dead members are removed and
   /// never respawn; the player must buy replacements.
@@ -439,10 +466,11 @@ class GameWorld {
     final hit = combo.advance(nowMs);
     pendingHitMultiplier = kit.comboHit(hit).multiplier;
     attackReadyAtMs = nowMs + (attackCycleMs / currentAttackRate()).round();
-    // Face the auto-aim target, or the movement direction while kiting.
-    final target = nearestEnemy(attackRange);
+    // Face the auto-aim target (monster or rival crystal), or the movement
+    // direction while kiting.
+    final target = _nearestHostilePoint(attackRange);
     if (target != null) {
-      player.facing = _normalize(target.position - player.position);
+      player.facing = _normalize(target - player.position);
     } else if (moveInput.distance > 0.01) {
       player.facing = _normalize(moveInput);
     }
@@ -904,6 +932,22 @@ class GameWorld {
         );
       }
     }
+    // Crystals are attacked directly, in any order, from the same swing.
+    for (final crystal in castleSystem.hostileCrystals.toList()) {
+      final delta = crystal.position - player.position;
+      final dist = delta.distance;
+      if (dist > range + 18 + crystalRadius) continue;
+      if (dist > 1) {
+        final facingDot =
+            (delta.dx * player.facing.dx + delta.dy * player.facing.dy) / dist;
+        if (facingDot < math.cos(halfArc)) continue;
+      }
+      hits++;
+      _damageCrystal(
+        crystal,
+        kit.baseDamage * multiplier * currentDamageMult(),
+      );
+    }
     fx.add(
       GameFx(
         kind: 'slash',
@@ -1280,6 +1324,21 @@ class GameWorld {
           projectile.pierceLeft--;
         }
       }
+      if (projectile.traveled >= projectile.maxTravel) continue;
+      // Rival crystals are solid targets for the hero's arrows.
+      for (final crystal in castleSystem.hostileCrystals.toList()) {
+        if (projectile.hitIds.contains(crystal.id)) continue;
+        if ((projectile.position - crystal.position).distance <
+            crystalRadius + 8) {
+          projectile.hitIds.add(crystal.id);
+          _damageCrystal(crystal, projectile.damage);
+          if (projectile.pierceLeft <= 0) {
+            projectile.traveled = projectile.maxTravel;
+            break;
+          }
+          projectile.pierceLeft--;
+        }
+      }
     }
     projectiles.removeWhere((p) => p.traveled >= p.maxTravel);
   }
@@ -1293,6 +1352,11 @@ class GameWorld {
         if (enemy.hp <= 0) continue;
         if ((enemy.position - zone.center).distance <= zone.radius) {
           _damageEnemy(enemy, zone.tickDamage);
+        }
+      }
+      for (final crystal in castleSystem.hostileCrystals.toList()) {
+        if ((crystal.position - zone.center).distance <= zone.radius) {
+          _damageCrystal(crystal, zone.tickDamage);
         }
       }
     }
@@ -1317,6 +1381,13 @@ class GameWorld {
               tickDamage: kit.baseDamage * 0.2 * currentDamageMult(),
             );
           }
+        }
+      }
+      for (final crystal in castleSystem.hostileCrystals.toList()) {
+        if (wave.hitIds.contains(crystal.id)) continue;
+        if ((crystal.position - wave.position).distance <= wave.halfWidth) {
+          wave.hitIds.add(crystal.id);
+          _damageCrystal(crystal, wave.damage);
         }
       }
     }
@@ -1700,6 +1771,61 @@ class GameWorld {
 
   /// XP required to advance from [level] to [level] + 1.
   static int xpForLevel(int level) => 30 + level * 45;
+
+  /// The local hero's castle.
+  CastleState get playerCastle => castleSystem.playerCastle;
+
+  /// Current cost of the next crystal rebuild (rises with every rebuild).
+  int get crystalRebuildCost =>
+      castleSystem.rebuildCost(castleSystem.playerCastle);
+
+  /// Rebuilds the next missing crystal at [position] during combat: paid
+  /// immediately, built instantly, and only inside the player's territory on
+  /// clear dry ground away from obstacles and mines.
+  CrystalRebuildResult rebuildCrystalAt(Offset position) {
+    final castle = castleSystem.playerCastle;
+    final cost = castleSystem.rebuildCost(castle);
+    final result = castleSystem.validateRebuild(
+      castle,
+      position,
+      resources: resources,
+    );
+    if (result != CrystalRebuildResult.ok) return result;
+    final crystal = castleSystem.rebuild(castle, position);
+    if (crystal == null) return CrystalRebuildResult.atMax;
+    resources -= cost;
+    _events.add(CrystalRebuiltEvent(slot: crystal.slot, cost: cost));
+    return CrystalRebuildResult.ok;
+  }
+
+  /// Nearest point the hero can aim at: a hostile monster or a rival crystal.
+  Offset? _nearestHostilePoint(double maxRange) {
+    final enemy = nearestEnemy(maxRange);
+    var best = enemy?.position;
+    var bestDistance = enemy == null
+        ? maxRange
+        : (enemy.position - player.position).distance;
+    for (final crystal in castleSystem.hostileCrystals) {
+      final distance = (crystal.position - player.position).distance;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = crystal.position;
+      }
+    }
+    return best;
+  }
+
+  void _damageCrystal(CrystalState crystal, double amount) {
+    final castle = castleSystem.castleOf(crystal.ownerId);
+    final destroyed = castleSystem.damageCrystal(crystal, amount);
+    if (!destroyed) return;
+    _events.add(
+      CrystalDestroyedEvent(ownerId: crystal.ownerId, slot: crystal.slot),
+    );
+    if (castle != null && castle.fallen) {
+      _events.add(CastleFellEvent(crystal.ownerId));
+    }
+  }
 
   EnemyState? nearestEnemy(double maxRange) {
     EnemyState? best;

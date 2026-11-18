@@ -18,6 +18,7 @@ import 'render3/glb.dart';
 import 'render3/hero3d_controller.dart';
 import 'render3/hero3d_painter.dart';
 import 'world/arena_map.dart';
+import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
 
@@ -93,6 +94,9 @@ class _GameScreenState extends State<GameScreen>
 
   /// Clip currently authored as non-looping and still playing out.
   String? _busyClip;
+
+  /// Armed by the rebuild button: the next arena tap chooses the crystal spot.
+  bool _placingCrystal = false;
 
   /// Joystick vector before normalization (magnitude decides walk vs run).
   Offset _moveRaw = Offset.zero;
@@ -297,6 +301,25 @@ class _GameScreenState extends State<GameScreen>
               color: const Color(0xFFFFD257),
             ),
           );
+        case CrystalDestroyedEvent(:final ownerId, :final slot):
+          _labels.add(
+            FloatLabel(
+              text: 'كريستال ${slot + 1} تحطم',
+              worldPosition: world.player.position - const Offset(0, 46),
+              bornAtMs: world.nowMs,
+              color: ownerId == MineController.localPlayerId
+                  ? const Color(0xFFFF8A80)
+                  : const Color(0xFFFFD257),
+            ),
+          );
+        case CastleFellEvent(:final ownerId):
+          _showToast(
+            ownerId == MineController.localPlayerId
+                ? 'سقطت قلعتك — أعد بناء أول كريستال'
+                : 'سقطت قلعة خصم',
+          );
+        case CrystalRebuiltEvent(:final cost):
+          _showToast('أُعيد بناء كريستال مقابل $cost موارد');
       }
     }
   }
@@ -568,26 +591,37 @@ class _GameScreenState extends State<GameScreen>
           children: [
             // Arena.
             Positioned.fill(
-              child: RepaintBoundary(
-                child: CustomPaint(
-                  painter: ArenaPainter(
-                    world: world,
-                    presentation: ArenaPresentation(
-                      kit: kit,
-                      theme: theme,
-                      sheet: activeSheet,
-                      frameId: _player?.frameId,
-                      pivotX: manifest?.pivotX ?? 0.5,
-                      pivotY: manifest?.pivotY ?? 0.86,
-                      frameWidth: manifest?.frameWidth ?? 192,
-                      frameHeight: manifest?.frameHeight ?? 192,
-                      labels: _labels,
-                      timeMs: world.nowMs,
-                      comboText: comboText,
-                      hero3d: _hero3d,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapDown: (details) => _onArenaTap(
+                      details.localPosition,
+                      constraints.biggest,
                     ),
-                  ),
-                ),
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: ArenaPainter(
+                          world: world,
+                          presentation: ArenaPresentation(
+                            kit: kit,
+                            theme: theme,
+                            sheet: activeSheet,
+                            frameId: _player?.frameId,
+                            pivotX: manifest?.pivotX ?? 0.5,
+                            pivotY: manifest?.pivotY ?? 0.86,
+                            frameWidth: manifest?.frameWidth ?? 192,
+                            frameHeight: manifest?.frameHeight ?? 192,
+                            labels: _labels,
+                            timeMs: world.nowMs,
+                            comboText: comboText,
+                            hero3d: _hero3d,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             // Top HUD.
@@ -621,7 +655,11 @@ class _GameScreenState extends State<GameScreen>
                       const SizedBox(height: 6),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [_minePanel(theme)],
+                        children: [
+                          _minePanel(theme),
+                          const SizedBox(width: 6),
+                          _castlePanel(theme),
+                        ],
                       ),
                     ],
                   ),
@@ -689,6 +727,35 @@ class _GameScreenState extends State<GameScreen>
                 ),
               ),
             ),
+            // Build-mode hint.
+            if (_placingCrystal)
+              Positioned(
+                top: 120,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _placingCrystal = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xDD000000),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF9BE845),
+                        ),
+                      ),
+                      child: const Text(
+                        'المس داخل أراضيك لبناء كريستال · اضغط هنا للإلغاء',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             // Toast.
             if (_toast != null)
               Positioned(
@@ -900,6 +967,83 @@ class _GameScreenState extends State<GameScreen>
           Text(
             'موارد ${world.resources} · جوهر ${world.essence}',
             style: const TextStyle(color: Colors.white, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onArenaTap(Offset local, Size size) {
+    if (!_placingCrystal) return;
+    final point = arenaToWorld(local, size, world);
+    final result = world.rebuildCrystalAt(point);
+    switch (result) {
+      case CrystalRebuildResult.ok:
+        setState(() => _placingCrystal = false);
+      case CrystalRebuildResult.notEnoughResources:
+        _showToast('الموارد غير كافية (${world.crystalRebuildCost})');
+      case CrystalRebuildResult.atMax:
+        _showToast('لديك سبعة كريستالات بالفعل');
+      case CrystalRebuildResult.outsideTerritory:
+        _showToast('ابنِ داخل أراضيك حول قلعتك');
+      case CrystalRebuildResult.blocked:
+        _showToast('المكان غير خالٍ — اختر أرضاً جافة مكشوفة');
+    }
+  }
+
+  Widget _castlePanel(ThemeData theme) {
+    final castle = world.playerCastle;
+    final cost = world.crystalRebuildCost;
+    final affordable = world.resources >= cost && castle.aliveCount < 7;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: _panelDecoration(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.castle, size: 14, color: Color(0xFF9BE845)),
+          const SizedBox(width: 4),
+          Text(
+            castle.fallen
+                ? 'قلعتك ساقطة'
+                : 'قلعتك ${castle.aliveCount}/$castleCrystalCount',
+            style: const TextStyle(color: Colors.white, fontSize: 11),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            key: const ValueKey('rebuild_crystal'),
+            onTap: affordable
+                ? () => setState(() => _placingCrystal = !_placingCrystal)
+                : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: _placingCrystal
+                    ? const Color(0xFF9BE845)
+                    : affordable
+                        ? const Color(0x339BE845)
+                        : Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF9BE845)
+                      .withValues(alpha: affordable ? 0.9 : 0.25),
+                ),
+              ),
+              child: Text(
+                _placingCrystal
+                    ? 'اختر مكاناً…'
+                    : 'كريستال بـ$cost',
+                style: TextStyle(
+                  color: _placingCrystal
+                      ? const Color(0xFF10240F)
+                      : affordable
+                          ? const Color(0xFFD7FFC0)
+                          : Colors.white38,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ],
       ),

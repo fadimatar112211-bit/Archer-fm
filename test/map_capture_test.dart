@@ -7,6 +7,7 @@ import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/minimap.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
+import 'package:archer_fm/game/world/castle_system.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/game/world/mine_system.dart';
 import 'package:flutter/material.dart';
@@ -134,6 +135,36 @@ void main() {
 
     await _save('33_mines.png', _paint(world));
   }, timeout: const Timeout(Duration(minutes: 5)));
+  test('paints castles, walls and damaged crystals', () async {
+    final world = GameWorld(
+      kit: rangerNewKit,
+      random: math.Random(11),
+      spawnWaves: false,
+    );
+    world.enemies.clear();
+    world.army.clear();
+
+    final castle = world.castleSystem.playerCastle;
+    world.player.position = castle.anchor + const Offset(0, 60);
+    world.player.facing = const Offset(0, -1);
+    world.fog.reveal(castle.anchor, fogRevealRadius);
+    world.fog.reveal(world.player.position, fogRevealRadius);
+
+    // Damage a couple of crystals so the HP bars read on the capture.
+    castle.crystals[0].hp = castle.crystals[0].maxHp * 0.35;
+    castle.crystals[4].hp = castle.crystals[4].maxHp * 0.6;
+    final rival = world.castleSystem.castleAt(1)!;
+    rival.crystals[0].hp = rival.crystals[0].maxHp * 0.4;
+
+    // A fallen castle disappears from the world entirely.
+    for (final crystal
+        in List<CrystalState>.of(world.castleSystem.castleAt(3)!.crystals)) {
+      world.castleSystem.damageCrystal(crystal, crystal.maxHp);
+    }
+
+    await _save('34_castles.png', _paint(world));
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
 }
 
 ui.Image _paint(GameWorld world) {
