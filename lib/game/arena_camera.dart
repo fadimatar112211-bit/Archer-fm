@@ -46,7 +46,7 @@ class ArenaCameraTransform {
   /// Converts a widget-local point to its exact map-world coordinate.
   Offset localToWorld(Offset local) {
     final projected = (local - viewportOrigin) / scale - _logicalCenter;
-    return cameraOrigin + projection.unprojectGround(projected);
+    return cameraOrigin + _logicalCenter + projection.unprojectGround(projected);
   }
 
   /// Converts a map-world coordinate to its exact widget-local screen point.
@@ -63,5 +63,5 @@ class ArenaCameraTransform {
           _logicalCenter.dx,
           _logicalCenter.dy,
         ),
-      ).shift(cameraOrigin);
+      ).shift(cameraOrigin + _logicalCenter);
 }
