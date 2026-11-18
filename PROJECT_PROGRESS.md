@@ -125,3 +125,13 @@ The game should approach Archero's visual readability and feel, not merely conta
 - GitHub Actions run `44389706091` was observed **in progress** immediately after push; do not treat the new coverage as passed until this run completes successfully.
 - This expands test/capture coverage; it does not by itself prove final visual polish or real-device performance.
 - Next: inspect run `44389706091`, fix any failures, inspect the new 16-ability capture artifact, then continue with face/animation visual review and targeted gameplay fixes.
+
+
+### 2026-11-18 — Ultimate capture review and progression contract tests
+- Inspected Actions run `44389706091`: Flutter Analyze **passed**, all tests **passed**, and 3D/Ultimate capture artifact upload **passed**. Android Release APK build was still running at last check; Verify APK and publish steps had not run yet.
+- Downloaded capture artifact `14466379982` (6,026,454 bytes), containing the newly added Ultimate captures plus existing hero, map, monster, and arena captures.
+- Visually inspected the Ultimate contact sheet and Ranger Multi Shot capture. The captures prove a real in-game scene was rendered, but the 800×450 arena view shows the hero and ability details quite small; the images do not yet prove polished, clearly readable signature effects. Do not mark visual polish complete.
+- Added `test/ultimate_kit_contract_test.dart` to verify all four kits expose exactly four distinct named Arabic Ultimates at unlock levels 1/10/20/30, and that the five-hit combo remains an independent five-step chain.
+- New test commit: `a45d222e4b8e534d85092fbf656c2c40c4823e8e`.
+- The new contract test has been pushed after run `44389706091`; it still needs its own Actions run to pass.
+- Next: verify the prior APK workflow result, then verify the new contract-test run; improve visual readability/signature FX and inspect hero face captures against the reference sheet.
