@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../game/render3/glb.dart';
+import '../game/render3/hero3d_controller.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'hero_assets.dart';
@@ -135,6 +138,8 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
   final Set<String> _unavailable = <String>{};
 
   HeroManifest? _manifest;
+  Hero3DController? _hero3d;
+  String? _hero3dError;
   AtlasSheet? _sheet;
   SpritePlayer? _player;
   String _state = 'idle';
@@ -156,6 +161,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     _loader = widget.loaderFactory(_hero);
     _ticker = createTicker(_onTick)..start();
     _loadManifest();
+    _loadHero3D();
   }
 
   @override
@@ -175,6 +181,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     if (player != null && delta.inMilliseconds > 0) {
       player.advance((delta.inMilliseconds * _speed).round());
     }
+    _hero3d?.advance(elapsed.inMilliseconds, onEvent: _handle3DEvent);
     _clock.value = elapsed.inMilliseconds;
     _effects.removeWhere((effect) => !effect.isAlive(_clock.value));
   }
@@ -212,6 +219,8 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
       _hero = hero;
       _loader = widget.loaderFactory(hero);
       _manifest = null;
+      _hero3d = null;
+      _hero3dError = null;
       _sheet = null;
       _player?.dispose();
       _player = null;
@@ -226,8 +235,45 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     });
     previous.dispose();
     await _loadManifest();
+    await _loadHero3D();
   }
 
+  Future<void> _loadHero3D() async {
+    final hero = _hero;
+    final paths = <String>[
+      if (hero.id == 'ranger_new') 'assets/heroes/ranger_new/ranger_animated.glb',
+      'assets/heroes/${hero.id}/model/${hero.id}_animated.glb',
+    ];
+    try {
+      ByteData? data;
+      for (final path in paths) {
+        try { data = await rootBundle.load(path); break; } catch (_) {}
+      }
+      if (data == null) throw StateError('GLB missing for ${hero.id}');
+      final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      final model = await GlbModel.load(bytes);
+      final controller = Hero3DController(Hero3DModel(model));
+      controller.model.calibrate();
+      controller.playClip('idle', loop: true, pace: _speed, nowMs: _clock.value, events: const []);
+      if (!mounted || hero.id != _hero.id) return;
+      setState(() { _hero3d = controller; _hero3dError = null; });
+    } catch (error) {
+      if (!mounted || hero.id != _hero.id) return;
+      setState(() => _hero3dError = '$error');
+    }
+  }
+
+  void _handle3DEvent(String event) {
+    _handleEvent(AnimationEvent(name: event, frame: 0));
+  }
+
+  Offset _directionVector(String direction) => switch (direction) {
+    'n' => const Offset(0, -1), 'ne' => const Offset(1, -1),
+    'e' => const Offset(1, 0), 'se' => const Offset(1, 1),
+    's' => const Offset(0, 1), 'sw' => const Offset(-1, 1),
+    'w' => const Offset(-1, 0), 'nw' => const Offset(-1, -1),
+    _ => const Offset(0, 1),
+  };
   Future<void> _select(String state, String direction) async {
     final manifest = _manifest;
     if (manifest == null) return;
@@ -387,6 +433,19 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
           animation: Listenable.merge([_clock, _player]),
           builder: (context, _) {
             final player = _player;
+            final hero3d = _hero3d;
+            if (hero3d != null) {
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [theme.stageTop, theme.stageBottom]),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: CustomPaint(
+                  painter: _Hero3DPreviewPainter(controller: hero3d, facing: _directionVector(_direction), timeMs: _clock.value, theme: theme),
+                  child: const SizedBox.expand(),
+                ),
+              );
+            }
             return HeroStage(
               sheet: _sheet,
               frameId: player?.frameId,
@@ -395,7 +454,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
               effects: _effects,
               timeMs: _clock.value,
               theme: theme,
-              placeholder: _sheetError ??
+              placeholder: _hero3dError != null ? 'تعذّر تحميل المجسم ثلاثي الأبعاد: $_hero3dError' : _sheetError ??
                   (_loadingSheet
                       ? 'جارٍ تحميل الرسوم…'
                       : _error != null
@@ -911,4 +970,20 @@ class _SectionTitle extends StatelessWidget {
       ),
     );
   }
+}
+
+class _Hero3DPreviewPainter extends CustomPainter {
+  const _Hero3DPreviewPainter({required this.controller, required this.facing, required this.timeMs, required this.theme});
+  final Hero3DController controller;
+  final Offset facing;
+  final int timeMs;
+  final HeroTheme theme;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ground = Paint()..color = theme.accent.withAlpha(24);
+    canvas.drawOval(Rect.fromCenter(center: Offset(size.width / 2, size.height * .88), width: size.width * .55, height: size.height * .10), ground);
+    controller.paint(canvas, anchor: Offset(size.width / 2, size.height * .88), facing: facing, scale: controller.scaleForPixelHeight(size.height * .68));
+  }
+  @override
+  bool shouldRepaint(covariant _Hero3DPreviewPainter old) => old.controller != controller || old.facing != facing || old.timeMs != timeMs || old.theme != theme;
 }
