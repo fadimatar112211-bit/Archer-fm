@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../game/render3/glb.dart';
 import '../game/render3/hero3d_controller.dart';
+import '../game/render3/hero3d_painter.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'hero_assets.dart';
@@ -181,7 +182,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     if (player != null && delta.inMilliseconds > 0) {
       player.advance((delta.inMilliseconds * _speed).round());
     }
-    _hero3d?.advance(elapsed.inMilliseconds, onEvent: (_) {});
+    _hero3d?.advance(elapsed.inMilliseconds, onEvent: _handle3DEvent);
     _clock.value = elapsed.inMilliseconds;
     _effects.removeWhere((effect) => !effect.isAlive(_clock.value));
   }
@@ -291,7 +292,8 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         loop: const ['idle', 'walk', 'run'].contains(state),
         pace: _speed,
         nowMs: _clock.value,
-        events: const [],
+        events: Hero3DController.scheduleFor(manifest, state),
+        durationMs: Hero3DController.durationFor(manifest, state),
       );
     }
     setState(() {
@@ -320,12 +322,16 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     });
   }
 
-  void _handleEvent(AnimationEvent event) {
+  void _handleEvent(AnimationEvent event) => _recordEvent(event.name);
+
+  void _handle3DEvent(String eventName) => _recordEvent(eventName);
+
+  void _recordEvent(String eventName) {
     final now = _clock.value;
-    _effects.add(StageEffect(kind: _effectForEvent(event.name), startMs: now));
+    _effects.add(StageEffect(kind: _effectForEvent(eventName), startMs: now));
     final state = stateLabels[_state] ?? _state;
     final direction = directionLabels[_direction] ?? _direction;
-    final label = eventLabels[event.name] ?? event.name;
+    final label = eventLabels[eventName] ?? eventName;
     _log.value = <String>[
       '$state · $direction — $label',
       ..._log.value,
