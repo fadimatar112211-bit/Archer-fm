@@ -244,7 +244,7 @@ const HeroKit rangerNewKit = HeroKit(
     AbilityDef(
       id: 'multi_shot',
       nameAr: 'وابل متعدد',
-      descAr: 'خمسة سهام خضراء تتفرّج لتغطي زاوية واسعة، كل سهم بضرر 60%.',
+      descAr: 'خمسة سهام خضراء تتفرّق لتغطي زاوية واسعة، كل سهم بضرر 60%.',
       unlockLevel: 1,
       cooldownMs: 6000,
       energyCost: 25,
@@ -261,7 +261,7 @@ const HeroKit rangerNewKit = HeroKit(
     AbilityDef(
       id: 'arrow_rain',
       nameAr: 'مطر السهام',
-      descAr: 'مطر سهم خضراء على منطقة محددة، 8 موجات بضرر 35% لكل موجة.',
+      descAr: 'مطر سهام خضراء على منطقة محددة، 8 موجات بضرر 35% لكل موجة.',
       unlockLevel: 20,
       cooldownMs: 12000,
       energyCost: 40,
@@ -329,7 +329,7 @@ const HeroKit flameKit = HeroKit(
     AbilityDef(
       id: 'inferno_rage',
       nameAr: 'هياج اللهب',
-      descAr: '6 ثوانٍ من الغضب: وتربة أسرع، ضرر +25%، ومدى قطع أوسع.',
+      descAr: '6 ثوانٍ من الغضب: وتيرة هجوم أسرع، ضرر +25%، ومدى قطع أوسع.',
       unlockLevel: 30,
       cooldownMs: 20000,
       energyCost: 35,
@@ -394,10 +394,10 @@ const HeroKit shadowKit = HeroKit(
   ],
 );
 
-/// Storm: ready-to-wire gameplay data. NOT playable yet — the repo contains
-/// only 4 design SVGs (attack/death/idle/walk); the Blender source, GLB,
-/// 496 renders, 64 atlases and manifest do not exist. Flip `playable` to
-/// true only after the asset pipeline (docs/game/storm_combat.md §4) lands.
+/// Storm: combat kit is implemented and marked playable. The original
+/// uploaded GLB is retained as provenance; the rigged, animated runtime model
+/// is documented in docs/game/storm_combat.md. Keep this flag aligned with
+/// the actual runtime asset and integration tests, not the source GLB alone.
 const HeroKit stormKit = HeroKit(
   heroId: 'storm',
   nameAr: 'حامل العاصفة',
