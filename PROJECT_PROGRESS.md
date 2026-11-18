@@ -186,3 +186,9 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Added this as an explicit visual requirement to `VISUAL_DIRECTION_PLAN.md`: prominent faceted vertical forms, visible base, controlled internal glow, player-color accents, readable HP bar, progressive crack/damage feedback, and a distinctive destruction effect.
 - Preserve the existing seven crystals per player and their HP values (500/700/900/1200/1500/1800/2200), targeting and rebuild rules; this is a visual change only.
 - Next: implement the large crystal presentation in the arena renderer, then capture and inspect at normal mobile gameplay zoom. Do not mark complete until visual evidence and tests pass.
+
+
+### 2026-11-18 — Crystal visual specification
+- Updated `VISUAL_DIRECTION_PLAN.md`: all seven crystals per player must be large, tall, prominent faceted crystal pillars/columns, not small stones. Added silhouette, base, glow/team color, health-bar readability, damage/cracking, destruction, and scale/readability requirements.
+- Existing seven-crystal count, HP values, placement, targeting, rebuild and gameplay rules are explicitly preserved; this is a visual-only decision.
+- Plan update commit: bbe054b71be16b983cc5e71cc562a896c0e891d2.
