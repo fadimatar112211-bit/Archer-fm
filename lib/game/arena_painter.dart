@@ -1392,7 +1392,7 @@ class ArenaPainter extends CustomPainter {
         canvas,
         anchor: player.position + const Offset(0, 14),
         facing: player.facing,
-        scale: hero3d.scaleForPixelHeight(92),
+        scale: hero3d.scaleForPixelHeight(112),
         alpha: veilActive ? 0.55 : 1,
         tint: player.dead ? const Color(0xFF888888) : null,
       );
