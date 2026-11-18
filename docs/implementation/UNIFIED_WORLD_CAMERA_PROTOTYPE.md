@@ -1,6 +1,6 @@
 # Unified World Camera & Ground-Projection Prototype
 
-Status: **design contract / implementation gate**. This document does not claim the renderer has been converted.
+Status: **partial prototype implemented; visual/gameplay acceptance gates remain open**. Shared ground compression, reversible camera/input mapping, and one combined hero/monster/corpse depth pass are now wired into the arena painter. This is not a completed 3D world conversion.
 
 ## Why this prototype is required
 
@@ -74,6 +74,23 @@ Automated tests and non-empty render captures are not proof of visual quality by
 - `Hero3DModel` applies a separate 0.9-radian tilt and perspective divide internally. Its comment explicitly describes a separate tilted top-down camera.
 - The current map bounds are 1920–2400 × 1080–1440 world units, while the logical arena viewport is 960 × 540.
 - The latest camera regression run has passed all tests and hero capture generation; the release APK build was still running at the time this document was written. Do not call the APK verified until the workflow's verify step succeeds.
+
+## Prototype implementation update (2026-11-19)
+
+Implemented on `ranger-reference-work`:
+- Added reversible oblique ground projection math and camera/input integration.
+- Applied the same 0.82 ground-depth compression to the arena canvas while locally counter-scaling upright actors.
+- Replaced the separate monster-only pass plus always-on-top hero pass with one depth-sorted actor list containing visible enemies, owned units, corpses and the player hero.
+- Removed a per-actor viewport-transform construction from the upright actor path; it now reuses the painter's immutable projection.
+- Added a camera regression test that checks viewport-corner and center round trips across three landscape sizes during eight camera-smoothing updates.
+
+Still not implemented or accepted:
+- Terrain/river/bridge geometry has not been migrated to a full yawed 3D/isometric projection; current ground transform is vertical compression only.
+- Trees and rocks are not yet part of a shared foreground occlusion/depth pass.
+- Projectiles, AoE, castles, crystals, pickups and fog are not all depth-sorted/projected with actors.
+- Automated captures are not a substitute for review on physical Android devices.
+- No frame-time/CPU-skinning benchmark has been recorded.
+- No production monster GLB should start until the single-monster visual prototype passes these gates.
 
 ## Initial capture review (run 44423577850)
 
