@@ -200,3 +200,12 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Kept the existing seven crystal slots, positions, HP values, damage rules, rebuild logic, and gameplay hit/collision radius unchanged.
 - Commit: `c05605f62a7b387f390f98fc6e7a6a48b3afe65d`.
 - Validation status: source change is pushed; Flutter analyze/tests and Android release build are pending the GitHub Actions run. Visual scale/readability still needs an in-game capture review at normal mobile zoom.
+
+
+### 2026-11-19 — Shared camera transform and tap-coordinate regression fix
+- Added `lib/game/arena_camera.dart` as the shared viewport transform for scale, letterbox offset, smoothed camera origin, screen-to-world and world-to-screen conversion.
+- Updated `ArenaPainter.paint` and `arenaToWorld` to consume the same transform data. This removes the previous mismatch where painting used the smoothed `world.cameraOrigin` while taps used an instantaneous player-centered camera origin.
+- Added `test/arena_camera_test.dart` for smoothed-camera alignment, round-trip conversion at four landscape phone aspect ratios, visible-world bounds, and integration through the arena tap helper.
+- Commits: `46da550294f18cff170dad0739b77405ebcd7504`, `3faa207ad3af58cb5c4282d95eba98e870bf5a65`, `b7f599f64d7681168b2bc860b2c9ae58ecb07448`, `69b0a00a0a955b95fbf2f358f25eda99635fc474`, `a1ac049386a893cf602e7f6fcf58e53ad30bf2a8`, `61996ccb9dbbf31912b90967d31bd2fb15ad2fcb`.
+- CI caught and led to a fix for missing `dart:ui` geometry imports in the new test. The latest Actions run for `61996ccb` has not yet reported a final result; do not mark analyze/tests/build as passing until it completes.
+- No camera zoom, isometric projection, map layout, combat rules, or gameplay behavior was changed in this batch. Next: wait for the latest validation result; only after green validation proceed to the unified 2.5D/isometric projection prototype.
