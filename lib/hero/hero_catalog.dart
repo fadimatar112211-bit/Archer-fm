@@ -108,26 +108,11 @@ const HeroTheme stormTheme = HeroTheme(
 
 /// The playable roster.
 ///
-/// Order is the in-game selection order: the balanced archer first, then the
-/// three melee identities. `ranger_new` is the rebuilt anime-reference Ranger
-/// on its own asset folder; the original ranger stays untouched until the new
-/// build is verified, so both appear side by side during verification.
-/// Names, weapons and skills mirror the production
-/// brief so the viewer and the future combat code describe the same character.
+/// Exactly four selectable heroes. The reference-quality Ranger is the
+/// canonical roster entry; the legacy `ranger` assets remain in the repository
+/// for compatibility tests and provenance, but are not a fifth selectable hero.
+/// Names, weapons and skills mirror the production brief.
 const List<HeroDefinition> heroCatalog = [
-  HeroDefinition(
-    id: 'ranger',
-    nameAr: 'الرامي المتوازن',
-    nameEn: 'Ranger',
-    roleAr: 'بعيد المدى · توازن',
-    weaponAr: 'قوس الطاقة الخضراء',
-    skillAr: 'وابل السهام',
-    descriptionAr:
-        'رامٍ رشيق يعتمد على المسافة والحركة. يسحب قوساً من الطاقة الخضراء '
-        'ويطلق سهماً واحداً دقيقاً، أو وابلاً يغطي منطقة أمامه.',
-    icon: Icons.gps_fixed,
-    theme: rangerTheme,
-  ),
   HeroDefinition(
     id: 'flame',
     nameAr: 'فارس اللهب',
@@ -169,8 +154,8 @@ const List<HeroDefinition> heroCatalog = [
   ),
   HeroDefinition(
     id: 'ranger_new',
-    nameAr: 'الرامي الجديد',
-    nameEn: 'Ranger II',
+    nameAr: 'الرامي',
+    nameEn: 'Ranger',
     roleAr: 'بعيد المدى · توازن',
     weaponAr: 'قوس الطاقة الخضراء',
     skillAr: 'وابل السهام',
@@ -183,5 +168,24 @@ const List<HeroDefinition> heroCatalog = [
   ),
 ];
 
-HeroDefinition heroById(String id) =>
-    heroCatalog.firstWhere((hero) => hero.id == id, orElse: () => heroCatalog.first);
+// Keep the old Ranger render bundle addressable by legacy asset tests. It is
+// intentionally not part of [heroCatalog] and can never appear in the roster.
+const HeroDefinition legacyRangerDefinition = HeroDefinition(
+  id: 'ranger',
+  nameAr: 'الرامي القديم',
+  nameEn: 'Ranger Legacy',
+  roleAr: 'أصول توافقية قديمة',
+  weaponAr: 'قوس الطاقة الخضراء',
+  skillAr: 'وابل السهام',
+  descriptionAr: 'حزمة رسوم قديمة محفوظة للتوافق والاختبارات فقط.',
+  icon: Icons.gps_fixed,
+  theme: rangerTheme,
+);
+
+HeroDefinition heroById(String id) {
+  if (id == 'ranger') return legacyRangerDefinition;
+  return heroCatalog.firstWhere(
+    (hero) => hero.id == id,
+    orElse: () => heroCatalog.first,
+  );
+}
