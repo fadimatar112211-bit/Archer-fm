@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Size;
 
 import 'package:archer_fm/game/arena_camera.dart';
+import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,6 +56,24 @@ void main() {
         expect(restored.dx, closeTo(worldPoint.dx, 1e-9));
         expect(restored.dy, closeTo(worldPoint.dy, 1e-9));
       }
+    });
+
+    test('arena tap helper uses the exact camera transform used by painter', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(41),
+        spawnWaves: false,
+      );
+      world.player.position += const Offset(240, 120);
+      world.update(16);
+      const size = Size(2400, 1080);
+      final transform = ArenaCameraTransform.forViewport(size, world);
+      const worldPoint = Offset(510, 330);
+      final screenPoint = transform.worldToLocal(worldPoint);
+      final tapWorldPoint = arenaToWorld(screenPoint, size, world);
+
+      expect(tapWorldPoint.dx, closeTo(worldPoint.dx, 1e-9));
+      expect(tapWorldPoint.dy, closeTo(worldPoint.dy, 1e-9));
     });
 
     test('visible world rectangle matches the camera window', () {
