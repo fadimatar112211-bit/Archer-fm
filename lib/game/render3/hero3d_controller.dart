@@ -12,7 +12,10 @@ import 'hero3d_painter.dart';
 /// were rendered from the very same GLB clips), so combat timing stays
 /// identical whether the hero draws through the sprite path or this one.
 class Hero3DController {
-  Hero3DController(this.model);
+  Hero3DController(this.model) {
+    // Calibrate once for every construction path, including injected models.
+    model.calibrate();
+  }
 
   final Hero3DModel model;
 
