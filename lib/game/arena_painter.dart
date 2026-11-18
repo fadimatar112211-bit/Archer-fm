@@ -7,38 +7,20 @@ import '../hero/hero_assets.dart';
 import 'combat/hero_kit.dart';
 import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
+import 'arena_camera.dart';
 import 'world/arena_map.dart';
 import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
 
-/// Top-left corner of the camera window in map coordinates, centered on the
-/// hero and clamped to the map edges. Shared by the painter and tap input so a
-/// tap maps back to the same world point the player sees.
-Offset arenaCameraOrigin(GameWorld world) {
-  final map = world.map;
-  final maxX = math.max(0.0, map.size.width - arenaWidth);
-  final maxY = math.max(0.0, map.size.height - arenaHeight);
-  return Offset(
-    (world.player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
-    (world.player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
-  );
-}
+/// Compatibility helper: the authoritative camera origin is the same
+/// smoothed origin consumed by the painter and all viewport input transforms.
+Offset arenaCameraOrigin(GameWorld world) => world.cameraOrigin;
 
-/// Converts a tap inside the arena widget to map coordinates. Uses the
-/// instant (unclamped-by-smoothing) camera origin so taps map back to the
-/// exact world point under the tap, matching what the renderer draws.
-Offset arenaToWorld(Offset local, Size size, GameWorld world) {
-  final scale = math.min(
-    size.width / arenaWidth,
-    size.height / arenaHeight,
-  );
-  final origin = Offset(
-    (size.width - arenaWidth * scale) / 2,
-    (size.height - arenaHeight * scale) / 2,
-  );
-  return (local - origin) / scale + arenaCameraOrigin(world);
-}
+/// Converts a tap inside the arena widget to map coordinates using the exact
+/// viewport and smoothed camera transform used by [ArenaPainter.paint].
+Offset arenaToWorld(Offset local, Size size, GameWorld world) =>
+    ArenaCameraTransform.forViewport(size, world).localToWorld(local);
 
 /// One transient screen-space label ("+10 XP", "Level Up!", …).
 class FloatLabel {
@@ -106,23 +88,18 @@ class ArenaPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = math.min(
-      size.width / arenaWidth,
-      size.height / arenaHeight,
-    );
+    final cameraTransform = ArenaCameraTransform.forViewport(size, world);
+    final scale = cameraTransform.scale;
+    final origin = cameraTransform.viewportOrigin;
     final viewWidth = arenaWidth * scale;
     final viewHeight = arenaHeight * scale;
-    final origin = Offset(
-      (size.width - viewWidth) / 2,
-      (size.height - viewHeight) / 2,
-    );
     canvas.save();
     canvas.clipRect(Offset.zero & size);
     _paintBackdrop(canvas, origin, viewWidth, viewHeight);
 
     canvas.translate(origin.dx, origin.dy);
     canvas.scale(scale);
-    final camera = _cameraOrigin();
+    final camera = cameraTransform.cameraOrigin;
     canvas.translate(-camera.dx, -camera.dy);
 
     _paintTerrain(canvas);
@@ -139,7 +116,6 @@ class ArenaPainter extends CustomPainter {
     canvas.restore();
   }
 
-  Offset _cameraOrigin() => world.cameraOrigin;
 
   // ---- Backdrop ---------------------------------------------------------------
 
