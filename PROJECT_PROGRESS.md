@@ -192,3 +192,11 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Updated `VISUAL_DIRECTION_PLAN.md`: all seven crystals per player must be large, tall, prominent faceted crystal pillars/columns, not small stones. Added silhouette, base, glow/team color, health-bar readability, damage/cracking, destruction, and scale/readability requirements.
 - Existing seven-crystal count, HP values, placement, targeting, rebuild and gameplay rules are explicitly preserved; this is a visual-only decision.
 - Plan update commit: bbe054b71be16b983cc5e71cc562a896c0e891d2.
+
+
+### 2026-11-18 — First in-game crystal visual implementation
+- Replaced the former small diamond crystal drawing in `lib/game/arena_painter.dart` with a tall, faceted crystal monolith and a substantial pedestal.
+- Added a pulsing owner-color energy bloom, brighter facet highlights, always-visible HP bars, and progressive crack details as HP falls.
+- Kept the existing seven crystal slots, positions, HP values, damage rules, rebuild logic, and gameplay hit/collision radius unchanged.
+- Commit: `c05605f62a7b387f390f98fc6e7a6a48b3afe65d`.
+- Validation status: source change is pushed; Flutter analyze/tests and Android release build are pending the GitHub Actions run. Visual scale/readability still needs an in-game capture review at normal mobile zoom.
