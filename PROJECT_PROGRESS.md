@@ -558,3 +558,10 @@ Verification:
 - Manual review of existing Stage One captures: the hero baseline render is visible and the hero model is large enough to inspect, but the separate 1920x1080 arena overview has no hero in frame and crops the upper/lower castle areas. This is recorded as a visual acceptance issue to investigate; passing image-capture tests alone do not prove camera framing is accepted.
 - CI hardening: cap apt package installation, Blender generation/rendering, and emulator test runtime so a stalled environment does not occupy a runner indefinitely.
 - No claim that Stage One is complete until Android emulator smoke passes and the arena framing/captures are reviewed.
+
+
+## Follow-up fixes after CI failures (2026-11-19)
+- Run 218 Android emulator smoke failed because Android system services died after boot (ADB Broken pipe / DeadSystemException); this is an emulator environment crash, not a Flutter assertion report. Retrying with clean no-snapshot boot and explicit 2 GB / 2 CPU emulator limits.
+- Run 219 monster generation failed inside Blender 3.0.1 while starting EEVEE render in headless mode (process aborted with exit 134). GLB generation had passed in earlier run 217; changed preview rendering to Blender Workbench studio/material shading to avoid headless EEVEE initialization. Needs CI revalidation.
+- Stage One remains incomplete: emulator smoke still not passed; camera overview crop/no-hero issue remains open.
+- Stage Two: four GLB prototypes previously generated and validator passed in run 217. New preview-render change is pending validation; no final visual sign-off or runtime integration yet.
