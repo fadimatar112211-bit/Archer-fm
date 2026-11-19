@@ -217,3 +217,26 @@ The regression suite also covers: multiple simultaneous projectiles; left/up tra
 - The default projection remains yaw zero with `groundScaleY=0.82`; the new non-zero-yaw painter regression exercises the opt-in path. This is not a claim that the shipped game has enabled yaw by default.
 - Mines, castles, terrain, bridges, pickups, zones, fire waves, fog and world effects inherit the shared ground transform because they are painted inside the same world canvas.
 - Remaining visual review: confirm objective structures and mines remain legible under yaw; rocks are ground-plane silhouettes; confirm crystal labels/HP bars and touch targeting visually; inspect all target landscape aspect ratios. Do not turn on a non-zero production yaw until captures are reviewed.
+
+## Castle occlusion layers (2026-11-19)
+
+The castle renderer no longer submits the complete castle as one oversized depth unit.
+The courtyard, keep/banner, each wall arc (including that arc's crenellations), and
+each living crystal are separate entries in the same ground-depth queue as the
+player, monsters, corpses, obstacles and projectiles.
+
+- Courtyard and keep use the castle anchor.
+- Each wall arc uses the midpoint of its own ground-plane arc as its depth anchor.
+- Each crystal uses its own base position; its tall body and HP bar remain a single
+  upright visual unit.
+- Fallen castles and destroyed crystals are omitted using the existing gameplay
+  state. No HP, collision, target selection, wall geometry or castle ownership
+  rules were changed.
+- The castle layer regression suite covers four castles, all 16 wall arcs,
+  missing/single wall sets, narrow/wide arcs, fallen castles, destroyed crystals
+  and repeated rendering.
+
+This improves coarse wall-segment occlusion, but it is not mesh-level 3D geometry:
+individual crenellations, banners, and the keep's vertical surfaces are still
+drawn together with their owning layer. Pixel-level capture review is still
+required before calling the visual result final.
