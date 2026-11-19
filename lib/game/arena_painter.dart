@@ -305,7 +305,6 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
-    _paintMines(canvas);
 
     // Pickups: mine output, loose resources and chests.
     for (final pickup in world.mineSystem.pickups) {
@@ -351,8 +350,7 @@ class ArenaPainter extends CustomPainter {
 
   }
 
-  void _paintMines(Canvas canvas) {
-    for (final mine in world.mineSystem.mines) {
+  void _paintMine(Canvas canvas, MineState mine) {
       final owned = mine.ownerId != null;
       final mineColor = !owned
           ? _rockColor
@@ -438,7 +436,6 @@ class ArenaPainter extends CustomPainter {
             ..color = ringColor,
         );
       }
-    }
   }
 
   void _paintCastleCourtyard(Canvas canvas, CastleState castle) {
@@ -993,6 +990,20 @@ class ArenaPainter extends CustomPainter {
         order: currentOrder,
         draw: () => _withUprightGroundActor(canvas, corpse.position, () {
           _paintCorpse(canvas, corpse);
+        }),
+      ));
+    }
+
+    // Mines are ground-level world objects, not a terrain overlay. Queue
+    // them with heroes and obstacles so a character can pass in front of or
+    // behind a mine according to the same camera depth.
+    for (final mine in world.mineSystem.mines) {
+      final mineOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(mine.position),
+        order: mineOrder,
+        draw: () => _withUprightGroundActor(canvas, mine.position, () {
+          _paintMine(canvas, mine);
         }),
       ));
     }
