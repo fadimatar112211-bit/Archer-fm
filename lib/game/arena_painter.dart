@@ -82,14 +82,26 @@ class ArenaPresentation {
 /// AoE telegraphs and transient labels. The painter scales the logical arena
 /// (`arenaWidth × arenaHeight`) to fit the widget, letterboxed.
 class ArenaPainter extends CustomPainter {
-  ArenaPainter({required this.world, required this.presentation});
+  ArenaPainter({
+    required this.world,
+    required this.presentation,
+    this.projection = const ArenaWorldProjection(groundScaleY: 0.82),
+  });
 
   final GameWorld world;
   final ArenaPresentation presentation;
 
+  /// Projection snapshot shared with pointer transforms by the arena host.
+  /// The production default remains yaw-zero until full-scene visual review.
+  final ArenaWorldProjection projection;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final cameraTransform = ArenaCameraTransform.forViewport(size, world);
+    final cameraTransform = ArenaCameraTransform.forViewport(
+      size,
+      world,
+      projection: projection,
+    );
     final scale = cameraTransform.scale;
     final origin = cameraTransform.viewportOrigin;
     final viewWidth = arenaWidth * scale;
@@ -975,8 +987,7 @@ class ArenaPainter extends CustomPainter {
   /// Draw every ground actor in one depth order. The hero, hostile units,
   /// owned units and corpses therefore occlude one another consistently as
   /// they cross on the projected ground plane.
-  ArenaWorldProjection get cameraProjection =>
-      const ArenaWorldProjection(groundScaleY: 0.82);
+  ArenaWorldProjection get cameraProjection => projection;
 
   void _paintActors(Canvas canvas) {
     final actors = <({double depth, int order, VoidCallback draw})>[];
