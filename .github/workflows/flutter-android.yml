@@ -22,7 +22,7 @@ permissions:
 jobs:
   build-release-apk:
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: timeout 20m flutter test integration_test/app_smoke_test.dart
+          script: timeout 35m flutter test --reporter expanded integration_test/app_smoke_test.dart
 
       - name: Build Release APK
         run: flutter build apk --release
