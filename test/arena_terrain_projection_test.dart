@@ -161,6 +161,77 @@ void main() {
       ], treeAndRockCounts);
     });
 
+    test('hero overlaps trees and rocks from multiple sides without painter state changes', () {
+      final world = _world(641);
+      final obstacles = world.map.obstacles.take(8).toList();
+      expect(obstacles, hasLength(8));
+      final before = obstacles
+          .map((obstacle) => [obstacle.position, obstacle.radius, obstacle.kind])
+          .toList();
+      for (var i = 0; i < obstacles.length; i++) {
+        final obstacle = obstacles[i];
+        final offsets = const [
+          Offset(0, 0),
+          Offset(24, 0),
+          Offset(-24, 0),
+          Offset(0, 24),
+          Offset(0, -24),
+        ];
+        for (final offset in offsets) {
+          world.player.position = obstacle.position + offset;
+          _paint(
+            _painter(
+              world,
+              ArenaWorldProjection(
+                yawRadians: (i.isEven ? 0.28 : -0.28),
+                groundScaleY: 0.8,
+              ),
+            ),
+            const Size(1920, 1080),
+          );
+        }
+      }
+      expect(
+        obstacles
+            .map((obstacle) => [obstacle.position, obstacle.radius, obstacle.kind])
+            .toList(),
+        before,
+      );
+    });
+
+    test('castle keep, wall segments and crystal plinths paint through actor overlaps', () {
+      final world = _world(643);
+      final castles = world.castleSystem.castles;
+      expect(castles, hasLength(4));
+      for (final castle in castles) {
+        expect(castle.crystals, hasLength(7));
+        expect(castle.walls, isNotEmpty);
+        final targets = [
+          castle.anchor,
+          ...castle.walls.map((wall) {
+            final angle = wall.startAngle + wall.sweep / 2;
+            return wall.center +
+                Offset(math.cos(angle) * wall.radius, math.sin(angle) * wall.radius);
+          }),
+          ...castle.alive.map((crystal) => crystal.position),
+        ];
+        for (final target in targets) {
+          world.player.position = target;
+          _paint(
+            _painter(
+              world,
+              const ArenaWorldProjection(
+                yawRadians: 0.24,
+                groundScaleY: 0.78,
+              ),
+            ),
+            const Size(1920, 1080),
+          );
+        }
+      }
+      expect(castles.every((castle) => castle.aliveCount == 7), isTrue);
+    });
+
     test('camera hit mapping remains invertible for terrain yaw', () {
       final world = _world(617);
       const projection = ArenaWorldProjection(
