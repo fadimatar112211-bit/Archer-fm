@@ -117,6 +117,35 @@ void main() {
       image.dispose();
     });
 
+    test('renders map chests as depth-sorted world pickups', () {
+      final world = _world(437);
+      expect(
+        world.map.pickups.where((pickup) => pickup.kind == PickupKind.chest),
+        isNotEmpty,
+      );
+      _paint(world);
+    });
+
+    test('renders loose resource piles at their world depth', () {
+      final world = _world(438);
+      expect(world.mineSystem.pickups, isNotEmpty);
+      _paint(world);
+    });
+
+    test('pickup rendering preserves map pickup positions and kinds', () {
+      final world = _world(440);
+      final before = world.map.pickups
+          .map((pickup) => [pickup.position, pickup.kind])
+          .toList();
+      _paint(world);
+      expect(
+        world.map.pickups
+            .map((pickup) => [pickup.position, pickup.kind])
+            .toList(),
+        before,
+      );
+    });
+
     test('repeated paint keeps mine count and state stable', () {
       final world = _world(439);
       final count = world.mineSystem.mines.length;
