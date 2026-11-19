@@ -993,6 +993,20 @@ class ArenaPainter extends CustomPainter {
         shadow,
       );
     }
+    // Obstacle shadows belong to the projected ground plane, not the
+    // upright tree/rock artwork. Keeping them here lets the shared camera
+    // compress and rotate footprints consistently with the terrain.
+    for (final obstacle in world.map.obstacles) {
+      final isTree = obstacle.kind == ObstacleKind.tree;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: obstacle.position + Offset(0, obstacle.radius * 0.14),
+          width: obstacle.radius * (isTree ? 2.3 : 2.1),
+          height: obstacle.radius * (isTree ? 0.9 : 0.8),
+        ),
+        shadow,
+      );
+    }
   }
 
   /// Draw every ground actor in one depth order. The hero, hostile units,
@@ -1208,14 +1222,6 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintTreeTrunk(Canvas canvas, MapObstacle obstacle) {
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: obstacle.position + const Offset(0, 8),
-        width: obstacle.radius * 2.3,
-        height: obstacle.radius * 0.9,
-      ),
-      Paint()..color = const Color(0x33000000),
-    );
     canvas.drawRect(
       Rect.fromCenter(
         center: obstacle.position + Offset(0, obstacle.radius * 0.4),
@@ -1243,14 +1249,6 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintObstacle(Canvas canvas, MapObstacle obstacle) {
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: obstacle.position + const Offset(0, 7),
-        width: obstacle.radius * 2.1,
-        height: obstacle.radius * 0.8,
-      ),
-      Paint()..color = const Color(0x33000000),
-    );
     canvas.drawRRect(
       RRect.fromRectAndCorners(
         Rect.fromCenter(
