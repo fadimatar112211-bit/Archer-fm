@@ -216,7 +216,12 @@ def build(kind):
     key=bpy.context.object; key.data.energy=520; key.data.shape="DISK"; key.data.size=4.0
     bpy.ops.object.light_add(type="AREA", location=(3.0,1.5,3.6))
     fill=bpy.context.object; fill.data.energy=260; fill.data.size=3.0
-    scene.render.engine="BLENDER_EEVEE"
+    scene.render.engine="BLENDER_WORKBENCH"
+    scene.display.shading.light="STUDIO"
+    scene.display.shading.color_type="MATERIAL"
+    scene.display.shading.show_shadows=True
+    scene.display.shading.show_cavity=True
+    scene.display.shading.cavity_type="BOTH"
     scene.render.resolution_x=768; scene.render.resolution_y=768
     scene.render.resolution_percentage=100
     scene.render.image_settings.file_format="PNG"
