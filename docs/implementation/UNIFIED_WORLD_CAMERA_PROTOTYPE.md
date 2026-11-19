@@ -202,3 +202,8 @@ A defensive guard skips a projectile with effectively zero velocity rather than 
 ## Projectile regression tests
 
 Added a painter-level regression that renders a moving projectile through the production arena painter and a second regression for a zero-velocity projectile. These tests check that the new path can render without invalid vector normalization or painter exceptions. They do not replace pixel-level ordering captures for behind/in-front crossings.
+
+
+### Additional projectile painter cases now covered
+
+The regression suite also covers: multiple simultaneous projectiles; left/up travel direction; very high velocity values; no mutation of position or velocity while painting; no-enemy/no-army scenes; projectiles alongside obstacles/corpses; large projectile styling; and repeated paints with unchanged simulation state. Together with the moving and zero-velocity cases, this gives ten painter-level scenarios. The tests validate safe rendering/state immutability, not pixel-perfect occlusion order.
