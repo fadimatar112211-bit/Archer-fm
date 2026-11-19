@@ -1077,6 +1077,52 @@ class ArenaPainter extends CustomPainter {
       );
     }
 
+    // Bridges, mines, loose resources and chests use the same soft
+    // ground-contact treatment as actors instead of floating over the floor.
+    for (final river in world.map.rivers) {
+      for (final bridge in river.bridges) {
+        _paintContactShadow(
+          canvas,
+          bridge.center,
+          width: bridge.rect.width * 0.9,
+          height: 15,
+          offsetY: 5,
+          alpha: 88,
+        );
+      }
+    }
+    for (final mine in world.mineSystem.mines) {
+      _paintContactShadow(
+        canvas,
+        mine.position,
+        width: mine.radius * 1.65,
+        height: mine.radius * 0.62,
+        offsetY: 5,
+        alpha: 96,
+      );
+    }
+    for (final pickup in world.mineSystem.pickups) {
+      _paintContactShadow(
+        canvas,
+        pickup.position,
+        width: 25,
+        height: 9,
+        offsetY: 3,
+        alpha: 82,
+      );
+    }
+    for (final pickup in world.map.pickups) {
+      if (pickup.kind == PickupKind.resource) continue;
+      _paintContactShadow(
+        canvas,
+        pickup.position,
+        width: 34,
+        height: 12,
+        offsetY: 4,
+        alpha: 90,
+      );
+    }
+
     // Castle mass, individual wall arcs and crystal plinths cast contact
     // shadows independently, matching their depth-sorted ground anchors.
     for (final castle in world.castleSystem.standingCastles) {
