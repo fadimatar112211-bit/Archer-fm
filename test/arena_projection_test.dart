@@ -51,14 +51,22 @@ void main() {
       expect(projection.depthOf(far), greaterThan(projection.depthOf(near)));
     });
 
-    test('tree canopy anchor sorts behind its ground-level trunk anchor', () {
+    test('tree crown layers sort behind the trunk in depth order', () {
       const projection = ArenaWorldProjection(groundScaleY: 0.82);
       const trunkAnchor = Offset(400, 300);
       const canopyAnchor = Offset(400, 300 - 58 * 0.35);
+      const upperLobeAnchor = Offset(
+        400 - 58 * 0.35,
+        300 - 58 * 0.6,
+      );
 
       expect(
         projection.depthOf(canopyAnchor),
         lessThan(projection.depthOf(trunkAnchor)),
+      );
+      expect(
+        projection.depthOf(upperLobeAnchor),
+        lessThan(projection.depthOf(canopyAnchor)),
       );
     });
 
