@@ -449,6 +449,11 @@ class ArenaPainter extends CustomPainter {
   void _paintCastleCourtyard(Canvas canvas, CastleState castle) {
     final anchor = castle.anchor;
     canvas.drawCircle(
+      anchor + const Offset(0, 8),
+      castleWallRadius + 40,
+      Paint()..color = const Color(0x44301E18),
+    );
+    canvas.drawCircle(
       anchor,
       castleWallRadius + 36,
       Paint()..color = const Color(0x55304A33),
@@ -457,6 +462,14 @@ class ArenaPainter extends CustomPainter {
       anchor,
       castleWallRadius + 30,
       Paint()..color = const Color(0xFF3C4B3E),
+    );
+    canvas.drawCircle(
+      anchor,
+      castleWallRadius + 24,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0x557F927A),
     );
   }
 
@@ -508,9 +521,24 @@ class ArenaPainter extends CustomPainter {
         ? const Color(0xFF9BE845)
         : const Color(0xFFFF7A5A);
     final keep = Rect.fromCenter(center: anchor, width: 56, height: 46);
+    final keepShape = RRect.fromRectAndRadius(keep, const Radius.circular(6));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(keep, const Radius.circular(6)),
-      Paint()..color = const Color(0xFF4D5A50),
+      keepShape.shift(const Offset(0, 8)),
+      Paint()..color = const Color(0x66301F19),
+    );
+    canvas.drawRRect(keepShape, Paint()..color = const Color(0xFF4D5A50));
+    final roof = Path()
+      ..moveTo(keep.left - 4, keep.top + 5)
+      ..lineTo(keep.center.dx, keep.top - 13)
+      ..lineTo(keep.right + 4, keep.top + 5)
+      ..close();
+    canvas.drawPath(roof, Paint()..color = const Color(0xFF7D887B));
+    canvas.drawPath(
+      roof,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = const Color(0xFF9AA596),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(keep.deflate(6), const Radius.circular(4)),
@@ -575,7 +603,25 @@ class ArenaPainter extends CustomPainter {
       ..lineTo(base.dx + 24, base.dy + 8)
       ..lineTo(base.dx - 24, base.dy + 8)
       ..close();
+    canvas.drawPath(
+      plinth.shift(const Offset(0, 4)),
+      Paint()..color = const Color(0x66301E18),
+    );
     canvas.drawPath(plinth, Paint()..color = const Color(0xFF343F3B));
+    final plinthTop = Path()
+      ..moveTo(base.dx - 24, base.dy - 13)
+      ..lineTo(base.dx + 24, base.dy - 13)
+      ..lineTo(base.dx + 31, base.dy - 1)
+      ..lineTo(base.dx - 31, base.dy - 1)
+      ..close();
+    canvas.drawPath(plinthTop, Paint()..color = const Color(0xFF58665D));
+    canvas.drawLine(
+      base + const Offset(-23, -11),
+      base + const Offset(23, -11),
+      Paint()
+        ..color = const Color(0x8897A99A)
+        ..strokeWidth = 2,
+    );
     canvas.drawPath(
       plinth,
       Paint()
