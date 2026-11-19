@@ -207,3 +207,13 @@ Added a painter-level regression that renders a moving projectile through the pr
 ### Additional projectile painter cases now covered
 
 The regression suite also covers: multiple simultaneous projectiles; left/up travel direction; very high velocity values; no mutation of position or velocity while painting; no-enemy/no-army scenes; projectiles alongside obstacles/corpses; large projectile styling; and repeated paints with unchanged simulation state. Together with the moving and zero-velocity cases, this gives ten painter-level scenarios. The tests validate safe rendering/state immutability, not pixel-perfect occlusion order.
+
+
+## Shared yaw projection is now wired into the painter (2026-11-19)
+
+- `ArenaPainter` accepts an immutable `ArenaWorldProjection` snapshot and passes that exact instance to `ArenaCameraTransform` for world-to-widget mapping.
+- The world canvas now applies the projection in the same order as the math model: rotate by `yawRadians`, then compress the camera-depth axis by `groundScaleY`.
+- Upright actors apply the inverse yaw and inverse depth scale around their own ground anchor. This includes hero/monster/corpse bodies, projectile geometry, split tree trunk/canopy layers, and floating labels.
+- The default projection remains yaw zero with `groundScaleY=0.82`; the new non-zero-yaw painter regression exercises the opt-in path. This is not a claim that the shipped game has enabled yaw by default.
+- Mines, castles, terrain, bridges, pickups, zones, fire waves, fog and world effects inherit the shared ground transform because they are painted inside the same world canvas.
+- Remaining visual review: confirm objective structures and mines remain legible under yaw; rocks are ground-plane silhouettes; confirm crystal labels/HP bars and touch targeting visually; inspect all target landscape aspect ratios. Do not turn on a non-zero production yaw until captures are reviewed.
