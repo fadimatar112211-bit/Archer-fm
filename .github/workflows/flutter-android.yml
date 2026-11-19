@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: archer-fm-3d-hero-visual-captures
-          path: /tmp/opencode/merge/captures/*.png
+          path: build/arena-captures/*.png
           if-no-files-found: error
           retention-days: 30
 
