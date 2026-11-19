@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:archer_fm/game/arena_camera.dart';
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
-import 'package:archer_fm/game/world/arena_map.dart' show fogRevealRadius;
 import 'package:archer_fm/game/world/arena_projection.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter/material.dart';
@@ -342,7 +341,16 @@ void main() {
       world.player.position = const Offset(480, 335);
       // The constructor reveals the spawn area; this deterministic capture
       // moves the hero, so reveal the matching area as gameplay would.
-      world.fog.reveal(world.player.position, fogRevealRadius);
+      // Captures are visual-review fixtures, not gameplay fog-of-war tests.
+      // Reveal the entire generated map so hidden cells do not mask the
+      // terrain, props, castles and actor-depth composition being reviewed.
+      world.fog.reveal(
+        world.map.center,
+        math.sqrt(
+          world.map.size.width * world.map.size.width +
+              world.map.size.height * world.map.size.height,
+        ),
+      );
       const projection = ArenaWorldProjection(
         yawRadians: 0.26,
         groundScaleY: 0.79,
