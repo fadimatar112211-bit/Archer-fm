@@ -101,6 +101,19 @@ void main() {
       );
       await save('76_glb_tree_background_narrow', render(const Size(1280, 720)));
 
+      // Split-depth tree: the trunk anchor is in front of the hero while
+      // the canopy anchor (20.3 world units farther back) is behind it.
+      // This is the critical partial-occlusion case for the split painter.
+      world.map.obstacles[0] = MapObstacle(
+        position: base + const Offset(0, 20),
+        radius: 58,
+        kind: ObstacleKind.tree,
+      );
+      await save(
+        '78_glb_tree_split_canopy_trunk_16x9',
+        render(const Size(1920, 1080)),
+      );
+
       // Foreground rock exercises the non-tree obstacle path.
       world.map.obstacles[0] = MapObstacle(
         position: base + const Offset(0, 42),
