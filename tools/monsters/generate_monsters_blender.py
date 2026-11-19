@@ -112,11 +112,12 @@ def build(kind):
     p=PALETTES[kind]
     mats={k:material(kind+"_"+k,v,0.5 if k=="metal" else 0.0,0.5,2.0 if k=="eye" else (1.2 if k=="accent" and kind=="ranged" else 0.0)) for k,v in p.items()}
     rig=make_rig(kind)
-    body_w={"runner":0.76,"tank":1.22,"stalker":0.74,"ranged":0.80}[kind]
+    body_w={"runner":0.78,"tank":1.30,"stalker":0.72,"ranged":0.82}[kind]
     # A compact chibi silhouette: broad readable head, connected shoulders,
     # and a slightly tapered body. All face pieces sit on the forward (-Y) side.
-    primitive("sphere",kind+"_torso",(0,0,1.10),(body_w,0.58,0.90),mats["body"],rig,"spine")
-    primitive("sphere",kind+"_head",(0,-0.035,1.86),(0.82,0.68,0.78),mats["body"],rig,"head")
+    primitive("sphere",kind+"_torso",(0,0,1.10),(body_w,0.66 if kind=="tank" else 0.58,0.96),mats["body"],rig,"spine")
+    primitive("sphere",kind+"_neck",(0,-0.015,1.52),(0.34,0.36,0.34),mats["body"],rig,"spine")
+    primitive("sphere",kind+"_head",(0,-0.055,1.88),(0.84,0.70,0.78),mats["body"],rig,"head")
     primitive("sphere",kind+"_muzzle",(0,-0.365,1.66),(0.25,0.15,0.14),mats["accent"],rig,"head")
     primitive("sphere",kind+"_mouth",(0,-0.405,1.535),(0.15,0.035,0.045),mats["dark"],rig,"head")
     for side in (-1,1):
@@ -125,8 +126,10 @@ def build(kind):
         primitive("sphere",kind+"_brow_"+str(side),(side*0.225,-0.405,2.17),(0.17,0.045,0.055),mats["dark"],rig,"head")
         primitive("sphere",kind+"_shoulder_"+str(side),(side*0.42,0,1.39),(0.35,0.42,0.34),mats["accent"] if kind=="tank" else mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
         primitive("cylinder",kind+"_upperarm_"+str(side),(side*0.47,0,1.13),(0.16,0.16,0.31),mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
-        primitive("sphere",kind+"_hand_"+str(side),(side*0.55,-0.02,0.88),(0.23,0.22,0.22),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
-        primitive("cylinder",kind+"_thigh_"+str(side),(side*0.22,0,0.48),(0.18,0.18,0.31),mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
+        primitive("cylinder",kind+"_forearm_"+str(side),(side*0.52,-0.025,1.00),(0.145,0.145,0.27),mats["body"],rig,"forearm.L" if side<0 else "forearm.R")
+        primitive("sphere",kind+"_hand_"+str(side),(side*0.56,-0.07,0.82),(0.22,0.23,0.22),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
+        primitive("cylinder",kind+"_thigh_"+str(side),(side*0.22,0,0.48),(0.19,0.19,0.34),mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
+        primitive("cylinder",kind+"_shin_"+str(side),(side*0.23,-0.01,0.25),(0.145,0.15,0.23),mats["body"],rig,"shin.L" if side<0 else "shin.R")
         primitive("sphere",kind+"_boot_"+str(side),(side*0.24,-0.09,0.12),(0.25,0.38,0.18),mats["dark"],rig,"shin.L" if side<0 else "shin.R")
     if kind=="runner":
         # Swept ears/scarf and light twin short blades.
@@ -136,7 +139,11 @@ def build(kind):
         for s in (-1,1):
             blade=primitive("cone",kind+"_dagger_"+str(s),(s*0.62,-0.08,0.92),(0.075,0.075,0.34),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
             blade.rotation_euler[1]=math.pi
-        primitive("cube",kind+"_scarf",(0,0.18,1.38),(0.24,0.66,0.16),mats["accent"],rig,"spine")
+        primitive("cube",kind+"_scarf",(0,0.22,1.38),(0.34,0.72,0.18),mats["accent"],rig,"spine")
+        for s in (-1,1):
+            tail=primitive("cone",kind+"_scarf_tail_"+str(s),(s*0.25,0.40,1.48),(0.13,0.13,0.48),mats["accent"],rig,"spine")
+            tail.rotation_euler[1]=s*0.65
+        primitive("sphere",kind+"_chest_badge",(0,-0.34,1.20),(0.18,0.06,0.20),mats["metal"],rig,"spine")
     elif kind=="tank":
         primitive("cube",kind+"_chestplate",(0,-0.28,1.18),(0.88,0.16,0.66),mats["metal"],rig,"spine",0.10)
         for s in (-1,1):
@@ -144,16 +151,21 @@ def build(kind):
             primitive("cube",kind+"_gauntlet_"+str(s),(s*0.57,-0.11,0.88),(0.35,0.36,0.28),mats["accent"],rig,"forearm.L" if s<0 else "forearm.R",0.06)
         primitive("cone",kind+"_helmet_spike",(0,0,2.25),(0.17,0.17,0.34),mats["metal"],rig,"head")
     elif kind=="stalker":
-        primitive("cone",kind+"_hood",(0,0.02,2.12),(0.48,0.50,0.55),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_shell",(0,0.16,1.94),(0.98,0.48,0.91),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
         for s in (-1,1):
             blade=primitive("cone",kind+"_short_blade_"+str(s),(s*0.70,-0.04,0.91),(0.09,0.09,0.39),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
             blade.rotation_euler[1]=math.pi
-        primitive("cube",kind+"_cloak",(0,0.26,1.10),(0.72,0.20,0.86),mats["dark"],rig,"spine",0.08)
+        primitive("cone",kind+"_cloak",(0,0.24,0.94),(0.48,0.48,0.78),mats["dark"],rig,"spine")
+        primitive("sphere",kind+"_belt",(0,-0.32,1.03),(0.62,0.08,0.13),mats["accent"],rig,"spine")
+        primitive("sphere",kind+"_hood_lining",(0,-0.23,1.90),(0.68,0.16,0.72),mats["body"],rig,"head")
     elif kind=="ranged":
         primitive("cone",kind+"_hood",(0,0.02,2.10),(0.46,0.48,0.55),mats["dark"],rig,"head")
-        primitive("cylinder",kind+"_staff",(0.72,0.02,1.15),(0.055,0.055,0.88),mats["metal"],rig,"forearm.R")
-        primitive("ico",kind+"_fire_orb",(0.72,-0.01,2.10),(0.30,0.30,0.30),mats["eye"],rig,"forearm.R")
-        primitive("cube",kind+"_robe",(0,0.20,0.88),(0.78,0.55,0.70),mats["body"],rig,"spine",0.12)
+        primitive("cone",kind+"_robe",(0,0.20,0.94),(0.49,0.48,0.82),mats["body"],rig,"spine")
+        primitive("sphere",kind+"_robe_collar",(0,-0.32,1.42),(0.55,0.12,0.18),mats["accent"],rig,"spine")
+        primitive("cylinder",kind+"_staff",(0.72,0.02,1.30),(0.065,0.065,0.98),mats["metal"],rig,"forearm.R")
+        primitive("sphere",kind+"_staff_grip",(0.72,-0.02,1.10),(0.12,0.12,0.14),mats["accent"],rig,"forearm.R")
+        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.30),(0.30,0.30,0.30),mats["eye"],rig,"forearm.R")
     # Ensure GLB exporter sees the rig and meshes, with no camera/light clutter.
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
