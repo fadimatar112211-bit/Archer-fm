@@ -1027,6 +1027,14 @@ class ArenaPainter extends CustomPainter {
           order: canopyOrder,
           draw: () => _paintTreeCanopy(canvas, obstacle),
         ));
+        final upperLobeAnchor =
+            obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6);
+        final upperLobeOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(upperLobeAnchor),
+          order: upperLobeOrder,
+          draw: () => _paintTreeCanopyUpperLobe(canvas, obstacle),
+        ));
       } else {
         final currentOrder = order++;
         actors.add((
@@ -1081,6 +1089,9 @@ class ArenaPainter extends CustomPainter {
       obstacle.radius,
       Paint()..color = _treeColor,
     );
+  }
+
+  void _paintTreeCanopyUpperLobe(Canvas canvas, MapObstacle obstacle) {
     canvas.drawCircle(
       obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
       obstacle.radius * 0.55,
@@ -1089,12 +1100,6 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintObstacle(Canvas canvas, MapObstacle obstacle) {
-    if (obstacle.kind == ObstacleKind.tree) {
-      _paintTreeTrunk(canvas, obstacle);
-      _paintTreeCanopy(canvas, obstacle);
-      return;
-    }
-
     canvas.drawOval(
       Rect.fromCenter(
         center: obstacle.position + const Offset(0, 7),
