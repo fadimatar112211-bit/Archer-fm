@@ -1,3 +1,7 @@
+> **2026-11-19 VISUAL AUTHORITY OVERRIDE:** The four visual concepts described in this older document (orange Runner, brown Tank, violet Stalker, teal Ranged) are superseded and must not be used as art references. The user supplied the exact four monster designs in a reference sheet. The only approved visual source is `docs/references/USER_APPROVED_VISUAL_REFERENCES.md`, especially `assets/references/approved/monsters/monster_types.png`. Rebuild the four monster models to match the supplied green sword goblin, skeleton dual-blade enemy, horned heavy armored mace enemy, and purple hooded violet-blade enemy exactly. Do not generate substitutions or alter their appearance to fit the older visual briefs. Gameplay stats/logic in this file are not automatically changed by this visual override; inspect and map gameplay roles separately without changing the source art.
+
+---
+
 # Archer FM — Monster Production Specification
 
 > Stage 2, batch 1 (steps 1–5). Audit and approved production brief.
