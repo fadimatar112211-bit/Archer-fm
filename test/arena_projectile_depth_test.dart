@@ -81,6 +81,25 @@ void main() {
       );
     });
 
+    test('renders each living castle crystal through the shared actor depth queue', () {
+      final world = _world(219);
+      for (final castle in world.castleSystem.castles) {
+        expect(castle.alive, hasLength(7));
+        for (final crystal in castle.alive) {
+          // Damaged crystals exercise their HP-bar path as well as the
+          // independently sorted crystal draw closure.
+          crystal.hp = crystal.maxHp * 0.64;
+        }
+      }
+      _paint(world);
+      expect(
+        world.castleSystem.castles
+            .expand((castle) => castle.alive)
+            .length,
+        28,
+      );
+    });
+
     test('renders a moving projectile through the shared actor depth queue', () {
       final world = _world(211);
       world.projectiles.add(_projectile(
