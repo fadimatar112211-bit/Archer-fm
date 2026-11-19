@@ -45,5 +45,13 @@ void main() {
     expect(find.text('الموزَّع: 20/20'), findsOneWidget);
     expect(find.byKey(const ValueKey('start_with_army')), findsOneWidget);
     expect(find.byKey(const ValueKey('home_3d_loaded')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('start_with_army')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('joystick_zone')), findsOneWidget);
+    expect(find.byKey(const ValueKey('btn_attack')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('btn_attack')));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(tester.takeException(), isNull);
   });
 }
