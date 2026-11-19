@@ -111,3 +111,90 @@ This is a visual specification only: preserve the seven-crystal count, current H
 - Damage feedback: visible cracks and unstable energy. Destruction: a clear collapse/shatter sequence with a strong but brief effect.
 - Preserve the existing seven-crystal count and HP values (500, 700, 900, 1200, 1500, 1800, 2200), exposed/walled placement rules, direct-targeting rules and rebuild gameplay. This is a visual specification only; do not silently alter balance or rules.
 - Apply the same large-pillar visual language to original and rebuilt crystals. Validate scale against heroes, monsters, walls and camera framing so the crystals feel monumental without hiding objectives or blocking the battlefield.
+
+
+## Approved gameplay-result reference — detailed implementation specification (2026-11-20)
+
+The user has supplied and approved a third reference image for the **actual in-match presentation** of Archer FM. The repository copy is:
+- `assets/references/approved_all/file_000000005c8c81f9ab4ccbb80ea59d5e.png`
+
+This image has a different purpose from the hero and enemy reference sheets:
+- The hero sheet defines the exact appearance of Ranger, Flame Knight, Shadow and Storm.
+- The enemy sheet defines the exact appearance of the four enemy archetypes.
+- This gameplay screenshot defines the target **camera, battlefield composition, scale, combat readability, HUD arrangement and moment-to-moment visual result**. It does not replace either character reference sheet.
+
+### A. Screen format and camera
+- Target a full-screen landscape mobile composition, approximately 16:9, with no portrait-mode layout.
+- Use an elevated three-quarter/isometric camera looking down enough to show paths, troops, objectives and terrain, while keeping character faces and bodies recognizable.
+- The camera must be close enough that the controlled hero, nearby enemy units and allied troops occupy meaningful screen space; do not pull back so far that characters become tiny.
+- Keep the controlled hero near the lower-middle/left-middle gameplay area as in the reference, with smooth camera follow and enough forward view to see approaching threats.
+- Preserve a useful view of the battlefield around the hero. Avoid excessive zoom, camera shake or effects that hide units.
+- Camera projection, world-to-screen mapping, touch coordinates, minimap and safe areas must remain consistent at supported landscape aspect ratios.
+
+### B. Battlefield environment and composition
+- Build a rich, readable fantasy arena with a walkable stone/cobblestone path winding through natural ground.
+- Mix stone paving, grass, flower patches, bushes, tall grass/reeds, trees, rocks and low stone ruins/walls. Use the reference's natural, lived-in environment rather than a flat empty arena.
+- Include a visible water feature/river or stream and a wooden bridge as recognizable environmental landmarks where the map layout permits.
+- Use terrain height, rocks and vegetation to frame the playable lanes, but never let decoration obscure heroes, monsters, crystal objectives, health bars or attack telegraphs.
+- Use coherent stylized 3D materials, lighting, contact shadows and scale across terrain, props, characters and structures.
+- Keep paths wide and readable enough for groups of troops to move and fight without visually merging into the environment.
+
+### C. Crystals and objective structures
+- Show large, tall, faceted, glowing crystal structures on substantial stone bases, visually prominent from normal gameplay distance.
+- Crystal color communicates ownership/team (the screenshot illustrates blue and red); use the actual player/team palette in the match.
+- Place crystals as meaningful battlefield objectives, not as tiny pickups. Their bases and vertical silhouettes must be visible.
+- Display a clear crystal health bar when the UI/game state calls for it. Make ownership and damage state readable.
+- Maintain the previously approved seven-crystal-per-player gameplay specification and existing objective rules; the sample image's visible crystal counts are illustrative only.
+
+### D. Character, troop and monster presentation
+- The controlled hero must be a clearly identifiable 3D character, with a visible team/selection ring beneath the feet and a readable level indicator and health bar nearby.
+- Keep the hero's exact approved design from the hero reference sheet. The gameplay screenshot is not permission to replace the approved Ranger design or redesign the other three heroes.
+- Show allied and enemy troops in distinguishable team colors, with compact silhouettes, readable weapons and clear movement/attack poses.
+- Show large/heavy monsters with noticeably greater body mass and screen presence than ordinary troops. Fast and ranged enemies should remain distinguishable by silhouette and attack behavior.
+- Use the exact four approved enemy designs from the enemy reference sheet. Do not infer a new permanent fifth monster type from incidental creatures in this gameplay illustration.
+- Enemy heroes/units may display their level and health bar above their head; keep bars aligned with the moving actor and avoid overlap where possible.
+- Use selection/team rings sparingly and consistently to clarify ownership or target state.
+
+### E. Combat feedback and moment-to-moment readability
+- Attacks should produce readable weapon motion, projectile/energy trails or impact flashes that visually connect attacker and target.
+- Show damage numbers briefly above the hit target, with strong contrast and a short, non-obstructive animation.
+- Health bars should update immediately and remain legible against busy terrain.
+- Telegraph heavy attacks and area effects with clear ground indicators, but do not cover the whole battlefield with bright effects.
+- Maintain the approved combat rules: one tap produces one basic attack; holding the attack control must not auto-repeat; dodge is separate; the five-hit combo remains separate from the four Ultimates.
+- Skill effects should use each hero's established signature palette and must remain readable at the target gameplay zoom.
+
+### F. HUD layout — match the reference's hierarchy
+- **Top-left player panel:** circular hero portrait, player name, current/max HP bar, and a compact hero-level badge. Keep it inside the landscape safe area.
+- **Top-center match strip:** team crystal/objective counters on either side of a central match timer; a match/combat icon may separate the counters. The exact sample values are not fixed gameplay rules.
+- **Top-right:** a compact minimap in a framed panel, plus a separate settings button near it. The minimap must show arena boundaries, player/team markers and relevant objectives using clear symbols/colors.
+- **Above battlefield actors:** contextual level badges and health bars for the controlled hero, enemy heroes and important monsters; show damage numbers only when a hit occurs.
+- **Bottom-left:** large translucent virtual movement joystick with a clear thumb area and directional response.
+- **Bottom-right:** large, separate, circular combat controls with distinct icons and color identity. The reference places a prominent basic attack/sword button at the lower-right, with skill/ability buttons arranged above and to its left.
+- **Bottom area near the controls:** a potion/consumable button with a visible remaining-count badge.
+- Keep all touch targets comfortably tappable on phones. Reserve screen space so the HUD does not unnecessarily cover the controlled hero, nearby enemies or objective lanes.
+- Arabic-first UI remains mandatory. The screenshot's sample Arabic player label and numeric HUD are visual examples; localize all labels and accessible names consistently in Arabic.
+
+### G. Responsive layout and interaction requirements
+- Preserve the same hierarchy at different phone aspect ratios; scale and reposition panels rather than cropping essential controls.
+- The joystick must remain reachable by the left thumb; attack and skill controls must remain reachable by the right thumb.
+- Support simultaneous movement and attack inputs without pointer conflicts.
+- Ensure button presses trigger exactly the intended action and do not repeat attacks because a pointer remains held.
+- Keep minimap, settings, player panel and top counters clear of notches/cutouts and system gesture areas.
+- Test the real game at 16:9 and narrower/wider landscape aspect ratios, with small and large device resolutions.
+
+### H. What must not be copied as fixed rules from the screenshot
+The screenshot is a visual target, not a source of balance constants. Do not hardcode its sample player level (18), enemy level (17), HP (850/850), match time (07:24), crystal counters (2 and 1), damage number (126), potion count (3), troop counts, unit colors or exact actor positions as game rules. Use the actual Archer FM match state, team assignment, combat data and approved economy/objective rules.
+
+### I. Visual acceptance checklist
+A gameplay capture can pass review only when:
+1. It is landscape and the full battlefield/HUD hierarchy is visible.
+2. Camera angle and distance clearly show the hero, nearby troops, enemies, paths and objectives.
+3. Hero and monster appearances match their own approved source sheets.
+4. Terrain has the reference's rich stone/grass/water/bridge/vegetation language without harming navigation or visibility.
+5. Crystal structures read as tall glowing objectives with visible ownership and health feedback.
+6. Top-left player panel, top-center timer/objective strip, top-right minimap/settings, bottom-left joystick and bottom-right combat controls are all present and legible.
+7. Damage, health, levels, team ownership and attack effects are readable during active combat.
+8. The controls remain functional and preserve one-press/one-attack semantics.
+9. No visual element obscures critical gameplay information at common phone resolutions.
+10. The reviewed screenshot comes from the actual running game build; concept images or mockups alone do not count as implementation evidence.
+
