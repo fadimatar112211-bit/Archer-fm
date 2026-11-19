@@ -339,6 +339,9 @@ void main() {
     test('captures full arena at three common landscape viewport sizes', () async {
       final world = _world(661);
       world.player.position = const Offset(480, 335);
+      // The constructor reveals the spawn area; this deterministic capture
+      // moves the hero, so reveal the matching area as gameplay would.
+      world.fog.reveal(world.player.position, fogRevealRadius);
       const projection = ArenaWorldProjection(
         yawRadians: 0.26,
         groundScaleY: 0.79,
