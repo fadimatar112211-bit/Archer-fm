@@ -529,3 +529,14 @@ Verification:
 - The validator is ready to run when actual GLB files and `assets/monsters/3d/manifest.json` are supplied. It intentionally does not claim to assess visual quality, deformation, foot contact or Android performance.
 - No model files were fabricated. The four model-production steps remain blocked until actual source meshes/rigs are created or supplied.
 - Stage-one run `44465905653` was checked again at 2026-11-19 05:43 UTC: Android emulator step had been running since 05:34 UTC, with no completed result; Release APK and APK verification were still pending. Run `44465899058` was in the same state. This is a stalled/long-running CI condition, not a successful emulator or APK result.
+
+
+### 2026-11-19 — Stage-one CI isolation and monster model generator
+
+- Split Android Release APK build/signature verification and Android emulator smoke test into independent GitHub Actions jobs. A stalled emulator can no longer block APK compilation, signing verification, artifact upload, or release publication.
+- Added an 8-minute widget-test timeout to `integration_test/app_smoke_test.dart` so a hanging smoke test fails with a bounded diagnostic instead of occupying the emulator job indefinitely.
+- Added `tools/monsters/generate_monsters_blender.py`: a free, reproducible Blender-based generator for four distinct stylized, rigged monster GLBs (Runner, Tank, Stalker, Ranged), including face/weapon details, skinning, and named gameplay clips.
+- Added a CI job that installs Blender, generates the four GLBs, runs `tools/validate_monster_glb.py`, and uploads the generated files as the `archer-fm-rigged-monster-glbs` artifact.
+- Important acceptance limit: these are generated first-pass production prototypes. They are not yet approved final art, are not yet integrated into the arena runtime, and must pass the CI export/validation plus gameplay-distance visual review before the Canvas fallback is replaced.
+- Workflow runs `44467506887` and `44467502786` (created before the final generator-job commit) show Analyze, all Flutter tests, and visual-capture upload passing; Release APK build and Android emulator smoke test are running independently. Their outcomes are not yet known.
+- Latest implementation commits: `2cbb029` (generator), `7abb6f8` (clip-name manifest fix), `73fbeff` (CI model-generation job).
