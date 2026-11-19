@@ -565,3 +565,20 @@ Verification:
 - Run 219 monster generation failed inside Blender 3.0.1 while starting EEVEE render in headless mode (process aborted with exit 134). GLB generation had passed in earlier run 217; changed preview rendering to Blender Workbench studio/material shading to avoid headless EEVEE initialization. Needs CI revalidation.
 - Stage One remains incomplete: emulator smoke still not passed; camera overview crop/no-hero issue remains open.
 - Stage Two: four GLB prototypes previously generated and validator passed in run 217. New preview-render change is pending validation; no final visual sign-off or runtime integration yet.
+
+
+## Parallel continuation — stage-by-stage status (2026-11-19)
+
+### Stage One — arena and Android acceptance (30 steps)
+- Verified current camera transform is shared by painter and input, and camera follows the player with smoothing and map-bound clamping (lib/game/arena_camera.dart, lib/game/world/game_world.dart).
+- Visual review remains blocked: the 1920×1080 arena capture shows the castle/crystal field cropped at viewport edges and no visible player; the separate hero baseline capture does show the Ranger but its body reads side/back-facing. This needs a corrected in-match capture and facing/camera review.
+- Android smoke failure from run 44483818874 is an emulator OS crash after boot (DeadSystemException, ADB broken pipe), not a reported Flutter test assertion. New run retries clean boot with no snapshot, wipe-data, 2 GB RAM and 2 cores.
+- APK build/signing succeeded in run 44483818874 (release v1.0.218), but Stage One is NOT accepted until a fresh emulator smoke passes and camera/hero visuals are reviewed.
+- Current progress: foundational implementation and build verification are in place; visual framing + reliable emulator smoke remain open. Do not mark 30/30.
+
+### Stage Two — four monster models and army integration (30 steps)
+- Batch 1 / steps 1–5: complete as audit/specification, not art completion.
+- Batch 2 / steps 6–10: canonical pipeline and four rigged GLB prototypes exist; run 44483399654 structurally validated all four assets (Runner 6 clips, Tank 5, Stalker 5, Ranged 7; 1 skin each). These are procedural low-poly prototypes, not visually approved production art and not integrated in runtime.
+- Current headless Blender CI aborts while invoking render backend. Changed previews to opt-in only via ARCHER_MONSTER_PREVIEWS=1, so required GLB export and structural validation do not depend on headless rendering. Revalidate in latest workflow before proceeding.
+- Keep Canvas monsters as runtime fallback until visual and animation review plus Android runtime integration passes.
+- No new monster types or gameplay systems added.
