@@ -402,3 +402,7 @@ Verification:
 - This is a coarse castle-level depth unit: individual walls and crystals are not yet independently sorted against actors. Capture and review is still required.
 - Code commit: `e4ba35b6ff83a1dac0d4e1d00d6feb41a70c2834`.
 - The new commit's Analyze/tests/APK status must be read from its Actions run before claiming verification.
+
+- Follow-up code commit: `7e9b26f375a82f1d0511e5c320bcf1d10f461758`.
+- Split living crystals out of the castle draw closure and inserted each crystal into the shared depth queue using its own base position. This permits per-crystal foreground/background ordering while keeping the castle keep and wall composition stable.
+- Crystal rendering still uses the existing owner tint, glow and HP bar painter; no gameplay or objective state was changed.
