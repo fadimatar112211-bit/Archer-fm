@@ -316,3 +316,17 @@ Completed the third five-task implementation batch:
 The regression test uses both tree and rock samples explicitly (four of each), three hero offsets per obstacle, and paints all four castles, their wall segments and their seven living crystals under a non-zero yaw. Tests also assert that castle crystal counts remain seven.
 
 Latest code/test commit: `385efb23`. GitHub Actions run `44431595448` is in progress; Analyze and tests have not yet reported a result for this commit. Do not treat this batch as CI-approved until that run completes.
+
+## Stage one — tasks 16–20: structure shadows and lighting (2026-11-19)
+
+Completed the fourth five-task implementation batch:
+
+16. Added a front/rear approach regression around a castle wall segment and a crystal base, painting the hero from both depth sides under non-zero yaw; the existing castle overlap regression continues to cover all four castles and their wall/crystal anchors.
+17. Added separate projected contact shadows for each standing castle footprint, each wall segment and every living crystal plinth.
+18. Unified hero and monster contact shadows through one soft radial ground-shadow helper with size-scaled footprints.
+19. Routed tree and rock ground shadows through the same helper, retaining different footprint proportions and opacity so the two obstacle types remain distinguishable.
+20. Aligned castle wall shading with the scene's upper-left light direction using a diagonal wall gradient and a restrained bright edge highlight; the keep roof and crystal facets retain matching upper-left highlights.
+
+Added regression coverage for front/rear wall and crystal approaches and for castle/actor shadow rendering at negative, zero and positive yaw. The tests assert that painting does not change castle crystal counts. This is renderer regression coverage, not a visual approval from a physical-device screenshot.
+
+Latest implementation commits: `71d0b4fc` (shared shadows), `3964ef94` (overlap/shadow tests), and `3bd0442c` (directional wall lighting). CI runs for the latest batch are still progressing through release APK builds; do not claim final CI approval until the newest run completes.
