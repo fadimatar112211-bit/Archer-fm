@@ -117,6 +117,62 @@ void main() {
       _paint(world);
     });
 
+    test('castle painting does not change wall arc geometry', () {
+      final world = _world(349);
+      final castle = world.castleSystem.castles.first;
+      final before = castle.walls
+          .map((wall) => [wall.center, wall.radius, wall.startAngle, wall.sweep])
+          .toList();
+      _paint(world);
+      final after = castle.walls
+          .map((wall) => [wall.center, wall.radius, wall.startAngle, wall.sweep])
+          .toList();
+      expect(after, before);
+    });
+
+    test('castle painting does not mutate crystal health or positions', () {
+      final world = _world(353);
+      final crystals = world.castleSystem.castles
+          .expand((castle) => castle.crystals)
+          .toList();
+      final before = crystals
+          .map((crystal) => [crystal.position, crystal.hp, crystal.maxHp])
+          .toList();
+      _paint(world);
+      final after = crystals
+          .map((crystal) => [crystal.position, crystal.hp, crystal.maxHp])
+          .toList();
+      expect(after, before);
+    });
+
+    test('castle painter preserves local and rival ownership flags', () {
+      final world = _world(359);
+      final ownership = world.castleSystem.castles
+          .map((castle) => [castle.ownerId, castle.isLocal])
+          .toList();
+      _paint(world);
+      expect(
+        world.castleSystem.castles
+            .map((castle) => [castle.ownerId, castle.isLocal])
+            .toList(),
+        ownership,
+      );
+    });
+
+    test('each castle can be painted independently without wall coupling', () {
+      final world = _world(367);
+      final castles = world.castleSystem.castles.toList();
+      for (final castle in castles) {
+        for (final other in castles.where((item) => !identical(item, castle))) {
+          other.fallen = true;
+        }
+        _paint(world);
+        for (final other in castles.where((item) => !identical(item, castle))) {
+          other.fallen = false;
+        }
+      }
+    });
+
     test('repeated paint remains stable with segmented castle layers', () {
       final world = _world(347);
       _paint(world);
