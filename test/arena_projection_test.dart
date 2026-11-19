@@ -70,6 +70,67 @@ void main() {
       );
     });
 
+    test('focus maps to projected origin for translated camera targets', () {
+      for (final focus in const [
+        Offset.zero,
+        Offset(480, 270),
+        Offset(1920, 1080),
+      ]) {
+        final projection = ArenaWorldProjection(
+          yawRadians: 0.63,
+          groundScaleY: 0.74,
+          scale: 1.3,
+          focus: focus,
+        );
+        expect(projection.projectGround(focus), Offset.zero);
+      }
+    });
+
+    test('depth ordering is invariant under world translation', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: -0.37,
+        groundScaleY: 0.79,
+      );
+      const a = Offset(130, 260);
+      const b = Offset(190, 330);
+      const translation = Offset(900, 420);
+      expect(
+        projection.depthOf(b) - projection.depthOf(a),
+        closeTo(
+          projection.depthOf(b + translation) -
+              projection.depthOf(a + translation),
+          1e-9,
+        ),
+      );
+    });
+
+    test('negative world height moves projected point downward', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.2,
+        groundScaleY: 0.8,
+        scale: 1.4,
+      );
+      const anchor = Offset(250, 410);
+      final ground = projection.projectGround(anchor);
+      final belowGround = projection.projectHeight(anchor, -25);
+      expect(belowGround.dx, closeTo(ground.dx, 1e-9));
+      expect(belowGround.dy, closeTo(ground.dy + 35, 1e-9));
+    });
+
+    test('projected ground scale is linear for translated points', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.4,
+        groundScaleY: 0.7,
+        scale: 1.5,
+      );
+      const a = Offset(100, 200);
+      const delta = Offset(30, -45);
+      final projectedDelta =
+          projection.projectGround(a + delta) - projection.projectGround(a);
+      expect(projectedDelta.dx, closeTo(1.5 * (30 * 0.921060994 + 45 * 0.389418342), 1e-8));
+      expect(projectedDelta.dy, closeTo(1.5 * 0.7 * (30 * 0.389418342 - 45 * 0.921060994), 1e-8));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
