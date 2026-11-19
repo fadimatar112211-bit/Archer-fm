@@ -87,7 +87,7 @@ Implemented on `ranger-reference-work`:
 
 Still not implemented or accepted:
 - Terrain/river/bridge geometry has not been migrated to a full yawed 3D/isometric projection; current ground transform is vertical compression only.
-- Trees and rocks now participate in the same painter-order list as actors, but each obstacle is still sorted by one ground anchor. Large canopies/irregular silhouettes can therefore produce imperfect partial occlusion when their visual bounds cross multiple depth rows.
+- Trees and rocks participate in the same painter-order list as actors. Tree shadow/trunk, main crown, and upper highlight lobe are independently depth-sorted using separate anchors. The canopy is still represented by two filled circular lobes rather than per-branch geometry, so complex silhouette overlaps remain approximate; rocks remain single shapes.
 - Projectiles, AoE, castles, crystals, pickups and fog are not all depth-sorted/projected with actors.
 - Automated captures are not a substitute for review on physical Android devices.
 - No frame-time/CPU-skinning benchmark has been recorded.
@@ -97,7 +97,7 @@ Still not implemented or accepted:
 
 The deterministic tree capture in `map_capture_test.dart` is only a visual artifact and renders the fallback player representation. A separate production-path capture test now loads `ranger_animated.glb`, passes its `Hero3DController` into `ArenaPainter`, and saves foreground-tree, background-tree and foreground-rock scenes at multiple landscape sizes (`test/hero3d_occlusion_capture_test.dart`). These are real GLB inspection captures, but they still do not assert pixel-level occlusion or prove visual acceptance; inspect the generated PNGs before signing off. The next implementation pass must add a GLB-enabled capture (or a stable test double with the same paint bounds), a corresponding no-occluder baseline, and assertions/review that confirm the expected foreground pixels actually cover the actor. Repeat the case with a rock and with the actor on both sides of the obstacle depth anchor. The GLB capture test now creates those cases; the remaining gate is to inspect its images and add pixel-level assertions if stable across the software rasterizer. Then test narrow landscape, 16:9 and wide landscape captures before accepting the camera.
 
-The current painter-order implementation sorts each tree/rock as one item by `obstacle.position`; it does not split tree trunk and canopy into separate depth layers. Partial canopy overlaps can therefore remain imperfect even though whole-obstacle ordering is shared.
+The painter-order implementation has since been refined: tree shadow/trunk, main crown and upper highlight lobe are independently sorted. This improves partial occlusion but is not full mesh-level foliage sorting; the two canopy lobes remain filled circles and rocks remain single depth-sorted shapes.
 
 ## Initial capture review (run 44423577850)
 
@@ -129,3 +129,11 @@ The tree canopy is now represented by two independently depth-sorted draw layers
 The GLB inspection test now also emits `73_glb_hero_no_obstacle_baseline.png`. Compare this baseline with captures 74–78 to determine whether the actual model silhouette is visible and which pixels are covered by the obstacle. These are still review captures; they do not constitute a pixel-level automated occlusion assertion.
 
 The camera suite now includes a yawed-projection pointer round-trip test. This validates the transform math only: the live arena painter currently applies vertical ground compression, not the full yaw rotation to terrain and every world object. The approved oblique 3D world camera remains unfinished.
+
+
+## Regression expansion after fine-grained canopy work (2026-11-19)
+
+- Added projection invariants for camera focus origin, translation-invariant depth differences, negative height offsets, and linear projected displacement.
+- Added camera regressions for letterbox geometry, fixed center under yaw, and inverse-projected viewport corner containment.
+- Added two real Ranger GLB review captures for a far-background tree and a background rock, complementing the existing foreground/background tree, split-depth tree, foreground rock and no-obstacle baseline.
+- These additions expand mathematical and visual review coverage; they do not establish a full yawed world renderer or visual acceptance. Await CI and inspect the newly generated artifact.
