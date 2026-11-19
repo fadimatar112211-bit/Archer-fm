@@ -616,3 +616,5 @@ Verification:
 - New Actions run `44486855762` is testing this correction. Await the GLB generation, preview images, Flutter tests, APK build, and emulator smoke results before marking any of them passed.
 - Stage One remains open: Android smoke and visual framing/facing acceptance have not yet passed on the current HEAD.
 - Stage Two remains open: four GLBs passed structural validation on earlier runs, but the procedural art prototypes are not visually approved and the current runtime still uses the Canvas renderer.
+
+- Follow-up visual geometry adjustment in commit `0f8ea90f13c9a80719a10bb0ddc1a4d689cc85fc`: organic forms (spheres/icospheres/cylinders) now use smooth polygon shading while armor/cube forms remain crisp. This is intended to reduce faceted/triangulated noise in small monster faces and silhouettes; it is pending the new CI preview artifact and visual review.
