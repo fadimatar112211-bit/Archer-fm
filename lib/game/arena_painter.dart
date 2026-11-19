@@ -114,6 +114,7 @@ class ArenaPainter extends CustomPainter {
     canvas.scale(scale);
     final projectionCenter = const Offset(arenaWidth / 2, arenaHeight / 2);
     canvas.translate(projectionCenter.dx, projectionCenter.dy);
+    canvas.rotate(cameraTransform.projection.yawRadians);
     canvas.scale(1, cameraTransform.projection.groundScaleY);
     canvas.translate(-projectionCenter.dx, -projectionCenter.dy);
     final camera = cameraTransform.cameraOrigin;
@@ -145,6 +146,7 @@ class ArenaPainter extends CustomPainter {
     final depthScale = cameraProjection.groundScaleY;
     canvas.save();
     canvas.translate(anchor.dx, anchor.dy);
+    canvas.rotate(-cameraProjection.yawRadians);
     canvas.scale(1, 1 / depthScale);
     canvas.translate(-anchor.dx, -anchor.dy);
     draw();
