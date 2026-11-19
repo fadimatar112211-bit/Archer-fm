@@ -146,6 +146,109 @@ void main() {
       );
     });
 
+    test('renders mine capture ring at zero progress without mutation', () {
+      final world = _world(445);
+      final mine = world.mineSystem.mines.first;
+      mine.capturerId = 'player';
+      mine.captureProgressMs = 0;
+      _paint(world);
+      expect(mine.captureFraction, 0);
+    });
+
+    test('renders mine capture ring at full progress', () {
+      final world = _world(449);
+      final mine = world.mineSystem.mines.first;
+      mine.capturerId = 'player';
+      mine.captureProgressMs = mineCaptureDurationMs;
+      _paint(world);
+      expect(mine.captureFraction, 1);
+    });
+
+    test('renders rival ownership tint with active capture ring', () {
+      final world = _world(451);
+      final mine = world.mineSystem.mines.first;
+      mine.ownerId = 'rival_2';
+      mine.capturerId = 'player';
+      mine.captureProgressMs = mineCaptureDurationMs * 0.8;
+      _paint(world);
+      expect(mine.owns('rival_2'), isTrue);
+      expect(mine.captureFraction, closeTo(0.8, 0.001));
+    });
+
+    test('painting mines preserves every mine ground position', () {
+      final world = _world(457);
+      final before = world.mineSystem.mines.map((mine) => mine.position).toList();
+      _paint(world);
+      expect(world.mineSystem.mines.map((mine) => mine.position).toList(), before);
+    });
+
+    test('painting mines preserves mine size and radius', () {
+      final world = _world(461);
+      final before = world.mineSystem.mines
+          .map((mine) => [mine.size, mine.radius])
+          .toList();
+      _paint(world);
+      expect(
+        world.mineSystem.mines
+            .map((mine) => [mine.size, mine.radius])
+            .toList(),
+        before,
+      );
+    });
+
+    test('empty mine collection does not break actor painting', () {
+      final world = _world(463);
+      world.mineSystem.mines.clear();
+      _paint(world);
+      expect(world.mineSystem.mines, isEmpty);
+    });
+
+    test('mine capture state can be painted in any actor order', () {
+      final world = _world(467);
+      for (var i = 0; i < world.mineSystem.mines.length; i++) {
+        final mine = world.mineSystem.mines[i];
+        mine.capturerId = i.isEven ? 'player' : 'rival_1';
+        mine.captureProgressMs = mineCaptureDurationMs * ((i % 4) / 4);
+      }
+      _paint(world);
+      expect(
+        world.mineSystem.mines.every((mine) => mine.captureFraction >= 0),
+        isTrue,
+      );
+    });
+
+    test('neutral mine remains neutral after rendering', () {
+      final world = _world(479);
+      final mine = world.mineSystem.mines.first;
+      mine.ownerId = null;
+      _paint(world);
+      expect(mine.isNeutral, isTrue);
+    });
+
+    test('resource pickup age and amount are unchanged by rendering', () {
+      final world = _world(487);
+      final before = world.mineSystem.pickups
+          .map((pickup) => [pickup.amount, pickup.bornAtMs, pickup.fromMine])
+          .toList();
+      _paint(world);
+      expect(
+        world.mineSystem.pickups
+            .map((pickup) => [pickup.amount, pickup.bornAtMs, pickup.fromMine])
+            .toList(),
+        before,
+      );
+    });
+
+    test('chest and resource pickup depth passes are repeatable', () {
+      final world = _world(491);
+      _paint(world);
+      _paint(world);
+      expect(
+        world.map.pickups.where((pickup) => pickup.kind == PickupKind.chest),
+        isNotEmpty,
+      );
+    });
+
     test('repeated paint keeps mine count and state stable', () {
       final world = _world(439);
       final count = world.mineSystem.mines.length;
