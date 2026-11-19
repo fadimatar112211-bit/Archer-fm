@@ -166,6 +166,44 @@ void main() {
       _paint(world);
     });
 
+    test('unlifted projectile visual position equals its ground anchor', () {
+      final shot = _projectile(
+        id: 'grounded',
+        position: const Offset(333, 222),
+        velocity: const Offset(4, 1),
+      );
+      expect(shot.visualHeight, 0);
+      expect(shot.visualPosition, shot.position);
+    });
+
+    test('lifted projectile visual position offsets upward only', () {
+      final shot = _projectile(
+        id: 'elevated',
+        position: const Offset(333, 222),
+        velocity: const Offset(4, 1),
+        visualHeight: 48,
+      );
+      expect(shot.visualPosition, const Offset(333, 174));
+      expect(shot.position, const Offset(333, 222));
+    });
+
+    test('negative projectile visual height is rejected', () {
+      expect(
+        () => ProjectileState(
+          id: 'below-ground',
+          position: Offset.zero,
+          velocity: const Offset(1, 0),
+          damage: 1,
+          pierceLeft: 0,
+          maxTravel: 10,
+          tint: 0xFFFFFFFF,
+          big: false,
+          visualHeight: -1,
+        ),
+        throwsAssertionError,
+      );
+    });
+
     test('visual lift renders separately while ground depth anchor stays fixed', () {
       final world = _world(269);
       final shot = _projectile(
