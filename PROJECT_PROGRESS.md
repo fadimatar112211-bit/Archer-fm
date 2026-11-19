@@ -549,3 +549,12 @@ Verification:
 - Fixed the generator manifest to emit lowercase keys mapped to the exact exported clip names in commit `fbf80b5`.
 - Removed the unnecessary Weighted Normal modifier that emitted repeated Blender 3.x warnings on bevelled low-poly meshes.
 - Pending: rerun CI, confirm all four GLBs pass the validator, inspect model renders/gameplay-distance captures, and only then decide on runtime integration. These remain prototypes, not visually approved production assets.
+
+
+## 2026-11-19 parallel verification update
+- Workflow run 217 (commit 7d668bd) completed Release APK build, signing verification, release upload, normal tests, and monster GLB generation/validation successfully. Android emulator smoke remained in progress at the last poll.
+- Workflow run 218 (commit 78c539a) completed Release APK build and APK signature verification successfully and published release `v1.0.218`. Normal Flutter tests and Analyze passed. Emulator smoke and monster generation were still running at the last poll.
+- The monster generator now renders four 768x768 front three-quarter PNG previews after exporting GLBs, under `build/monster-glb/previews/`; these previews are included in the same Actions artifact for visual review. This latest preview generation has not yet completed.
+- Manual review of existing Stage One captures: the hero baseline render is visible and the hero model is large enough to inspect, but the separate 1920x1080 arena overview has no hero in frame and crops the upper/lower castle areas. This is recorded as a visual acceptance issue to investigate; passing image-capture tests alone do not prove camera framing is accepted.
+- CI hardening: cap apt package installation, Blender generation/rendering, and emulator test runtime so a stalled environment does not occupy a runner indefinitely.
+- No claim that Stage One is complete until Android emulator smoke passes and the arena framing/captures are reviewed.
