@@ -168,6 +168,40 @@ void main() {
         render(const Size(1920, 1080)),
       );
 
+      // Capture the actual skinned Ranger against the mine and pickup
+      // layers that now share the world depth queue.
+      final targetMine = world.mineSystem.mines.first;
+      world.player.position = targetMine.position + const Offset(0, 38);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '84_glb_hero_mine_foreground_overlap',
+        render(const Size(1920, 1080)),
+      );
+      world.player.position = targetMine.position - const Offset(0, 38);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '85_glb_hero_mine_background_overlap',
+        render(const Size(1920, 1080)),
+      );
+
+      final chest = world.map.pickups.firstWhere(
+        (pickup) => pickup.kind == PickupKind.chest,
+      );
+      world.player.position = chest.position + const Offset(0, 24);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '86_glb_hero_chest_overlap',
+        render(const Size(1920, 1080)),
+      );
+
+      final resource = world.mineSystem.pickups.first;
+      world.player.position = resource.position - const Offset(0, 24);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '87_glb_hero_resource_pickup_overlap',
+        render(const Size(1920, 1080)),
+      );
+
       final targetCrystal = localCastle.alive.first;
       world.player.position = targetCrystal.position + const Offset(0, 18);
       world.fog.reveal(world.player.position, 900);
