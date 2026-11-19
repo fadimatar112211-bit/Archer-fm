@@ -195,6 +195,38 @@ void main() {
       expect(b.bottom - a.bottom, closeTo(shift.dy, 1e-8));
     });
 
+    test('projection round-trips a dense grid with non-zero focus', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: -0.52,
+        groundScaleY: 0.61,
+        scale: 1.37,
+        focus: Offset(1100, 720),
+      );
+      for (var x = -2; x <= 8; x++) {
+        for (var y = -2; y <= 8; y++) {
+          final point = Offset(x * 137.25, y * 91.75);
+          final restored =
+              projection.unprojectGround(projection.projectGround(point));
+          expect(restored.dx, closeTo(point.dx, 1e-8));
+          expect(restored.dy, closeTo(point.dy, 1e-8));
+        }
+      }
+    });
+
+    test('projection of a point is deterministic across repeated calls', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.28,
+        groundScaleY: 0.84,
+        scale: 0.93,
+        focus: Offset(340, 210),
+      );
+      const point = Offset(1290.5, -75.25);
+      final first = projection.projectGround(point);
+      for (var i = 0; i < 20; i++) {
+        expect(projection.projectGround(point), first);
+      }
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
