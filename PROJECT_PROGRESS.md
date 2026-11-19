@@ -410,3 +410,15 @@ Verification:
 - Added a focused painter regression that keeps all 28 living crystal objectives in the world, damages them to exercise their HP-bar rendering path, and paints them through the shared actor queue.
 - Test commit: `a4cd95350b65f40883702e3038a15bd1e07b3318`.
 - The test is an automated render-path regression, not pixel-level proof that the GLB hero is visually occluded by each crystal.
+
+### 2026-11-19 — Segmented castle occlusion follow-up
+
+- Refactored castle rendering into courtyard, keep/banner, and independent wall-arc painters.
+- Added each wall arc to the shared actor depth queue using the arc midpoint on its ground circle; its stone strokes and crenellations remain grouped.
+- Kept each living crystal independently depth-sorted by its base.
+- Added `test/arena_castle_depth_test.dart` for all four castles, 16 arcs, missing/single arcs, sweep extremes, fallen castles, destroyed crystals, repeated paints, state immutability, ownership and isolated castle rendering.
+- Extended projection tests for curved wall midpoint anchors, opposite depth bands, and yaw/scale finite values.
+- Extended real Ranger GLB capture test with south-wall, north-wall, and local-crystal overlap captures.
+- Updated `UNIFIED_WORLD_CAMERA_PROTOTYPE.md` with the new painter order and explicit remaining limits.
+- Code commits: `d61a5e04`, `3cac8ccd`, `4e447730`, `5e4feab2`, `56c6c385`.
+- Visual captures and tests still require completed Actions and review; no claim of final visual acceptance is made.
