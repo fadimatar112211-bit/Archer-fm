@@ -364,6 +364,24 @@ void main() {
       expect(screenDelta.distance, greaterThan(0));
     });
 
+    test('default camera keeps horizontal scale and compresses vertical depth', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(137),
+        spawnWaves: false,
+      );
+      const size = Size(2400, 1080);
+      final transform = ArenaCameraTransform.forViewport(size, world);
+      final origin = world.cameraOrigin + const Offset(arenaWidth / 2, arenaHeight / 2);
+      final center = transform.worldToLocal(origin);
+      final horizontal = transform.worldToLocal(origin + const Offset(100, 0));
+      final vertical = transform.worldToLocal(origin + const Offset(0, 100));
+      expect(horizontal.dx - center.dx, closeTo(100 * transform.scale, 1e-8));
+      expect(horizontal.dy, closeTo(center.dy, 1e-8));
+      expect(vertical.dx, closeTo(center.dx, 1e-8));
+      expect(vertical.dy - center.dy, closeTo(82 * transform.scale, 1e-8));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
