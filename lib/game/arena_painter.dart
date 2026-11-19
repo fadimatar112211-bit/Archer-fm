@@ -534,10 +534,6 @@ class ArenaPainter extends CustomPainter {
         ..close();
       canvas.drawPath(flag, Paint()..color = accent);
 
-      // Crystals: diamonds with a glow, owner color and an HP bar when hurt.
-      for (final crystal in castle.alive) {
-        _paintCrystal(canvas, crystal, accent, castle.isLocal);
-      }
   }
 
   /// Draws each objective as a tall crystal monolith, not a small pickup gem.
@@ -1085,6 +1081,27 @@ class ArenaPainter extends CustomPainter {
           _paintCastle(canvas, castle);
         }),
       ));
+
+      // Tall crystal objectives are independent occluders. Sorting them by
+      // their own bases lets a hero pass behind one crystal while remaining
+      // in front of the castle keep or another crystal.
+      for (final crystal in castle.alive) {
+        final crystalOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(crystal.position),
+          order: crystalOrder,
+          draw: () => _withUprightGroundActor(canvas, crystal.position, () {
+            _paintCrystal(
+              canvas,
+              crystal,
+              castle.isLocal
+                  ? const Color(0xFF9BE845)
+                  : const Color(0xFFFF7A5A),
+              castle.isLocal,
+            );
+          }),
+        ));
+      }
     }
 
     // Projectiles share the same ground-depth queue as actors and obstacle
