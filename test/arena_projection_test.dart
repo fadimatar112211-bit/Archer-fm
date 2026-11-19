@@ -332,6 +332,15 @@ void main() {
       expect(restored.dy, closeTo(point.dy, 1e-8));
     });
 
+    test('projected radius scales only with uniform projection scale', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 1.1,
+        groundScaleY: 0.42,
+        scale: 1.75,
+      );
+      expect(projection.projectRadius(24), 42);
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
