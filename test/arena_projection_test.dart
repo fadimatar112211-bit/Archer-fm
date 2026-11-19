@@ -247,7 +247,7 @@ void main() {
       );
       const anchor = Offset(340, 520);
       final deeper =
-          anchor + Offset(-80 * math.sin(yaw), 80 * math.cos(yaw));
+          anchor + Offset(80 * math.sin(yaw), 80 * math.cos(yaw));
       final a = projection.projectGround(anchor);
       final b = projection.projectGround(deeper);
       expect(b.dx, closeTo(a.dx, 1e-8));
