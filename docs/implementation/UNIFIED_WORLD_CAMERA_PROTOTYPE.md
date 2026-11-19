@@ -166,3 +166,8 @@ Regression coverage now explicitly includes invalid zero scale/depth-compression
 ## Camera viewport regression update
 
 Camera tests now cover immutable viewport snapshots, positive scale across supported landscape aspect ratios, logical center alignment, yawed viewport-origin stability, repeat projection idempotence, and separation of letterboxed world viewport from screen-space HUD space. Input transforms remain tied to the same camera snapshot; HUD rendering remains unprojected.
+
+
+## Explicit remaining renderer blockers
+
+Before enabling yaw in production, migrate every world-space pass together: terrain and biome fills, river/bridge geometry, crystal and castle silhouettes, mines/pickups, shadows, actor anchors, projectile trajectories, combat effects, fog cells and floating labels. Upright actor compensation must use the same projection basis. Keep HUD, joystick, action controls and minimap UI in screen space. Verify touch hit-testing against the exact projected scene and validate map-edge clamping after inverse projection.
