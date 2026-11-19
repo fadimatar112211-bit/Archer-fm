@@ -500,6 +500,15 @@ void main() {
       }
     });
 
+    test('world center maps to viewport center at zero camera offset', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(173), spawnWaves: false);
+      final transform = ArenaCameraTransform.forViewport(const Size(1920, 1080), world);
+      final center = world.cameraOrigin + const Offset(arenaWidth / 2, arenaHeight / 2);
+      final screen = transform.worldToLocal(center);
+      expect(screen.dx, closeTo(960, 1e-8));
+      expect(screen.dy, closeTo(540, 1e-8));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
