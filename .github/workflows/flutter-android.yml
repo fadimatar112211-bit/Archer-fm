@@ -144,7 +144,8 @@ jobs:
           set -euxo pipefail
           SDKMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
           AVDMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
-          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:?Android SDK path missing}}"
+          yes | "$SDKMANAGER" --licenses >/dev/null
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
           "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2 > /tmp/archer-emulator.log 2>&1 &
