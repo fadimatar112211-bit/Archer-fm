@@ -486,7 +486,16 @@ class ArenaPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 18
         ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF6E7376),
+        ..shader = ui.Gradient.linear(
+          rect.topLeft,
+          rect.bottomRight,
+          const [
+            Color(0xFF92999A),
+            Color(0xFF747B7D),
+            Color(0xFF555D60),
+          ],
+          const [0.0, 0.52, 1.0],
+        ),
     );
     canvas.drawArc(
       rect,
@@ -495,9 +504,9 @@ class ArenaPainter extends CustomPainter {
       false,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
+        ..strokeWidth = 5
         ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF8C9194),
+        ..color = const Color(0x99D9E0DD),
     );
     final steps = math.max(2, (wall.sweep / 0.24).floor());
     for (var i = 0; i <= steps; i++) {
