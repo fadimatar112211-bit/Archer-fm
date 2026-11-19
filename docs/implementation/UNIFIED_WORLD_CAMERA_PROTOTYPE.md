@@ -83,15 +83,21 @@ Implemented on `ranger-reference-work`:
 - Replaced the separate monster-only pass plus always-on-top hero pass with one depth-sorted actor list containing visible enemies, owned units, corpses, the player hero, trees and rocks. Trees/rocks now act as foreground occluders when their ground depth is nearer.
 - Removed a per-actor viewport-transform construction from the upright actor path; it now reuses the painter's immutable projection.
 - Added a camera regression test that checks viewport-corner and center round trips across three landscape sizes during eight camera-smoothing updates.
-- Added a deterministic map capture with a tree placed in front of the hero to visually inspect foreground occlusion (`35_actor_tree_occlusion.png`).
+- Added a deterministic map capture with a tree placed in front of the player actor (`35_actor_tree_occlusion.png`). The capture exercises the shared painter order, but its `ArenaPresentation` supplies no `Hero3DController`; it is not evidence that the production GLB hero is correctly occluded.
 
 Still not implemented or accepted:
 - Terrain/river/bridge geometry has not been migrated to a full yawed 3D/isometric projection; current ground transform is vertical compression only.
-- Trees and rocks are not yet part of a shared foreground occlusion/depth pass.
+- Trees and rocks now participate in the same painter-order list as actors, but each obstacle is still sorted by one ground anchor. Large canopies/irregular silhouettes can therefore produce imperfect partial occlusion when their visual bounds cross multiple depth rows.
 - Projectiles, AoE, castles, crystals, pickups and fog are not all depth-sorted/projected with actors.
 - Automated captures are not a substitute for review on physical Android devices.
 - No frame-time/CPU-skinning benchmark has been recorded.
 - No production monster GLB should start until the single-monster visual prototype passes these gates.
+
+## Occlusion verification limits and next gates
+
+The deterministic tree capture is currently a visual artifact only: the test writes a PNG but does not assert pixel-level occlusion, and it renders the fallback player representation rather than the production skinned GLB. Treat it as a reproducible inspection scene, not a passing visual acceptance test. The next implementation pass must add a GLB-enabled capture (or a stable test double with the same paint bounds), a corresponding no-occluder baseline, and assertions/review that confirm the expected foreground pixels actually cover the actor. Repeat the case with a rock and with the actor on both sides of the obstacle depth anchor. Then test narrow landscape, 16:9 and wide landscape captures before accepting the camera.
+
+The current painter-order implementation sorts each tree/rock as one item by `obstacle.position`; it does not split tree trunk and canopy into separate depth layers. Partial canopy overlaps can therefore remain imperfect even though whole-obstacle ordering is shared.
 
 ## Initial capture review (run 44423577850)
 
