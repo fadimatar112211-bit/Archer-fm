@@ -124,6 +124,43 @@ void main() {
       );
     });
 
+    test('bridges, split tree layers and rock facets paint at varied camera angles', () {
+      final world = _world(631);
+      final bridgeRects = world.map.rivers
+          .expand((river) => river.bridges)
+          .map((bridge) => bridge.rect)
+          .toList();
+      final treeAndRockCounts = [
+        world.map.obstacles.where((o) => o.kind.name == 'tree').length,
+        world.map.obstacles.where((o) => o.kind.name == 'rock').length,
+      ];
+      expect(bridgeRects, isNotEmpty);
+      expect(treeAndRockCounts[0], greaterThan(0));
+      expect(treeAndRockCounts[1], greaterThan(0));
+
+      for (final yaw in const [-0.37, 0.0, 0.32]) {
+        _paint(
+          _painter(
+            world,
+            ArenaWorldProjection(yawRadians: yaw, groundScaleY: 0.8),
+          ),
+          const Size(1920, 1080),
+        );
+      }
+
+      expect(
+        world.map.rivers
+            .expand((river) => river.bridges)
+            .map((bridge) => bridge.rect)
+            .toList(),
+        bridgeRects,
+      );
+      expect([
+        world.map.obstacles.where((o) => o.kind.name == 'tree').length,
+        world.map.obstacles.where((o) => o.kind.name == 'rock').length,
+      ], treeAndRockCounts);
+    });
+
     test('camera hit mapping remains invertible for terrain yaw', () {
       final world = _world(617);
       const projection = ArenaWorldProjection(
