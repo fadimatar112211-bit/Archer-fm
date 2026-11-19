@@ -108,8 +108,17 @@ void main() {
         image.dispose();
       }
 
-      // 1 — idle in the arena with both dummies around.
+      // 1 — deliberate front-facing idle capture for face/readability review.
+      // The eight-direction suite below still verifies all gameplay facings;
+      // this dedicated frame prevents a back-facing run shot being mistaken
+      // for the hero's normal idle appearance.
       stepTo(600);
+      world.player.facing = const Offset(0, 1);
+      pose('idle');
+      await save('70_game_3d_hero_front_idle', capture());
+
+      // 2 — idle battle frame with enemies at the sides.
+      world.player.facing = const Offset(1, 0);
       pose('idle');
       await save('71_game_3d_hero_idle', capture());
 
