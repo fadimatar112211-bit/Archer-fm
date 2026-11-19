@@ -95,6 +95,11 @@ def primitive(kind, name, loc, scale, mat, rig, bone, bevel=0.0):
     obj=bpy.context.object; obj.name=name
     obj.dimensions=scale
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    # Smooth organic forms (heads, eyes, limbs) so triangulation does not
+    # dominate the small in-game silhouette. Keep armor/cubes crisp.
+    if kind in ("sphere", "ico", "cylinder"):
+        for polygon in obj.data.polygons:
+            polygon.use_smooth = True
     obj.data.materials.append(mat)
     if bevel and kind=="cube":
         mod=obj.modifiers.new("Soft bevel","BEVEL"); mod.width=bevel; mod.segments=2
