@@ -277,3 +277,15 @@ Completed the first five planned terrain/projection tasks as a focused batch:
 Added `test/arena_terrain_projection_test.dart` to paint generated biomes, rivers and bridges at multiple yaw/scale settings, verify terrain painting does not mutate river/bridge geometry, and check camera hit-mapping round trips.
 
 Important boundary: production yaw remains zero by deliberate choice until full-scene visual captures are reviewed; the shared projection supports yaw and the tests exercise it, but no unreviewed camera rotation has been forced into gameplay. Bridge deck depth sorting and 3D terrain meshes are not claimed complete.
+
+### Completion detail for the first five terrain/projection tasks
+
+The first five items are now implemented as follows:
+
+- Shared projection: regression confirms the exact same projection snapshot is consumed by the painter and camera/pointer transform.
+- Camera basis: tests verify projected ground Y and the depth-sort key agree across positive, negative and zero yaw. The production yaw is intentionally still zero pending review of a complete-scene capture.
+- Ground proportions/shadows: hero and monster contact shadows are anchored closer to their ground/foot positions; tree and rock shadows were moved out of upright actor painting into the ground plane, so they inherit ground compression and yaw instead of remaining visually upright.
+- Biomes: radial biome overlays now use a gentler three-stop alpha falloff to avoid abrupt color patches.
+- River: banks now have three nested shore layers, and shimmer strokes use the normal of each local river segment, remaining perpendicular to curved/angled water flow.
+
+Regression coverage includes projected terrain/biomes/rivers/bridges, multiple yaw values, stable camera input inversion, and map geometry/state immutability. The new checks are awaiting the newest GitHub Actions run; the earlier run on `547e1aef` passed Analyze and all tests before these five-task changes.
