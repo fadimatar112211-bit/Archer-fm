@@ -236,3 +236,23 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Monster depth ordering now uses the projection's depth key (currently equivalent to map Y because yaw is 0). World simulation, collision, movement, combat ranges and stored map coordinates remain unchanged.
 - Added camera tests for centered projection, depth compression, inverse pointer mapping and expanded visible-world bounds, plus standalone projection math tests.
 - This is the first rendering prototype, not final MOBA camera approval. Need CI on the newest head, visual captures at narrow/16:9/wide landscape ratios, actor overlap/occlusion review, and Android performance measurement before increasing the angle or migrating more world systems.
+
+
+### 2026-11-19 — Ten-step projection and GLB occlusion regression expansion
+
+- Starting branch HEAD: `91721b4f1165fd4202613d95e5e7d95f4f437eb9`.
+- Step 1: projection test verifies that a configured camera focus maps to projected origin for multiple focus points.
+- Step 2: projection test verifies depth differences are invariant under translating both world points.
+- Step 3: projection test verifies negative world height moves an elevated point downward by the expected scaled amount.
+- Step 4: projection test verifies linear projected displacement under yaw, depth compression and uniform scale.
+- Step 5: camera test verifies letterbox offsets and logical viewport dimensions across narrow and wide landscape sizes.
+- Step 6: camera test verifies the logical arena center remains centered under a non-zero yaw projection.
+- Step 7: camera test verifies yawed visible-world bounds contain all inverse-projected viewport corners.
+- Step 8: production-path GLB capture adds a far-background tree case at 16:9.
+- Step 9: production-path GLB capture adds a background rock case at narrow landscape size.
+- Step 10: corrected stale prototype documentation that still claimed trees were single depth-sorted items; recorded the expanded test/capture coverage and remaining visual gates.
+- Commits: `c18ae6d5` (projection tests), `6cd88102` (camera tests), `37e92e0f` (GLB captures), `03030d04` (prototype documentation).
+- Validation: GitHub Actions runs were triggered for the code commits. They were not yet complete when this checkpoint was written; do not mark the new tests as passing until the newest run completes.
+- Visual acceptance: not complete. New GLB captures must be reviewed from the workflow artifact. The terrain, rivers, bridges, projectiles, crystals, fog and all world objects still do not share a full yawed 3D projection.
+- APK: no current-HEAD verified APK is claimed.
+- Next: inspect latest Actions results and logs; fix any analyzer/test errors; download and review the newest GLB capture artifact; only then continue staged ground/monster projection work.
