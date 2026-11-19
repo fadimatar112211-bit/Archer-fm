@@ -1029,7 +1029,9 @@ class ArenaPainter extends CustomPainter {
         actors.add((
           depth: cameraProjection.depthOf(obstacle.position),
           order: trunkOrder,
-          draw: () => _paintTreeTrunk(canvas, obstacle),
+          draw: () => _withUprightGroundActor(canvas, obstacle.position, () {
+            _paintTreeTrunk(canvas, obstacle);
+          }),
         ));
         final canopyAnchor =
             obstacle.position - Offset(0, obstacle.radius * 0.35);
@@ -1037,7 +1039,9 @@ class ArenaPainter extends CustomPainter {
         actors.add((
           depth: cameraProjection.depthOf(canopyAnchor),
           order: canopyOrder,
-          draw: () => _paintTreeCanopy(canvas, obstacle),
+          draw: () => _withUprightGroundActor(canvas, canopyAnchor, () {
+            _paintTreeCanopy(canvas, obstacle);
+          }),
         ));
         final upperLobeAnchor =
             obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6);
@@ -1045,7 +1049,9 @@ class ArenaPainter extends CustomPainter {
         actors.add((
           depth: cameraProjection.depthOf(upperLobeAnchor),
           order: upperLobeOrder,
-          draw: () => _paintTreeCanopyUpperLobe(canvas, obstacle),
+          draw: () => _withUprightGroundActor(canvas, upperLobeAnchor, () {
+            _paintTreeCanopyUpperLobe(canvas, obstacle);
+          }),
         ));
       } else {
         final currentOrder = order++;
