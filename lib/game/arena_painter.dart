@@ -337,65 +337,6 @@ class ArenaPainter extends CustomPainter {
       }
     }
 
-    // Indestructible trees and rocks.
-    for (final obstacle in map.obstacles) {
-      if (obstacle.kind == ObstacleKind.tree) {
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: obstacle.position + const Offset(0, 8),
-            width: obstacle.radius * 2.3,
-            height: obstacle.radius * 0.9,
-          ),
-          Paint()..color = const Color(0x33000000),
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: obstacle.position + Offset(0, obstacle.radius * 0.4),
-            width: obstacle.radius * 0.45,
-            height: obstacle.radius * 0.9,
-          ),
-          Paint()..color = _trunkColor,
-        );
-        canvas.drawCircle(
-          obstacle.position - Offset(0, obstacle.radius * 0.35),
-          obstacle.radius,
-          Paint()..color = _treeColor,
-        );
-        canvas.drawCircle(
-          obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
-          obstacle.radius * 0.55,
-          Paint()..color = _treeLightColor,
-        );
-      } else {
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: obstacle.position + const Offset(0, 7),
-            width: obstacle.radius * 2.1,
-            height: obstacle.radius * 0.8,
-          ),
-          Paint()..color = const Color(0x33000000),
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndCorners(
-            Rect.fromCenter(
-              center: obstacle.position,
-              width: obstacle.radius * 1.9,
-              height: obstacle.radius * 1.5,
-            ),
-            topLeft: Radius.circular(obstacle.radius * 0.5),
-            topRight: Radius.circular(obstacle.radius * 0.7),
-            bottomRight: Radius.circular(obstacle.radius * 0.4),
-            bottomLeft: Radius.circular(obstacle.radius * 0.6),
-          ),
-          Paint()..color = _rockColor,
-        );
-        canvas.drawCircle(
-          obstacle.position - Offset(obstacle.radius * 0.3, obstacle.radius * 0.25),
-          obstacle.radius * 0.35,
-          Paint()..color = _rockLightColor,
-        );
-      }
-    }
   }
 
   void _paintMines(Canvas canvas) {
@@ -1066,6 +1007,17 @@ class ArenaPainter extends CustomPainter {
       ));
     }
 
+    // Trees and rocks share the same ground-depth ordering as characters.
+    // Their trunks/rocks therefore cover actors only when they are in front.
+    for (final obstacle in world.map.obstacles) {
+      final currentOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(obstacle.position),
+        order: currentOrder,
+        draw: () => _paintObstacle(canvas, obstacle),
+      ));
+    }
+
     final playerPosition = world.player.position;
     final heroOrder = order++;
     actors.add((
@@ -1083,6 +1035,66 @@ class ArenaPainter extends CustomPainter {
     for (final actor in actors) {
       actor.draw();
     }
+  }
+
+  void _paintObstacle(Canvas canvas, MapObstacle obstacle) {
+    if (obstacle.kind == ObstacleKind.tree) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: obstacle.position + const Offset(0, 8),
+          width: obstacle.radius * 2.3,
+          height: obstacle.radius * 0.9,
+        ),
+        Paint()..color = const Color(0x33000000),
+      );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: obstacle.position + Offset(0, obstacle.radius * 0.4),
+          width: obstacle.radius * 0.45,
+          height: obstacle.radius * 0.9,
+        ),
+        Paint()..color = _trunkColor,
+      );
+      canvas.drawCircle(
+        obstacle.position - Offset(0, obstacle.radius * 0.35),
+        obstacle.radius,
+        Paint()..color = _treeColor,
+      );
+      canvas.drawCircle(
+        obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
+        obstacle.radius * 0.55,
+        Paint()..color = _treeLightColor,
+      );
+      return;
+    }
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: obstacle.position + const Offset(0, 7),
+        width: obstacle.radius * 2.1,
+        height: obstacle.radius * 0.8,
+      ),
+      Paint()..color = const Color(0x33000000),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromCenter(
+          center: obstacle.position,
+          width: obstacle.radius * 1.9,
+          height: obstacle.radius * 1.5,
+        ),
+        topLeft: Radius.circular(obstacle.radius * 0.5),
+        topRight: Radius.circular(obstacle.radius * 0.7),
+        bottomRight: Radius.circular(obstacle.radius * 0.4),
+        bottomLeft: Radius.circular(obstacle.radius * 0.6),
+      ),
+      Paint()..color = _rockColor,
+    );
+    canvas.drawCircle(
+      obstacle.position - Offset(obstacle.radius * 0.3, obstacle.radius * 0.25),
+      obstacle.radius * 0.35,
+      Paint()..color = _rockLightColor,
+    );
   }
 
   void _paintMonster(Canvas canvas, EnemyState monster) {
