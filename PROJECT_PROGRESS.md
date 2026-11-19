@@ -638,3 +638,12 @@ Verification:
 - `d35e996366c096b3a5ebfece022bcbbd87536ad2` — stronger GLB reference validation.
 - `34c3ac5415de7e23c33b4a6d49a44adbecedcad7` — monster lifecycle/compatibility tests.
 - Latest observed HEAD at this checkpoint: `34c3ac5415de7e23c33b4a6d49a44adbecedcad7`.
+
+
+### 2026-11-19 — Virtual-display render succeeded; first four-monster visual review
+
+- CI run `44487374412` (commit `066f32a48a981cf0a662d4a82ad6c6208c78089d`) successfully generated all four GLBs and all four PNG previews under `xvfb-run`; artifact `14511286354` contains four models, manifest, and previews. GLB structural validation passed: Runner 244,556 B / 22 meshes / 1 skin / 6 clips; Tank 295,928 B / 23 meshes / 1 skin / 5 clips; Stalker 248,428 B / 21 meshes / 1 skin / 5 clips; Ranged 259,872 B / 21 meshes / 1 skin / 7 clips.
+- Downloaded and visually inspected the four actual preview PNGs. The display/preview pipeline now works, but the first set remains visually prototype-grade: toy-like spherical bodies, detached-looking limbs, weak archetype detail, and small/unclear expressions at review scale. They are not approved as final game art and have not been integrated into the live Canvas monster renderer.
+- Follow-up art commit `e82dad4023671070b24fe937dfedda38a09b736f` enlarges the chibi head, strengthens eye/pupil/brow/mouth readability, improves torso proportions, and moves the preview camera closer to frontal so both eyes can be judged. Await its own artifact before deciding whether this fixes the issues.
+- Stronger GLB skin/animation reference checks and monster lifecycle edge tests were pushed in `d35e996...` and `34c3ac5...`; their workflow runs are in progress at this checkpoint.
+- Stage One: the emulator smoke jobs are still running; no end-to-end Android pass or current-HEAD APK success is claimed. A prior release job failed while Gradle attempted to retrieve Kotlin 2.0.21 artifacts from the plugin portal; investigate if repeated on a fresh run.
