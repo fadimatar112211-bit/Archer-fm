@@ -157,12 +157,12 @@ jobs:
       - name: Install free Blender runtime
         run: |
           sudo timeout 10m apt-get update
-          sudo timeout 8m apt-get install -y blender python3-numpy
+          sudo timeout 8m apt-get install -y blender python3-numpy xvfb
 
       - name: Generate four rigged monster models
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          ARCHER_MONSTER_PREVIEWS=1 timeout 20m blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+          ARCHER_MONSTER_PREVIEWS=1 timeout 20m xvfb-run -a blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
           python3 tools/validate_monster_glb.py --root build/monster-glb
 
       - name: Upload generated monster GLBs
