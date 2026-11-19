@@ -18,6 +18,7 @@ ProjectileState _projectile({
   required Offset position,
   required Offset velocity,
   bool big = false,
+  double visualHeight = 0,
 }) =>
     ProjectileState(
       id: id,
@@ -28,6 +29,7 @@ ProjectileState _projectile({
       maxTravel: 900,
       tint: 0xFF66CCFF,
       big: big,
+      visualHeight: visualHeight,
     );
 
 void _paint(GameWorld world) {
@@ -162,6 +164,21 @@ void main() {
         big: true,
       ));
       _paint(world);
+    });
+
+    test('visual lift renders separately while ground depth anchor stays fixed', () {
+      final world = _world(269);
+      final shot = _projectile(
+        id: 'lifted',
+        position: const Offset(540, 320),
+        velocity: const Offset(8, 2),
+        visualHeight: 64,
+      );
+      world.projectiles.add(shot);
+      final groundAnchor = shot.position;
+      _paint(world);
+      expect(shot.position, groundAnchor);
+      expect(shot.visualHeight, 64);
     });
 
     test('repeated paint calls remain deterministic for unchanged projectiles', () {
