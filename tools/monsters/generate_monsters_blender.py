@@ -98,7 +98,8 @@ def primitive(kind, name, loc, scale, mat, rig, bone, bevel=0.0):
     obj.data.materials.append(mat)
     if bevel and kind=="cube":
         mod=obj.modifiers.new("Soft bevel","BEVEL"); mod.width=bevel; mod.segments=2
-        obj.modifiers.new("Weighted normals","WEIGHTED_NORMAL")
+        # Keep the low-poly bevel shading deterministic across Blender 3.x/4.x;
+        # Weighted Normal requires Auto Smooth and is unnecessary for these meshes.
     return bind(obj,rig,bone)
 
 def build(kind):
@@ -207,7 +208,7 @@ def main():
     for kind in REQUIRED:
         os.makedirs(os.path.join(OUT,kind),exist_ok=True)
         build(kind)
-        clips={state:state.title() for state in REQUIRED[kind]}
+        clips={state.lower():state for state in REQUIRED[kind]}
         entry={"file":kind+"/monster.glb","scale":1.0,"forward":"-Y","groundOffset":[0,0,0],"clips":clips}
         if kind=="ranged": entry["events"]={"projectileRelease":0.58}
         manifest["monsters"][kind]=entry
