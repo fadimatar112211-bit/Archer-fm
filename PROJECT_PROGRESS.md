@@ -540,3 +540,12 @@ Verification:
 - Important acceptance limit: these are generated first-pass production prototypes. They are not yet approved final art, are not yet integrated into the arena runtime, and must pass the CI export/validation plus gameplay-distance visual review before the Canvas fallback is replaced.
 - Workflow runs `44467506887` and `44467502786` (created before the final generator-job commit) show Analyze, all Flutter tests, and visual-capture upload passing; Release APK build and Android emulator smoke test are running independently. Their outcomes are not yet known.
 - Latest implementation commits: `2cbb029` (generator), `7abb6f8` (clip-name manifest fix), `73fbeff` (CI model-generation job).
+
+
+## Monster GLB generator follow-up — 2026-11-19
+
+- The free Blender job successfully generated all four prototype GLBs (Runner, Tank, Stalker, Ranged), each with one skin and the expected animation count (6/5/5/7 respectively).
+- The first validator run rejected the manifest because clip-map keys were title-cased while the runtime contract requires lowercase gameplay state keys. The exported animation names themselves were present.
+- Fixed the generator manifest to emit lowercase keys mapped to the exact exported clip names in commit `fbf80b5`.
+- Removed the unnecessary Weighted Normal modifier that emitted repeated Blender 3.x warnings on bevelled low-poly meshes.
+- Pending: rerun CI, confirm all four GLBs pass the validator, inspect model renders/gameplay-distance captures, and only then decide on runtime integration. These remain prototypes, not visually approved production assets.
