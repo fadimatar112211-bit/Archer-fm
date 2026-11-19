@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect;
 
 import 'package:archer_fm/game/world/arena_projection.dart';
+import 'package:archer_fm/game/world/castle_system.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -50,6 +51,58 @@ void main() {
       const near = Offset(100, 100);
       const far = Offset(100 + 100 * 0.4794255386, 100 + 100 * 0.8775825619);
       expect(projection.depthOf(far), greaterThan(projection.depthOf(near)));
+    });
+
+    test('castle wall arc midpoint anchors follow the curved wall', () {
+      const projection = ArenaWorldProjection(groundScaleY: 0.82);
+      const wall = CastleWall(
+        center: Offset(600, 400),
+        radius: castleWallRadius,
+        startAngle: 0.2,
+        sweep: 1.1,
+      );
+      final middle = wall.startAngle + wall.sweep / 2;
+      final anchor = wall.center +
+          Offset(math.cos(middle) * wall.radius, math.sin(middle) * wall.radius);
+      expect(
+        projection.depthOf(anchor),
+        closeTo(anchor.dy, 1e-9),
+      );
+      expect(anchor, isNot(wall.center));
+    });
+
+    test('opposite castle wall arcs occupy opposite camera depth bands', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.18,
+        groundScaleY: 0.82,
+      );
+      const center = Offset(900, 700);
+      const radius = castleWallRadius;
+      final north = center + const Offset(0, -radius);
+      final south = center + const Offset(0, radius);
+      expect(
+        projection.depthOf(south),
+        greaterThan(projection.depthOf(north)),
+      );
+    });
+
+    test('castle wall depth anchors remain finite under yaw and scale', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: -0.37,
+        groundScaleY: 0.73,
+        scale: 1.4,
+      );
+      for (var i = 0; i < 4; i++) {
+        final angle = i * math.pi / 2 + math.pi / 4;
+        final anchor = const Offset(500, 500) +
+            Offset(
+              math.cos(angle) * castleWallRadius,
+              math.sin(angle) * castleWallRadius,
+            );
+        expect(projection.depthOf(anchor).isFinite, isTrue);
+        expect(projection.projectGround(anchor).dx.isFinite, isTrue);
+        expect(projection.projectGround(anchor).dy.isFinite, isTrue);
+      }
     });
 
     test('tree crown layers sort behind the trunk in depth order', () {
