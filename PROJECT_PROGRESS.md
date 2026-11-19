@@ -463,3 +463,13 @@ Verification:
 - Code/test batch: `dd2cdfcb`, `a002cddf`, `910b2448`, `a6f4089f`.
 - CI run for latest batch is queued/running. First batch's final Analyze, all tests and 3D capture stages passed on `89277c60`; APK build remained in progress at last check.
 - Stage-one plan progress: first 10 of 30 tasks addressed; task 11 (hero overlap from multiple directions) remains in the next batch.
+
+### Stage one — third five tasks (11–15), 2026-11-19
+
+- Task 11: added hero/tree/rock overlap render regression, covering four trees and four rocks, hero center/left/right offsets, positive/negative camera yaw, and obstacle immutability.
+- Task 12: improved castle keep building silhouette with contact shadow, raised roof and roof highlight.
+- Task 13: verified courtyard/keep/wall/crystal actors remain in shared depth queue; regression paints all four castles with hero overlaps.
+- Task 14: tested each independently sorted wall-arc midpoint with hero overlap.
+- Task 15: improved crystal plinth with separate ground shadow, top face and rim highlight; regression covers all seven crystals per castle.
+- Latest code/test commit: `385efb23`; Actions run `44431595448` is still running, so CI is pending.
+- Phase 1 implementation batches: 15/30 tasks addressed; two more five-task batches remain after this one.
