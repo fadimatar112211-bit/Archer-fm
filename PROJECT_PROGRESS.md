@@ -473,3 +473,14 @@ Verification:
 - Task 15: improved crystal plinth with separate ground shadow, top face and rim highlight; regression covers all seven crystals per castle.
 - Latest code/test commit: `385efb23`; Actions run `44431595448` is still running, so CI is pending.
 - Phase 1 implementation batches: 15/30 tasks addressed; two more five-task batches remain after this one.
+
+### Stage one — fourth five tasks (16–20), 2026-11-19
+
+- Task 16: added hero front/rear approach rendering around castle wall and crystal ground anchors under non-zero yaw.
+- Task 17: added projected contact shadows for castle footprints, individual wall segments and living crystal bases.
+- Task 18: unified hero and monster contact shadows using a shared soft radial helper.
+- Task 19: routed tree and rock footprints through the same helper while preserving type-specific footprint sizes/opacity.
+- Task 20: applied diagonal upper-left lighting to castle wall stonework and refined its bright edge highlight to match keep/crystal/tree lighting.
+- Regression coverage: front/rear wall/crystal approaches and castle/actor shadows at yaw -0.42, 0 and +0.42; crystal counts remain unchanged.
+- Implementation commits: `71d0b4fc`, `3964ef94`, `3bd0442c`. Latest CI is still running release APK builds.
+- Phase 1 implementation batches: 20/30 tasks addressed; two five-task batches remain.
