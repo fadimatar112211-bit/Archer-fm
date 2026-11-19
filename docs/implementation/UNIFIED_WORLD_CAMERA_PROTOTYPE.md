@@ -240,3 +240,26 @@ This improves coarse wall-segment occlusion, but it is not mesh-level 3D geometr
 individual crenellations, banners, and the keep's vertical surfaces are still
 drawn together with their owning layer. Pixel-level capture review is still
 required before calling the visual result final.
+
+## Mine and pickup depth integration (2026-11-19)
+
+Mines, loose resource piles and map chests have been removed from the terrain-only
+overlay and submitted to the shared world actor depth queue.
+
+- A mine uses its ground center as its depth anchor. Its pit, ore, ownership ring,
+  size pips and capture-progress arc remain a single stable visual group.
+- Loose mine-output/resource piles use their own world positions.
+- Map chests use their own world positions; resource-kind map entries remain
+  skipped in this pass because their runtime resource-pile representation is
+  supplied by the mine controller.
+- Ownership colors, mine size, capture progress, pickup amount/age and all
+  gameplay state remain unchanged by painting.
+- The regression suite covers neutral/local/rival ownership, all mine sizes,
+  capture-ring progress, yawed projections, missing mine/chest/resource sets,
+  pickup immutability and repeated paints.
+- Real Ranger GLB capture coverage now includes foreground/background mine
+  overlap, chest overlap and loose-resource overlap.
+
+This is ground-anchor sorting, not per-ore-chunk or per-pixel 3D occlusion.
+River bridges and the continuous terrain/river surface remain in the terrain
+pass and still need a dedicated projection/occlusion review.
