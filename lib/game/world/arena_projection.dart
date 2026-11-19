@@ -95,3 +95,7 @@ class ArenaWorldProjection {
     return Rect.fromLTRB(minX, minY, maxX, maxY);
   }
 }
+
+/// Single default projection shared by the arena renderer and input mapping.
+const ArenaWorldProjection defaultArenaWorldProjection =
+    ArenaWorldProjection(groundScaleY: 0.82);
