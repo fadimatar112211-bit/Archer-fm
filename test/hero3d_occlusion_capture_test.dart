@@ -82,6 +82,11 @@ void main() {
         image.dispose();
       }
 
+      // Baseline with the real GLB hero and no obstacle. Review this beside
+      // the overlap captures to distinguish model visibility from occlusion.
+      world.map.obstacles.clear();
+      await save('73_glb_hero_no_obstacle_baseline', render(const Size(1920, 1080)));
+
       // Foreground tree: its ground anchor is deeper than the hero's.
       world.map.obstacles
         ..clear()
