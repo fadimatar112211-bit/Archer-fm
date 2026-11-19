@@ -203,35 +203,40 @@ def build(kind):
         export_apply=True,
     )
 
-    # Produce a consistent front three-quarter preview for human art review.
-    # Camera/light objects are added only after the GLB export, so they never
-    # become part of the runtime model.
-    bpy.ops.object.select_all(action="DESELECT")
-    bpy.ops.object.camera_add(location=(4.2, -7.5, 3.4))
-    camera=bpy.context.object
-    camera.name=kind+"_PreviewCamera"
-    camera.rotation_euler=(Vector((0,-0.02,1.15))-camera.location).to_track_quat("-Z","Y").to_euler()
-    scene.camera=camera
-    bpy.ops.object.light_add(type="AREA", location=(-3.5,-4.5,5.5))
-    key=bpy.context.object; key.data.energy=520; key.data.shape="DISK"; key.data.size=4.0
-    bpy.ops.object.light_add(type="AREA", location=(3.0,1.5,3.6))
-    fill=bpy.context.object; fill.data.energy=260; fill.data.size=3.0
-    scene.render.engine="BLENDER_WORKBENCH"
-    scene.display.shading.light="STUDIO"
-    scene.display.shading.color_type="MATERIAL"
-    scene.display.shading.show_shadows=True
-    scene.display.shading.show_cavity=True
-    scene.display.shading.cavity_type="BOTH"
-    scene.render.resolution_x=768; scene.render.resolution_y=768
-    scene.render.resolution_percentage=100
-    scene.render.image_settings.file_format="PNG"
-    scene.render.film_transparent=False
-    scene.world.color=(0.055,0.065,0.085)
-    scene.view_settings.view_transform="Standard"
-    preview_dir=os.path.join(OUT,"previews")
-    os.makedirs(preview_dir,exist_ok=True)
-    scene.render.filepath=os.path.join(preview_dir,kind+".png")
-    bpy.ops.render.render(write_still=True)
+    # Preview rendering is opt-in because headless Blender builds on CI can
+    # abort inside the render backend. GLB export/validation must not depend on
+    # a display or GPU renderer. Enable locally with ARCHER_MONSTER_PREVIEWS=1.
+    if os.environ.get("ARCHER_MONSTER_PREVIEWS") == "1":
+        # Produce a consistent front three-quarter preview for human art review.
+        # Camera/light objects are added only after the GLB export, so they never
+        # become part of the runtime model.
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.ops.object.camera_add(location=(4.2, -7.5, 3.4))
+        camera=bpy.context.object
+        camera.name=kind+"_PreviewCamera"
+        camera.rotation_euler=(Vector((0,-0.02,1.15))-camera.location).to_track_quat("-Z","Y").to_euler()
+        scene.camera=camera
+        bpy.ops.object.light_add(type="AREA", location=(-3.5,-4.5,5.5))
+        key=bpy.context.object; key.data.energy=520; key.data.shape="DISK"; key.data.size=4.0
+        bpy.ops.object.light_add(type="AREA", location=(3.0,1.5,3.6))
+        fill=bpy.context.object; fill.data.energy=260; fill.data.size=3.0
+        scene.render.engine="BLENDER_WORKBENCH"
+        scene.display.shading.light="STUDIO"
+        scene.display.shading.color_type="MATERIAL"
+        scene.display.shading.show_shadows=True
+        scene.display.shading.show_cavity=True
+        scene.display.shading.cavity_type="BOTH"
+        scene.render.resolution_x=768; scene.render.resolution_y=768
+        scene.render.resolution_percentage=100
+        scene.render.image_settings.file_format="PNG"
+        scene.render.film_transparent=False
+        scene.world.color=(0.055,0.065,0.085)
+        scene.view_settings.view_transform="Standard"
+        preview_dir=os.path.join(OUT,"previews")
+        os.makedirs(preview_dir,exist_ok=True)
+        scene.render.filepath=os.path.join(preview_dir,kind+".png")
+        bpy.ops.render.render(write_still=True)
+    
 
 def main():
     manifest={"schemaVersion":1,"units":"meters","coordinateSystem":"Blender Z-up exported as glTF Y-up","monsters":{}}
