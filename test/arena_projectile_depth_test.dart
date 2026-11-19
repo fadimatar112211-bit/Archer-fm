@@ -35,7 +35,7 @@ ProjectileState _projectile({
 
 void _paint(
   GameWorld world, {
-  ArenaWorldProjection projection = const ArenaWorldProjection(groundScaleY: 0.82),
+  ArenaWorldProjection projection = defaultArenaWorldProjection,
 }) {
   final painter = ArenaPainter(
     world: world,
