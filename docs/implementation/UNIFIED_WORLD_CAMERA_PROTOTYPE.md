@@ -289,3 +289,16 @@ The first five items are now implemented as follows:
 - River: banks now have three nested shore layers, and shimmer strokes use the normal of each local river segment, remaining perpendicular to curved/angled water flow.
 
 Regression coverage includes projected terrain/biomes/rivers/bridges, multiple yaw values, stable camera input inversion, and map geometry/state immutability. The new checks are awaiting the newest GitHub Actions run; the earlier run on `547e1aef` passed Analyze and all tests before these five-task changes.
+
+## Stage one — tasks 6–10: bridge, tree and rock readability (2026-11-19)
+
+Completed the second five-task batch:
+
+6. Bridge decks are no longer painted as a flat river/terrain overlay. Each bridge is submitted to the shared actor depth queue at its ground center, so heroes and other actors can pass in front of or behind the deck according to the same camera depth key. The bridge renderer now includes a deck shadow, plank lines and edge rails.
+7–8. Rechecked and retained the existing split-tree rendering: trunk, main canopy and upper canopy lobe are independent depth-sorted layers. This preserves the ability for the hero to overlap foliage and trunk separately.
+9. Improved tree readability with trunk bark detail, a rounded trunk/root accent, layered canopy lighting and a subtle lower canopy shadow accent.
+10. Improved rock readability with a ground contact edge, a lit stone facet and a darker facet seam.
+
+Added regression coverage that paints bridges, trees and rocks under negative, zero and positive yaw, then verifies bridge rectangles and obstacle counts remain unchanged. Numeric stroke widths are explicitly converted to doubles to avoid analyzer type issues.
+
+CI for this exact batch commit `a6f4089f` has started; no final result is claimed yet. The previous first-batch commit `89277c60` has since passed Analyze, all tests and 3D hero capture generation; its APK build is still running.
