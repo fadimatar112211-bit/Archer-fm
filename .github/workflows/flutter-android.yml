@@ -114,7 +114,7 @@ jobs:
 
   android-emulator-smoke:
     runs-on: ubuntu-22.04
-    timeout-minutes: 50
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -145,24 +145,24 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: timeout 35m flutter test --reporter expanded integration_test/app_smoke_test.dart
+          script: timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
 
   generate-monster-glbs:
     runs-on: ubuntu-22.04
-    timeout-minutes: 35
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install free Blender runtime
         run: |
-          sudo apt-get update
-          sudo apt-get install -y blender python3-numpy
+          sudo timeout 10m apt-get update
+          sudo timeout 8m apt-get install -y blender python3-numpy
 
       - name: Generate four rigged monster models
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+          timeout 12m blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
           python3 tools/validate_monster_glb.py --root build/monster-glb
 
       - name: Upload generated monster GLBs
