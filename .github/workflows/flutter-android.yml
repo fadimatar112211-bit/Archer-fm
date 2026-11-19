@@ -145,6 +145,7 @@ jobs:
           SDKMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
           AVDMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:?Android SDK path missing}}"
+          export PATH="$SDK/platform-tools:$PATH"
           set +o pipefail
           yes | "$SDKMANAGER" --licenses >/dev/null
           LICENSE_STATUS=${PIPESTATUS[1]}
