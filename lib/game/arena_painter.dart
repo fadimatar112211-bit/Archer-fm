@@ -952,7 +952,7 @@ class ArenaPainter extends CustomPainter {
     final shadow = Paint()..color = const Color(0x66000000);
     canvas.drawOval(
       Rect.fromCenter(
-        center: world.player.position + const Offset(0, 30),
+        center: world.player.position + const Offset(0, 10),
         width: 52,
         height: 16,
       ),
@@ -963,7 +963,7 @@ class ArenaPainter extends CustomPainter {
       final size = monster.radius * 2.6;
       canvas.drawOval(
         Rect.fromCenter(
-          center: monster.position + Offset(0, monster.radius * 1.35),
+          center: monster.position + Offset(0, monster.radius * 0.95),
           width: size * 0.9,
           height: size * 0.28,
         ),
