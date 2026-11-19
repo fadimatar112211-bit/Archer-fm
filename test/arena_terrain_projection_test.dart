@@ -338,9 +338,8 @@ void main() {
 
     test('captures full arena at three common landscape viewport sizes', () async {
       final world = _world(661);
-      world.player.position = const Offset(480, 335);
-      // The constructor reveals the spawn area; this deterministic capture
-      // moves the hero, so reveal the matching area as gameplay would.
+      // Keep the player at the constructor's camera-followed spawn so the
+      // hero marker stays inside the viewport in every landscape capture.
       // Captures are visual-review fixtures, not gameplay fog-of-war tests.
       // Reveal the entire generated map so hidden cells do not mask the
       // terrain, props, castles and actor-depth composition being reviewed.
