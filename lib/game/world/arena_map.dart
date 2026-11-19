@@ -194,8 +194,10 @@ class ArenaMap {
   /// in a later step; the map reserves their anchors).
   final List<Offset> castleAnchors;
 
-  /// The local player starts beside their own castle (anchor 0).
-  Offset get playerSpawn => castleAnchors.first + const Offset(0, 96);
+  /// The local player starts just outside the south wall of their own castle.
+  /// Keep the spawn beyond the wall radius plus the hero collision radius so
+  /// the opening camera frame never stacks the hero inside crystals/walls.
+  Offset get playerSpawn => castleAnchors.first + const Offset(0, 220);
 
   Offset get center => Offset(size.width / 2, size.height / 2);
 
@@ -518,7 +520,7 @@ class ArenaMap {
     List<MapPickup> pickups,
   ) {
     final obstacles = <MapObstacle>[];
-    final spawn = castles.first + const Offset(0, 96);
+    final spawn = castles.first + const Offset(0, 220);
 
     void tryPlace(ObstacleKind kind) {
       for (var attempt = 0; attempt < 240; attempt++) {
