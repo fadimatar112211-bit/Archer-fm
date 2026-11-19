@@ -151,7 +151,7 @@ void main() {
       final world = _world(445);
       final mine = world.mineSystem.mines.first;
       mine.capturerId = 'player';
-      mine.captureProgressMs = 0;
+      mine.captureProgressMs = 0.0;
       _paint(world);
       expect(mine.captureFraction, 0);
     });
@@ -160,7 +160,7 @@ void main() {
       final world = _world(449);
       final mine = world.mineSystem.mines.first;
       mine.capturerId = 'player';
-      mine.captureProgressMs = mineCaptureDurationMs;
+      mine.captureProgressMs = mineCaptureDurationMs.toDouble();
       _paint(world);
       expect(mine.captureFraction, 1);
     });
