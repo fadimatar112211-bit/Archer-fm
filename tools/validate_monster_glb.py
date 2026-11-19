@@ -90,6 +90,69 @@ def validate_one(root: Path, monster: str, entry: dict) -> list[str]:
     if not animations:
         errors.append(f"{monster}: no animation clips")
 
+    # Validate references that a simple header/clip-name check would miss.
+    accessors = gltf.get("accessors", [])
+    for mesh_index, mesh in enumerate(meshes):
+        for primitive_index, primitive in enumerate(mesh.get("primitives", [])):
+            attributes = primitive.get("attributes", {})
+            if "POSITION" not in attributes:
+                errors.append(
+                    f"{monster}: mesh {mesh_index} primitive {primitive_index} has no POSITION attribute"
+                )
+            for semantic, accessor_index in attributes.items():
+                if not isinstance(accessor_index, int) or not 0 <= accessor_index < len(accessors):
+                    errors.append(
+                        f"{monster}: mesh {mesh_index} primitive {primitive_index} "
+                        f"attribute {semantic} references invalid accessor {accessor_index}"
+                    )
+            indices = primitive.get("indices")
+            if indices is not None and (
+                not isinstance(indices, int) or not 0 <= indices < len(accessors)
+            ):
+                errors.append(
+                    f"{monster}: mesh {mesh_index} primitive {primitive_index} "
+                    f"references invalid index accessor {indices}"
+                )
+
+    for skin_index, skin in enumerate(skins):
+        joints = skin.get("joints", [])
+        if not joints:
+            errors.append(f"{monster}: skin {skin_index} has no joints")
+        for joint in joints:
+            if not isinstance(joint, int) or not 0 <= joint < len(nodes):
+                errors.append(f"{monster}: skin {skin_index} references invalid joint node {joint}")
+        inverse_bind = skin.get("inverseBindMatrices")
+        if inverse_bind is not None and (
+            not isinstance(inverse_bind, int) or not 0 <= inverse_bind < len(accessors)
+        ):
+            errors.append(f"{monster}: skin {skin_index} has invalid inverseBindMatrices accessor")
+
+    for animation in animations:
+        for channel_index, channel in enumerate(animation.get("channels", [])):
+            target_node = channel.get("target", {}).get("node")
+            if target_node is not None and (
+                not isinstance(target_node, int) or not 0 <= target_node < len(nodes)
+            ):
+                errors.append(
+                    f"{monster}: animation '{animation.get('name', '<unnamed>')}' "
+                    f"channel {channel_index} targets invalid node {target_node}"
+                )
+            sampler_index = channel.get("sampler")
+            samplers = animation.get("samplers", [])
+            if not isinstance(sampler_index, int) or not 0 <= sampler_index < len(samplers):
+                errors.append(
+                    f"{monster}: animation '{animation.get('name', '<unnamed>')}' "
+                    f"channel {channel_index} references invalid sampler {sampler_index}"
+                )
+        for sampler_index, sampler in enumerate(animation.get("samplers", [])):
+            for accessor_field in ("input", "output"):
+                accessor_index = sampler.get(accessor_field)
+                if not isinstance(accessor_index, int) or not 0 <= accessor_index < len(accessors):
+                    errors.append(
+                        f"{monster}: animation '{animation.get('name', '<unnamed>')}' "
+                        f"sampler {sampler_index} has invalid {accessor_field} accessor {accessor_index}"
+                    )
+
     image_count = len(gltf.get("images", []))
     external_images = [
         image.get("uri", "")
