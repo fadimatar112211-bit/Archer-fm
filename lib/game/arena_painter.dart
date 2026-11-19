@@ -1004,41 +1004,104 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
-  void _paintGroundShadows(Canvas canvas) {
-    final shadow = Paint()..color = const Color(0x66000000);
+  void _paintContactShadow(
+    Canvas canvas,
+    Offset groundAnchor, {
+    required double width,
+    required double height,
+    double offsetY = 0,
+    int alpha = 102,
+  }) {
     canvas.drawOval(
       Rect.fromCenter(
-        center: world.player.position + const Offset(0, 10),
-        width: 52,
-        height: 16,
+        center: groundAnchor + Offset(0, offsetY),
+        width: width,
+        height: height,
       ),
-      shadow,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          groundAnchor + Offset(0, offsetY),
+          math.max(width, height) * 0.62,
+          [
+            Color.fromARGB(alpha, 0, 0, 0),
+            Color.fromARGB((alpha * 0.42).round(), 0, 0, 0),
+            const Color(0x00000000),
+          ],
+          const [0.0, 0.68, 1.0],
+        ),
+    );
+  }
+
+  void _paintGroundShadows(Canvas canvas) {
+    // A single soft contact-shadow treatment keeps actors and scenery on
+    // the same projected floor while preserving their independent depth.
+    _paintContactShadow(
+      canvas,
+      world.player.position,
+      width: 56,
+      height: 18,
+      offsetY: 10,
+      alpha: 112,
     );
     for (final monster in [...world.enemies, ...world.army]) {
       if (monster.hp <= 0) continue;
       final size = monster.radius * 2.6;
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: monster.position + Offset(0, monster.radius * 0.95),
-          width: size * 0.9,
-          height: size * 0.28,
-        ),
-        shadow,
+      _paintContactShadow(
+        canvas,
+        monster.position,
+        width: size * 0.9,
+        height: size * 0.28,
+        offsetY: monster.radius * 0.95,
       );
     }
     // Obstacle shadows belong to the projected ground plane, not the
-    // upright tree/rock artwork. Keeping them here lets the shared camera
-    // compress and rotate footprints consistently with the terrain.
+    // upright tree/rock artwork.
     for (final obstacle in world.map.obstacles) {
       final isTree = obstacle.kind == ObstacleKind.tree;
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: obstacle.position + Offset(0, obstacle.radius * 0.14),
-          width: obstacle.radius * (isTree ? 2.3 : 2.1),
-          height: obstacle.radius * (isTree ? 0.9 : 0.8),
-        ),
-        shadow,
+      _paintContactShadow(
+        canvas,
+        obstacle.position,
+        width: obstacle.radius * (isTree ? 2.3 : 2.1),
+        height: obstacle.radius * (isTree ? 0.9 : 0.8),
+        offsetY: obstacle.radius * 0.14,
+        alpha: 94,
       );
+    }
+
+    // Castle mass, individual wall arcs and crystal plinths cast contact
+    // shadows independently, matching their depth-sorted ground anchors.
+    for (final castle in world.castleSystem.standingCastles) {
+      _paintContactShadow(
+        canvas,
+        castle.anchor,
+        width: castleWallRadius * 2.55,
+        height: castleWallRadius * 1.05,
+        offsetY: 12,
+        alpha: 86,
+      );
+      for (final wall in castle.walls) {
+        final angle = wall.startAngle + wall.sweep / 2;
+        final anchor = wall.center +
+            Offset(math.cos(angle) * wall.radius, math.sin(angle) * wall.radius);
+        _paintContactShadow(
+          canvas,
+          anchor,
+          width: 48,
+          height: 17,
+          offsetY: 5,
+          alpha: 92,
+        );
+      }
+      for (final crystal in castle.alive) {
+        _paintContactShadow(
+          canvas,
+          crystal.position,
+          width: 70,
+          height: 23,
+          offsetY: 8,
+          alpha: 118,
+        );
+      }
     }
   }
 
