@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
+import 'package:archer_fm/game/world/arena_projection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,9 +33,13 @@ ProjectileState _projectile({
       visualHeight: visualHeight,
     );
 
-void _paint(GameWorld world) {
+void _paint(
+  GameWorld world, {
+  ArenaWorldProjection projection = const ArenaWorldProjection(groundScaleY: 0.82),
+}) {
   final painter = ArenaPainter(
     world: world,
+    projection: projection,
     presentation: ArenaPresentation(
       kit: rangerNewKit,
       theme: ThemeData(brightness: Brightness.dark),
@@ -59,6 +64,23 @@ void _paint(GameWorld world) {
 
 void main() {
   group('ArenaPainter projectile depth pass', () {
+    test('renders with a non-zero yaw using the injected shared projection', () {
+      final world = _world(207);
+      world.projectiles.add(_projectile(
+        id: 'yawed',
+        position: const Offset(480, 280),
+        velocity: const Offset(8, 3),
+        visualHeight: 32,
+      ));
+      _paint(
+        world,
+        projection: const ArenaWorldProjection(
+          yawRadians: 0.24,
+          groundScaleY: 0.82,
+        ),
+      );
+    });
+
     test('renders a moving projectile through the shared actor depth queue', () {
       final world = _world(211);
       world.projectiles.add(_projectile(
