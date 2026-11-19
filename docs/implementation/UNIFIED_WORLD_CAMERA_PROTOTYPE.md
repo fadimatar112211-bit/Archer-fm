@@ -83,6 +83,7 @@ Implemented on `ranger-reference-work`:
 - Replaced the separate monster-only pass plus always-on-top hero pass with one depth-sorted actor list containing visible enemies, owned units, corpses, the player hero, trees and rocks. Trees/rocks now act as foreground occluders when their ground depth is nearer.
 - Removed a per-actor viewport-transform construction from the upright actor path; it now reuses the painter's immutable projection.
 - Added a camera regression test that checks viewport-corner and center round trips across three landscape sizes during eight camera-smoothing updates.
+- Added a deterministic map capture with a tree placed in front of the hero to visually inspect foreground occlusion (`35_actor_tree_occlusion.png`).
 
 Still not implemented or accepted:
 - Terrain/river/bridge geometry has not been migrated to a full yawed 3D/isometric projection; current ground transform is vertical compression only.
