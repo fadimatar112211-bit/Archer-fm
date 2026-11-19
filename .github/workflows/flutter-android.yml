@@ -58,7 +58,7 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Run all tests
-        run: flutter test
+        run: timeout 20m flutter test --reporter expanded
 
       - name: Run on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -68,7 +68,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: flutter test integration_test/app_smoke_test.dart
+          script: timeout 20m flutter test integration_test/app_smoke_test.dart
 
       - name: Upload 3D hero visual captures
         uses: actions/upload-artifact@v4
