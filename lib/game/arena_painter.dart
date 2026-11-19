@@ -313,23 +313,6 @@ class ArenaPainter extends CustomPainter {
         );
         canvas.drawLine(start - normal, start + normal, shimmer);
       }
-      for (final bridge in river.bridges) {
-        final rect = bridge.rect;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(7)),
-          Paint()..color = _bridgeColor,
-        );
-        final planks = Paint()
-          ..color = _bridgePlankColor
-          ..strokeWidth = 2;
-        for (var x = rect.left + 8; x < rect.right; x += 12) {
-          canvas.drawLine(
-            Offset(x, rect.top + 4),
-            Offset(x, rect.bottom - 4),
-            planks,
-          );
-        }
-      }
     }
 
 
@@ -1033,6 +1016,21 @@ class ArenaPainter extends CustomPainter {
       ));
     }
 
+    // Bridges are elevated dry crossings. Draw each deck in the same
+    // depth queue as actors so a hero can pass in front of or behind it.
+    for (final river in world.map.rivers) {
+      for (final bridge in river.bridges) {
+        final bridgeOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(bridge.center),
+          order: bridgeOrder,
+          draw: () => _withUprightGroundActor(canvas, bridge.center, () {
+            _paintBridge(canvas, bridge);
+          }),
+        ));
+      }
+    }
+
     // Mines are ground-level world objects, not a terrain overlay. Queue
     // them with heroes and obstacles so a character can pass in front of or
     // behind a mine according to the same camera depth.
@@ -1222,6 +1220,43 @@ class ArenaPainter extends CustomPainter {
     });
     for (final actor in actors) {
       actor.draw();
+    }
+  }
+
+  void _paintBridge(Canvas canvas, Bridge bridge) {
+    final rect = bridge.rect;
+    final deck = RRect.fromRectAndRadius(
+      rect,
+      Radius.circular((rect.height * 0.12).clamp(4.0, 10.0)),
+    );
+    canvas.drawRRect(
+      deck.shift(const Offset(0, 5)),
+      Paint()..color = const Color(0x660F1C18),
+    );
+    canvas.drawRRect(deck, Paint()..color = _bridgeColor);
+    final rail = Paint()
+      ..color = const Color(0xFF9A7045)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(rect.left + 3, rect.top + 4),
+      Offset(rect.right - 3, rect.top + 4),
+      rail,
+    );
+    canvas.drawLine(
+      Offset(rect.left + 3, rect.bottom - 4),
+      Offset(rect.right - 3, rect.bottom - 4),
+      rail,
+    );
+    final planks = Paint()
+      ..color = _bridgePlankColor
+      ..strokeWidth = 2;
+    for (var x = rect.left + 8; x < rect.right; x += 12) {
+      canvas.drawLine(
+        Offset(x, rect.top + 7),
+        Offset(x, rect.bottom - 7),
+        planks,
+      );
     }
   }
 
