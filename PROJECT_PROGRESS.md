@@ -511,3 +511,13 @@ Verification:
 - Batch 1 steps 1–5 are complete as an audit/design/source-readiness batch. The asset audit has a clear blocker: no approved monster 3D source assets exist in the active branch. No fake asset paths were added and the procedural fallback remains untouched.
 - Next: steps 6–10, establish a free/reproducible model pipeline and produce/validate four distinct monster assets before runtime integration.
 - Stage-one Actions run `44465905653` on code commit `e82257a`: Analyze, all Flutter tests and hero/arena capture upload passed; Android emulator step is still in progress. Release APK build, signature verification and upload have not started. Stage one is not yet accepted.
+
+
+### Stage two — batch 2 (steps 6–10), 2026-11-19 — blocked at asset creation
+
+- Step 6: defined the reproducible free Blender/glTF production contract, canonical folder layout, GLB manifest schema, required clips/events, coordinate/scale conventions and per-model acceptance gate in `docs/monsters/MONSTER_3D_ASSET_PIPELINE.md`. Documentation complete.
+- Steps 7–10: Runner, Tank, Stalker and Ranged model creation/validation are not complete. The active branch has no source monster GLB/BLEND models, and no actual model-generation/export runtime is available through the connected GitHub operations. Existing legacy SVG sheets and procedural Canvas shapes are not 3D source models and will not be mislabeled as such.
+- Audited `monster-army-work`: it contains a substantial older monster runtime and legacy SVG assets, but its history has diverged heavily from `ranger-reference-work` (347 commits ahead, 278 behind; merge base `645bbeeb`). It also contains no dedicated monster GLB/BLEND production assets. Do not merge this branch wholesale into the active hero branch; preserve it as reference pending a deliberate, file-by-file port plan.
+- Current branch remains on the hero-safe `ranger-reference-work`; no monster runtime or hero files were overwritten.
+- Stage 2 visual production cannot honestly advance to runtime integration until four real model sources are created/provided and pass the GLB gates.
+- Stage 1 Android checks: runs `44465905653` and `44465899058` still show emulator step running, with Release APK build and signature verification pending. Analyze, all Flutter tests and visual-capture upload passed in run `44465905653`; emulator/APK success is not confirmed.
