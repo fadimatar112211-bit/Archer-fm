@@ -1261,51 +1261,96 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintTreeTrunk(Canvas canvas, MapObstacle obstacle) {
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: obstacle.position + Offset(0, obstacle.radius * 0.4),
-        width: obstacle.radius * 0.45,
-        height: obstacle.radius * 0.9,
-      ),
+    final trunk = Rect.fromCenter(
+      center: obstacle.position + Offset(0, obstacle.radius * 0.4),
+      width: obstacle.radius * 0.45,
+      height: obstacle.radius * 0.9,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(trunk, Radius.circular(obstacle.radius * 0.12)),
       Paint()..color = _trunkColor,
+    );
+    canvas.drawLine(
+      Offset(trunk.center.dx - obstacle.radius * 0.07, trunk.top + 4),
+      Offset(trunk.center.dx - obstacle.radius * 0.07, trunk.bottom - 3),
+      Paint()
+        ..color = const Color(0x668F6842)
+        ..strokeWidth = (obstacle.radius * 0.055).clamp(1.5, 4.0),
+    );
+    canvas.drawLine(
+      Offset(trunk.left + 1, trunk.bottom - 2),
+      Offset(trunk.center.dx, trunk.bottom - obstacle.radius * 0.12),
+      Paint()
+        ..color = _trunkColor
+        ..strokeWidth = (obstacle.radius * 0.13).clamp(3.0, 9.0)
+        ..strokeCap = StrokeCap.round,
     );
   }
 
   void _paintTreeCanopy(Canvas canvas, MapObstacle obstacle) {
+    final center = obstacle.position - Offset(0, obstacle.radius * 0.35);
+    canvas.drawCircle(center, obstacle.radius, Paint()..color = _treeColor);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center + Offset(-obstacle.radius * 0.22, -obstacle.radius * 0.18),
+        width: obstacle.radius * 0.92,
+        height: obstacle.radius * 0.48,
+      ),
+      Paint()..color = Color.lerp(_treeColor, _treeLightColor, 0.34)!,
+    );
     canvas.drawCircle(
-      obstacle.position - Offset(0, obstacle.radius * 0.35),
-      obstacle.radius,
-      Paint()..color = _treeColor,
+      center + Offset(obstacle.radius * 0.48, obstacle.radius * 0.28),
+      obstacle.radius * 0.19,
+      Paint()..color = Color.lerp(_treeColor, Colors.black, 0.16)!,
     );
   }
 
   void _paintTreeCanopyUpperLobe(Canvas canvas, MapObstacle obstacle) {
+    final center =
+        obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6);
     canvas.drawCircle(
-      obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
+      center,
       obstacle.radius * 0.55,
       Paint()..color = _treeLightColor,
+    );
+    canvas.drawCircle(
+      center - Offset(obstacle.radius * 0.12, obstacle.radius * 0.13),
+      obstacle.radius * 0.17,
+      Paint()..color = Color.lerp(_treeLightColor, Colors.white, 0.16)!,
     );
   }
 
   void _paintObstacle(Canvas canvas, MapObstacle obstacle) {
-    canvas.drawRRect(
-      RRect.fromRectAndCorners(
-        Rect.fromCenter(
-          center: obstacle.position,
-          width: obstacle.radius * 1.9,
-          height: obstacle.radius * 1.5,
-        ),
-        topLeft: Radius.circular(obstacle.radius * 0.5),
-        topRight: Radius.circular(obstacle.radius * 0.7),
-        bottomRight: Radius.circular(obstacle.radius * 0.4),
-        bottomLeft: Radius.circular(obstacle.radius * 0.6),
-      ),
-      Paint()..color = _rockColor,
+    final rect = Rect.fromCenter(
+      center: obstacle.position,
+      width: obstacle.radius * 1.9,
+      height: obstacle.radius * 1.5,
     );
-    canvas.drawCircle(
-      obstacle.position - Offset(obstacle.radius * 0.3, obstacle.radius * 0.25),
-      obstacle.radius * 0.35,
-      Paint()..color = _rockLightColor,
+    final rock = RRect.fromRectAndCorners(
+      rect,
+      topLeft: Radius.circular(obstacle.radius * 0.5),
+      topRight: Radius.circular(obstacle.radius * 0.7),
+      bottomRight: Radius.circular(obstacle.radius * 0.4),
+      bottomLeft: Radius.circular(obstacle.radius * 0.6),
+    );
+    canvas.drawRRect(
+      rock.shift(Offset(0, obstacle.radius * 0.08)),
+      Paint()..color = const Color(0x55301F19),
+    );
+    canvas.drawRRect(rock, Paint()..color = _rockColor);
+    final facet = Path()
+      ..moveTo(rect.left + obstacle.radius * 0.28, rect.top + obstacle.radius * 0.2)
+      ..lineTo(rect.center.dx + obstacle.radius * 0.05, rect.top + obstacle.radius * 0.12)
+      ..lineTo(rect.center.dx - obstacle.radius * 0.12, rect.center.dy)
+      ..lineTo(rect.left + obstacle.radius * 0.18, rect.center.dy + obstacle.radius * 0.12)
+      ..close();
+    canvas.drawPath(facet, Paint()..color = _rockLightColor);
+    canvas.drawLine(
+      Offset(rect.center.dx + obstacle.radius * 0.05, rect.top + obstacle.radius * 0.12),
+      Offset(rect.right - obstacle.radius * 0.16, rect.center.dy + obstacle.radius * 0.2),
+      Paint()
+        ..color = Color.lerp(_rockColor, Colors.black, 0.22)!
+        ..strokeWidth = (obstacle.radius * 0.045).clamp(1.2, 3.0),
     );
   }
 
