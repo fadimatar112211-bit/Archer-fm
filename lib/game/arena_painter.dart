@@ -349,91 +349,91 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintMine(Canvas canvas, MineState mine) {
-      final owned = mine.ownerId != null;
-      final mineColor = !owned
-          ? _rockColor
-          : mine.owns(MineController.localPlayerId)
-              ? const Color(0xFF5E8F35)
-              : const Color(0xFF8E3F34);
-      final ringColor = !owned
-          ? const Color(0xFFB9C0C4)
-          : mine.owns(MineController.localPlayerId)
-              ? const Color(0xFF9BE845)
-              : const Color(0xFFFF7A5A);
+    final owned = mine.ownerId != null;
+    final mineColor = !owned
+        ? _rockColor
+        : mine.owns(MineController.localPlayerId)
+            ? const Color(0xFF5E8F35)
+            : const Color(0xFF8E3F34);
+    final ringColor = !owned
+        ? const Color(0xFFB9C0C4)
+        : mine.owns(MineController.localPlayerId)
+            ? const Color(0xFF9BE845)
+            : const Color(0xFFFF7A5A);
 
-      // Sunken pit under the ore.
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: mine.position + const Offset(0, 6),
-          width: mine.radius * 2.1,
-          height: mine.radius * 1.1,
-        ),
-        Paint()..color = const Color(0x44000000),
+    // Sunken pit under the ore.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: mine.position + const Offset(0, 6),
+        width: mine.radius * 2.1,
+        height: mine.radius * 1.1,
+      ),
+      Paint()..color = const Color(0x44000000),
+    );
+    canvas.drawCircle(
+      mine.position,
+      mine.radius,
+      Paint()..color = mineColor.withValues(alpha: 0.92),
+    );
+    canvas.drawCircle(
+      mine.position,
+      mine.radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..color = ringColor,
+    );
+
+    // Ore chunks: three gold crystals inside the pit.
+    for (var i = 0; i < 3; i++) {
+      final angle = -math.pi / 2 + i * (math.pi * 2 / 3);
+      final offset = Offset(
+        math.cos(angle) * mine.radius * 0.42,
+        math.sin(angle) * mine.radius * 0.3,
       );
-      canvas.drawCircle(
-        mine.position,
-        mine.radius,
-        Paint()..color = mineColor.withValues(alpha: 0.92),
+      final chunk = mine.position + offset;
+      final size = mine.radius * 0.2;
+      canvas.drawPath(
+        Path()
+          ..moveTo(chunk.dx, chunk.dy - size)
+          ..lineTo(chunk.dx + size * 0.7, chunk.dy)
+          ..lineTo(chunk.dx, chunk.dy + size)
+          ..lineTo(chunk.dx - size * 0.7, chunk.dy)
+          ..close(),
+        Paint()..color = _goldColor,
       );
+    }
+
+    // Size pips: one, two or three marks along the bottom of the ring.
+    final pips = switch (mine.size) {
+      MineSize.small => 1,
+      MineSize.medium => 2,
+      MineSize.large => 3,
+    };
+    final pipPaint = Paint()..color = ringColor;
+    for (var i = 0; i < pips; i++) {
       canvas.drawCircle(
-        mine.position,
-        mine.radius,
+        mine.position +
+            Offset((i - (pips - 1) / 2) * 9, mine.radius * 0.62),
+        2.6,
+        pipPaint,
+      );
+    }
+
+    // Capture progress ring for the player standing inside.
+    if (mine.capturerId != null && mine.captureFraction > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: mine.position, radius: mine.radius + 7),
+        -math.pi / 2,
+        math.pi * 2 * mine.captureFraction,
+        false,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round
           ..color = ringColor,
       );
-
-      // Ore chunks: three gold crystals inside the pit.
-      for (var i = 0; i < 3; i++) {
-        final angle = -math.pi / 2 + i * (math.pi * 2 / 3);
-        final offset = Offset(
-          math.cos(angle) * mine.radius * 0.42,
-          math.sin(angle) * mine.radius * 0.3,
-        );
-        final chunk = mine.position + offset;
-        final size = mine.radius * 0.2;
-        canvas.drawPath(
-          Path()
-            ..moveTo(chunk.dx, chunk.dy - size)
-            ..lineTo(chunk.dx + size * 0.7, chunk.dy)
-            ..lineTo(chunk.dx, chunk.dy + size)
-            ..lineTo(chunk.dx - size * 0.7, chunk.dy)
-            ..close(),
-          Paint()..color = _goldColor,
-        );
-      }
-
-      // Size pips: one, two or three marks along the bottom of the ring.
-      final pips = switch (mine.size) {
-        MineSize.small => 1,
-        MineSize.medium => 2,
-        MineSize.large => 3,
-      };
-      final pipPaint = Paint()..color = ringColor;
-      for (var i = 0; i < pips; i++) {
-        canvas.drawCircle(
-          mine.position +
-              Offset((i - (pips - 1) / 2) * 9, mine.radius * 0.62),
-          2.6,
-          pipPaint,
-        );
-      }
-
-      // Capture progress ring for the player standing inside.
-      if (mine.capturerId != null && mine.captureFraction > 0) {
-        canvas.drawArc(
-          Rect.fromCircle(center: mine.position, radius: mine.radius + 7),
-          -math.pi / 2,
-          math.pi * 2 * mine.captureFraction,
-          false,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 4
-            ..strokeCap = StrokeCap.round
-            ..color = ringColor,
-        );
-      }
+    }
   }
 
   void _paintCastleCourtyard(Canvas canvas, CastleState castle) {
