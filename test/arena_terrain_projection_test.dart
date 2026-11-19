@@ -102,6 +102,28 @@ void main() {
       expect(world.map.rivers, isNotEmpty);
     });
 
+    test('projected obstacle shadows and softened biome edges paint without mutating the map', () {
+      final world = _world(619);
+      final before = world.map.obstacles
+          .map((obstacle) => [obstacle.position, obstacle.radius, obstacle.kind])
+          .toList();
+      final painter = _painter(
+        world,
+        const ArenaWorldProjection(
+          yawRadians: 0.34,
+          groundScaleY: 0.71,
+        ),
+      );
+      _paint(painter, const Size(1920, 1080));
+      _paint(painter, const Size(1920, 1080));
+      expect(
+        world.map.obstacles
+            .map((obstacle) => [obstacle.position, obstacle.radius, obstacle.kind])
+            .toList(),
+        before,
+      );
+    });
+
     test('camera hit mapping remains invertible for terrain yaw', () {
       final world = _world(617);
       const projection = ArenaWorldProjection(
