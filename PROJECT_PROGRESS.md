@@ -422,3 +422,16 @@ Verification:
 - Updated `UNIFIED_WORLD_CAMERA_PROTOTYPE.md` with the new painter order and explicit remaining limits.
 - Code commits: `d61a5e04`, `3cac8ccd`, `4e447730`, `5e4feab2`, `56c6c385`.
 - Visual captures and tests still require completed Actions and review; no claim of final visual acceptance is made.
+
+### 2026-11-19 — Mine and pickup depth integration
+
+- Continued from the user-confirmed base commit `19440a6c`, with all new work on `ranger-reference-work`.
+- Removed mines from the terrain-only paint pass and added them to the shared ground-depth queue with the hero, monsters, trees, castles, crystals and projectiles.
+- Extracted a dedicated mine painter while preserving neutral/local/rival tints, ore chunks, size pips and capture-progress arc.
+- Moved mine-output resource piles and map chests into the same depth queue; map resource entries remain represented by the mine-controller pickup list to avoid duplicate rendering.
+- Added `test/arena_mine_depth_test.dart` with coverage for mine ownership, size classes, capture fractions, empty collections, yaw, state immutability, chests and resource pickups.
+- Extended real Ranger GLB captures with mine foreground/background, chest and resource-pile overlap cases.
+- Updated `UNIFIED_WORLD_CAMERA_PROTOTYPE.md` with integration details and remaining limitations.
+- Code commits: `33e98ff3`, `a1878564`, `151e263f`, `4cd749a2`, `95fba146`, `edbc159e`, `af2852cd`, `3ff0d27a`, `4cb43556`, `550b0497`.
+- Previous workflow `44429243077` proved Analyze and 401 tests passed and uploaded 93 visual captures, but Release APK failed at Gradle dependency resolution for Kotlin 2.0.21 (repository resolution failure). This is distinct from a Dart compile/test failure.
+- Current mine/pickup changes still require fresh Analyze/test/capture CI on the latest branch head; no APK claim is made.
