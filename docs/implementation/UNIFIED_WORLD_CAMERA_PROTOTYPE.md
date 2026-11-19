@@ -80,7 +80,7 @@ Automated tests and non-empty render captures are not proof of visual quality by
 Implemented on `ranger-reference-work`:
 - Added reversible oblique ground projection math and camera/input integration.
 - Applied the same 0.82 ground-depth compression to the arena canvas while locally counter-scaling upright actors.
-- Replaced the separate monster-only pass plus always-on-top hero pass with one depth-sorted actor list containing visible enemies, owned units, corpses and the player hero.
+- Replaced the separate monster-only pass plus always-on-top hero pass with one depth-sorted actor list containing visible enemies, owned units, corpses, the player hero, trees and rocks. Trees/rocks now act as foreground occluders when their ground depth is nearer.
 - Removed a per-actor viewport-transform construction from the upright actor path; it now reuses the painter's immutable projection.
 - Added a camera regression test that checks viewport-corner and center round trips across three landscape sizes during eight camera-smoothing updates.
 
