@@ -223,11 +223,15 @@ def build(kind):
         scene.render.engine="BLENDER_WORKBENCH"
         scene.display.shading.light="STUDIO"
         scene.display.shading.color_type="MATERIAL"
+        # Render clean solid surfaces: wire overlays hide the face and material
+        # separation that must be judged in the approval preview.
+        scene.display.shading.show_wireframe=False
+        scene.display.shading.show_object_outline=False
         scene.display.shading.show_shadows=True
-        scene.display.shading.show_cavity=True
-        scene.display.shading.cavity_type="BOTH"
+        scene.display.shading.show_cavity=False
         scene.render.resolution_x=768; scene.render.resolution_y=768
         scene.render.resolution_percentage=100
+        scene.camera.data.lens=58
         scene.render.image_settings.file_format="PNG"
         scene.render.film_transparent=False
         scene.world.color=(0.055,0.065,0.085)
