@@ -44,5 +44,6 @@ void main() {
     expect(find.byKey(const ValueKey('army_total')), findsOneWidget);
     expect(find.text('الموزَّع: 20/20'), findsOneWidget);
     expect(find.byKey(const ValueKey('start_with_army')), findsOneWidget);
+    expect(find.byKey(const ValueKey('home_3d_loaded')), findsOneWidget);
   });
 }
