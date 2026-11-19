@@ -10,6 +10,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ArenaCameraTransform', () {
+    test('uses the centralized shared default projection', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(5),
+        spawnWaves: false,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(960, 540),
+        world,
+      );
+      expect(transform.projection, same(defaultArenaWorldProjection));
+      expect(transform.projection.groundScaleY, 0.82);
+      expect(transform.projection.yawRadians, 0);
+    });
+
     test('pointer conversion uses the smoothed camera origin used to paint', () {
       final world = GameWorld(
         kit: rangerNewKit,
