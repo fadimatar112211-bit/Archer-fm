@@ -337,3 +337,15 @@ Twenty-five tracked work items in this continuation:
 Latest source/test HEAD at this checkpoint: `d9a3ec230b329335aab4e5a6ff54364451ce366e`. The dedicated test-file workflow (`44427793874`) was still in progress at Flutter setup when checked; the source change run (`44427737324`) had passed setup/dependencies and was running Analyze. The earlier camera run (`44427516363`) had Analyze success and was running all tests. These are intermediate statuses, not final pass results.
 
 Known unresolved work: confirm all new tests and analysis pass; inspect actual projectile-vs-tree/actor capture pixels; add separate projectile visual-height/trail segmentation if needed; migrate ground/objective passes before enabling live yaw; visually validate all heroes against the reference; and verify a current-HEAD APK. No full-game completion is claimed.
+
+
+### 2026-11-19 — Shared yaw projection and projectile elevation
+
+- Fixed the analyzer blocker found in run `44427894937`: removed the now-unreferenced legacy `_paintProjectiles` helper. The earlier run failed Analyze on that warning; it did not reach tests or APK.
+- Added a separate non-negative `ProjectileState.visualHeight` and `visualPosition`. Ground depth/collision still use `position`; rendering uses the lifted position.
+- Added projectile tests for zero/default lift, positive lift, negative-height assertion, and stable ground anchor.
+- Injected one `ArenaWorldProjection` into `ArenaPainter` and its `ArenaCameraTransform`.
+- Applied world yaw rotation and depth compression to the entire world canvas in the same order as `projectGround`.
+- Added inverse yaw/depth compensation around upright actors, tree layers and floating labels.
+- Added a non-zero-yaw painter capture regression. Production default remains yaw zero until visual review.
+- Latest source branch tip at this checkpoint is tracked by the later progress commit; Actions remain pending for the newest changes.
