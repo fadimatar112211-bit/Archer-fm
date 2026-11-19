@@ -171,3 +171,8 @@ Camera tests now cover immutable viewport snapshots, positive scale across suppo
 ## Explicit remaining renderer blockers
 
 Before enabling yaw in production, migrate every world-space pass together: terrain and biome fills, river/bridge geometry, crystal and castle silhouettes, mines/pickups, shadows, actor anchors, projectile trajectories, combat effects, fog cells and floating labels. Upright actor compensation must use the same projection basis. Keep HUD, joystick, action controls and minimap UI in screen space. Verify touch hit-testing against the exact projected scene and validate map-edge clamping after inverse projection.
+
+
+## Projectile depth integration acceptance criteria
+
+Projectiles currently render after the combined actor/obstacle pass. The next implementation must represent each projectile with a ground anchor plus visual height, sort its ground anchor against actor and obstacle depth keys, and render the projectile body at its height without changing its ground depth. Required captures: projectile behind trunk, projectile in front of trunk, projectile crossing canopy depth, projectile crossing a monster, and projectile passing above a crystal. Keep trails and impact FX attached to the same projectile state and avoid sorting purely by screen Y.
