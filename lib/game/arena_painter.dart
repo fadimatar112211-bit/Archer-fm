@@ -1625,14 +1625,6 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
-  void _paintProjectiles(Canvas canvas) {
-    // Kept as a compatibility entry point for capture helpers; production
-    // ArenaPainter now inserts each projectile into the shared depth queue.
-    for (final projectile in world.projectiles) {
-      _paintProjectile(canvas, projectile);
-    }
-  }
-
   void _paintProjectile(Canvas canvas, ProjectileState projectile) {
       if (projectile.velocity.distance < 0.001) return;
       final dir = projectile.velocity / projectile.velocity.distance;
