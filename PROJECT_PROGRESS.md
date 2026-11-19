@@ -406,3 +406,7 @@ Verification:
 - Follow-up code commit: `7e9b26f375a82f1d0511e5c320bcf1d10f461758`.
 - Split living crystals out of the castle draw closure and inserted each crystal into the shared depth queue using its own base position. This permits per-crystal foreground/background ordering while keeping the castle keep and wall composition stable.
 - Crystal rendering still uses the existing owner tint, glow and HP bar painter; no gameplay or objective state was changed.
+
+- Added a focused painter regression that keeps all 28 living crystal objectives in the world, damages them to exercise their HP-bar rendering path, and paints them through the shared actor queue.
+- Test commit: `a4cd95350b65f40883702e3038a15bd1e07b3318`.
+- The test is an automated render-path regression, not pixel-level proof that the GLB hero is visually occluded by each crystal.
