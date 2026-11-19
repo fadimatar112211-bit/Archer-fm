@@ -149,7 +149,7 @@ jobs:
 
   generate-monster-glbs:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -162,7 +162,7 @@ jobs:
       - name: Generate four rigged monster models
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          timeout 12m blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+          ARCHER_MONSTER_PREVIEWS=1 timeout 20m blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
           python3 tools/validate_monster_glb.py --root build/monster-glb
 
       - name: Upload generated monster GLBs
