@@ -127,6 +127,29 @@ void main() {
       );
       await save('77_glb_rock_foreground_16x9', render(const Size(1920, 1080)));
 
+      // A second tree depth extreme checks that the complete crown stays
+      // behind the hero when its ground anchor is well behind the player.
+      world.map.obstacles[0] = MapObstacle(
+        position: base - const Offset(0, 120),
+        radius: 58,
+        kind: ObstacleKind.tree,
+      );
+      await save(
+        '79_glb_tree_far_background_16x9',
+        render(const Size(1920, 1080)),
+      );
+
+      // Background rock is the opposite depth case to the foreground rock.
+      world.map.obstacles[0] = MapObstacle(
+        position: base - const Offset(0, 64),
+        radius: 38,
+        kind: ObstacleKind.rock,
+      );
+      await save(
+        '80_glb_rock_background_narrow',
+        render(const Size(1280, 720)),
+      );
+
       expect(model.jointNames, isNotEmpty);
       expect(model.clips.keys, contains('idle'));
     },
