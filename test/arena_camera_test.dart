@@ -527,6 +527,13 @@ void main() {
       expect(twice.dy, closeTo(once.dy, 1e-8));
     });
 
+    test('screen-space HUD viewport remains separate from world coordinates', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(191), spawnWaves: false);
+      final transform = ArenaCameraTransform.forViewport(const Size(2400, 1080), world);
+      expect(transform.viewportOrigin, isNot(Offset.zero));
+      expect(transform.worldToLocal(world.cameraOrigin + const Offset(arenaWidth / 2, arenaHeight / 2)), const Offset(1200, 540));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
