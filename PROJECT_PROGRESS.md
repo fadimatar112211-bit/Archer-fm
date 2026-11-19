@@ -256,3 +256,29 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Visual acceptance: not complete. New GLB captures must be reviewed from the workflow artifact. The terrain, rivers, bridges, projectiles, crystals, fog and all world objects still do not share a full yawed 3D projection.
 - APK: no current-HEAD verified APK is claimed.
 - Next: inspect latest Actions results and logs; fix any analyzer/test errors; download and review the newest GLB capture artifact; only then continue staged ground/monster projection work.
+
+
+### 2026-11-19 — Fifteen-step camera/projection regression and CI failure correction batch
+
+- Starting HEAD: `b4434b1c869892e31abee5eef0c388bddd078538`.
+- Step 1: corrected the projection linearity test tolerance. CI had reported a 2.10e-8 floating-point difference against a 1e-8 tolerance; this was test precision, not a renderer runtime failure.
+- Step 2: tested inverse mapping of projected origin to a non-zero focus, scale-independent depth keys, negative-yaw depth direction, height offset independence, and focus-translated visible bounds.
+- Step 3: added dense-grid round-trip and deterministic projection checks.
+- Step 4: added camera tests for ultrawide aspect ratios, yawed pointer conversion beyond map center, and immutable camera snapshots.
+- Step 5: added viewport-edge round trips and relative world displacement checks.
+- Step 6: added camera-right and camera-depth basis tests.
+- Step 7: corrected the test's camera-depth basis vector to match the projection's documented yaw convention.
+- Step 8: audited and documented actual painter pass order and remaining depth-order gaps: projectiles remain a later pass above actors; terrain/objectives are flat; yaw is not applied to the live whole scene.
+- Step 9: locked the current live default camera contract: horizontal scale is unchanged and vertical ground depth is compressed by 0.82.
+- Step 10: locked zero-yaw X-axis behavior.
+- Step 11: locked zero-yaw Y-axis compression behavior.
+- Step 12: tested projection-scale forward/inverse camera mapping and camera-follow response.
+- Step 13: verified visible-world bounds shrink consistently with projection zoom.
+- Step 14: tested camera input round trips at all map corners and far-edge coordinates.
+- Step 15: recorded the batch, evidence, CI status and remaining renderer gates in this checkpoint.
+- Main commits: `2f2cefdf` (tolerance fix), `f09b04bb`, `8053e965`, `734e68cc`, `81d49d5b`, `3005b38b`, `bcd3db10`, `a37440ca`, `2cc283b6`, `bf923a3f`, `deefb351`, `b49c9a26`, `c5d65230`, `1f00f566`.
+- CI evidence: runs `44426601917`, `44426624520` and `44426641401` failed on the earlier too-tight floating-point assertion (329/330, 332/333 tests passed in those runs). The tolerance fix is on a later commit. Runs for subsequent commits were still in progress at checkpoint time; do not call the full suite green yet.
+- Latest code HEAD before this checkpoint: `1f00f5663c2b544e988318342580a7f093256ff6`.
+- APK: no current-HEAD verified APK is claimed.
+- Visual acceptance: not complete. These are regression tests and source audit updates; no claim that live yaw or complete 3D world projection is implemented.
+- Next: wait for the latest workflow run, inspect any new failures, and review the new Ranger GLB obstacle captures. Once the test gate is green, continue with a staged projectile/actor depth integration rather than enabling yaw across only part of the scene.
