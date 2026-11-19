@@ -1630,7 +1630,7 @@ class ArenaPainter extends CustomPainter {
       final dir = projectile.velocity / projectile.velocity.distance;
       final perpendicular = Offset(-dir.dy, dir.dx);
       final length = projectile.big ? 30.0 : 22.0;
-      final visualPosition = projectile.position - Offset(0, projectile.visualHeight);
+      final visualPosition = projectile.visualPosition;
       final tail = visualPosition - dir * length;
       final tint = Color(projectile.tint);
       final glow = Paint()
