@@ -1630,27 +1630,28 @@ class ArenaPainter extends CustomPainter {
       final dir = projectile.velocity / projectile.velocity.distance;
       final perpendicular = Offset(-dir.dy, dir.dx);
       final length = projectile.big ? 30.0 : 22.0;
-      final tail = projectile.position - dir * length;
+      final visualPosition = projectile.position - Offset(0, projectile.visualHeight);
+      final tail = visualPosition - dir * length;
       final tint = Color(projectile.tint);
       final glow = Paint()
         ..color = tint.withValues(alpha: 0.28)
         ..strokeWidth = projectile.big ? 18 : 13
         ..strokeCap = StrokeCap.round
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      canvas.drawLine(tail, projectile.position, glow);
+      canvas.drawLine(tail, visualPosition, glow);
       final edge = Paint()
         ..color = tint.withValues(alpha: 0.92)
         ..strokeWidth = projectile.big ? 7 : 5
         ..strokeCap = StrokeCap.round;
-      canvas.drawLine(tail, projectile.position, edge);
+      canvas.drawLine(tail, visualPosition, edge);
       final core = Paint()
         ..color = Color.lerp(tint, Colors.white, 0.68)!
         ..strokeWidth = projectile.big ? 2.8 : 2
         ..strokeCap = StrokeCap.round;
-      canvas.drawLine(tail, projectile.position, core);
+      canvas.drawLine(tail, visualPosition, core);
       // Arrow head.
       final head = Paint()..color = tint;
-      final tip = projectile.position + dir * 5;
+      final tip = visualPosition + dir * 5;
       final path = ui.Path()
         ..moveTo(tip.dx, tip.dy)
         ..lineTo(
