@@ -5,8 +5,9 @@ import 'dart:ui' show Offset, Rect;
 ///
 /// Simulation and collision continue to use map-world coordinates. This
 /// object only maps those coordinates to projected ground coordinates; it is
-/// intentionally independent of Flutter widgets and GameWorld so the math can
-/// be tested before it is wired into the renderer.
+/// intentionally independent of Flutter widgets and GameWorld. The same
+/// projection instance is injected into the live arena painter and camera
+/// input transform so rendering and pointer mapping share one basis.
 ///
 /// `yawRadians` rotates the ground plane around the camera. `groundScaleY`
 /// compresses the camera-depth axis to create an oblique top-down view.
