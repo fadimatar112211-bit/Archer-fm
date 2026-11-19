@@ -85,7 +85,7 @@ class ArenaPainter extends CustomPainter {
   ArenaPainter({
     required this.world,
     required this.presentation,
-    this.projection = const ArenaWorldProjection(groundScaleY: 0.82),
+    this.projection = defaultArenaWorldProjection,
   });
 
   final GameWorld world;
