@@ -618,3 +618,23 @@ Verification:
 - Stage Two remains open: four GLBs passed structural validation on earlier runs, but the procedural art prototypes are not visually approved and the current runtime still uses the Canvas renderer.
 
 - Follow-up visual geometry adjustment in commit `0f8ea90f13c9a80719a10bb0ddc1a4d689cc85fc`: organic forms (spheres/icospheres/cylinders) now use smooth polygon shading while armor/cube forms remain crisp. This is intended to reduce faceted/triangulated noise in small monster faces and silhouettes; it is pending the new CI preview artifact and visual review.
+
+
+### 2026-11-19 — Larger parallel batch: preview runner, GLB integrity, monster lifecycle tests
+
+#### Stage One — arena / Android
+- Kept the landscape emulator smoke path enabled; it verifies app launch, landscape orientation, army selection at 20/20, match entry, joystick/attack controls, and teardown.
+- Camera/projection coverage already includes reversible world/screen mapping, multiple aspect ratios, yaw/scale behavior, and visible bounds. No gameplay zoom change was made: the user's close gameplay framing remains the target, while full-map overview framing must be handled by the capture itself.
+- Current emulator job is still running; no pass is claimed yet. A prior release attempt failed during Gradle dependency resolution (`kotlin-stdlib`/Kotlin Gradle plugin 2.0.21 could not be retrieved from the plugin portal), after visual capture upload had succeeded. Treat that as an unresolved build-environment/repository failure, not a code pass.
+
+#### Stage Two — four monsters / army
+- CI preview job now installs `xvfb` and launches Blender through `xvfb-run -a`, giving Workbench preview rendering a virtual display instead of crashing with `Unable to open a display` / exit 134.
+- Extended `tools/validate_monster_glb.py` beyond container headers and clip names: checks mesh POSITION/accessor references, skin joint and inverse-bind accessor references, animation target-node and sampler/accessor references.
+- Extended `test/monster_system_test.dart` with compatibility aliases, lower/upper level clamping, formation-offset finiteness/separation, and corpse-animation timing bounds.
+- These changes are pending the Actions run on the new HEAD. Earlier generated GLBs were structurally valid, but the current prototypes are not yet visually approved or integrated into the runtime renderer.
+
+#### Batch commits
+- `066f32a48a981cf0a662d4a82ad6c6208c78089d` — CI virtual display for previews.
+- `d35e996366c096b3a5ebfece022bcbbd87536ad2` — stronger GLB reference validation.
+- `34c3ac5415de7e23c33b4a6d49a44adbecedcad7` — monster lifecycle/compatibility tests.
+- Latest observed HEAD at this checkpoint: `34c3ac5415de7e23c33b4a6d49a44adbecedcad7`.
