@@ -521,3 +521,11 @@ Verification:
 - Current branch remains on the hero-safe `ranger-reference-work`; no monster runtime or hero files were overwritten.
 - Stage 2 visual production cannot honestly advance to runtime integration until four real model sources are created/provided and pass the GLB gates.
 - Stage 1 Android checks: runs `44465905653` and `44465899058` still show emulator step running, with Release APK build and signature verification pending. Analyze, all Flutter tests and visual-capture upload passed in run `44465905653`; emulator/APK success is not confirmed.
+
+
+### Stage two — batch 2 tooling follow-up, 2026-11-19
+
+- Added `tools/validate_monster_glb.py` (commit `e4e1096`), a dependency-free Python validator for GLB v2 container integrity, mesh/node presence, skin/skeleton presence, embedded/self-contained image references, and all required named animation clips for Runner/Tank/Stalker/Ranged.
+- The validator is ready to run when actual GLB files and `assets/monsters/3d/manifest.json` are supplied. It intentionally does not claim to assess visual quality, deformation, foot contact or Android performance.
+- No model files were fabricated. The four model-production steps remain blocked until actual source meshes/rigs are created or supplied.
+- Stage-one run `44465905653` was checked again at 2026-11-19 05:43 UTC: Android emulator step had been running since 05:34 UTC, with no completed result; Release APK and APK verification were still pending. Run `44465899058` was in the same state. This is a stalled/long-running CI condition, not a successful emulator or APK result.
