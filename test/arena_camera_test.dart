@@ -382,6 +382,58 @@ void main() {
       expect(vertical.dy - center.dy, closeTo(82 * transform.scale, 1e-8));
     });
 
+    test('projection scale participates in camera forward and inverse mapping', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(139),
+        spawnWaves: false,
+      );
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.22,
+        groundScaleY: 0.77,
+        scale: 1.35,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+        projection: projection,
+      );
+      for (final point in const [
+        Offset(100, 100),
+        Offset(960, 540),
+        Offset(1800, 1000),
+      ]) {
+        final restored =
+            transform.localToWorld(transform.worldToLocal(point));
+        expect(restored.dx, closeTo(point.dx, 1e-7));
+        expect(restored.dy, closeTo(point.dy, 1e-7));
+      }
+    });
+
+    test('camera movement shifts a fixed world landmark by the expected screen delta', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(149),
+        spawnWaves: false,
+      );
+      final first = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+      );
+      final landmark = world.cameraOrigin + const Offset(700, 400);
+      final firstScreen = first.worldToLocal(landmark);
+      world.player.position += const Offset(320, 160);
+      for (var i = 0; i < 6; i++) {
+        world.update(16);
+      }
+      final second = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+      );
+      final secondScreen = second.worldToLocal(landmark);
+      expect(secondScreen, isNot(firstScreen));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
