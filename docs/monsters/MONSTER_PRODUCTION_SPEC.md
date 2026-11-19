@@ -73,12 +73,12 @@ Each final monster asset must provide:
 - No mesh self-intersection, detached weapon, floating feet, or broken deformation at key poses.
 - A manifest mapping gameplay states to clip names and timing/events, plus a validated fallback.
 
-### Asset source decision
-- No approved, ready-to-integrate monster GLB/BLEND files were found in the active branch during this audit.
-- Do not invent file paths or pretend the existing Canvas shapes are 3D models.
-- The next production batch must either create/source the four model assets using available free workflows, or build one representative asset pipeline prototype and validate it before scaling to all four.
-- Do not remove the procedural fallback until the corresponding model passes import, animation, gameplay-distance capture and Android performance checks.
-
+### Asset source decision and prototype status
+- The free Blender pipeline now generates four rigged prototype GLBs in the CI artifact folder `build/monster-glb/` and emits a manifest plus preview PNGs. The generated files are CI artifacts; they are not committed as runtime assets under `assets/monsters/3d/`.
+- The first preview set (run `44487374412`) was rejected for toy-like spherical bodies, disconnected-looking limbs and weak role detail.
+- The face pass (commit `e82dad4`, run `44487884841`) improved eye/pupil/brow/mouth readability, but visual inspection still rejects the set as final art: limbs remain visibly segmented and the Stalker/Ranged hood and weapon silhouettes are not strong enough.
+- Follow-up geometry work (commit `324c574`) adds bridging geometry, shins, Runner scarf details, a fuller Stalker hood/cloak, and a tapered Ranged robe/staff assembly. Its artifact must be visually reviewed before acceptance.
+- Passing GLB structure validation is only a technical gate. Do not call these models final, integrate them into runtime, or remove the procedural fallback until faces, silhouettes, weapons, animation deformation and gameplay-distance captures are approved.
 ## Existing mechanics that must not regress
 
 - Exactly four `MonsterType` values.
