@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect;
 
 import 'package:archer_fm/game/world/arena_projection.dart';
@@ -129,6 +130,69 @@ void main() {
           projection.projectGround(a + delta) - projection.projectGround(a);
       expect(projectedDelta.dx, closeTo(1.5 * (30 * 0.921060994 + 45 * 0.389418342), 1e-7));
       expect(projectedDelta.dy, closeTo(1.5 * 0.7 * (30 * 0.389418342 - 45 * 0.921060994), 1e-7));
+    });
+
+    test('zero projected point restores the configured focus', () {
+      const focus = Offset(845, 612);
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.71,
+        groundScaleY: 0.63,
+        scale: 1.8,
+        focus: focus,
+      );
+      expect(projection.unprojectGround(Offset.zero), focus);
+    });
+
+    test('depth key is independent of visual scale and depth compression', () {
+      const point = Offset(420, 760);
+      const plain = ArenaWorldProjection(yawRadians: 0.29);
+      const stylized = ArenaWorldProjection(
+        yawRadians: 0.29,
+        groundScaleY: 0.51,
+        scale: 2.4,
+      );
+      expect(stylized.depthOf(point), closeTo(plain.depthOf(point), 1e-9));
+    });
+
+    test('depth key increases along positive camera depth for negative yaw', () {
+      const projection = ArenaWorldProjection(yawRadians: -0.6);
+      const origin = Offset(300, 500);
+      final forward = origin +
+          Offset(-100 * math.sin(0.6), 100 * math.cos(0.6));
+      expect(projection.depthOf(forward), greaterThan(projection.depthOf(origin)));
+    });
+
+    test('height offset is independent of ground yaw', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.92,
+        groundScaleY: 0.67,
+        scale: 1.25,
+      );
+      const anchor = Offset(715, 388);
+      final ground = projection.projectGround(anchor);
+      final raised = projection.projectHeight(anchor, 32);
+      expect(raised.dx, closeTo(ground.dx, 1e-9));
+      expect(raised.dy, closeTo(ground.dy - 40, 1e-9));
+    });
+
+    test('visible bounds translate exactly with projection focus', () {
+      const viewport = Rect.fromLTRB(-320, -180, 320, 180);
+      const base = ArenaWorldProjection(
+        yawRadians: 0.44,
+        groundScaleY: 0.73,
+      );
+      const shift = Offset(640, 390);
+      const moved = ArenaWorldProjection(
+        yawRadians: 0.44,
+        groundScaleY: 0.73,
+        focus: shift,
+      );
+      final a = base.visibleWorldBounds(viewport);
+      final b = moved.visibleWorldBounds(viewport);
+      expect(b.left - a.left, closeTo(shift.dx, 1e-8));
+      expect(b.top - a.top, closeTo(shift.dy, 1e-8));
+      expect(b.right - a.right, closeTo(shift.dx, 1e-8));
+      expect(b.bottom - a.bottom, closeTo(shift.dy, 1e-8));
     });
 
     test('height lifts an anchor without changing its ground projection', () {
