@@ -450,3 +450,5 @@ Verification:
 - Code commits: `03e59766`, `d6409b58`, `96e3f9c2`, `ef04401d`, `e1bd88a8`, `6d9fa931`.
 - Production camera yaw remains zero pending visual review; no unsupported claim of final camera angle or bridge depth occlusion is made.
 - CI for this batch is pending; the previous successful Analyze/tests run was `44430061513` on `547e1aef`, before this batch.
+
+- Follow-up refinement for the first five tasks: tree and rock contact shadows are now drawn on the projected ground plane (not inside upright actor wrappers); biome patches use a softer three-stop radial fade; terrain regression tests include repeated projected obstacle/biome paints and verify map obstacle geometry is immutable. Latest code/test commit: `89277c60`. New CI is queued/running; not yet declared green.
