@@ -306,7 +306,6 @@ class ArenaPainter extends CustomPainter {
     }
 
     _paintMines(canvas);
-    _paintCastles(canvas);
 
     // Pickups: mine output, loose resources and chests.
     for (final pickup in world.mineSystem.pickups) {
@@ -442,9 +441,8 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
-  void _paintCastles(Canvas canvas) {
-    for (final castle in world.castleSystem.castles) {
-      if (!castle.standing) continue; // A fallen castle disappears.
+  void _paintCastle(Canvas canvas, CastleState castle) {
+      if (!castle.standing) return; // A fallen castle disappears.
       final accent = castle.isLocal
           ? const Color(0xFF9BE845)
           : const Color(0xFFFF7A5A);
@@ -540,7 +538,6 @@ class ArenaPainter extends CustomPainter {
       for (final crystal in castle.alive) {
         _paintCrystal(canvas, crystal, accent, castle.isLocal);
       }
-    }
   }
 
   /// Draws each objective as a tall crystal monolith, not a small pickup gem.
@@ -1072,6 +1069,23 @@ class ArenaPainter extends CustomPainter {
         _paintHero(canvas);
       }),
     ));
+
+    // Castles and their crystal objectives participate in the same ground-depth
+    // order as actors. Previously they were painted with the terrain pass, which
+    // forced every hero and projectile to appear above every castle regardless
+    // of which side of the structure they occupied.
+    for (final castle in world.castleSystem.castles) {
+      if (!castle.standing) continue;
+      final castleAnchor = castle.anchor;
+      final castleOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(castleAnchor),
+        order: castleOrder,
+        draw: () => _withUprightGroundActor(canvas, castleAnchor, () {
+          _paintCastle(canvas, castle);
+        }),
+      ));
+    }
 
     // Projectiles share the same ground-depth queue as actors and obstacle
     // layers. Their current position is the depth anchor; the trail and head
