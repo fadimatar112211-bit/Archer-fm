@@ -242,6 +242,17 @@ class ArenaPainter extends CustomPainter {
       for (final point in river.points.skip(1)) {
         path.lineTo(point.dx, point.dy);
       }
+      // Three ground-plane shore layers create a readable bank edge and
+      // a soft transition between terrain and water under the oblique camera.
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width + 34
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..color = const Color(0x88402D22),
+      );
       canvas.drawPath(
         path,
         Paint()
@@ -249,7 +260,16 @@ class ArenaPainter extends CustomPainter {
           ..strokeWidth = river.width + 18
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round
-          ..color = const Color(0xFF24402C),
+          ..color = const Color(0xFF314B34),
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width + 8
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..color = const Color(0xFF536A43),
       );
       canvas.drawPath(
         path,
@@ -280,11 +300,14 @@ class ArenaPainter extends CustomPainter {
           a.dx + (b.dx - a.dx) * t,
           a.dy + (b.dy - a.dy) * t,
         );
-        canvas.drawLine(
-          start - Offset(0, 12),
-          start + Offset(0, 12),
-          shimmer,
+        final tangent = b - a;
+        final tangentLength = tangent.distance;
+        if (tangentLength <= 0.001) continue;
+        final normal = Offset(
+          -tangent.dy / tangentLength * 12,
+          tangent.dx / tangentLength * 12,
         );
+        canvas.drawLine(start - normal, start + normal, shimmer);
       }
       for (final bridge in river.bridges) {
         final rect = bridge.rect;
