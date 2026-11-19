@@ -1055,6 +1055,20 @@ class ArenaPainter extends CustomPainter {
       }),
     ));
 
+    // Projectiles share the same ground-depth queue as actors and obstacle
+    // layers. Their current position is the depth anchor; the trail and head
+    // are drawn together so they cannot pop above every foreground obstacle.
+    for (final projectile in world.projectiles) {
+      final projectileOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(projectile.position),
+        order: projectileOrder,
+        draw: () => _withUprightGroundActor(canvas, projectile.position, () {
+          _paintProjectile(canvas, projectile);
+        }),
+      ));
+    }
+
     actors.sort((a, b) {
       final byDepth = a.depth.compareTo(b.depth);
       return byDepth != 0 ? byDepth : a.order.compareTo(b.order);
@@ -1613,7 +1627,15 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintProjectiles(Canvas canvas) {
+    // Kept as a compatibility entry point for capture helpers; production
+    // ArenaPainter now inserts each projectile into the shared depth queue.
     for (final projectile in world.projectiles) {
+      _paintProjectile(canvas, projectile);
+    }
+  }
+
+  void _paintProjectile(Canvas canvas, ProjectileState projectile) {
+      if (projectile.velocity.distance < 0.001) return;
       final dir = projectile.velocity / projectile.velocity.distance;
       final perpendicular = Offset(-dir.dy, dir.dx);
       final length = projectile.big ? 30.0 : 22.0;
@@ -1659,7 +1681,6 @@ class ArenaPainter extends CustomPainter {
         tail,
         trail,
       );
-    }
   }
 
   void _paintHero(Canvas canvas) {
