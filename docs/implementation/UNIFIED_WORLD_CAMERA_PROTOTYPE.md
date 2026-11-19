@@ -156,3 +156,8 @@ Consequences:
 - The camera's yawed inverse mapping is covered by mathematical tests, but must not be mistaken for a live yawed scene.
 
 These are explicit remaining integration tasks, not accepted visual behavior. The next renderer milestone should introduce a single projected ground-anchor/depth record for projectiles and objective/environment actors, then capture crossing cases before enabling any non-zero live yaw.
+
+
+## Projection edge-case coverage update
+
+Regression coverage now explicitly includes invalid zero scale/depth-compression assertions, very small and large positive depth compression, projected radius behavior, height-vs-depth independence, and finite visible bounds. These tests exercise the math object only; they do not imply that non-zero yaw is enabled in the live painter.
