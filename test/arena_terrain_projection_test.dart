@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -44,6 +45,23 @@ void _paint(ArenaPainter painter, Size size) {
   expect(image.width, size.width.round());
   expect(image.height, size.height.round());
   image.dispose();
+}
+
+Future<void> _capture(ArenaPainter painter, Size size, String fileName) async {
+  final recorder = ui.PictureRecorder();
+  painter.paint(Canvas(recorder), size);
+  final picture = recorder.endRecording();
+  final image = await picture.toImage(size.width.round(), size.height.round());
+  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+  expect(bytes, isNotNull);
+  final directory = Directory('build/arena-captures');
+  directory.createSync(recursive: true);
+  File('${directory.path}/$fileName').writeAsBytesSync(
+    bytes!.buffer.asUint8List(),
+    flush: true,
+  );
+  image.dispose();
+  picture.dispose();
 }
 
 void main() {
@@ -280,6 +298,103 @@ void main() {
         world.castleSystem.castles.map((castle) => castle.aliveCount).toList(),
         castleCounts,
       );
+    });
+
+    test('hero overlaps bridges, mines, resources and chests through the shared depth queue', () {
+      final world = _world(659);
+      final targets = <Offset>[
+        ...world.map.rivers.expand((river) => river.bridges).map((bridge) => bridge.center),
+        ...world.mineSystem.mines.map((mine) => mine.position),
+        ...world.mineSystem.pickups.map((pickup) => pickup.position),
+        ...world.map.pickups
+            .where((pickup) => pickup.kind.name != 'resource')
+            .map((pickup) => pickup.position),
+      ];
+      expect(world.map.rivers.expand((river) => river.bridges), isNotEmpty);
+      expect(world.mineSystem.mines, isNotEmpty);
+      expect(world.mineSystem.pickups, isNotEmpty);
+      expect(targets, isNotEmpty);
+      final initialCrystals = world.castleSystem.castles
+          .map((castle) => castle.aliveCount)
+          .toList();
+      for (var i = 0; i < targets.length; i++) {
+        world.player.position = targets[i];
+        _paint(
+          _painter(
+            world,
+            ArenaWorldProjection(
+              yawRadians: i.isEven ? -0.36 : 0.36,
+              groundScaleY: 0.77,
+            ),
+          ),
+          const Size(1280, 720),
+        );
+      }
+      expect(
+        world.castleSystem.castles.map((castle) => castle.aliveCount).toList(),
+        initialCrystals,
+      );
+    });
+
+    test('captures full arena at three common landscape viewport sizes', () async {
+      final world = _world(661);
+      world.player.position = const Offset(480, 335);
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.26,
+        groundScaleY: 0.79,
+      );
+      final painter = _painter(world, projection);
+      await _capture(painter, const Size(1280, 720), 'arena-1280x720.png');
+      await _capture(painter, const Size(1920, 1080), 'arena-1920x1080.png');
+      await _capture(painter, const Size(2340, 1080), 'arena-2340x1080.png');
+      expect(Directory('build/arena-captures').existsSync(), isTrue);
+      expect(
+        Directory('build/arena-captures')
+            .listSync()
+            .whereType<File>()
+            .length,
+        greaterThanOrEqualTo(3),
+      );
+    });
+
+    test('landscape viewport scale keeps hero and crystal objectives inside paint bounds', () {
+      final world = _world(663);
+      final hero = world.player.position;
+      final crystals = world.castleSystem.castles
+          .expand((castle) => castle.alive)
+          .map((crystal) => crystal.position)
+          .toList();
+      expect(crystals, isNotEmpty);
+      for (final size in const [
+        Size(1280, 720),
+        Size(1920, 1080),
+        Size(2340, 1080),
+      ]) {
+        final transform = ArenaCameraTransform.forViewport(
+          size,
+          world,
+          projection: const ArenaWorldProjection(
+            yawRadians: -0.21,
+            groundScaleY: 0.8,
+          ),
+        );
+        final heroScreen = transform.worldToLocal(hero);
+        expect(heroScreen.dx.isFinite && heroScreen.dy.isFinite, isTrue);
+        for (final crystal in crystals) {
+          final screen = transform.worldToLocal(crystal);
+          expect(screen.dx.isFinite && screen.dy.isFinite, isTrue);
+        }
+        _paint(
+          _painter(
+            world,
+            const ArenaWorldProjection(
+              yawRadians: -0.21,
+              groundScaleY: 0.8,
+            ),
+          ),
+          size,
+        );
+      }
     });
 
     test('camera hit mapping remains invertible for terrain yaw', () {
