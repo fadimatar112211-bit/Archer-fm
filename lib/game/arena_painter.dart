@@ -134,8 +134,8 @@ class ArenaPainter extends CustomPainter {
 
 
   /// Draws an upright actor at a ground-projected anchor. The global ground
-  /// plane compresses camera depth; this inverse local scale prevents bodies,
-  /// faces, weapons and health bars from being squashed with the terrain.
+  /// plane rotates and compresses camera depth; inverse rotation and scale
+  /// keep bodies, faces, weapons, health bars and labels upright.
   void _withUprightGroundActor(
     Canvas canvas,
     Offset anchor,
