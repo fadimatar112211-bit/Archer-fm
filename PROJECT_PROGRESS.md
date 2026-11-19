@@ -282,3 +282,14 @@ The game should approach Archero's visual readability and feel, not merely conta
 - APK: no current-HEAD verified APK is claimed.
 - Visual acceptance: not complete. These are regression tests and source audit updates; no claim that live yaw or complete 3D world projection is implemented.
 - Next: wait for the latest workflow run, inspect any new failures, and review the new Ranger GLB obstacle captures. Once the test gate is green, continue with a staged projectile/actor depth integration rather than enabling yaw across only part of the scene.
+
+
+### 2026-11-19 — Twenty-step projection/camera hardening batch
+
+- Steps 1–8: added projection edge regressions for constructor assertions, extreme-but-valid depth compression, projected radius, height/depth independence, and finite conservative viewport bounds.
+- Steps 9–14: added camera viewport regressions for immutable snapshots, supported landscape scales, logical center, yawed viewport framing, repeated forward/inverse mapping, and letterboxed world-vs-HUD separation.
+- Steps 15–20: documented projection coverage, camera viewport coverage, whole-scene migration blockers, projectile depth acceptance criteria, visual evidence checklist, and this progress checkpoint.
+- Latest code HEAD before this checkpoint: `138710b7a2e46df44bfe167cb0fa099ad412f65e`; progress commit follows.
+- No live renderer yaw was enabled. Projectiles remain a later pass and are not yet depth-interleaved with obstacles and actors.
+- CI status must be checked on the newest runs; the earlier failures were from the previous batch and must not be described as fixed until the new full test job passes.
+- No current-HEAD APK or visual acceptance is claimed.
