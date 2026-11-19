@@ -341,6 +341,19 @@ void main() {
       expect(projection.projectRadius(24), 42);
     });
 
+    test('height projection does not alter depth sorting', () {
+      const projection = ArenaWorldProjection(yawRadians: 0.73);
+      const point = Offset(440, 770);
+      expect(
+        projection.depthOf(point),
+        projection.depthOf(point),
+      );
+      expect(
+        projection.projectHeight(point, 80).dx,
+        projection.projectGround(point).dx,
+      );
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
