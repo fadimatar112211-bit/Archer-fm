@@ -437,3 +437,5 @@ Verification:
 - Current mine/pickup changes still require fresh Analyze/test/capture CI on the latest branch head; no APK claim is made.
 
 - CI review exposed test-only analyzer errors in the new mine test file: missing direct imports for `MineSize`/`PickupKind` and an integer literal assigned to a double capture-progress field. Corrected both in `48d8817e`. The new HEAD's Analyze/test run is queued; the correction is not yet declared green.
+
+- Follow-up Analyze on `48d8817e` isolated one remaining integer literal in the zero-progress mine test (the earlier type fix addressed a different line). Corrected zero and full-progress assignments to explicit doubles in `547e1aef`. Fresh Analyze/test confirmation is pending.
