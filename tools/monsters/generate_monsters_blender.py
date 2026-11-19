@@ -112,14 +112,17 @@ def build(kind):
     p=PALETTES[kind]
     mats={k:material(kind+"_"+k,v,0.5 if k=="metal" else 0.0,0.5,2.0 if k=="eye" else (1.2 if k=="accent" and kind=="ranged" else 0.0)) for k,v in p.items()}
     rig=make_rig(kind)
-    body_w={"runner":0.72,"tank":1.22,"stalker":0.72,"ranged":0.78}[kind]
-    primitive("sphere",kind+"_torso",(0,0,1.12),(body_w,0.52,0.92),mats["body"],rig,"spine")
-    primitive("sphere",kind+"_head",(0,-0.025,1.82),(0.70,0.62,0.68),mats["body"],rig,"head")
-    # Face is on -Y, toward the gameplay camera.
-    primitive("sphere",kind+"_muzzle",(0,-0.315,1.67),(0.34,0.24,0.22),mats["accent"],rig,"head")
+    body_w={"runner":0.76,"tank":1.22,"stalker":0.74,"ranged":0.80}[kind]
+    # A compact chibi silhouette: broad readable head, connected shoulders,
+    # and a slightly tapered body. All face pieces sit on the forward (-Y) side.
+    primitive("sphere",kind+"_torso",(0,0,1.10),(body_w,0.58,0.90),mats["body"],rig,"spine")
+    primitive("sphere",kind+"_head",(0,-0.035,1.86),(0.82,0.68,0.78),mats["body"],rig,"head")
+    primitive("sphere",kind+"_muzzle",(0,-0.365,1.66),(0.25,0.15,0.14),mats["accent"],rig,"head")
+    primitive("sphere",kind+"_mouth",(0,-0.405,1.535),(0.15,0.035,0.045),mats["dark"],rig,"head")
     for side in (-1,1):
-        primitive("sphere",kind+"_eye_"+str(side),(side*0.19,-0.325,1.91),(0.14,0.09,0.17),mats["eye"],rig,"head")
-        primitive("sphere",kind+"_pupil_"+str(side),(side*0.19,-0.402,1.91),(0.055,0.035,0.09),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_eye_"+str(side),(side*0.225,-0.365,1.98),(0.165,0.105,0.19),mats["eye"],rig,"head")
+        primitive("sphere",kind+"_pupil_"+str(side),(side*0.225,-0.458,1.98),(0.066,0.035,0.105),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_brow_"+str(side),(side*0.225,-0.405,2.17),(0.17,0.045,0.055),mats["dark"],rig,"head")
         primitive("sphere",kind+"_shoulder_"+str(side),(side*0.42,0,1.39),(0.35,0.42,0.34),mats["accent"] if kind=="tank" else mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
         primitive("cylinder",kind+"_upperarm_"+str(side),(side*0.47,0,1.13),(0.16,0.16,0.31),mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
         primitive("sphere",kind+"_hand_"+str(side),(side*0.55,-0.02,0.88),(0.23,0.22,0.22),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
@@ -216,10 +219,10 @@ def build(kind):
         # Camera/light objects are added only after the GLB export, so they never
         # become part of the runtime model.
         bpy.ops.object.select_all(action="DESELECT")
-        bpy.ops.object.camera_add(location=(4.2, -7.5, 3.4))
+        bpy.ops.object.camera_add(location=(2.0, -8.2, 3.0))
         camera=bpy.context.object
         camera.name=kind+"_PreviewCamera"
-        camera.rotation_euler=(Vector((0,-0.02,1.15))-camera.location).to_track_quat("-Z","Y").to_euler()
+        camera.rotation_euler=(Vector((0,-0.02,1.28))-camera.location).to_track_quat("-Z","Y").to_euler()
         scene.camera=camera
         bpy.ops.object.light_add(type="AREA", location=(-3.5,-4.5,5.5))
         key=bpy.context.object; key.data.energy=520; key.data.shape="DISK"; key.data.size=4.0
