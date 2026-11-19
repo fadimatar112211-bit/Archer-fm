@@ -229,8 +229,12 @@ class ArenaPainter extends CustomPainter {
           ..shader = ui.Gradient.radial(
             patch.center,
             patch.radius,
-            [color.withValues(alpha: 0.9), color.withValues(alpha: 0.0)],
-            const [0.45, 1.0],
+            [
+              color.withValues(alpha: 0.52),
+              color.withValues(alpha: 0.22),
+              color.withValues(alpha: 0.0),
+            ],
+            const [0.0, 0.72, 1.0],
           ),
       );
     }
