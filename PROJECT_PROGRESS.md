@@ -647,3 +647,27 @@ Verification:
 - Follow-up art commit `e82dad4023671070b24fe937dfedda38a09b736f` enlarges the chibi head, strengthens eye/pupil/brow/mouth readability, improves torso proportions, and moves the preview camera closer to frontal so both eyes can be judged. Await its own artifact before deciding whether this fixes the issues.
 - Stronger GLB skin/animation reference checks and monster lifecycle edge tests were pushed in `d35e996...` and `34c3ac5...`; their workflow runs are in progress at this checkpoint.
 - Stage One: the emulator smoke jobs are still running; no end-to-end Android pass or current-HEAD APK success is claimed. A prior release job failed while Gradle attempted to retrieve Kotlin 2.0.21 artifacts from the plugin portal; investigate if repeated on a fresh run.
+
+## 2026-11-19 continuation after visual-review checkpoint
+
+### Stage One — arena and Android acceptance
+
+- The map-wide captures from the latest hero-capture artifact (run `44487884841`, commit `e82dad4`) are diagnostic map renders, not a playable match screenshot: `arena-1280x720.png` and the 1920/2340 variants have no hero controller attached and show only a cropped viewport around map objects. Do not use them as evidence that the in-game camera hides the hero.
+- The dedicated 3D hero capture `73_glb_hero_no_obstacle_baseline.png` is a north-facing run pose; the model is correctly showing its back/side for that direction. It is not a front-face approval image. Added an explicit south-facing idle capture (`70_game_3d_hero_front_idle`) in `test/hero3d_game_capture_test.dart` so future artifacts include a valid face-readability frame alongside the eight-direction suite.
+- The live camera remains close and player-following; do not zoom it out to make a static map overview fit. Stage One is still open until the current-head workflow completes Android smoke, full tests, release APK build and APK signature verification, and the new front-idle capture is visually inspected.
+- The current-head Actions run triggered by the art/test changes must be treated as the acceptance run; older successful jobs are not proof for the new HEAD.
+
+### Stage Two — four monster models and runtime
+
+- The `e82dad4` artifact `14512140347` successfully generated and validated four GLBs and preview PNGs. Visual inspection of all four new previews shows larger/clearer eyes and mouths, but the bodies remain primitive toy-like forms with visibly segmented limbs; Stalker/Ranged hood and weapon reads are weak, and the four designs do not yet meet the intended polished chibi-fantasy standard. They are explicitly **not approved for runtime integration**.
+- Follow-up generator change `324c574` adds neck/limb bridges and shins, more distinctive Runner scarf tails/chest badge, a fuller Stalker hood/cloak, a tapered Ranged robe and a more readable staff/orb assembly. This is an art iteration only; it is not accepted until its newly generated previews are inspected and the validator passes.
+- Procedural Canvas rendering remains the live fallback. The GLB outputs are CI artifacts, not committed runtime assets. Do not claim the 3D monster migration is finished or remove the fallback.
+- The four roles, stats, starting 20-unit roster, level-40 cap, purchases, combat/death lifecycle and regression tests remain the locked gameplay scope. No fifth monster or new economy/win mechanics are permitted.
+
+### Current verified state and blockers
+
+- Commit `324c574`: monster geometry iteration.
+- Commit `19c581c`: dedicated front-facing idle hero capture added.
+- The current branch CI run must still be polled for: Flutter tests, capture artifact, release APK + signature, Android emulator smoke, four GLB generation and GLB validation.
+- Stage One: **not complete** pending current-head Android/release evidence and front-facing hero visual inspection.
+- Stage Two: **not complete** pending review of the new model previews, animation/pose quality review, approved asset integration and Android performance checks.
