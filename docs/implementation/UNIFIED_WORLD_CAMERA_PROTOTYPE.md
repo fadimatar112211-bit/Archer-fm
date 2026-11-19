@@ -197,3 +197,8 @@ A defensive guard skips a projectile with effectively zero velocity rather than 
 - Projectile trails are sorted with the projectile head as one visual unit; long trails do not yet split across multiple depth layers.
 - Crystal/castle/building geometry remains in the earlier ground pass and is not part of the actor depth queue.
 - No visual claim is made until the new overlap captures are reviewed.
+
+
+## Projectile regression tests
+
+Added a painter-level regression that renders a moving projectile through the production arena painter and a second regression for a zero-velocity projectile. These tests check that the new path can render without invalid vector normalization or painter exceptions. They do not replace pixel-level ordering captures for behind/in-front crossings.
