@@ -161,3 +161,8 @@ These are explicit remaining integration tasks, not accepted visual behavior. Th
 ## Projection edge-case coverage update
 
 Regression coverage now explicitly includes invalid zero scale/depth-compression assertions, very small and large positive depth compression, projected radius behavior, height-vs-depth independence, and finite visible bounds. These tests exercise the math object only; they do not imply that non-zero yaw is enabled in the live painter.
+
+
+## Camera viewport regression update
+
+Camera tests now cover immutable viewport snapshots, positive scale across supported landscape aspect ratios, logical center alignment, yawed viewport-origin stability, repeat projection idempotence, and separation of letterboxed world viewport from screen-space HUD space. Input transforms remain tied to the same camera snapshot; HUD rendering remains unprojected.
