@@ -509,6 +509,14 @@ void main() {
       expect(screen.dy, closeTo(540, 1e-8));
     });
 
+    test('yawed camera transform has a stable viewport origin', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(179), spawnWaves: false);
+      const projection = ArenaWorldProjection(yawRadians: 0.91, groundScaleY: 0.55);
+      final transform = ArenaCameraTransform.forViewport(const Size(1920, 1080), world, projection: projection);
+      expect(transform.viewportOrigin.dx, greaterThanOrEqualTo(0));
+      expect(transform.viewportOrigin.dy, greaterThanOrEqualTo(0));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
