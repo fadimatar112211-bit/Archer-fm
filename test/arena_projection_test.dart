@@ -306,6 +306,19 @@ void main() {
       );
     });
 
+    test('very small positive depth compression remains invertible', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.3,
+        groundScaleY: 0.01,
+        scale: 0.5,
+        focus: Offset(100, 200),
+      );
+      const point = Offset(900, 1300);
+      final restored = projection.unprojectGround(projection.projectGround(point));
+      expect(restored.dx, closeTo(point.dx, 1e-7));
+      expect(restored.dy, closeTo(point.dy, 1e-7));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
