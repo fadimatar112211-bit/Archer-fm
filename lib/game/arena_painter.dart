@@ -441,99 +441,97 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
-  void _paintCastle(Canvas canvas, CastleState castle) {
-      if (!castle.standing) return; // A fallen castle disappears.
-      final accent = castle.isLocal
-          ? const Color(0xFF9BE845)
-          : const Color(0xFFFF7A5A);
-      final anchor = castle.anchor;
+  void _paintCastleCourtyard(Canvas canvas, CastleState castle) {
+    final anchor = castle.anchor;
+    canvas.drawCircle(
+      anchor,
+      castleWallRadius + 36,
+      Paint()..color = const Color(0x55304A33),
+    );
+    canvas.drawCircle(
+      anchor,
+      castleWallRadius + 30,
+      Paint()..color = const Color(0xFF3C4B3E),
+    );
+  }
 
-      // Courtyard.
-      canvas.drawCircle(
-        anchor,
-        castleWallRadius + 36,
-        Paint()..color = const Color(0x55304A33),
-      );
-      canvas.drawCircle(
-        anchor,
-        castleWallRadius + 30,
-        Paint()..color = const Color(0xFF3C4B3E),
-      );
-
-      // Stone wall arcs with four gates (one per exposed crystal).
-      for (final wall in castle.walls) {
-        final rect = Rect.fromCircle(center: wall.center, radius: wall.radius);
-        canvas.drawArc(
-          rect,
-          wall.startAngle,
-          wall.sweep,
-          false,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 18
-            ..strokeCap = StrokeCap.round
-            ..color = const Color(0xFF6E7376),
-        );
-        canvas.drawArc(
-          rect,
-          wall.startAngle,
-          wall.sweep,
-          false,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 6
-            ..strokeCap = StrokeCap.round
-            ..color = const Color(0xFF8C9194),
-        );
-        // Crenellations.
-        final steps = math.max(2, (wall.sweep / 0.24).floor());
-        for (var i = 0; i <= steps; i++) {
-          final angle = wall.startAngle + wall.sweep * (i / steps);
-          final point = wall.center +
-              Offset(
-                math.cos(angle) * (wall.radius + 9),
-                math.sin(angle) * (wall.radius + 9),
-              );
-          canvas.drawCircle(
-            point,
-            3,
-            Paint()..color = const Color(0xFF9AA0A3),
+  /// One wall arc is a separate occluder. Its midpoint on the ground arc is
+  /// the stable depth anchor; crenellations remain attached to that segment.
+  void _paintCastleWall(Canvas canvas, CastleWall wall) {
+    final rect = Rect.fromCircle(center: wall.center, radius: wall.radius);
+    canvas.drawArc(
+      rect,
+      wall.startAngle,
+      wall.sweep,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 18
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF6E7376),
+    );
+    canvas.drawArc(
+      rect,
+      wall.startAngle,
+      wall.sweep,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF8C9194),
+    );
+    final steps = math.max(2, (wall.sweep / 0.24).floor());
+    for (var i = 0; i <= steps; i++) {
+      final angle = wall.startAngle + wall.sweep * (i / steps);
+      final point = wall.center +
+          Offset(
+            math.cos(angle) * (wall.radius + 9),
+            math.sin(angle) * (wall.radius + 9),
           );
-        }
-      }
+      canvas.drawCircle(
+        point,
+        3,
+        Paint()..color = const Color(0xFF9AA0A3),
+      );
+    }
+  }
 
-      // Keep and banner.
-      final keep = Rect.fromCenter(center: anchor, width: 56, height: 46);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(keep, const Radius.circular(6)),
-        Paint()..color = const Color(0xFF4D5A50),
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(keep.deflate(6), const Radius.circular(4)),
-        Paint()..color = const Color(0xFF5E6C60),
-      );
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: anchor + const Offset(0, -6),
-          width: 10,
-          height: 20,
-        ),
-        Paint()..color = const Color(0xFF20261F),
-      );
-      canvas.drawLine(
-        anchor + const Offset(0, -26),
-        anchor + const Offset(0, -52),
-        Paint()
-          ..color = const Color(0xFFD8DED9)
-          ..strokeWidth = 2,
-      );
-      final flag = Path()
-        ..moveTo(anchor.dx, anchor.dy - 52)
-        ..lineTo(anchor.dx + 22, anchor.dy - 46)
-        ..lineTo(anchor.dx, anchor.dy - 38)
-        ..close();
-      canvas.drawPath(flag, Paint()..color = accent);
-
+  void _paintCastleKeep(Canvas canvas, CastleState castle) {
+    final anchor = castle.anchor;
+    final accent = castle.isLocal
+        ? const Color(0xFF9BE845)
+        : const Color(0xFFFF7A5A);
+    final keep = Rect.fromCenter(center: anchor, width: 56, height: 46);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(keep, const Radius.circular(6)),
+      Paint()..color = const Color(0xFF4D5A50),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(keep.deflate(6), const Radius.circular(4)),
+      Paint()..color = const Color(0xFF5E6C60),
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: anchor + const Offset(0, -6),
+        width: 10,
+        height: 20,
+      ),
+      Paint()..color = const Color(0xFF20261F),
+    );
+    canvas.drawLine(
+      anchor + const Offset(0, -26),
+      anchor + const Offset(0, -52),
+      Paint()
+        ..color = const Color(0xFFD8DED9)
+        ..strokeWidth = 2,
+    );
+    final flag = Path()
+      ..moveTo(anchor.dx, anchor.dy - 52)
+      ..lineTo(anchor.dx + 22, anchor.dy - 46)
+      ..lineTo(anchor.dx, anchor.dy - 38)
+      ..close();
+    canvas.drawPath(flag, Paint()..color = accent);
   }
 
   /// Draws each objective as a tall crystal monolith, not a small pickup gem.
@@ -1073,14 +1071,40 @@ class ArenaPainter extends CustomPainter {
     for (final castle in world.castleSystem.castles) {
       if (!castle.standing) continue;
       final castleAnchor = castle.anchor;
-      final castleOrder = order++;
+      final courtyardOrder = order++;
       actors.add((
         depth: cameraProjection.depthOf(castleAnchor),
-        order: castleOrder,
+        order: courtyardOrder,
         draw: () => _withUprightGroundActor(canvas, castleAnchor, () {
-          _paintCastle(canvas, castle);
+          _paintCastleCourtyard(canvas, castle);
         }),
       ));
+
+      final keepOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(castleAnchor),
+        order: keepOrder,
+        draw: () => _withUprightGroundActor(canvas, castleAnchor, () {
+          _paintCastleKeep(canvas, castle);
+        }),
+      ));
+
+      for (final wall in castle.walls) {
+        final middleAngle = wall.startAngle + wall.sweep / 2;
+        final wallAnchor = wall.center +
+            Offset(
+              math.cos(middleAngle) * wall.radius,
+              math.sin(middleAngle) * wall.radius,
+            );
+        final wallOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(wallAnchor),
+          order: wallOrder,
+          draw: () => _withUprightGroundActor(canvas, wallAnchor, () {
+            _paintCastleWall(canvas, wall);
+          }),
+        ));
+      }
 
       // Tall crystal objectives are independent occluders. Sorting them by
       // their own bases lets a hero pass behind one crystal while remaining
