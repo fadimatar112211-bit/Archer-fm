@@ -1408,13 +1408,24 @@ class ArenaPainter extends CustomPainter {
   void _paintTreeCanopy(Canvas canvas, MapObstacle obstacle) {
     final center = obstacle.position - Offset(0, obstacle.radius * 0.35);
     canvas.drawCircle(center, obstacle.radius, Paint()..color = _treeColor);
+    final canopyHighlight = Rect.fromCenter(
+      center: center + Offset(-obstacle.radius * 0.22, -obstacle.radius * 0.18),
+      width: obstacle.radius * 0.92,
+      height: obstacle.radius * 0.48,
+    );
     canvas.drawOval(
-      Rect.fromCenter(
-        center: center + Offset(-obstacle.radius * 0.22, -obstacle.radius * 0.18),
-        width: obstacle.radius * 0.92,
-        height: obstacle.radius * 0.48,
-      ),
-      Paint()..color = Color.lerp(_treeColor, _treeLightColor, 0.34)!,
+      canopyHighlight,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          canopyHighlight.topLeft,
+          canopyHighlight.bottomRight,
+          [
+            Color.lerp(_treeColor, _treeLightColor, 0.62)!,
+            Color.lerp(_treeColor, _treeLightColor, 0.22)!,
+            Color.lerp(_treeColor, Colors.black, 0.12)!,
+          ],
+          const [0.0, 0.58, 1.0],
+        ),
     );
     canvas.drawCircle(
       center + Offset(obstacle.radius * 0.48, obstacle.radius * 0.28),
@@ -1462,7 +1473,20 @@ class ArenaPainter extends CustomPainter {
       ..lineTo(rect.center.dx - obstacle.radius * 0.12, rect.center.dy)
       ..lineTo(rect.left + obstacle.radius * 0.18, rect.center.dy + obstacle.radius * 0.12)
       ..close();
-    canvas.drawPath(facet, Paint()..color = _rockLightColor);
+    canvas.drawPath(
+      facet,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(rect.left, rect.top),
+          Offset(rect.right, rect.bottom),
+          [
+            Color.lerp(_rockLightColor, Colors.white, 0.12)!,
+            _rockLightColor,
+            Color.lerp(_rockLightColor, Colors.black, 0.18)!,
+          ],
+          const [0.0, 0.55, 1.0],
+        ),
+    );
     canvas.drawLine(
       Offset(rect.center.dx + obstacle.radius * 0.05, rect.top + obstacle.radius * 0.12),
       Offset(rect.right - obstacle.radius * 0.16, rect.center.dy + obstacle.radius * 0.2),
