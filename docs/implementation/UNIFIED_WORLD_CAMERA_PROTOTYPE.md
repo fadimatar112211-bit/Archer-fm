@@ -176,3 +176,8 @@ Before enabling yaw in production, migrate every world-space pass together: terr
 ## Projectile depth integration acceptance criteria
 
 Projectiles currently render after the combined actor/obstacle pass. The next implementation must represent each projectile with a ground anchor plus visual height, sort its ground anchor against actor and obstacle depth keys, and render the projectile body at its height without changing its ground depth. Required captures: projectile behind trunk, projectile in front of trunk, projectile crossing canopy depth, projectile crossing a monster, and projectile passing above a crystal. Keep trails and impact FX attached to the same projectile state and avoid sorting purely by screen Y.
+
+
+## Visual evidence checklist
+
+A passing CI run is necessary but insufficient. Review and retain: unobstructed Ranger GLB baseline; foreground and background tree; foreground and background rock; canopy/trunk partial overlap; all four landscape aspect ratios; world edges and letterbox boundaries; projectile/actor crossing cases; fog boundaries; crystal readability; and a full-scene screenshot with terrain, bridge, castle, mine, monsters and player visible. Compare hero face, armor and weapon against `assets/heroes/reference/heroes_reference_sheet.jpg` separately.
