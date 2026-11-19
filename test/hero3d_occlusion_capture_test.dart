@@ -150,6 +150,32 @@ void main() {
         render(const Size(1280, 720)),
       );
 
+      // Real GLB capture: move the hero across the south/north wall arcs
+      // of the local castle so reviewers can inspect the newly split wall
+      // occluders and independent crystal depth entries.
+      final localCastle = world.castleSystem.playerCastle;
+      world.map.obstacles.clear();
+      world.player.position = localCastle.anchor + const Offset(0, 132);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '81_glb_hero_castle_south_wall_overlap',
+        render(const Size(1920, 1080)),
+      );
+      world.player.position = localCastle.anchor - const Offset(0, 132);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '82_glb_hero_castle_north_wall_overlap',
+        render(const Size(1920, 1080)),
+      );
+
+      final targetCrystal = localCastle.alive.first;
+      world.player.position = targetCrystal.position + const Offset(0, 18);
+      world.fog.reveal(world.player.position, 900);
+      await save(
+        '83_glb_hero_local_crystal_overlap',
+        render(const Size(1920, 1080)),
+      );
+
       expect(model.jointNames, isNotEmpty);
       expect(model.clips.keys, contains('idle'));
     },
