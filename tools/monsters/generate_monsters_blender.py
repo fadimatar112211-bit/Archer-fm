@@ -143,29 +143,34 @@ def build(kind):
         for s in (-1,1):
             tail=primitive("cone",kind+"_scarf_tail_"+str(s),(s*0.25,0.40,1.48),(0.13,0.13,0.48),mats["accent"],rig,"spine")
             tail.rotation_euler[1]=s*0.65
-        primitive("sphere",kind+"_chest_badge",(0,-0.34,1.20),(0.18,0.06,0.20),mats["metal"],rig,"spine")
+        primitive("sphere",kind+"_scarf_collar",(0,-0.34,1.43),(0.43,0.10,0.16),mats["accent"],rig,"spine")
+        primitive("sphere",kind+"_chest_badge",(0,-0.35,1.18),(0.16,0.07,0.17),mats["accent"],rig,"spine")
     elif kind=="tank":
-        primitive("cube",kind+"_chestplate",(0,-0.28,1.18),(0.88,0.16,0.66),mats["metal"],rig,"spine",0.10)
+        primitive("cube",kind+"_chestplate",(0,-0.31,1.18),(1.04,0.18,0.70),mats["metal"],rig,"spine",0.14)
+        primitive("cube",kind+"_helmet_brow",(0,-0.35,2.14),(0.78,0.18,0.18),mats["metal"],rig,"head",0.06)
+        primitive("sphere",kind+"_helmet_cheek_L",(-0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
+        primitive("sphere",kind+"_helmet_cheek_R",(0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
         for s in (-1,1):
-            primitive("cube",kind+"_shoulder_plate_"+str(s),(s*0.48,-0.02,1.52),(0.50,0.55,0.28),mats["metal"],rig,"upper_arm.L" if s<0 else "upper_arm.R",0.08)
+            primitive("cube",kind+"_shoulder_plate_"+str(s),(s*0.50,-0.02,1.52),(0.58,0.58,0.34),mats["metal"],rig,"upper_arm.L" if s<0 else "upper_arm.R",0.08)
             primitive("cube",kind+"_gauntlet_"+str(s),(s*0.57,-0.11,0.88),(0.35,0.36,0.28),mats["accent"],rig,"forearm.L" if s<0 else "forearm.R",0.06)
         primitive("cone",kind+"_helmet_spike",(0,0,2.25),(0.17,0.17,0.34),mats["metal"],rig,"head")
     elif kind=="stalker":
         primitive("sphere",kind+"_hood_shell",(0,0.16,1.94),(0.98,0.48,0.91),mats["dark"],rig,"head")
         primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
         for s in (-1,1):
-            blade=primitive("cone",kind+"_short_blade_"+str(s),(s*0.70,-0.04,0.91),(0.09,0.09,0.39),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
+            blade=primitive("cone",kind+"_short_blade_"+str(s),(s*0.70,-0.10,0.92),(0.12,0.12,0.48),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
             blade.rotation_euler[1]=math.pi
         primitive("cone",kind+"_cloak",(0,0.24,0.94),(0.48,0.48,0.78),mats["dark"],rig,"spine")
         primitive("sphere",kind+"_belt",(0,-0.32,1.03),(0.62,0.08,0.13),mats["accent"],rig,"spine")
         primitive("sphere",kind+"_hood_lining",(0,-0.23,1.90),(0.68,0.16,0.72),mats["body"],rig,"head")
     elif kind=="ranged":
-        primitive("cone",kind+"_hood",(0,0.02,2.10),(0.46,0.48,0.55),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_shell",(0,0.16,1.94),(0.98,0.48,0.91),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
         primitive("cone",kind+"_robe",(0,0.20,0.94),(0.49,0.48,0.82),mats["body"],rig,"spine")
         primitive("sphere",kind+"_robe_collar",(0,-0.32,1.42),(0.55,0.12,0.18),mats["accent"],rig,"spine")
-        primitive("cylinder",kind+"_staff",(0.72,0.02,1.30),(0.065,0.065,0.98),mats["metal"],rig,"forearm.R")
+        primitive("cylinder",kind+"_staff",(0.72,0.02,1.30),(0.085,0.085,0.98),mats["metal"],rig,"forearm.R")
         primitive("sphere",kind+"_staff_grip",(0.72,-0.02,1.10),(0.12,0.12,0.14),mats["accent"],rig,"forearm.R")
-        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.30),(0.30,0.30,0.30),mats["eye"],rig,"forearm.R")
+        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.22),(0.32,0.32,0.32),mats["eye"],rig,"forearm.R")
     # Ensure GLB exporter sees the rig and meshes, with no camera/light clutter.
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
