@@ -462,6 +462,28 @@ void main() {
       );
     });
 
+    test('camera mapping round-trips map corners and far-edge points', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(157),
+        spawnWaves: false,
+      );
+      const size = Size(2400, 1080);
+      final transform = ArenaCameraTransform.forViewport(size, world);
+      for (final point in const [
+        Offset(0, 0),
+        Offset(arenaWidth, 0),
+        Offset(0, arenaHeight),
+        Offset(arenaWidth, arenaHeight),
+        Offset(2400, 1440),
+      ]) {
+        final restored =
+            transform.localToWorld(transform.worldToLocal(point));
+        expect(restored.dx, closeTo(point.dx, 1e-7));
+        expect(restored.dy, closeTo(point.dy, 1e-7));
+      }
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
