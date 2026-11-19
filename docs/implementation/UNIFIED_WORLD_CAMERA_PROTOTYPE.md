@@ -302,3 +302,17 @@ Completed the second five-task batch:
 Added regression coverage that paints bridges, trees and rocks under negative, zero and positive yaw, then verifies bridge rectangles and obstacle counts remain unchanged. Numeric stroke widths are explicitly converted to doubles to avoid analyzer type issues.
 
 CI for this exact batch commit `a6f4089f` has started; no final result is claimed yet. The previous first-batch commit `89277c60` has since passed Analyze, all tests and 3D hero capture generation; its APK build is still running.
+
+## Stage one — tasks 11–15: overlap and castle readability (2026-11-19)
+
+Completed the third five-task implementation batch:
+
+11. Added deterministic overlap-render regression coverage placing the hero at and around both tree and rock footprints from multiple sides and yaw directions; the test also verifies obstacle geometry is not mutated by painting.
+12. Improved the castle keep as a readable building: added a grounded contact shadow, raised roof silhouette, roof edge highlight and retained the existing wall/keep depth queue.
+13. Revalidated the castle courtyard, keep, walls and crystal objectives as separate entries in the shared actor depth queue; added overlap rendering coverage for all four castles.
+14. Revalidated each castle wall arc as its own depth-sorted occluder, with a regression that positions the hero at each wall segment's ground midpoint.
+15. Improved crystal plinth grounding with a separate contact shadow, top stone face and rim highlight; added overlap rendering coverage at each of the seven crystal bases per castle.
+
+The regression test uses both tree and rock samples explicitly (four of each), three hero offsets per obstacle, and paints all four castles, their wall segments and their seven living crystals under a non-zero yaw. Tests also assert that castle crystal counts remain seven.
+
+Latest code/test commit: `385efb23`. GitHub Actions run `44431595448` is in progress; Analyze and tests have not yet reported a result for this commit. Do not treat this batch as CI-approved until that run completes.
