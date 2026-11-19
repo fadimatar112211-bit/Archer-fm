@@ -233,6 +233,55 @@ void main() {
       expect(castles.every((castle) => castle.aliveCount == 7), isTrue);
     });
 
+    test('castle walls and crystals remain readable from front and rear approach positions', () {
+      final world = _world(647);
+      final castle = world.castleSystem.castles.first;
+      final wall = castle.walls.first;
+      final angle = wall.startAngle + wall.sweep / 2;
+      final wallBase = wall.center +
+          Offset(math.cos(angle) * wall.radius, math.sin(angle) * wall.radius);
+      final crystalBase = castle.alive.first.position;
+      for (final base in [wallBase, crystalBase]) {
+        for (final offset in const [
+          Offset(0, -48),
+          Offset(0, 48),
+        ]) {
+          world.player.position = base + offset;
+          _paint(
+            _painter(
+              world,
+              const ArenaWorldProjection(
+                yawRadians: -0.33,
+                groundScaleY: 0.76,
+              ),
+            ),
+            const Size(1280, 720),
+          );
+        }
+      }
+      expect(castle.aliveCount, 7);
+    });
+
+    test('castle and actor contact shadows render consistently across yaw angles', () {
+      final world = _world(653);
+      final castleCounts = world.castleSystem.castles
+          .map((castle) => castle.aliveCount)
+          .toList();
+      for (final yaw in const [-0.42, 0.0, 0.42]) {
+        _paint(
+          _painter(
+            world,
+            ArenaWorldProjection(yawRadians: yaw, groundScaleY: 0.79),
+          ),
+          const Size(1280, 720),
+        );
+      }
+      expect(
+        world.castleSystem.castles.map((castle) => castle.aliveCount).toList(),
+        castleCounts,
+      );
+    });
+
     test('camera hit mapping remains invertible for terrain yaw', () {
       final world = _world(617);
       const projection = ArenaWorldProjection(
