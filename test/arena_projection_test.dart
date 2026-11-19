@@ -372,6 +372,12 @@ void main() {
       expect(bounds.height, greaterThan(0));
     });
 
+    test('projected radius is unaffected by yaw and depth compression', () {
+      const a = ArenaWorldProjection(yawRadians: 0, groundScaleY: 1, scale: 2);
+      const b = ArenaWorldProjection(yawRadians: -1.3, groundScaleY: 0.2, scale: 2);
+      expect(a.projectRadius(19), b.projectRadius(19));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
