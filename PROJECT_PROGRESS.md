@@ -452,3 +452,14 @@ Verification:
 - CI for this batch is pending; the previous successful Analyze/tests run was `44430061513` on `547e1aef`, before this batch.
 
 - Follow-up refinement for the first five tasks: tree and rock contact shadows are now drawn on the projected ground plane (not inside upright actor wrappers); biome patches use a softer three-stop radial fade; terrain regression tests include repeated projected obstacle/biome paints and verify map obstacle geometry is immutable. Latest code/test commit: `89277c60`. New CI is queued/running; not yet declared green.
+
+### Stage one — second five tasks (6–10), 2026-11-19
+
+- Bridge decks moved from the flat terrain pass into the shared actor depth queue; bridge deck now has contact shading, rails and plank details.
+- Confirmed tree trunk/main canopy/upper lobe remain independent depth-sorted layers (tasks 7–8).
+- Improved tree bark, root accent and canopy lighting (task 9).
+- Improved rock ground edge, light facet and dark facet seam (task 10).
+- Added regression coverage for bridge/tree/rock rendering at multiple projection yaws and verified map geometry remains unchanged.
+- Code/test batch: `dd2cdfcb`, `a002cddf`, `910b2448`, `a6f4089f`.
+- CI run for latest batch is queued/running. First batch's final Analyze, all tests and 3D capture stages passed on `89277c60`; APK build remained in progress at last check.
+- Stage-one plan progress: first 10 of 30 tasks addressed; task 11 (hero overlap from multiple directions) remains in the next batch.
