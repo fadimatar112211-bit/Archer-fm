@@ -272,6 +272,26 @@ void main() {
       expect(delta.dy, closeTo(172.2, 1e-9));
     });
 
+    test('negative yaw remains invertible for points on both sides of focus', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: -1.12,
+        groundScaleY: 0.58,
+        scale: 1.65,
+        focus: Offset(920, 610),
+      );
+      for (final point in const [
+        Offset(-800, -500),
+        Offset(920, 610),
+        Offset(0, 1200),
+        Offset(2400, 1900),
+      ]) {
+        final projected = projection.projectGround(point);
+        final restored = projection.unprojectGround(projected);
+        expect(restored.dx, closeTo(point.dx, 1e-8));
+        expect(restored.dy, closeTo(point.dy, 1e-8));
+      }
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
