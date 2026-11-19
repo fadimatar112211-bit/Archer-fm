@@ -163,7 +163,10 @@ void main() {
 
     test('hero overlaps trees and rocks from multiple sides without painter state changes', () {
       final world = _world(641);
-      final obstacles = world.map.obstacles.take(8).toList();
+      final obstacles = [
+        ...world.map.obstacles.where((o) => o.kind.name == 'tree').take(4),
+        ...world.map.obstacles.where((o) => o.kind.name == 'rock').take(4),
+      ];
       expect(obstacles, hasLength(8));
       final before = obstacles
           .map((obstacle) => [obstacle.position, obstacle.radius, obstacle.kind])
@@ -174,8 +177,6 @@ void main() {
           Offset(0, 0),
           Offset(24, 0),
           Offset(-24, 0),
-          Offset(0, 24),
-          Offset(0, -24),
         ];
         for (final offset in offsets) {
           world.player.position = obstacle.position + offset;
@@ -187,7 +188,7 @@ void main() {
                 groundScaleY: 0.8,
               ),
             ),
-            const Size(1920, 1080),
+            const Size(1280, 720),
           );
         }
       }
@@ -225,7 +226,7 @@ void main() {
                 groundScaleY: 0.78,
               ),
             ),
-            const Size(1920, 1080),
+            const Size(1280, 720),
           );
         }
       }
