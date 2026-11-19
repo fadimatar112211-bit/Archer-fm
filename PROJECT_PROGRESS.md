@@ -349,3 +349,45 @@ Known unresolved work: confirm all new tests and analysis pass; inspect actual p
 - Added inverse yaw/depth compensation around upright actors, tree layers and floating labels.
 - Added a non-zero-yaw painter capture regression. Production default remains yaw zero until visual review.
 - Latest source branch tip at this checkpoint is tracked by the later progress commit; Actions remain pending for the newest changes.
+
+
+### 2026-11-19 — 30-step shared projection and projectile-height pass
+
+1. Rechecked the current `ranger-reference-work` branch head before editing.
+2. Rechecked the previous Actions runs instead of assuming the prior batch passed.
+3. Retrieved the failed analyzer log and identified the exact unused-element warning.
+4. Removed the obsolete `_paintProjectiles` compatibility method that had become unreferenced after shared-depth integration.
+5. Added `ProjectileState.visualHeight` as an optional render-only height.
+6. Added a non-negative assertion for projectile visual height.
+7. Added `ProjectileState.visualPosition` to derive the elevated render coordinate.
+8. Kept `ProjectileState.position` as the unchanged gameplay and depth-sort ground anchor.
+9. Updated projectile painting to use `visualPosition`.
+10. Kept projectile ordering keyed by the original ground `position`.
+11. Added a regression for zero/default visual lift.
+12. Added a regression for the exact upward visual offset.
+13. Added a regression that negative lift is rejected.
+14. Added a painter regression confirming a lifted projectile does not mutate its ground anchor.
+15. Added an optional projection parameter to `ArenaPainter`.
+16. Passed that exact projection instance into `ArenaCameraTransform`.
+17. Changed the world canvas transform to apply yaw rotation before depth compression.
+18. Kept the canvas transform order consistent with `ArenaWorldProjection.projectGround`.
+19. Added inverse yaw compensation around upright actor anchors.
+20. Kept inverse depth compression for upright actors.
+21. Applied upright compensation to tree trunks.
+22. Applied upright compensation to main tree canopies.
+23. Applied upright compensation to upper canopy lobes.
+24. Kept floating labels upright through the same actor compensation helper.
+25. Kept terrain, mines, castles, pickups, zones, fog and effects inside the shared ground-plane transform.
+26. Added a non-zero-yaw painter regression with a lifted projectile.
+27. Centralized the default `ArenaWorldProjection` instance.
+28. Updated `ArenaCameraTransform` to use the centralized default.
+29. Updated `ArenaPainter` and painter tests to use the same centralized default.
+30. Added a camera regression asserting the default projection instance and yaw/scale values.
+
+Verification:
+- Run `44427894937` failed Analyze because of the obsolete unused helper; tests and APK were skipped.
+- After removing that helper, run `44428139297` reported Analyze **success**, all tests **success**, and hero visual-capture upload **success**; the APK build was still in progress when checked.
+- The later visual-height and shared-yaw commits have their own Actions runs queued/in progress. They are not yet verified by a completed workflow.
+- The latest camera/projection regression run `44428528101` was still at checkout when checked.
+- The production default remains yaw zero. Non-zero yaw is now available through projection injection, but visual review of the resulting screenshots is still required before enabling it in the shipped game.
+- Current-head APK verification is not yet established.
