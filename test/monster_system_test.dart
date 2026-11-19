@@ -131,6 +131,62 @@ void main() {
     });
   });
 
+  group('monster compatibility and lifecycle edges', () {
+    test('legacy names map only to the four approved production types', () {
+      expect(monsterTypeFromName('slime'), MonsterType.runner);
+      expect(monsterTypeFromName('runner'), MonsterType.runner);
+      expect(monsterTypeFromName('brute'), MonsterType.tank);
+      expect(monsterTypeFromName('tank'), MonsterType.tank);
+      expect(monsterTypeFromName('stalker'), MonsterType.stalker);
+      expect(monsterTypeFromName('archer'), MonsterType.ranged);
+      expect(monsterTypeFromName('ranged'), MonsterType.ranged);
+      expect(monsterTypeFromName('unrecognized'), MonsterType.runner);
+      expect(MonsterType.values, hasLength(4));
+    });
+
+    test('level inputs clamp safely at both ends for every monster type', () {
+      for (final type in MonsterType.values) {
+        expect(MonsterStats.of(type, -20).level, 1);
+        expect(MonsterStats.of(type, 0).level, 1);
+        expect(MonsterStats.of(type, 999).level, monsterMaxLevel);
+      }
+    });
+
+    test('formation offsets are finite and separate successive slots', () {
+      for (var total = 1; total <= GameWorld.startingArmySize; total++) {
+        final offsets = [
+          for (var slot = 0; slot < total; slot++)
+            armyFormationOffset(slot, total),
+        ];
+        for (final offset in offsets) {
+          expect(offset.dx.isFinite, isTrue);
+          expect(offset.dy.isFinite, isTrue);
+        }
+        for (var i = 0; i < offsets.length; i++) {
+          for (var j = i + 1; j < offsets.length; j++) {
+            expect((offsets[i] - offsets[j]).distance, greaterThan(0.1));
+          }
+        }
+      }
+    });
+
+    test('corpse animation has bounded progress and a fixed death state', () {
+      final corpse = MonsterCorpse(
+        type: MonsterType.stalker,
+        team: MonsterTeam.enemy,
+        position: const Offset(200, 300),
+        facing: const Offset(1, 0),
+        bornAtMs: 1000,
+      );
+      expect(corpse.stateAt(1000), MonsterAnimState.death);
+      expect(corpse.progressAt(900), 0);
+      expect(corpse.progressAt(1000), 0);
+      expect(corpse.progressAt(1350), closeTo(0.5, 1e-9));
+      expect(corpse.progressAt(1700), 1);
+      expect(corpse.progressAt(3000), 1);
+    });
+  });
+
   group('army roster', () {
     test('a match starts with the full 20-monster free army', () {
       final world = makeMonsterWorld();
