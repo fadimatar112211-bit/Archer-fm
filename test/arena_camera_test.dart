@@ -493,6 +493,13 @@ void main() {
       expect(transform.viewportOrigin, origin);
     });
 
+    test('camera transform scale is positive for supported landscape sizes', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(167), spawnWaves: false);
+      for (final size in const [Size(1280, 720), Size(1920, 1080), Size(2400, 1080)]) {
+        expect(ArenaCameraTransform.forViewport(size, world).scale, greaterThan(0));
+      }
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
