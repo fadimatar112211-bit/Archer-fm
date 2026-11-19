@@ -303,3 +303,37 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Added `test/arena_projectile_depth_test.dart` with moving and stationary projectile painter regressions.
 - Implementation commit: `8dc8f4379061e80de0ef7d2565f1cc0007fe74e5`; duplicate-pass fix: `2a55ebca1f6fcd85924a14e5394a001a056364f7`; painter test commit: `8c339d1a4c9ecd0ef07a639fb9b0f4848f43e417`.
 - Verification status: pending CI for the newest source/test commits. Do not treat the prior camera batch as fully verified until the workflow completes. No visual ordering acceptance or APK build is claimed.
+
+
+### 2026-11-19 — Projectile regression expansion and verification audit
+
+Twenty-five tracked work items in this continuation:
+1. Inspected branch HEAD and prior Actions state before changing files.
+2. Confirmed the previous camera batch has not reached final CI completion.
+3. Added projectile entries to the shared actor/obstacle depth queue.
+4. Used the common projection depth key for projectile anchors.
+5. Kept each projectile's glow, edge, core, arrowhead and trail in one draw entry.
+6. Removed the unconditional after-actors projectile pass.
+7. Prevented duplicate projectile rendering.
+8. Added a near-zero velocity guard before vector normalization.
+9. Added a dedicated projectile depth painter test file.
+10. Added moving-projectile rendering coverage.
+11. Added zero-velocity rendering coverage.
+12. Added multiple simultaneous projectile coverage.
+13. Added left/up direction coverage.
+14. Added high-velocity coverage.
+15. Added simulation-position immutability coverage.
+16. Added velocity immutability coverage.
+17. Added no-enemy/no-army coverage.
+18. Added projectile-with-obstacles/corpses coverage.
+19. Added large-projectile styling coverage.
+20. Added repeated-paint determinism/state-retention coverage.
+21. Documented shared-depth integration and its known limitations.
+22. Documented the ten painter regression scenarios and what they do not prove.
+23. Checked latest branch HEAD after code/test changes.
+24. Inspected Actions job steps for the new test-file run and the prior camera run.
+25. Recorded the remaining CI, pixel-capture and APK acceptance gates.
+
+Latest source/test HEAD at this checkpoint: `d9a3ec230b329335aab4e5a6ff54364451ce366e`. The dedicated test-file workflow (`44427793874`) was still in progress at Flutter setup when checked; the source change run (`44427737324`) had passed setup/dependencies and was running Analyze. The earlier camera run (`44427516363`) had Analyze success and was running all tests. These are intermediate statuses, not final pass results.
+
+Known unresolved work: confirm all new tests and analysis pass; inspect actual projectile-vs-tree/actor capture pixels; add separate projectile visual-height/trail segmentation if needed; migrate ground/objective passes before enabling live yaw; visually validate all heroes against the reference; and verify a current-HEAD APK. No full-game completion is claimed.
