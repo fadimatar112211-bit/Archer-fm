@@ -137,3 +137,22 @@ The camera suite now includes a yawed-projection pointer round-trip test. This v
 - Added camera regressions for letterbox geometry, fixed center under yaw, and inverse-projected viewport corner containment.
 - Added two real Ranger GLB review captures for a far-background tree and a background rock, complementing the existing foreground/background tree, split-depth tree, foreground rock and no-obstacle baseline.
 - These additions expand mathematical and visual review coverage; they do not establish a full yawed world renderer or visual acceptance. Await CI and inspect the newly generated artifact.
+
+
+## Render-order and projection boundary audit (2026-11-19)
+
+Source inspection confirms the current pass order in `ArenaPainter.paint`:
+
+1. Terrain, biome patches, rivers, bridges, mines, castles and pickups are painted as ground content.
+2. Ground shadows are painted before the actor depth list.
+3. Corpses, monsters, army units, tree trunk/canopy layers, rocks and the player are depth-sorted together.
+4. Projectiles are painted in a later pass, above the complete actor list.
+5. Combat effects, fog and floating labels are separate later passes.
+
+Consequences:
+- The actor list has shared depth ordering, but projectiles are not yet interleaved with trees/actors by ground depth. A projectile can therefore appear above an obstacle even when its ground anchor is behind it.
+- Terrain and objective structures are still flat ground-pass geometry; they are not yet height-aware 3D meshes.
+- The painter currently applies only the shared vertical ground compression (`groundScaleY=0.82`). The live renderer does not apply `yawRadians` to all terrain, actors, projectile paths, fog and effects.
+- The camera's yawed inverse mapping is covered by mathematical tests, but must not be mistaken for a live yawed scene.
+
+These are explicit remaining integration tasks, not accepted visual behavior. The next renderer milestone should introduce a single projected ground-anchor/depth record for projectiles and objective/environment actors, then capture crossing cases before enabling any non-zero live yaw.
