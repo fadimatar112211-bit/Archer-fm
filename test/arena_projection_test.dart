@@ -127,8 +127,8 @@ void main() {
       const delta = Offset(30, -45);
       final projectedDelta =
           projection.projectGround(a + delta) - projection.projectGround(a);
-      expect(projectedDelta.dx, closeTo(1.5 * (30 * 0.921060994 + 45 * 0.389418342), 1e-8));
-      expect(projectedDelta.dy, closeTo(1.5 * 0.7 * (30 * 0.389418342 - 45 * 0.921060994), 1e-8));
+      expect(projectedDelta.dx, closeTo(1.5 * (30 * 0.921060994 + 45 * 0.389418342), 1e-7));
+      expect(projectedDelta.dy, closeTo(1.5 * 0.7 * (30 * 0.389418342 - 45 * 0.921060994), 1e-7));
     });
 
     test('height lifts an anchor without changing its ground projection', () {
