@@ -391,3 +391,14 @@ Verification:
 - The latest camera/projection regression run `44428528101` was still at checkout when checked.
 - The production default remains yaw zero. Non-zero yaw is now available through projection injection, but visual review of the resulting screenshots is still required before enabling it in the shipped game.
 - Current-head APK verification is not yet established.
+
+### 2026-11-19 — Castle and crystal depth-order integration
+
+- Removed castle drawing from the terrain-only pass.
+- Added each standing castle to the shared actor/obstacle depth queue using its world anchor.
+- Kept the castle keep, walls, banners and all living crystal objectives together as one draw unit so their internal composition remains stable.
+- Applied the upright-ground compensation at the castle anchor so tall crystal silhouettes do not inherit ground-plane depth compression.
+- Preserved castle ownership colors, standing-state visibility, crystal HP bars, and all gameplay coordinates/state.
+- This is a coarse castle-level depth unit: individual walls and crystals are not yet independently sorted against actors. Capture and review is still required.
+- Code commit: `e4ba35b6ff83a1dac0d4e1d00d6feb41a70c2834`.
+- The new commit's Analyze/tests/APK status must be read from its Actions run before claiming verification.
