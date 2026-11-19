@@ -608,3 +608,11 @@ Verification:
 - Inspected the actual Runner and Tank preview PNGs, not just the GLB validator output. The current previews are NOT art-approved: surfaces show unwanted wire/triangulation overlays and material/face readability is poor. The underlying prototypes are blocky and the visible face details are not yet convincing.
 - Fixed preview configuration to explicitly disable wireframe and object outlines, disable cavity noise, retain material colours, and use a tighter lens. Enabled opt-in previews in CI (`ARCHER_MONSTER_PREVIEWS=1`) so the next artifact includes review images while preserving the successful GLB validator path.
 - This is a preview-quality correction only; it does not yet improve the mesh geometry or prove the faces/animations are production-ready. Reinspect all four new previews before approving or integrating.
+
+
+### 2026-11-19 — Blender 3.0 preview compatibility correction
+- The first preview-enabled CI attempt (run `44486504634`, commit `8656e7c`) exposed a version-specific API failure: Blender 3.0.1 does not expose `View3DShading.show_wireframe`; the exception stopped the generator before writing the manifest, so this run is a failure and no preview artifact is approved.
+- Updated `tools/monsters/generate_monsters_blender.py` in commit `87eaca0f3cb4363baca12f67803bb7a50521c9f5` to guard optional shading properties with `hasattr`, supporting Blender 3.0 and newer without aborting export.
+- New Actions run `44486855762` is testing this correction. Await the GLB generation, preview images, Flutter tests, APK build, and emulator smoke results before marking any of them passed.
+- Stage One remains open: Android smoke and visual framing/facing acceptance have not yet passed on the current HEAD.
+- Stage Two remains open: four GLBs passed structural validation on earlier runs, but the procedural art prototypes are not visually approved and the current runtime still uses the Canvas renderer.
