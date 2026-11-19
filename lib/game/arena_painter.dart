@@ -1007,15 +1007,34 @@ class ArenaPainter extends CustomPainter {
       ));
     }
 
-    // Trees and rocks share the same ground-depth ordering as characters.
-    // Their trunks/rocks therefore cover actors only when they are in front.
+    // Split tree geometry into independently depth-sorted ground/trunk and
+    // canopy layers. A hero can pass behind the canopy while remaining in
+    // front of the trunk (or vice versa) instead of the whole tree popping
+    // in front/behind as one oversized sprite.
     for (final obstacle in world.map.obstacles) {
-      final currentOrder = order++;
-      actors.add((
-        depth: cameraProjection.depthOf(obstacle.position),
-        order: currentOrder,
-        draw: () => _paintObstacle(canvas, obstacle),
-      ));
+      if (obstacle.kind == ObstacleKind.tree) {
+        final trunkOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(obstacle.position),
+          order: trunkOrder,
+          draw: () => _paintTreeTrunk(canvas, obstacle),
+        ));
+        final canopyAnchor =
+            obstacle.position - Offset(0, obstacle.radius * 0.35);
+        final canopyOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(canopyAnchor),
+          order: canopyOrder,
+          draw: () => _paintTreeCanopy(canvas, obstacle),
+        ));
+      } else {
+        final currentOrder = order++;
+        actors.add((
+          depth: cameraProjection.depthOf(obstacle.position),
+          order: currentOrder,
+          draw: () => _paintObstacle(canvas, obstacle),
+        ));
+      }
     }
 
     final playerPosition = world.player.position;
@@ -1037,34 +1056,42 @@ class ArenaPainter extends CustomPainter {
     }
   }
 
+  void _paintTreeTrunk(Canvas canvas, MapObstacle obstacle) {
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: obstacle.position + const Offset(0, 8),
+        width: obstacle.radius * 2.3,
+        height: obstacle.radius * 0.9,
+      ),
+      Paint()..color = const Color(0x33000000),
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: obstacle.position + Offset(0, obstacle.radius * 0.4),
+        width: obstacle.radius * 0.45,
+        height: obstacle.radius * 0.9,
+      ),
+      Paint()..color = _trunkColor,
+    );
+  }
+
+  void _paintTreeCanopy(Canvas canvas, MapObstacle obstacle) {
+    canvas.drawCircle(
+      obstacle.position - Offset(0, obstacle.radius * 0.35),
+      obstacle.radius,
+      Paint()..color = _treeColor,
+    );
+    canvas.drawCircle(
+      obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
+      obstacle.radius * 0.55,
+      Paint()..color = _treeLightColor,
+    );
+  }
+
   void _paintObstacle(Canvas canvas, MapObstacle obstacle) {
     if (obstacle.kind == ObstacleKind.tree) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: obstacle.position + const Offset(0, 8),
-          width: obstacle.radius * 2.3,
-          height: obstacle.radius * 0.9,
-        ),
-        Paint()..color = const Color(0x33000000),
-      );
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: obstacle.position + Offset(0, obstacle.radius * 0.4),
-          width: obstacle.radius * 0.45,
-          height: obstacle.radius * 0.9,
-        ),
-        Paint()..color = _trunkColor,
-      );
-      canvas.drawCircle(
-        obstacle.position - Offset(0, obstacle.radius * 0.35),
-        obstacle.radius,
-        Paint()..color = _treeColor,
-      );
-      canvas.drawCircle(
-        obstacle.position - Offset(obstacle.radius * 0.35, obstacle.radius * 0.6),
-        obstacle.radius * 0.55,
-        Paint()..color = _treeLightColor,
-      );
+      _paintTreeTrunk(canvas, obstacle);
+      _paintTreeCanopy(canvas, obstacle);
       return;
     }
 
