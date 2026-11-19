@@ -154,10 +154,11 @@ jobs:
       - name: Install free Blender runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
 
       - name: Generate four rigged monster models
         run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
           python3 tools/validate_monster_glb.py --root build/monster-glb
 
