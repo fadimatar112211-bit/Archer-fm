@@ -181,3 +181,19 @@ Projectiles currently render after the combined actor/obstacle pass. The next im
 ## Visual evidence checklist
 
 A passing CI run is necessary but insufficient. Review and retain: unobstructed Ranger GLB baseline; foreground and background tree; foreground and background rock; canopy/trunk partial overlap; all four landscape aspect ratios; world edges and letterbox boundaries; projectile/actor crossing cases; fog boundaries; crystal readability; and a full-scene screenshot with terrain, bridge, castle, mine, monsters and player visible. Compare hero face, armor and weapon against `assets/heroes/reference/heroes_reference_sheet.jpg` separately.
+
+
+## Projectile pass implementation checkpoint (2026-11-19)
+
+The production painter now adds each projectile to the same depth-sorted draw-entry list used by the player, monsters, corpses, and split tree/rock obstacle layers. Projectile depth uses its current world position as the ground anchor and the same `ArenaWorldProjection.depthOf` function as actors. The projectile's glow, edge, core, arrow head, and trail are drawn together as one entry, preserving their internal appearance while changing their relationship to foreground/background actors.
+
+The former unconditional projectile pass after all actors has been removed from the production paint sequence, preventing duplicate rendering and preventing every projectile from automatically appearing above every tree/monster. The compatibility helper remains available for isolated capture tooling.
+
+A defensive guard skips a projectile with effectively zero velocity rather than normalizing a zero-length vector. This avoids NaN geometry during transient/invalid projectile states.
+
+### Current limitations
+
+- Projectile visual height is not yet modeled as a separate state field. The current position is used as the shared ground-depth anchor.
+- Projectile trails are sorted with the projectile head as one visual unit; long trails do not yet split across multiple depth layers.
+- Crystal/castle/building geometry remains in the earlier ground pass and is not part of the actor depth queue.
+- No visual claim is made until the new overlap captures are reviewed.
