@@ -55,6 +55,15 @@ void main() {
 
     await _save('30_map_world.png', _paint(world));
 
+    // Deterministic foreground tree overlap: the tree base is placed deeper
+    // than the hero so the shared depth pass must draw it in front.
+    world.map.obstacles[0] = MapObstacle(
+      position: world.player.position + const Offset(0, 72),
+      radius: 58,
+      kind: ObstacleKind.tree,
+    );
+    await _save('35_actor_tree_occlusion.png', _paint(world));
+
     // Explore a trail, then jump far away: the explored trail stays visible
     // while everything the hero has not reached is still hidden.
     for (var step = 0; step < 14; step++) {
