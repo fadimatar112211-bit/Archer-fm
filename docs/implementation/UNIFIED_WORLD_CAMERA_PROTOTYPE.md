@@ -120,3 +120,12 @@ These observations justify starting with the shared projection prototype. They d
 - This permits partial occlusion across the canopy/trunk boundary instead of forcing the complete tree to render before or after the hero.
 - Added GLB capture `78_glb_tree_split_canopy_trunk_16x9.png`, placing the trunk anchor slightly in front of Ranger while the canopy anchor falls behind him. This capture is a review case, not a pixel-level pass/fail assertion.
 - Remaining limits: the canopy itself is still one filled silhouette, not per-branch geometry; large canopy overlaps can still be approximate. Rocks remain single depth-sorted shapes. Inspect the new artifact and test on Android before accepting the result.
+
+
+## Fine-grained tree canopy ordering (2026-11-19)
+
+The tree canopy is now represented by two independently depth-sorted draw layers: the main crown and its upper highlight lobe. Together with the separately sorted trunk/shadow layer, this reduces the size of each indivisible occlusion region and allows more partial overlaps with the player model. Projection tests verify the expected depth ordering of all three anchors.
+
+The GLB inspection test now also emits `73_glb_hero_no_obstacle_baseline.png`. Compare this baseline with captures 74–78 to determine whether the actual model silhouette is visible and which pixels are covered by the obstacle. These are still review captures; they do not constitute a pixel-level automated occlusion assertion.
+
+The camera suite now includes a yawed-projection pointer round-trip test. This validates the transform math only: the live arena painter currently applies vertical ground compression, not the full yaw rotation to terrain and every world object. The approved oblique 3D world camera remains unfinished.
