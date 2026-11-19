@@ -254,6 +254,24 @@ void main() {
       expect(b.dy - a.dy, closeTo(80 * 0.75 * 1.2, 1e-8));
     });
 
+    test('zero yaw leaves the world X axis horizontal', () {
+      const projection = ArenaWorldProjection(groundScaleY: 0.82, scale: 1.4);
+      const a = Offset(200, 300);
+      const b = Offset(350, 300);
+      final delta = projection.projectGround(b) - projection.projectGround(a);
+      expect(delta.dx, closeTo(210, 1e-9));
+      expect(delta.dy, closeTo(0, 1e-9));
+    });
+
+    test('zero yaw compresses only the world Y axis', () {
+      const projection = ArenaWorldProjection(groundScaleY: 0.82, scale: 1.4);
+      const a = Offset(200, 300);
+      const b = Offset(200, 450);
+      final delta = projection.projectGround(b) - projection.projectGround(a);
+      expect(delta.dx, closeTo(0, 1e-9));
+      expect(delta.dy, closeTo(172.2, 1e-9));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
