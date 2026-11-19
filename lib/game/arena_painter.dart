@@ -306,48 +306,46 @@ class ArenaPainter extends CustomPainter {
     }
 
 
-    // Pickups: mine output, loose resources and chests.
-    for (final pickup in world.mineSystem.pickups) {
-      for (var i = 0; i < 3; i++) {
-        canvas.drawCircle(
-          pickup.position + Offset((i - 1) * 8.0, i.isEven ? -3 : 3),
-          5,
-          Paint()..color = _goldColor,
-        );
-      }
-    }
-    for (final pickup in map.pickups) {
-      if (pickup.kind == PickupKind.resource) {
-        continue;
-      } else {
-        final rect = Rect.fromCenter(
-          center: pickup.position,
-          width: 24,
-          height: 17,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(3)),
-          Paint()..color = _chestColor,
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: pickup.position + const Offset(0, -7),
-            width: 26,
-            height: 6,
-          ),
-          Paint()..color = const Color(0xFF5C3A1C),
-        );
-        canvas.drawRect(
-          Rect.fromCenter(
-            center: pickup.position,
-            width: 5,
-            height: 8,
-          ),
-          Paint()..color = _goldColor,
-        );
-      }
-    }
 
+
+  }
+
+  void _paintResourcePickup(Canvas canvas, ResourcePickup pickup) {
+    for (var i = 0; i < 3; i++) {
+      canvas.drawCircle(
+        pickup.position + Offset((i - 1) * 8.0, i.isEven ? -3 : 3),
+        5,
+        Paint()..color = _goldColor,
+      );
+    }
+  }
+
+  void _paintChestPickup(Canvas canvas, MapPickup pickup) {
+    final rect = Rect.fromCenter(
+      center: pickup.position,
+      width: 24,
+      height: 17,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(3)),
+      Paint()..color = _chestColor,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: pickup.position + const Offset(0, -7),
+        width: 26,
+        height: 6,
+      ),
+      Paint()..color = const Color(0xFF5C3A1C),
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: pickup.position,
+        width: 5,
+        height: 8,
+      ),
+      Paint()..color = _goldColor,
+    );
   }
 
   void _paintMine(Canvas canvas, MineState mine) {
@@ -1004,6 +1002,30 @@ class ArenaPainter extends CustomPainter {
         order: mineOrder,
         draw: () => _withUprightGroundActor(canvas, mine.position, () {
           _paintMine(canvas, mine);
+        }),
+      ));
+    }
+
+    // Resource piles and chests are world pickups. Keep them in the shared
+    // depth queue rather than painting them as a flat overlay above actors.
+    for (final pickup in world.mineSystem.pickups) {
+      final pickupOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(pickup.position),
+        order: pickupOrder,
+        draw: () => _withUprightGroundActor(canvas, pickup.position, () {
+          _paintResourcePickup(canvas, pickup);
+        }),
+      ));
+    }
+    for (final pickup in world.map.pickups) {
+      if (pickup.kind == PickupKind.resource) continue;
+      final pickupOrder = order++;
+      actors.add((
+        depth: cameraProjection.depthOf(pickup.position),
+        order: pickupOrder,
+        draw: () => _withUprightGroundActor(canvas, pickup.position, () {
+          _paintChestPickup(canvas, pickup);
         }),
       ));
     }
