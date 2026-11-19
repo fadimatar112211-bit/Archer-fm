@@ -50,3 +50,36 @@ Required destinations:
 - `assets/references/approved/monsters/monster_types.png`
 
 Do not create fake image files or substitute thumbnails. Keep this status pending until all five exact binary files are visible in the Git tree.
+
+
+## Latest approved reference set — consolidated update (2026-11-20)
+
+The user subsequently supplied and approved a consolidated set of three visual references. This section is the latest authority where older notes above describe a different image packaging or earlier paths.
+
+### 1. Hero appearance sheet
+- Repository image: `assets/references/approved_all/hero_roster_concept.jpg`
+- Defines the four playable hero appearances in one sheet:
+  - Ranger: brown spiky hair, green eyes, green hood/cloak and armor, bow and green energy.
+  - Flame Knight: vivid red/orange hair, red/orange armor and fire identity, sword.
+  - Shadow: purple hood and dark armor, violet eyes/energy blades.
+  - Storm: white hair, blue eyes, blue-and-white outfit/armor and blue lightning energy.
+- This exact image is the appearance authority for all four heroes. Do not substitute generated images or the older separate-image path list above.
+
+### 2. Enemy appearance sheet
+- Repository image: `assets/references/approved_all/archer_fm_monsters_reference.png`
+- Defines exactly four enemy appearances, left to right:
+  1. Green goblin-like sword wielder — ordinary enemy.
+  2. Skeleton with dual blades — fast enemy.
+  3. Large horned armored brute with oversized spiked mace — heavy enemy.
+  4. Purple hooded masked fighter with violet energy blades — infiltrator/ranged-style enemy as labelled in the supplied reference.
+- The source image's four designs are authoritative. Do not redesign them to match older provisional Runner/Tank/Stalker/Ranged terminology; map gameplay roles only after reviewing the actual game specification and code.
+
+### 3. In-match gameplay appearance and HUD
+- Repository image: `assets/references/approved_all/file_000000005c8c81f9ab4ccbb80ea59d5e.png`
+- Defines the target landscape gameplay presentation: elevated close three-quarter/isometric camera; richly detailed stone-and-grass arena with river, wooden bridge, rocks, ruins and vegetation; large glowing crystal structures; readable hero and troop scale; visible monster combat; health bars, level badges and damage numbers; top-left player portrait/name/HP/level; top-center match timer and objective counters; top-right minimap and settings; bottom-left movement joystick; bottom-right attack and skill buttons; consumable/potion control.
+- This screenshot is a presentation/layout target only. Its sample timer, player levels, health, crystal counts, damage values, potion count, troop count and exact positions are not fixed game rules.
+- The gameplay screenshot does not replace the hero or enemy appearance sheets. Use the hero sheet for hero design, the enemy sheet for enemy design, and this screenshot for camera, arena, composition, combat readability and HUD.
+- Detailed implementation requirements and acceptance checklist are recorded in `VISUAL_DIRECTION_PLAN.md` under **Approved gameplay-result reference — detailed implementation specification (2026-11-20)**.
+
+### Repository verification note
+At the time this consolidated update was written, the three image paths above were present in the `ranger-reference-work` Git tree. Keep the original image bytes unchanged. Do not delete duplicate/older reference files until the approved three images are verified and a deliberate cleanup is requested.
