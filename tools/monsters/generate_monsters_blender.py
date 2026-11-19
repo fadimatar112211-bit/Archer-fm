@@ -225,10 +225,16 @@ def build(kind):
         scene.display.shading.color_type="MATERIAL"
         # Render clean solid surfaces: wire overlays hide the face and material
         # separation that must be judged in the approval preview.
-        scene.display.shading.show_wireframe=False
-        scene.display.shading.show_object_outline=False
-        scene.display.shading.show_shadows=True
-        scene.display.shading.show_cavity=False
+        # Blender 3.0 (Ubuntu runner) and newer releases expose slightly
+        # different shading property names. Set only properties available in
+        # the installed build so preview rendering cannot abort GLB export.
+        shading = scene.display.shading
+        for property_name in ("show_wireframe", "show_wireframes",
+                              "show_object_outline", "show_cavity"):
+            if hasattr(shading, property_name):
+                setattr(shading, property_name, False)
+        if hasattr(shading, "show_shadows"):
+            shading.show_shadows = True
         scene.render.resolution_x=768; scene.render.resolution_y=768
         scene.render.resolution_percentage=100
         scene.camera.data.lens=58
