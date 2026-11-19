@@ -107,6 +107,19 @@ def primitive(kind, name, loc, scale, mat, rig, bone, bevel=0.0):
         # Weighted Normal requires Auto Smooth and is unnecessary for these meshes.
     return bind(obj,rig,bone)
 
+def bridge(name, start, end, diameter, mat, rig, bone):
+    """Add a tapered-looking organic connector between two limb joints."""
+    a=Vector(start); b=Vector(end); delta=b-a
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=12, location=(a+b)*0.5)
+    obj=bpy.context.object; obj.name=name
+    obj.dimensions=(diameter,diameter,delta.length+diameter*0.45)
+    obj.rotation_mode="QUATERNION"
+    obj.rotation_quaternion=delta.to_track_quat("Z","Y")
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    for polygon in obj.data.polygons: polygon.use_smooth=True
+    obj.data.materials.append(mat)
+    return bind(obj,rig,bone)
+
 def build(kind):
     clear_scene()
     p=PALETTES[kind]
@@ -131,6 +144,11 @@ def build(kind):
         primitive("cylinder",kind+"_thigh_"+str(side),(side*0.22,0,0.48),(0.19,0.19,0.34),mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
         primitive("cylinder",kind+"_shin_"+str(side),(side*0.23,-0.01,0.25),(0.145,0.15,0.23),mats["body"],rig,"shin.L" if side<0 else "shin.R")
         primitive("sphere",kind+"_boot_"+str(side),(side*0.24,-0.09,0.12),(0.25,0.38,0.18),mats["dark"],rig,"shin.L" if side<0 else "shin.R")
+        # Joint-to-joint bridges remove the detached-ball look at gameplay scale.
+        bridge(kind+"_upperarm_bridge_"+str(side),(side*0.42,0,1.39),(side*0.47,0,1.13),0.27,mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
+        bridge(kind+"_forearm_bridge_"+str(side),(side*0.47,0,1.13),(side*0.56,-0.07,0.82),0.23,mats["body"],rig,"forearm.L" if side<0 else "forearm.R")
+        bridge(kind+"_thigh_bridge_"+str(side),(side*0.22,0,0.68),(side*0.22,0,0.48),0.31,mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
+        bridge(kind+"_shin_bridge_"+str(side),(side*0.22,0,0.48),(side*0.24,-0.09,0.12),0.24,mats["body"],rig,"shin.L" if side<0 else "shin.R")
     if kind=="runner":
         # Swept ears/scarf and light twin short blades.
         for s in (-1,1):
