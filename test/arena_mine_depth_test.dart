@@ -249,6 +249,127 @@ void main() {
       );
     });
 
+    test('renders quarter mine capture progress', () {
+      final world = _world(493);
+      final mine = world.mineSystem.mines.first;
+      mine.capturerId = 'player';
+      mine.captureProgressMs = mineCaptureDurationMs * 0.25;
+      _paint(world);
+      expect(mine.captureFraction, closeTo(0.25, 0.001));
+    });
+
+    test('renders three-quarter mine capture progress', () {
+      final world = _world(497);
+      final mine = world.mineSystem.mines.first;
+      mine.capturerId = 'player';
+      mine.captureProgressMs = mineCaptureDurationMs * 0.75;
+      _paint(world);
+      expect(mine.captureFraction, closeTo(0.75, 0.001));
+    });
+
+    test('mine ownership and capture state remain independent per mine', () {
+      final world = _world(499);
+      final first = world.mineSystem.mines[0];
+      final second = world.mineSystem.mines[1];
+      first.ownerId = 'player';
+      second.ownerId = 'rival_1';
+      first.capturerId = 'player';
+      second.capturerId = 'rival_2';
+      _paint(world);
+      expect(first.ownerId, 'player');
+      expect(second.ownerId, 'rival_1');
+      expect(first.capturerId, 'player');
+      expect(second.capturerId, 'rival_2');
+    });
+
+    test('chest pickups still render when all mines are absent', () {
+      final world = _world(503);
+      world.mineSystem.mines.clear();
+      expect(
+        world.map.pickups.where((pickup) => pickup.kind == PickupKind.chest),
+        isNotEmpty,
+      );
+      _paint(world);
+    });
+
+    test('mine rendering still works when map chests are absent', () {
+      final world = _world(509);
+      world.map.pickups.clear();
+      expect(world.mineSystem.mines, isNotEmpty);
+      _paint(world);
+    });
+
+    test('resource rendering remains safe when loose piles are absent', () {
+      final world = _world(521);
+      world.mineSystem.pickups.clear();
+      _paint(world);
+      expect(world.mineSystem.pickups, isEmpty);
+    });
+
+    test('multiple resource pickups retain independent positions', () {
+      final world = _world(523);
+      final before = world.mineSystem.pickups.map((item) => item.position).toList();
+      _paint(world);
+      expect(world.mineSystem.pickups.map((item) => item.position).toList(), before);
+    });
+
+    test('all mine ownership tints can coexist in one render pass', () {
+      final world = _world(541);
+      for (var i = 0; i < world.mineSystem.mines.length; i++) {
+        world.mineSystem.mines[i].ownerId = switch (i % 3) {
+          0 => null,
+          1 => 'player',
+          _ => 'rival_1',
+        };
+      }
+      _paint(world);
+      expect(world.mineSystem.mines, isNotEmpty);
+    });
+
+    test('mine and chest painter paths coexist without removing either entity', () {
+      final world = _world(547);
+      final mineCount = world.mineSystem.mines.length;
+      final chestCount = world.map.pickups
+          .where((pickup) => pickup.kind == PickupKind.chest)
+          .length;
+      _paint(world);
+      expect(world.mineSystem.mines, hasLength(mineCount));
+      expect(
+        world.map.pickups.where((pickup) => pickup.kind == PickupKind.chest),
+        hasLength(chestCount),
+      );
+    });
+
+    test('projected mine pass remains stable at steep camera yaw', () {
+      final world = _world(557);
+      final painter = ArenaPainter(
+        world: world,
+        projection: const ArenaWorldProjection(
+          yawRadians: -0.58,
+          groundScaleY: 0.69,
+          scale: 0.92,
+        ),
+        presentation: ArenaPresentation(
+          kit: rangerNewKit,
+          theme: ThemeData(brightness: Brightness.dark),
+          sheet: null,
+          frameId: null,
+          pivotX: 0.5,
+          pivotY: 0.85,
+          frameWidth: 192,
+          frameHeight: 192,
+          labels: const [],
+          timeMs: world.nowMs,
+          comboText: null,
+        ),
+      );
+      final recorder = ui.PictureRecorder();
+      painter.paint(Canvas(recorder), const Size(1280, 720));
+      final image = recorder.endRecording().toImageSync(1280, 720);
+      expect(image.width, 1280);
+      image.dispose();
+    });
+
     test('repeated paint keeps mine count and state stable', () {
       final world = _world(439);
       final count = world.mineSystem.mines.length;
