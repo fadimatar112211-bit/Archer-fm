@@ -312,6 +312,58 @@ void main() {
       expect(world.cameraOrigin, isNot(capturedOrigin));
     });
 
+    test('letterboxed coordinates round-trip on each viewport edge', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(127),
+        spawnWaves: false,
+      );
+      const size = Size(1280, 800);
+      final transform = ArenaCameraTransform.forViewport(size, world);
+      final left = transform.viewportOrigin.dx;
+      final top = transform.viewportOrigin.dy;
+      final right = size.width - left;
+      final bottom = size.height - top;
+      for (final screen in [
+        Offset(left, size.height / 2),
+        Offset(right, size.height / 2),
+        Offset(size.width / 2, top),
+        Offset(size.width / 2, bottom),
+      ]) {
+        final worldPoint = transform.localToWorld(screen);
+        final restored = transform.worldToLocal(worldPoint);
+        expect(restored.dx, closeTo(screen.dx, 1e-8));
+        expect(restored.dy, closeTo(screen.dy, 1e-8));
+      }
+    });
+
+    test('camera transforms preserve relative world displacement', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(131),
+        spawnWaves: false,
+      );
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.19,
+        groundScaleY: 0.82,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+        projection: projection,
+      );
+      const a = Offset(650, 440);
+      const b = Offset(780, 520);
+      final screenDelta =
+          transform.worldToLocal(b) - transform.worldToLocal(a);
+      final restoredDelta =
+          transform.localToWorld(transform.worldToLocal(b)) -
+              transform.localToWorld(transform.worldToLocal(a));
+      expect(restoredDelta.dx, closeTo(b.dx - a.dx, 1e-8));
+      expect(restoredDelta.dy, closeTo(b.dy - a.dy, 1e-8));
+      expect(screenDelta.distance, greaterThan(0));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
