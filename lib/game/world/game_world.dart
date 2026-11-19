@@ -309,7 +309,8 @@ class ProjectileState {
     this.sourceMonsterId,
     this.sourceMonsterType,
     this.visualHeight = 0,
-  }) : hostile = hostile ?? tint == 0xFFFF7A5A;
+  })  : assert(visualHeight >= 0),
+        hostile = hostile ?? tint == 0xFFFF7A5A;
 
   final String id;
   Offset position;
@@ -324,6 +325,9 @@ class ProjectileState {
   /// Visual lift above the ground anchor, in world units. Depth sorting and
   /// collision continue to use [position]; only the rendered arrow is lifted.
   final double visualHeight;
+
+  /// Render-only position. Gameplay, collision and depth sorting use [position].
+  Offset get visualPosition => position - Offset(0, visualHeight);
 
   /// True while this projectile belongs to the hostile side. Hostile shots
   /// damage the player and the player's monsters; friendly shots (the hero and
