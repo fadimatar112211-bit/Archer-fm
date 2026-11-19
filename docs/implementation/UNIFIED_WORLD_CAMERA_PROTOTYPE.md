@@ -263,3 +263,17 @@ overlay and submitted to the shared world actor depth queue.
 This is ground-anchor sorting, not per-ore-chunk or per-pixel 3D occlusion.
 River bridges and the continuous terrain/river surface remain in the terrain
 pass and still need a dedicated projection/occlusion review.
+
+## Ground, biome and river pass — first five stage-one tasks (2026-11-19)
+
+Completed the first five planned terrain/projection tasks as a focused batch:
+
+1. Added a regression proving the arena painter and pointer/camera transform consume the exact same injected projection snapshot.
+2. Added a projection invariant proving the projected vertical ground coordinate and depth-sort key remain consistent across positive, negative and zero yaw.
+3. Corrected hero and monster contact-shadow anchors: shadows now sit close to the actor's ground/foot anchor rather than visibly trailing below it.
+4. Reworked river banks into three nested shore layers (outer bank shadow, mid bank, inner shoreline) so the edge remains legible after ground compression.
+5. Changed water shimmer strokes to follow the local river segment normal, instead of always drawing vertically; this keeps highlights perpendicular to curved/angled river flow.
+
+Added `test/arena_terrain_projection_test.dart` to paint generated biomes, rivers and bridges at multiple yaw/scale settings, verify terrain painting does not mutate river/bridge geometry, and check camera hit-mapping round trips.
+
+Important boundary: production yaw remains zero by deliberate choice until full-scene visual captures are reviewed; the shared projection supports yaw and the tests exercise it, but no unreviewed camera rotation has been forced into gameplay. Bridge deck depth sorting and 3D terrain meshes are not claimed complete.
