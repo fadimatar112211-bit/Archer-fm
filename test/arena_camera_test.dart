@@ -517,6 +517,16 @@ void main() {
       expect(transform.viewportOrigin.dy, greaterThanOrEqualTo(0));
     });
 
+    test('camera transform preserves world coordinate when screen point is projected twice', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(181), spawnWaves: false);
+      final transform = ArenaCameraTransform.forViewport(const Size(1920, 1080), world);
+      const point = Offset(720, 440);
+      final once = transform.worldToLocal(point);
+      final twice = transform.worldToLocal(transform.localToWorld(once));
+      expect(twice.dx, closeTo(once.dx, 1e-8));
+      expect(twice.dy, closeTo(once.dy, 1e-8));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
