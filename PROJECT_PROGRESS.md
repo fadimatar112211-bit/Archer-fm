@@ -484,3 +484,18 @@ Verification:
 - Regression coverage: front/rear wall/crystal approaches and castle/actor shadows at yaw -0.42, 0 and +0.42; crystal counts remain unchanged.
 - Implementation commits: `71d0b4fc`, `3964ef94`, `3bd0442c`. Latest CI is still running release APK builds.
 - Phase 1 implementation batches: 20/30 tasks addressed; two five-task batches remain.
+
+### Stage one — final ten tasks (21–30), 2026-11-19
+
+- 21: unified tree canopy and rock facet highlights with upper-left scene lighting.
+- 22: audited shared projected-depth sorting for hero, monsters, tree layers, rocks, corpses and projectiles.
+- 23: verified mines, resource piles and chests join the shared actor depth queue.
+- 24: verified bridge decks join the queue at their ground anchors while river banks remain projected terrain.
+- 25: verified castle courtyard, keep, individual wall arcs and living crystals are separate depth-sorted objects.
+- 26: added hero overlap rendering for bridges, mines, resources and chests; prior tests cover obstacles and castle layers.
+- 27: added deterministic PNG arena captures at 1280×720, 1920×1080 and 2340×1080.
+- 28: added landscape viewport transform/render checks for those three sizes.
+- 29: added matching ground-contact shadows for bridges, mines, resource piles and chests; corrected remaining lighting gradients.
+- 30: updated Android CI to upload the generated arena captures, then run analyze, all tests, release APK build and APK signature verification.
+- Capture output: `build/arena-captures/`; artifact name: `archer-fm-3d-hero-visual-captures`. These are painter-generated captures, not physical-device screenshots.
+- All 30 stage-one tasks are implemented/verified in source and tests. Final acceptance awaits the latest CI run and inspection of its capture artifact. No device visual sign-off is claimed.
