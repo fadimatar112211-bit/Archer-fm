@@ -292,6 +292,13 @@ void main() {
       }
     });
 
+    test('zero projection scale is rejected by constructor assertions', () {
+      expect(
+        () => ArenaWorldProjection(scale: 0),
+        throwsAssertionError,
+      );
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
