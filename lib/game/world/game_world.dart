@@ -308,6 +308,7 @@ class ProjectileState {
     bool? hostile,
     this.sourceMonsterId,
     this.sourceMonsterType,
+    this.visualHeight = 0,
   }) : hostile = hostile ?? tint == 0xFFFF7A5A;
 
   final String id;
@@ -319,6 +320,10 @@ class ProjectileState {
   final double maxTravel;
   final int tint;
   final bool big;
+
+  /// Visual lift above the ground anchor, in world units. Depth sorting and
+  /// collision continue to use [position]; only the rendered arrow is lifted.
+  final double visualHeight;
 
   /// True while this projectile belongs to the hostile side. Hostile shots
   /// damage the player and the player's monsters; friendly shots (the hero and
