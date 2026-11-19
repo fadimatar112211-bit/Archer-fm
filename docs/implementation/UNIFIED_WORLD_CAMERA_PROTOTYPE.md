@@ -112,3 +112,11 @@ Observed in `71_game_3d_hero_idle.png` and `72_game_3d_hero_attack.png`:
 - `30_map_world.png` and `31_map_fog.png` show a map rendered as a flat 2D layout with hard-edged fog regions; they do not demonstrate the larger connected, angled world direction.
 
 These observations justify starting with the shared projection prototype. They do not establish that all four hero faces match the reference or that all combat effects are visually polished.
+
+
+## Split tree depth layers (2026-11-19)
+
+- Tree rendering is now split into a ground shadow/trunk layer and a canopy layer. Each layer is inserted independently into the same depth-sorted actor list; the canopy uses an elevated ground anchor while the trunk keeps the obstacle ground anchor.
+- This permits partial occlusion across the canopy/trunk boundary instead of forcing the complete tree to render before or after the hero.
+- Added GLB capture `78_glb_tree_split_canopy_trunk_16x9.png`, placing the trunk anchor slightly in front of Ranger while the canopy anchor falls behind him. This capture is a review case, not a pixel-level pass/fail assertion.
+- Remaining limits: the canopy itself is still one filled silhouette, not per-branch geometry; large canopy overlaps can still be approximate. Rocks remain single depth-sorted shapes. Inspect the new artifact and test on Android before accepting the result.
