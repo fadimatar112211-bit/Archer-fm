@@ -499,3 +499,15 @@ Verification:
 - 30: updated Android CI to upload the generated arena captures, then run analyze, all tests, release APK build and APK signature verification.
 - Capture output: `build/arena-captures/`; artifact name: `archer-fm-3d-hero-visual-captures`. These are painter-generated captures, not physical-device screenshots.
 - All 30 stage-one tasks are implemented/verified in source and tests. Final acceptance awaits the latest CI run and inspection of its capture artifact. No device visual sign-off is claimed.
+
+
+### Stage two — batch 1 (steps 1–5), 2026-11-19
+
+- Audited monster catalog, renderer, world/test coverage and repository asset tree.
+- Confirmed the four existing roles and locked their current level-1 stat baselines, palettes, silhouettes, face direction and weapon reads in `docs/monsters/MONSTER_PRODUCTION_SPEC.md`.
+- Confirmed monsters still use the procedural Canvas painter in `lib/game/arena_painter.dart`; no dedicated monster GLB/BLEND models, rigs or animation manifests were found on `ranger-reference-work`.
+- Reviewed the existing monster mechanics and capture tests. They cover roster, stats/progression, army, purchases, losses, movement, targeting, ranged projectiles and basic visual capture execution. They do not prove final 3D art quality.
+- Added the production specification in commit `e6a5554a7b27583fd9677f9958226d121d527a84`.
+- Batch 1 steps 1–5 are complete as an audit/design/source-readiness batch. The asset audit has a clear blocker: no approved monster 3D source assets exist in the active branch. No fake asset paths were added and the procedural fallback remains untouched.
+- Next: steps 6–10, establish a free/reproducible model pipeline and produce/validate four distinct monster assets before runtime integration.
+- Stage-one Actions run `44465905653` on code commit `e82257a`: Analyze, all Flutter tests and hero/arena capture upload passed; Android emulator step is still in progress. Release APK build, signature verification and upload have not started. Stage one is not yet accepted.
