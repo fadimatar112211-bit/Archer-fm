@@ -11,13 +11,13 @@ class ArenaCameraTransform {
     required this.scale,
     required this.viewportOrigin,
     required this.cameraOrigin,
-    this.projection = const ArenaWorldProjection(groundScaleY: 0.82),
+    this.projection = defaultArenaWorldProjection,
   });
 
   factory ArenaCameraTransform.forViewport(
     Size size,
     GameWorld world, {
-    ArenaWorldProjection projection = const ArenaWorldProjection(groundScaleY: 0.82),
+    ArenaWorldProjection projection = defaultArenaWorldProjection,
   }) {
     final scale = math.min(
       size.width / arenaWidth,
