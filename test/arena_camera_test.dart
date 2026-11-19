@@ -484,6 +484,15 @@ void main() {
       }
     });
 
+    test('camera transform keeps its captured viewport origin immutable', () {
+      final world = GameWorld(kit: rangerNewKit, random: math.Random(163), spawnWaves: false);
+      final transform = ArenaCameraTransform.forViewport(const Size(1920, 1080), world);
+      final origin = transform.viewportOrigin;
+      world.player.position += const Offset(300, 180);
+      world.update(32);
+      expect(transform.viewportOrigin, origin);
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
