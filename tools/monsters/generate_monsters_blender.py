@@ -1,6 +1,6 @@
 """Generate four original, low-poly, rigged Archer FM monster GLBs.
 
-Run with Blender 4.x:
+Run with Blender 3.x or newer:
   blender -b -noaudio --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
 
 The models are procedural production prototypes, not replacements for final art
@@ -41,8 +41,13 @@ def material(name, rgba, metallic=0.0, roughness=0.72, emission=0.0):
     bs.inputs["Metallic"].default_value=metallic
     bs.inputs["Roughness"].default_value=roughness
     if emission:
-        bs.inputs["Emission Color"].default_value=rgba
-        bs.inputs["Emission Strength"].default_value=emission
+        # Blender 3.x calls this socket "Emission"; Blender 4.x renamed it.
+        emission_color = bs.inputs.get("Emission Color") or bs.inputs.get("Emission")
+        if emission_color is not None:
+            emission_color.default_value=rgba
+        emission_strength = bs.inputs.get("Emission Strength")
+        if emission_strength is not None:
+            emission_strength.default_value=emission
     return m
 
 def clear_scene():
