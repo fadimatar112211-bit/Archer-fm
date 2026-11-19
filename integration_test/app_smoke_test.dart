@@ -20,7 +20,7 @@ void main() {
     // Allow real asset bundle reads, GLB parsing and first-frame rendering.
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 250));
-      if (find.byKey(const ValueKey('home_play')).evaluate().isNotEmpty) {
+      if (find.byKey(const ValueKey('home_3d_loaded')).evaluate().isNotEmpty) {
         break;
       }
     }
@@ -38,7 +38,7 @@ void main() {
     );
 
     await tester.tap(find.byKey(const ValueKey('home_play')));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('اختيار البطل والجيش'), findsOneWidget);
     expect(find.byKey(const ValueKey('army_total')), findsOneWidget);
