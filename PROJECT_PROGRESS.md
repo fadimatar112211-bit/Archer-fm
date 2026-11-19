@@ -293,3 +293,13 @@ The game should approach Archero's visual readability and feel, not merely conta
 - No live renderer yaw was enabled. Projectiles remain a later pass and are not yet depth-interleaved with obstacles and actors.
 - CI status must be checked on the newest runs; the earlier failures were from the previous batch and must not be described as fixed until the new full test job passes.
 - No current-HEAD APK or visual acceptance is claimed.
+
+
+### 2026-11-19 — Projectile shared-depth integration
+
+- Added projectiles to the same depth-sorted entry queue as player, monsters, corpses, and split tree/rock obstacle layers, using the common camera projection depth key.
+- Removed the old unconditional post-actor projectile draw pass to prevent duplicate drawing and the previous always-on-top behavior.
+- Added a zero-velocity guard before normalizing projectile velocity.
+- Added `test/arena_projectile_depth_test.dart` with moving and stationary projectile painter regressions.
+- Implementation commit: `8dc8f4379061e80de0ef7d2565f1cc0007fe74e5`; duplicate-pass fix: `2a55ebca1f6fcd85924a14e5394a001a056364f7`; painter test commit: `8c339d1a4c9ecd0ef07a639fb9b0f4848f43e417`.
+- Verification status: pending CI for the newest source/test commits. Do not treat the prior camera batch as fully verified until the workflow completes. No visual ordering acceptance or APK build is claimed.
