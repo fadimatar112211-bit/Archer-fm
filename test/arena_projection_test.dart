@@ -354,6 +354,24 @@ void main() {
       );
     });
 
+    test('visible bounds remain finite for ordinary landscape viewports', () {
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.65,
+        groundScaleY: 0.72,
+        scale: 1.1,
+        focus: Offset(1500, 900),
+      );
+      final bounds = projection.visibleWorldBounds(
+        const Rect.fromLTRB(-960, -540, 960, 540),
+      );
+      expect(bounds.left.isFinite, isTrue);
+      expect(bounds.top.isFinite, isTrue);
+      expect(bounds.right.isFinite, isTrue);
+      expect(bounds.bottom.isFinite, isTrue);
+      expect(bounds.width, greaterThan(0));
+      expect(bounds.height, greaterThan(0));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
