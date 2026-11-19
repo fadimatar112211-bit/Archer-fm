@@ -227,6 +227,33 @@ void main() {
       }
     });
 
+    test('camera-right movement does not change the depth sort key', () {
+      const yaw = 0.47;
+      const projection = ArenaWorldProjection(yawRadians: yaw);
+      const anchor = Offset(600, 420);
+      final rightward = anchor + Offset(100 * math.cos(yaw), -100 * math.sin(yaw));
+      expect(
+        projection.depthOf(rightward),
+        closeTo(projection.depthOf(anchor), 1e-8),
+      );
+    });
+
+    test('camera-depth movement changes projected vertical coordinate only', () {
+      const yaw = -0.36;
+      const projection = ArenaWorldProjection(
+        yawRadians: yaw,
+        groundScaleY: 0.75,
+        scale: 1.2,
+      );
+      const anchor = Offset(340, 520);
+      final deeper =
+          anchor + Offset(-80 * math.sin(yaw), 80 * math.cos(yaw));
+      final a = projection.projectGround(anchor);
+      final b = projection.projectGround(deeper);
+      expect(b.dx, closeTo(a.dx, 1e-8));
+      expect(b.dy - a.dy, closeTo(80 * 0.75 * 1.2, 1e-8));
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
