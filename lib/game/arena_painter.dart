@@ -112,7 +112,6 @@ class ArenaPainter extends CustomPainter {
     _paintFireWaves(canvas);
     _paintGroundShadows(canvas);
     _paintActors(canvas);
-    _paintProjectiles(canvas);
     _paintFx(canvas);
     _paintFog(canvas, camera);
     _paintLabels(canvas, scale);
