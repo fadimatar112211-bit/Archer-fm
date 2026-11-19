@@ -439,3 +439,14 @@ Verification:
 - CI review exposed test-only analyzer errors in the new mine test file: missing direct imports for `MineSize`/`PickupKind` and an integer literal assigned to a double capture-progress field. Corrected both in `48d8817e`. The new HEAD's Analyze/test run is queued; the correction is not yet declared green.
 
 - Follow-up Analyze on `48d8817e` isolated one remaining integer literal in the zero-progress mine test (the earlier type fix addressed a different line). Corrected zero and full-progress assignments to explicit doubles in `547e1aef`. Fresh Analyze/test confirmation is pending.
+
+### 2026-11-19 — Stage one, first five terrain/projection tasks
+
+- Verified the existing shared ground projection and added a painter/camera input projection identity regression.
+- Added a yaw invariant linking projected ground Y to the same depth coordinate used by actor sorting.
+- Corrected hero/monster ground contact shadow offsets.
+- Added layered river-bank shading and flow-normal water shimmer for curved river segments.
+- Added `test/arena_terrain_projection_test.dart` covering biome/river/bridge painting under oblique projections, geometry immutability, multiple yaw values and input mapping.
+- Code commits: `03e59766`, `d6409b58`, `96e3f9c2`, `ef04401d`, `e1bd88a8`, `6d9fa931`.
+- Production camera yaw remains zero pending visual review; no unsupported claim of final camera angle or bridge depth occlusion is made.
+- CI for this batch is pending; the previous successful Analyze/tests run was `44430061513` on `547e1aef`, before this batch.
