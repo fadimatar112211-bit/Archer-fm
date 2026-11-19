@@ -357,7 +357,7 @@ void main() {
       );
     });
 
-    test('landscape viewport scale keeps hero and crystal objectives inside paint bounds', () {
+    test('landscape viewport transforms keep hero and crystal coordinates finite', () {
       final world = _world(663);
       final hero = world.player.position;
       final crystals = world.castleSystem.castles
