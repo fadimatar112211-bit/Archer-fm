@@ -596,3 +596,15 @@ Verification:
 - Downloaded the actual workflow artifact and independently checked GLB v2 headers and manifest mappings: Runner 609,852 B / 22 meshes / 1 skin / 6 clips; Tank 654,524 B / 23 meshes / 1 skin / 5 clips; Stalker 611,492 B / 21 meshes / 1 skin / 5 clips; Ranged 631,068 B / 21 meshes / 1 skin / 7 clips. The manifest includes Idle/Walk/Attack/Hit/Death for all; Runner also Run; Ranged also Cast/Release.
 - This closes structural generation for steps 7–10, but does NOT approve visual quality, facial detail, deformation, animation playback, Android performance or runtime integration. The generated archive contains GLBs and manifest only; no preview images were produced because previews are now opt-in.
 - Runtime remains on procedural Canvas monsters until visual/animation review and in-game integration are completed.
+
+
+## Parallel work update — 2026-11-19 (visual review)
+
+### Stage One — arena / Android (30 steps)
+- Current smoke and release jobs are still running; no emulator pass is claimed.
+- Outstanding visual acceptance remains the clipped arena overview and insufficiently clear Ranger face/facing in the supplied captures. The in-match camera should stay close as specified; a full-map diagnostic capture must use its own framing rather than changing gameplay zoom.
+
+### Stage Two — monster art / army (30 steps)
+- Inspected the actual Runner and Tank preview PNGs, not just the GLB validator output. The current previews are NOT art-approved: surfaces show unwanted wire/triangulation overlays and material/face readability is poor. The underlying prototypes are blocky and the visible face details are not yet convincing.
+- Fixed preview configuration to explicitly disable wireframe and object outlines, disable cavity noise, retain material colours, and use a tighter lens. Enabled opt-in previews in CI (`ARCHER_MONSTER_PREVIEWS=1`) so the next artifact includes review images while preserving the successful GLB validator path.
+- This is a preview-quality correction only; it does not yet improve the mesh geometry or prove the faces/animations are production-ready. Reinspect all four new previews before approving or integrating.
