@@ -1,5 +1,9 @@
 name: Flutter Android Release APK
 
+concurrency:
+  group: archer-fm-android-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
