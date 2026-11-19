@@ -245,7 +245,8 @@ void main() {
       final world = makeWorld();
       final spawn = world.player.position;
       final home = world.map.castleAnchors.first;
-      expect((spawn - home).distance, lessThan(160));
+      expect((spawn - home).distance, greaterThan(castleWallRadius + 24 + 20));
+      expect((spawn - home).distance, lessThan(240));
       expect(world.map.isWater(spawn), isFalse);
       expect(world.map.isBlocked(spawn, 24), isFalse);
     });
