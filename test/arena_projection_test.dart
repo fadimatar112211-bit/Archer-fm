@@ -51,6 +51,17 @@ void main() {
       expect(projection.depthOf(far), greaterThan(projection.depthOf(near)));
     });
 
+    test('tree canopy anchor sorts behind its ground-level trunk anchor', () {
+      const projection = ArenaWorldProjection(groundScaleY: 0.82);
+      const trunkAnchor = Offset(400, 300);
+      const canopyAnchor = Offset(400, 300 - 58 * 0.35);
+
+      expect(
+        projection.depthOf(canopyAnchor),
+        lessThan(projection.depthOf(trunkAnchor)),
+      );
+    });
+
     test('height lifts an anchor without changing its ground projection', () {
       const projection = ArenaWorldProjection(scale: 1.5);
       const anchor = Offset(200, 300);
