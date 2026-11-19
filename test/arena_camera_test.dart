@@ -164,6 +164,84 @@ void main() {
       }
     });
 
+    test('letterbox offsets remain outside the projected world viewport', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(97),
+        spawnWaves: false,
+      );
+      for (final size in const [Size(1280, 800), Size(2400, 1080)]) {
+        final transform = ArenaCameraTransform.forViewport(size, world);
+        expect(transform.viewportOrigin.dx, greaterThanOrEqualTo(0));
+        expect(transform.viewportOrigin.dy, greaterThanOrEqualTo(0));
+        expect(
+          transform.viewportOrigin.dx * 2 +
+              arenaWidth * transform.scale,
+          closeTo(size.width, 1e-8),
+        );
+        expect(
+          transform.viewportOrigin.dy * 2 +
+              arenaHeight * transform.scale,
+          closeTo(size.height, 1e-8),
+        );
+      }
+    });
+
+    test('yawed transform keeps logical arena center fixed', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(101),
+        spawnWaves: false,
+      );
+      const size = Size(2340, 1080);
+      const projection = ArenaWorldProjection(
+        yawRadians: -0.41,
+        groundScaleY: 0.76,
+        scale: 1.15,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        size,
+        world,
+        projection: projection,
+      );
+      final center = world.cameraOrigin +
+          const Offset(arenaWidth / 2, arenaHeight / 2);
+      final screen = transform.worldToLocal(center);
+      expect(screen.dx, closeTo(size.width / 2, 1e-8));
+      expect(screen.dy, closeTo(size.height / 2, 1e-8));
+    });
+
+    test('yawed visible bounds contain the inverse-projected viewport corners', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(103),
+        spawnWaves: false,
+      );
+      const size = Size(1920, 1080);
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.33,
+        groundScaleY: 0.78,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        size,
+        world,
+        projection: projection,
+      );
+      final bounds = transform.visibleWorldRect;
+      final origin = transform.viewportOrigin;
+      final corners = [
+        origin,
+        Offset(size.width - origin.dx, origin.dy),
+        Offset(origin.dx, size.height - origin.dy),
+        Offset(size.width - origin.dx, size.height - origin.dy),
+      ];
+      for (final corner in corners) {
+        final point = transform.localToWorld(corner);
+        expect(point.dx, inInclusiveRange(bounds.left - 1e-8, bounds.right + 1e-8));
+        expect(point.dy, inInclusiveRange(bounds.top - 1e-8, bounds.bottom + 1e-8));
+      }
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
