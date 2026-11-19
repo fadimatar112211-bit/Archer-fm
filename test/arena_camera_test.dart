@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Size;
 
 import 'package:archer_fm/game/arena_camera.dart';
+import 'package:archer_fm/game/world/arena_projection.dart';
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
@@ -134,6 +135,33 @@ void main() {
       final restored = transform.localToWorld(screen);
       expect(restored.dx, closeTo(point.dx, 1e-9));
       expect(restored.dy, closeTo(point.dy, 1e-9));
+    });
+
+    test('camera input round-trips with a yawed ground projection', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(73),
+        spawnWaves: false,
+      );
+      const size = Size(1920, 1080);
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.24,
+        groundScaleY: 0.82,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        size,
+        world,
+        projection: projection,
+      );
+      for (final point in const [
+        Offset(180, 140),
+        Offset(960, 540),
+        Offset(1740, 900),
+      ]) {
+        final restored = transform.localToWorld(transform.worldToLocal(point));
+        expect(restored.dx, closeTo(point.dx, 1e-8));
+        expect(restored.dy, closeTo(point.dy, 1e-8));
+      }
     });
 
     test('visible world rectangle matches the camera window', () {
