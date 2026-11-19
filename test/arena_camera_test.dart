@@ -434,6 +434,34 @@ void main() {
       expect(secondScreen, isNot(firstScreen));
     });
 
+    test('visible world bounds shrink with a larger projection scale', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(151),
+        spawnWaves: false,
+      );
+      final base = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+      );
+      final zoomed = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+        projection: const ArenaWorldProjection(
+          groundScaleY: 0.82,
+          scale: 1.5,
+        ),
+      );
+      expect(
+        zoomed.visibleWorldRect.width,
+        closeTo(base.visibleWorldRect.width / 1.5, 1e-8),
+      );
+      expect(
+        zoomed.visibleWorldRect.height,
+        closeTo(base.visibleWorldRect.height / 1.5, 1e-8),
+      );
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
