@@ -435,3 +435,5 @@ Verification:
 - Code commits: `33e98ff3`, `a1878564`, `151e263f`, `4cd749a2`, `95fba146`, `edbc159e`, `af2852cd`, `3ff0d27a`, `4cb43556`, `550b0497`.
 - Previous workflow `44429243077` proved Analyze and 401 tests passed and uploaded 93 visual captures, but Release APK failed at Gradle dependency resolution for Kotlin 2.0.21 (repository resolution failure). This is distinct from a Dart compile/test failure.
 - Current mine/pickup changes still require fresh Analyze/test/capture CI on the latest branch head; no APK claim is made.
+
+- CI review exposed test-only analyzer errors in the new mine test file: missing direct imports for `MineSize`/`PickupKind` and an integer literal assigned to a double capture-progress field. Corrected both in `48d8817e`. The new HEAD's Analyze/test run is queued; the correction is not yet declared green.
