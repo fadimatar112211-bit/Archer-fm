@@ -582,3 +582,17 @@ Verification:
 - Current headless Blender CI aborts while invoking render backend. Changed previews to opt-in only via ARCHER_MONSTER_PREVIEWS=1, so required GLB export and structural validation do not depend on headless rendering. Revalidate in latest workflow before proceeding.
 - Keep Canvas monsters as runtime fallback until visual and animation review plus Android runtime integration passes.
 - No new monster types or gameplay systems added.
+
+
+## Evidence update — 2026-11-19 (run 44485644182)
+
+### Stage One — 30-step acceptance
+- New Android emulator smoke and release APK jobs are still running; no pass is claimed yet.
+- Reviewed the two latest arena captures directly. The 1920×1080 overview cuts off the upper and lower castle areas and has no playable hero visible. The hero baseline capture includes the Ranger but the current angle does not clearly show the face; facing/orientation needs a focused in-match review. This remains an acceptance defect, not a pass.
+- Keep the requested closer gameplay camera; do not zoom out the live camera just to make a static overview fit. The capture needs a distinct, deliberately framed overview if the purpose is to show the whole map.
+
+### Stage Two — 30-step monster/army pipeline
+- Run 44485644182 successfully generated all four GLBs after preview rendering was made opt-in, and the structural validator passed all four.
+- Downloaded the actual workflow artifact and independently checked GLB v2 headers and manifest mappings: Runner 609,852 B / 22 meshes / 1 skin / 6 clips; Tank 654,524 B / 23 meshes / 1 skin / 5 clips; Stalker 611,492 B / 21 meshes / 1 skin / 5 clips; Ranged 631,068 B / 21 meshes / 1 skin / 7 clips. The manifest includes Idle/Walk/Attack/Hit/Death for all; Runner also Run; Ranged also Cast/Release.
+- This closes structural generation for steps 7–10, but does NOT approve visual quality, facial detail, deformation, animation playback, Android performance or runtime integration. The generated archive contains GLBs and manifest only; no preview images were produced because previews are now opt-in.
+- Runtime remains on procedural Canvas monsters until visual/animation review and in-game integration are completed.
