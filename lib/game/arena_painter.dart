@@ -20,8 +20,19 @@ Offset arenaCameraOrigin(GameWorld world) => world.cameraOrigin;
 
 /// Converts a tap inside the arena widget to map coordinates using the exact
 /// viewport and smoothed camera transform used by [ArenaPainter.paint].
-Offset arenaToWorld(Offset local, Size size, GameWorld world) =>
-    ArenaCameraTransform.forViewport(size, world).localToWorld(local);
+Offset arenaToWorld(
+  Offset local,
+  Size size,
+  GameWorld world, {
+  ArenaCameraConfig config = defaultArenaCameraConfig,
+  ArenaWorldProjection? projection,
+}) =>
+    ArenaCameraTransform.forViewport(
+      size,
+      world,
+      config: config,
+      projection: projection,
+    ).localToWorld(local);
 
 /// One transient screen-space label ("+10 XP", "Level Up!", …).
 class FloatLabel {
@@ -85,14 +96,18 @@ class ArenaPainter extends CustomPainter {
   ArenaPainter({
     required this.world,
     required this.presentation,
-    this.projection = defaultArenaWorldProjection,
-  });
+    this.config = defaultArenaCameraConfig,
+    ArenaWorldProjection? projection,
+  }) : projection = projection ?? config.projection;
 
   final GameWorld world;
   final ArenaPresentation presentation;
 
-  /// Projection snapshot shared with pointer transforms by the arena host.
-  /// The production default remains yaw-zero until full-scene visual review.
+  /// Camera settings shared with pointer transforms by the arena host.
+  final ArenaCameraConfig config;
+
+  /// Projection used by both painting and touch. Defaults to the one built
+  /// from [config]; pass one only to override it.
   final ArenaWorldProjection projection;
 
   @override
@@ -100,15 +115,13 @@ class ArenaPainter extends CustomPainter {
     final cameraTransform = ArenaCameraTransform.forViewport(
       size,
       world,
+      config: config,
       projection: projection,
     );
     final scale = cameraTransform.scale;
     final origin = cameraTransform.viewportOrigin;
     final viewWidth = arenaWidth * scale;
     final viewHeight = arenaHeight * scale;
-    // Fill the full physical viewport before the oblique world transform.
-    // Rotating the ground plane otherwise exposes black triangular corners
-    // on wide landscape screens outside the transformed map rectangle.
     canvas.drawColor(const Color(0xFF07110A), BlendMode.src);
     canvas.save();
     canvas.clipRect(Offset.zero & size);
@@ -118,8 +131,10 @@ class ArenaPainter extends CustomPainter {
     canvas.scale(scale);
     final projectionCenter = const Offset(arenaWidth / 2, arenaHeight / 2);
     canvas.translate(projectionCenter.dx, projectionCenter.dy);
-    canvas.rotate(cameraTransform.projection.yawRadians);
+    // Same order as ArenaWorldProjection.projectGround: rotate first,
+    // then compress depth. This is what makes painting == touch math.
     canvas.scale(1, cameraTransform.projection.groundScaleY);
+    canvas.rotate(cameraTransform.projection.yawRadians);
     canvas.translate(-projectionCenter.dx, -projectionCenter.dy);
     final camera = cameraTransform.cameraOrigin;
     canvas.translate(-camera.dx, -camera.dy);
@@ -130,7 +145,7 @@ class ArenaPainter extends CustomPainter {
     _paintGroundShadows(canvas);
     _paintActors(canvas);
     _paintFx(canvas);
-    _paintFog(canvas, camera);
+    _paintFog(canvas, cameraTransform.visibleWorldRect);
     _paintLabels(canvas, scale);
 
     canvas.restore();
@@ -806,13 +821,8 @@ class ArenaPainter extends CustomPainter {
     );
   }
 
-  void _paintFog(Canvas canvas, Offset camera) {
-    final view = Rect.fromLTWH(
-      camera.dx,
-      camera.dy,
-      arenaWidth,
-      arenaHeight,
-    ).inflate(fogCellSize);
+  void _paintFog(Canvas canvas, Rect visibleWorld) {
+    final view = visibleWorld.inflate(fogCellSize);
     final fogPaint = Paint()..color = const Color(0xF007110A);
     for (final cell in world.fog.hiddenCellsIn(view)) {
       canvas.drawRect(cell.inflate(0.5), fogPaint);
