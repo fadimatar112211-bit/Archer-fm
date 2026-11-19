@@ -106,6 +106,10 @@ class ArenaPainter extends CustomPainter {
     final origin = cameraTransform.viewportOrigin;
     final viewWidth = arenaWidth * scale;
     final viewHeight = arenaHeight * scale;
+    // Fill the full physical viewport before the oblique world transform.
+    // Rotating the ground plane otherwise exposes black triangular corners
+    // on wide landscape screens outside the transformed map rectangle.
+    canvas.drawColor(const Color(0xFF07110A), BlendMode.src);
     canvas.save();
     canvas.clipRect(Offset.zero & size);
     _paintBackdrop(canvas, origin, viewWidth, viewHeight);
