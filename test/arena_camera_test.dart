@@ -25,6 +25,49 @@ void main() {
       expect(transform.projection.yawRadians, 0);
     });
 
+    test('painter and pointer transform accept the identical projection snapshot', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(13),
+        spawnWaves: false,
+      );
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.19,
+        groundScaleY: 0.78,
+        scale: 1.08,
+        focus: Offset(12, -8),
+      );
+      const size = Size(1920, 1080);
+      final transform = ArenaCameraTransform.forViewport(
+        size,
+        world,
+        projection: projection,
+      );
+      final painter = ArenaPainter(
+        world: world,
+        projection: projection,
+        presentation: ArenaPresentation(
+          kit: rangerNewKit,
+          theme: ThemeData.dark(),
+          sheet: null,
+          frameId: null,
+          pivotX: 0.5,
+          pivotY: 0.85,
+          frameWidth: 192,
+          frameHeight: 192,
+          labels: const [],
+          timeMs: world.nowMs,
+          comboText: null,
+        ),
+      );
+      expect(transform.projection, same(painter.cameraProjection));
+      const point = Offset(780, 420);
+      final screen = transform.worldToLocal(point);
+      final restored = transform.localToWorld(screen);
+      expect(restored.dx, closeTo(point.dx, 1e-8));
+      expect(restored.dy, closeTo(point.dy, 1e-8));
+    });
+
     test('pointer conversion uses the smoothed camera origin used to paint', () {
       final world = GameWorld(
         kit: rangerNewKit,
