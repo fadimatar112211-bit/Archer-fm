@@ -43,6 +43,27 @@ void main() {
       }
     });
 
+    test('projected vertical ground coordinate encodes the same depth used for sorting', () {
+      for (final yaw in const [-0.62, -0.2, 0.0, 0.27, 0.61]) {
+        const point = Offset(730, 410);
+        const focus = Offset(320, 180);
+        const scale = 1.17;
+        const groundScaleY = 0.79;
+        final projection = ArenaWorldProjection(
+          yawRadians: yaw,
+          groundScaleY: groundScaleY,
+          scale: scale,
+          focus: focus,
+        );
+        final projected = projection.projectGround(point);
+        final depth = projection.depthOf(point);
+        expect(
+          projected.dy,
+          closeTo(depth * groundScaleY * scale, 1e-9),
+        );
+      }
+    });
+
     test('ground depth is monotonic along the camera depth axis', () {
       const projection = ArenaWorldProjection(
         yawRadians: 0.5,
