@@ -1227,7 +1227,7 @@ class ArenaPainter extends CustomPainter {
     final rect = bridge.rect;
     final deck = RRect.fromRectAndRadius(
       rect,
-      Radius.circular((rect.height * 0.12).clamp(4.0, 10.0)),
+      Radius.circular((rect.height * 0.12).clamp(4.0, 10.0).toDouble()),
     );
     canvas.drawRRect(
       deck.shift(const Offset(0, 5)),
@@ -1275,14 +1275,14 @@ class ArenaPainter extends CustomPainter {
       Offset(trunk.center.dx - obstacle.radius * 0.07, trunk.bottom - 3),
       Paint()
         ..color = const Color(0x668F6842)
-        ..strokeWidth = (obstacle.radius * 0.055).clamp(1.5, 4.0),
+        ..strokeWidth = (obstacle.radius * 0.055).clamp(1.5, 4.0).toDouble(),
     );
     canvas.drawLine(
       Offset(trunk.left + 1, trunk.bottom - 2),
       Offset(trunk.center.dx, trunk.bottom - obstacle.radius * 0.12),
       Paint()
         ..color = _trunkColor
-        ..strokeWidth = (obstacle.radius * 0.13).clamp(3.0, 9.0)
+        ..strokeWidth = (obstacle.radius * 0.13).clamp(3.0, 9.0).toDouble()
         ..strokeCap = StrokeCap.round,
     );
   }
@@ -1350,7 +1350,7 @@ class ArenaPainter extends CustomPainter {
       Offset(rect.right - obstacle.radius * 0.16, rect.center.dy + obstacle.radius * 0.2),
       Paint()
         ..color = Color.lerp(_rockColor, Colors.black, 0.22)!
-        ..strokeWidth = (obstacle.radius * 0.045).clamp(1.2, 3.0),
+        ..strokeWidth = (obstacle.radius * 0.045).clamp(1.2, 3.0).toDouble(),
     );
   }
 
