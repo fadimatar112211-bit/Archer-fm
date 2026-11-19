@@ -242,6 +242,76 @@ void main() {
       }
     });
 
+    test('world-screen round trips remain stable at ultrawide landscape sizes', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(107),
+        spawnWaves: false,
+      );
+      for (final size in const [Size(2560, 1080), Size(2400, 1080), Size(1600, 900)]) {
+        final transform = ArenaCameraTransform.forViewport(size, world);
+        for (final offset in const [
+          Offset(0, 0),
+          Offset(120, 240),
+          Offset(480, 270),
+          Offset(900, 510),
+          Offset(960, 540),
+        ]) {
+          final point = world.cameraOrigin + offset;
+          final restored = transform.localToWorld(transform.worldToLocal(point));
+          expect(restored.dx, closeTo(point.dx, 1e-8));
+          expect(restored.dy, closeTo(point.dy, 1e-8));
+        }
+      }
+    });
+
+    test('yawed pointer mapping round-trips points beyond map center', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(109),
+        spawnWaves: false,
+      );
+      const projection = ArenaWorldProjection(
+        yawRadians: 0.58,
+        groundScaleY: 0.69,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(2400, 1080),
+        world,
+        projection: projection,
+      );
+      for (final point in const [
+        Offset(-500, -300),
+        Offset(0, 0),
+        Offset(1200, 800),
+        Offset(2600, 1700),
+      ]) {
+        final screen = transform.worldToLocal(point);
+        final restored = transform.localToWorld(screen);
+        expect(restored.dx, closeTo(point.dx, 1e-7));
+        expect(restored.dy, closeTo(point.dy, 1e-7));
+      }
+    });
+
+    test('camera snapshot remains stable if the world advances afterwards', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(113),
+        spawnWaves: false,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(1920, 1080),
+        world,
+      );
+      final capturedOrigin = transform.cameraOrigin;
+      world.player.position += const Offset(450, 260);
+      for (var i = 0; i < 5; i++) {
+        world.update(16);
+      }
+      expect(transform.cameraOrigin, capturedOrigin);
+      expect(world.cameraOrigin, isNot(capturedOrigin));
+    });
+
     test('visible world rectangle matches the camera window', () {
       final world = GameWorld(
         kit: rangerNewKit,
