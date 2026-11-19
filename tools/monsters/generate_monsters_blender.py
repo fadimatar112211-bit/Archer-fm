@@ -137,18 +137,14 @@ def build(kind):
         primitive("sphere",kind+"_eye_"+str(side),(side*0.225,-0.365,1.98),(0.165,0.105,0.19),mats["eye"],rig,"head")
         primitive("sphere",kind+"_pupil_"+str(side),(side*0.225,-0.458,1.98),(0.066,0.035,0.105),mats["dark"],rig,"head")
         primitive("sphere",kind+"_brow_"+str(side),(side*0.225,-0.405,2.17),(0.17,0.045,0.055),mats["dark"],rig,"head")
-        primitive("sphere",kind+"_shoulder_"+str(side),(side*0.42,0,1.39),(0.35,0.42,0.34),mats["accent"] if kind=="tank" else mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
-        primitive("cylinder",kind+"_upperarm_"+str(side),(side*0.47,0,1.13),(0.16,0.16,0.31),mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
-        primitive("cylinder",kind+"_forearm_"+str(side),(side*0.52,-0.025,1.00),(0.145,0.145,0.27),mats["body"],rig,"forearm.L" if side<0 else "forearm.R")
-        primitive("sphere",kind+"_hand_"+str(side),(side*0.56,-0.07,0.82),(0.22,0.23,0.22),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
-        primitive("cylinder",kind+"_thigh_"+str(side),(side*0.22,0,0.48),(0.19,0.19,0.34),mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
-        primitive("cylinder",kind+"_shin_"+str(side),(side*0.23,-0.01,0.25),(0.145,0.15,0.23),mats["body"],rig,"shin.L" if side<0 else "shin.R")
-        primitive("sphere",kind+"_boot_"+str(side),(side*0.24,-0.09,0.12),(0.25,0.38,0.18),mats["dark"],rig,"shin.L" if side<0 else "shin.R")
-        # Joint-to-joint bridges remove the detached-ball look at gameplay scale.
-        bridge(kind+"_upperarm_bridge_"+str(side),(side*0.42,0,1.39),(side*0.47,0,1.13),0.27,mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
+        # Continuous tapered limbs: avoid stacked spherical joints at arena scale.
+        bridge(kind+"_upperarm_bridge_"+str(side),(side*0.40,0,1.42),(side*0.47,0,1.13),0.29,mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
         bridge(kind+"_forearm_bridge_"+str(side),(side*0.47,0,1.13),(side*0.56,-0.07,0.82),0.23,mats["body"],rig,"forearm.L" if side<0 else "forearm.R")
-        bridge(kind+"_thigh_bridge_"+str(side),(side*0.22,0,0.68),(side*0.22,0,0.48),0.31,mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
-        bridge(kind+"_shin_bridge_"+str(side),(side*0.22,0,0.48),(side*0.24,-0.09,0.12),0.24,mats["body"],rig,"shin.L" if side<0 else "shin.R")
+        primitive("sphere",kind+"_hand_"+str(side),(side*0.56,-0.07,0.80),(0.16,0.18,0.16),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
+        bridge(kind+"_thigh_bridge_"+str(side),(side*0.22,0,0.68),(side*0.22,0,0.43),0.34,mats["body"],rig,"thigh.L" if side<0 else "thigh.R")
+        bridge(kind+"_shin_bridge_"+str(side),(side*0.22,0,0.43),(side*0.24,-0.09,0.13),0.25,mats["body"],rig,"shin.L" if side<0 else "shin.R")
+        primitive("sphere",kind+"_boot_"+str(side),(side*0.24,-0.09,0.11),(0.21,0.30,0.15),mats["dark"],rig,"shin.L" if side<0 else "shin.R")
+
     if kind=="runner":
         # Swept ears/scarf and light twin short blades.
         for s in (-1,1):
@@ -164,12 +160,12 @@ def build(kind):
         primitive("sphere",kind+"_scarf_collar",(0,-0.34,1.43),(0.43,0.10,0.16),mats["accent"],rig,"spine")
         primitive("sphere",kind+"_chest_badge",(0,-0.35,1.18),(0.16,0.07,0.17),mats["accent"],rig,"spine")
     elif kind=="tank":
-        primitive("cube",kind+"_chestplate",(0,-0.31,1.18),(1.04,0.18,0.70),mats["metal"],rig,"spine",0.14)
+        primitive("cube",kind+"_chestplate",(0,-0.34,1.17),(0.82,0.14,0.50),mats["metal"],rig,"spine",0.18)
         primitive("cube",kind+"_helmet_brow",(0,-0.35,2.14),(0.78,0.18,0.18),mats["metal"],rig,"head",0.06)
         primitive("sphere",kind+"_helmet_cheek_L",(-0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
         primitive("sphere",kind+"_helmet_cheek_R",(0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
         for s in (-1,1):
-            primitive("cube",kind+"_shoulder_plate_"+str(s),(s*0.50,-0.02,1.52),(0.58,0.58,0.34),mats["metal"],rig,"upper_arm.L" if s<0 else "upper_arm.R",0.08)
+            primitive("cube",kind+"_shoulder_plate_"+str(s),(s*0.49,-0.02,1.48),(0.40,0.42,0.26),mats["metal"],rig,"upper_arm.L" if s<0 else "upper_arm.R",0.12)
             primitive("cube",kind+"_gauntlet_"+str(s),(s*0.57,-0.11,0.88),(0.35,0.36,0.28),mats["accent"],rig,"forearm.L" if s<0 else "forearm.R",0.06)
         primitive("cone",kind+"_helmet_spike",(0,0,2.25),(0.17,0.17,0.34),mats["metal"],rig,"head")
     elif kind=="stalker":
@@ -186,9 +182,10 @@ def build(kind):
         primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
         primitive("cone",kind+"_robe",(0,0.20,0.94),(0.49,0.48,0.82),mats["body"],rig,"spine")
         primitive("sphere",kind+"_robe_collar",(0,-0.32,1.42),(0.55,0.12,0.18),mats["accent"],rig,"spine")
-        primitive("cylinder",kind+"_staff",(0.72,0.02,1.30),(0.085,0.085,0.98),mats["metal"],rig,"forearm.R")
-        primitive("sphere",kind+"_staff_grip",(0.72,-0.02,1.10),(0.12,0.12,0.14),mats["accent"],rig,"forearm.R")
-        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.22),(0.32,0.32,0.32),mats["eye"],rig,"forearm.R")
+        primitive("cylinder",kind+"_staff",(0.72,0.02,1.62),(0.085,0.085,1.34),mats["metal"],rig,"forearm.R")
+        primitive("sphere",kind+"_staff_grip",(0.72,-0.02,1.18),(0.12,0.12,0.14),mats["accent"],rig,"forearm.R")
+        primitive("sphere",kind+"_orb_socket",(0.72,-0.02,2.24),(0.20,0.20,0.16),mats["metal"],rig,"forearm.R")
+        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.38),(0.27,0.27,0.27),mats["eye"],rig,"forearm.R")
     # Ensure GLB exporter sees the rig and meshes, with no camera/light clutter.
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
