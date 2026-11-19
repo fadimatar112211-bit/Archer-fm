@@ -6,6 +6,7 @@ import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/game/world/arena_projection.dart';
 import 'package:archer_fm/game/world/mine_system.dart';
+import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -80,7 +81,7 @@ void main() {
       final mine = world.mineSystem.mines.first;
       mine.ownerId = 'player';
       mine.capturerId = 'player';
-      mine.captureProgressMs = 4321;
+      mine.captureProgressMs = 4321.0;
       _paint(world);
       expect(mine.ownerId, 'player');
       expect(mine.capturerId, 'player');
