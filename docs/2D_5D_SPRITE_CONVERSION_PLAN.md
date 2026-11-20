@@ -5,6 +5,38 @@
 **Repository:** `fadimatar112211-bit/Archer-fm`  
 **Working branch:** `ranger-reference-work`
 
+## 0.1 User's mandatory reference-only rule (added 2026-11-21)
+
+The user explicitly requires that production visuals must come only from their uploaded/approved reference images. This is a hard constraint, not a preference:
+- Never insert assistant-generated, AI-generated, web-sourced, stock, generic, or invented pictures for any hero, monster, or the final gameplay reference.
+- Hero appearance must be checked against `assets/references/approved_all/hero_roster_concept.jpg` (current Git blob SHA: `b4283a86b3f1727aa6c59966a3ce8479d32d735f`).
+- Monster appearance must be checked against `assets/references/approved_all/archer_fm_monsters_reference.png` (current Git blob SHA: `2d1b350617f71c00fb3986ae986cabbe53df00da`).
+- Final in-match composition/camera/HUD must be checked against `assets/references/approved_all/file_000000005c8c81f9ab4ccbb80ea59d5e.png` (see `docs/references/USER_APPROVED_VISUAL_REFERENCES.md`).
+- Shadow's user-supplied eight-direction/four-frame walk sheet `1000241306.png` is an animation-layout/source reference. Preserve the source; derive clean frame assets only by editing/cropping that supplied image. Do not replace its character art with newly generated art.
+- If an exact reference is unavailable, ambiguous, or conflicts with another approved reference, stop and ask the user. Do not improvise.
+- Reference image files are immutable. Never overwrite, crop, recolor, compress, or otherwise alter the original reference files in the repository.
+
+## 0.2 Phase 0 repository audit — 2026-11-21
+
+Audited branch `ranger-reference-work`, HEAD `8170774995824e9335e124e716f866d2563ef5c1`.
+
+Verified:
+- The project already has a sprite-atlas runtime: `lib/hero/hero_assets.dart`, `lib/hero/hero_manifest.dart`, `lib/hero/sprite_player.dart`.
+- The arena's current production renderer is `lib/game/arena_painter.dart` using Flutter Canvas and `ArenaWorldProjection`; it is not currently a real 3D scene/renderer.
+- `lib/game/game_screen.dart` calls `_loadHero3D()` during initialization. When a GLB loads, `ArenaPresentation.hero3d` selects the 3D hero painter instead of the atlas sprite. Therefore the 2D sprite path exists but is currently overridden for heroes when GLB loading succeeds.
+- `pubspec.yaml` declares sprite manifests/atlases and all four GLB models.
+- The sprite directories contain existing atlases for Ranger (legacy), Ranger New, Flame, Shadow and Storm. Tree audit counted 64 atlas PNGs for each of the four current roster IDs (ranger_new, flame, shadow, storm); this is asset presence only, not proof of visual approval.
+- Shadow's current manifest has 64 directional clips across eight directions and eight states. Its `walk_s` clip has 9 frames at 83 ms; the user-supplied `1000241306.png` sheet depicts 4 frames per direction. These are different asset sources/animation specifications and must not be silently conflated.
+- No `assets/monsters/` production image assets were found in the current tree query. The approved monster reference exists under `assets/references/approved_all/`.
+- Existing tests include `hero_manifest_test.dart`, `sprite_player_test.dart`, `all_hero_render_manifest_test.dart`, `arena_projection_test.dart`, and capture tests. No tests were run as part of this read-only audit.
+
+Important implications:
+1. Do not assume existing atlases visually match the approved roster sheet; inspect actual frames and compare before enabling them in production.
+2. First make the approved user-supplied Shadow walk sheet the explicit Phase 1 input and verify its true alpha/cell extraction without changing the original.
+3. Add a controlled sprite-only in-game path (or equivalent test mode) after inspecting all GLB override call sites; preserve GLB source files and diagnostic viewer until the four sprite replacements are approved.
+4. The 3D-world requirement is a separate renderer migration. The existing Canvas projection is 2D; do not label it "3D". Prototype the lightest real 3D-world integration while preserving world coordinates, camera/touch mapping, depth order, and game rules.
+5. The final gameplay reference and hero/monster appearance references are separate authorities; never use one to invent or override another.
+
 ## 1. Final approved direction
 
 - **Heroes:** 2D sprite characters with a polished 2.5D appearance: dimensional painted forms, readable faces, layered clothing, controlled highlights, contact shadows and signature VFX.
