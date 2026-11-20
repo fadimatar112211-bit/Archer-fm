@@ -122,3 +122,19 @@ Committed `lib/game/game_screen.dart` change at commit `1b1c496f41c198ab99b615ec
 **Important distinction:** this code currently selects the existing repository Shadow sprite atlas/manifest (including the existing 9-frame walk clips), not the newly cleaned 4-frame-per-direction pack in the local ZIP. The cleaned PNG atlas pack has not yet been uploaded to the repository, so it is not yet bundled into the app.
 
 **Verification status:** code change committed; current branch HEAD checked. No CI run was triggered for this commit and no emulator/device run was performed. Therefore in-game appearance, actual runtime animation, and build success are still unverified. Do not treat the pilot as accepted until fresh captures and tests exist.
+
+## Follow-up inspection — current Shadow runtime atlas and CI (2026-11-21)
+
+A direct visual fetch of the committed production atlas `assets/heroes/shadow/renders/atlases/walk_s.png` shows that it does **not** match the user's approved Shadow reference: the character has a bare head/short hair rather than the purple hooded silhouette and does not preserve the reference identity. This atlas must not be shown as the final Shadow art and must not be used as the basis for the remaining heroes.
+
+The current `lib/game/game_screen.dart` already contains a Shadow-only early return in `_loadHero3D()`, so a normal Shadow match bypasses GLB loading and falls back to the sprite renderer. Because the currently committed sprite atlas is visually incorrect, this means the branch's current Shadow pilot path is not ready for user approval. Do not mark it complete.
+
+The newly extracted user-reference-based 8×4 source and eight direction atlases are available in the working session at `/mnt/data/shadow_2d5_assets/` and `/mnt/data/shadow_unpacked/shadow_2d5_assets/`, but the active GitHub connector in this session exposes text-file writes and Git blob/tree primitives without a supported local-file/binary upload bridge. I therefore did not replace the committed PNG atlases, alter the runtime manifest to point at uncommitted files, or claim an in-game result. This is an integration blocker, not an OpenCode requirement.
+
+Latest workflow inspected: `44831375138`, commit `1b1c496f41c198ab99b615ecca8b08992ef20fee`:
+- Flutter Analyze: passed.
+- Full Flutter test suite: passed.
+- Release APK build and APK verification: passed.
+- Android emulator smoke test: failed at `integration_test/app_smoke_test.dart:61` because the expected `home_3d_loaded` widget key was not found after opening army selection. This is not a Shadow sprite rendering test and does not validate the new extracted atlas.
+
+**Current truthful status:** extraction package exists and has genuine alpha; the new atlas is not committed to the repository; production manifest/runtime still uses the old incorrect Shadow atlas; no in-game validation of the new 8×4 frames has occurred.
