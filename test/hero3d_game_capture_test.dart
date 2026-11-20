@@ -287,7 +287,7 @@ void main() {
             canvas,
             anchor: const Offset(400, 660),
             facing: view[1] as Offset,
-            scale: hero3d.scaleForPixelHeight(520),
+            scale: hero3d.scaleForPixelHeight(700),
           );
           final bounds = hero3d.model.drawnBounds;
           final drawnHeight = bounds[3] - bounds[1];
