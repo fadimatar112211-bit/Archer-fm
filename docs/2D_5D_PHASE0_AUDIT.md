@@ -95,3 +95,18 @@ Before any Shadow atlas replacement:
 5. Build the atlas/metadata using the existing manifest loader contract and test it in an isolated Shadow-only scene before changing the production renderer.
 
 **Status:** Phase 0 audit complete. Phase 1 started with source inspection; production atlas is blocked pending clean frame extraction/approval. No game runtime files changed and no tests/builds were run during this source inspection.
+
+## Shadow 8×4 extraction package prepared (2026-11-21)
+
+A local processing package was prepared from the user's exact uploaded `1000241306.png`; no assistant-generated or web-sourced character art was used.
+
+- Combined sheet: 768×1536 PNG, RGBA, 8 rows × 4 columns, 192×192 cells.
+- Alpha channel verified programmatically: range 0–255 (transparent and opaque pixels present).
+- Each cell has a non-empty alpha bounding box and shares the 192×192 frame/pivot convention.
+- Direction order follows the supplied sheet: front, front-right, right, back-right, back, back-left, left, front-left.
+- Eight direction-specific 4-frame atlas PNG/JSON pairs were generated in the local delivery package, with proposed mapping `s,se,e,ne,n,nw,w,sw` and 120 ms/frame.
+- The generated package is delivered separately as `ArcherFM_Shadow_2D5_walk_assets.zip`.
+
+**Not integrated / not tested in game:** this chat's GitHub connector can create text blobs/files but does not provide a path to upload the generated local PNG binary bytes to the repository. Therefore the generated PNG atlases are not present in the branch, the manifest was not switched, the Shadow GLB path was not disabled, and no app build/emulator test was run. Do not claim this phase is complete. The extracted source is compressed and some cells may retain faint baked shadow/edge artifacts; user visual approval is still required before runtime use.
+
+Next step: import the ZIP's eight PNG atlas files and JSON metadata into `assets/heroes/shadow/renders/atlases/`, merge only the eight walk clip entries from `shadow_walk_manifest_patch.json` into `shadow_manifest.json`, then disable the Shadow GLB override and run Flutter tests/build/capture on the same commit. Verify the direction mapping against `GameWorld.octantNames` before accepting it.
