@@ -694,3 +694,17 @@ Verification:
 2. Add/adjust tests for the approved zoom behavior, world-edge clamping, and pointer-to-world round trips under zoom.
 3. Run analyze and all tests; then produce fresh gameplay/hero captures and inspect them.
 4. Run Android emulator smoke and release APK/signature verification on the exact same HEAD; record run IDs, artifacts, and outcomes here.
+
+
+## 2026-11-20 — Review of Claude ZIP submission
+
+### Files reviewed
+- Received `archer_fm_fixes.zip` containing four files: `lib/game/arena_painter.dart`, `lib/game/combat/hero_kit.dart`, `docs/game/special_abilities.md`, and `test/hero_consistency_test.dart`.
+- The ZIP's `arena_painter.dart` is an older/simpler camera implementation (46,684 bytes) than the current `ranger-reference-work` file (70,868 bytes). It uses its own scale/origin conversion and omits the current shared `arena_projection.dart` integration. Replacing the current painter with this file would regress the camera work, so it was deliberately **not applied**.
+- `hero_kit.dart` and `docs/game/special_abilities.md` already exist on this branch; the ZIP copies were not blindly overwritten.
+- Added the new `test/hero_consistency_test.dart` regression test to check equal base HP/energy/energy regeneration, distinct hero movement speeds, five-hit combo multipliers, four special abilities at levels 1/10/20/30, and Arabic ability-name consistency with the documentation.
+
+### Verification status
+- GitHub commit adding the test: `77ffc29dd4cd8d80b79b4710fe1ba676f98c775e`.
+- The test has been committed but has **not yet been executed** in a Flutter environment. No test pass or build success is claimed.
+- This ZIP review does not resolve the previously recorded camera API mismatch. Stage One remains **OPEN**; the camera fix and current-HEAD Android/release evidence are still required.
