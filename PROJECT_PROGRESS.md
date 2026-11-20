@@ -671,3 +671,26 @@ Verification:
 - The current branch CI run must still be polled for: Flutter tests, capture artifact, release APK + signature, Android emulator smoke, four GLB generation and GLB validation.
 - Stage One: **not complete** pending current-head Android/release evidence and front-facing hero visual inspection.
 - Stage Two: **not complete** pending review of the new model previews, animation/pose quality review, approved asset integration and Android performance checks.
+
+## 2026-11-20 — Stage One resumed: fresh source audit
+
+### Scope and evidence
+- Re-read `VISUAL_DIRECTION_PLAN.md` and the current `ranger-reference-work` source snapshot before continuing. No Stage Two work is authorized until Stage One is accepted.
+- Re-inspected `lib/game/arena_camera.dart`, `lib/game/arena_painter.dart`, `lib/game/world/arena_projection.dart`, `test/arena_camera_test.dart`, and `test/arena_projection_test.dart`.
+- Confirmed a source-level camera API mismatch: `arena_painter.dart` declares and uses `ArenaCameraConfig`, `defaultArenaCameraConfig`, and calls `ArenaCameraTransform.forViewport(..., config: config, projection: projection)`; the fetched `arena_camera.dart` defines only the projection-based API and has no `ArenaCameraConfig` or matching `config` parameter. This is an unresolved compile/analyzer blocker until reconciled.
+- `arena_painter.dart` also expects `config.projection`; its `cameraProjection` getter delegates to the selected projection. No `ArenaCameraFollower` or zoom implementation was present in the fetched camera file.
+- Existing camera tests cover projection sharing, painter/input round-trips, letterboxing, camera smoothing snapshots, yawed projection, and visible-world bounds. They do not yet validate the requested zoom/config/world-bound clamping behavior.
+- The existing progress history still records Stage One open: Android emulator smoke, actual in-match framing capture, and front-facing hero visual review have not all been accepted on one current HEAD. Older APK/CI successes are not evidence for a newer commit.
+
+### Stage One status
+- Source audit: in progress; camera API mismatch recorded as the first blocking defect.
+- Camera fix: not applied yet; do not claim it is fixed until the API, all call sites, tests, and current-HEAD CI agree.
+- Visual evidence: pending fresh playable-match capture and inspection of the dedicated south-facing idle hero capture.
+- Android/release gate: pending successful emulator smoke, full tests/analyze, release APK build, and signature verification on the same commit.
+- Stage One remains **OPEN**. Do not start Stage Two.
+
+### Next actions
+1. Reconcile the camera config/transform API with every painter and pointer-input call site; preserve a single shared projection snapshot.
+2. Add/adjust tests for the approved zoom behavior, world-edge clamping, and pointer-to-world round trips under zoom.
+3. Run analyze and all tests; then produce fresh gameplay/hero captures and inspect them.
+4. Run Android emulator smoke and release APK/signature verification on the exact same HEAD; record run IDs, artifacts, and outcomes here.
