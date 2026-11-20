@@ -2163,8 +2163,10 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    // Match the 120px reference height used by the 2.5D hero presentation.
-    const drawHeight = 120.0;
+    // Shadow's authored atlas has generous transparent padding around the
+    // character. Give it a larger logical cell so its visible body matches
+    // the previous 3D hero's on-screen footprint without scaling other heroes.
+    final drawHeight = presentation.kit.heroId == 'shadow' ? 210.0 : 120.0;
     final drawWidth = drawHeight *
         presentation.frameWidth /
         presentation.frameHeight;
