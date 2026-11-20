@@ -146,6 +146,12 @@ jobs:
           AVDMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:?Android SDK path missing}}"
           export PATH="$SDK/platform-tools:$PATH"
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "WARNING: /dev/kvm is not exposed by this runner."
+          fi
           set +o pipefail
           yes | "$SDKMANAGER" --licenses >/dev/null
           LICENSE_STATUS=${PIPESTATUS[1]}
