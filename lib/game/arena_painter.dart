@@ -2163,7 +2163,8 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    const drawHeight = 92.0;
+    // Match the 120px reference height used by the 2.5D hero presentation.
+    const drawHeight = 120.0;
     final drawWidth = drawHeight *
         presentation.frameWidth /
         presentation.frameHeight;
