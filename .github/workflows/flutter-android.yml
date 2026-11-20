@@ -154,15 +154,72 @@ jobs:
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
           "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2 > /tmp/archer-emulator.log 2>&1 &
-          echo $! > /tmp/archer-emulator.pid
+          EMULATOR_PID=$!
+          echo "$EMULATOR_PID" > /tmp/archer-emulator.pid
           adb start-server
-          adb wait-for-device
+          DEVICE_READY=0
           for attempt in $(seq 1 180); do
-            BOOTED="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-            if [ "$BOOTED" = "1" ]; then break; fi
+            if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
+              echo "Android emulator process exited before ADB became ready."
+              cat /tmp/archer-emulator.log || true
+              exit 1
+            fi
+            if adb devices | grep -qE '^emulator-[0-9]+[[:space:]]+device
+      - name: Run Android integration smoke test
+        run: timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
+
+  generate-monster-glbs:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install free Blender runtime
+        run: |
+          sudo timeout 10m apt-get update
+          sudo timeout 8m apt-get install -y blender python3-numpy xvfb
+
+      - name: Generate four rigged monster models
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          ARCHER_MONSTER_PREVIEWS=1 timeout 20m xvfb-run -a blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+          python3 tools/validate_monster_glb.py --root build/monster-glb
+
+      - name: Upload generated monster GLBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-rigged-monster-glbs
+          path: build/monster-glb/
+          if-no-files-found: error
+          retention-days: 30
+; then
+              DEVICE_READY=1
+              break
+            fi
             sleep 5
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
+          if [ "$DEVICE_READY" != "1" ]; then
+            echo "Timed out waiting for an online Android emulator device."
+            adb devices || true
+            cat /tmp/archer-emulator.log || true
+            exit 1
+          fi
+          BOOT_COMPLETED=0
+          for attempt in $(seq 1 180); do
+            BOOTED="$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+            if [ "$BOOTED" = "1" ]; then
+              BOOT_COMPLETED=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$BOOT_COMPLETED" != "1" ]; then
+            echo "Emulator connected to ADB but Android did not finish booting."
+            adb devices || true
+            cat /tmp/archer-emulator.log || true
+            exit 1
+          fi
           adb shell input keyevent 82 || true
           adb devices
       - name: Run Android integration smoke test
