@@ -98,4 +98,4 @@ class ArenaWorldProjection {
 
 /// Single default projection shared by the arena renderer and input mapping.
 const ArenaWorldProjection defaultArenaWorldProjection =
-    ArenaWorldProjection(groundScaleY: 0.82);
+    ArenaWorldProjection(groundScaleY: 0.82, scale: 1.15);
