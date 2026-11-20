@@ -293,43 +293,43 @@
     },
     {
       "animation": "walk_e",
-      "image": "atlases/walk_e.png",
-      "meta": "atlases/walk_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "walk_n",
-      "image": "atlases/walk_n.png",
-      "meta": "atlases/walk_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "walk_ne",
-      "image": "atlases/walk_ne.png",
-      "meta": "atlases/walk_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "walk_nw",
-      "image": "atlases/walk_nw.png",
-      "meta": "atlases/walk_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "walk_s",
-      "image": "atlases/walk_s.png",
-      "meta": "atlases/walk_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "walk_se",
-      "image": "atlases/walk_se.png",
-      "meta": "atlases/walk_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "walk_sw",
-      "image": "atlases/walk_sw.png",
-      "meta": "atlases/walk_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "walk_w",
-      "image": "atlases/walk_w.png",
-      "meta": "atlases/walk_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     }
   ],
   "animations": {
@@ -347,17 +347,12 @@
     },
     "walk_s": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_s_000",
-        "shadow_walk_s_001",
-        "shadow_walk_s_002",
-        "shadow_walk_s_003",
-        "shadow_walk_s_004",
-        "shadow_walk_s_005",
-        "shadow_walk_s_006",
-        "shadow_walk_s_007",
-        "shadow_walk_s_008"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_001",
+        "shadow_walk_s_user_002",
+        "shadow_walk_s_user_003"
       ],
       "events": []
     },
@@ -502,17 +497,12 @@
     },
     "walk_sw": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_sw_000",
-        "shadow_walk_sw_001",
-        "shadow_walk_sw_002",
-        "shadow_walk_sw_003",
-        "shadow_walk_sw_004",
-        "shadow_walk_sw_005",
-        "shadow_walk_sw_006",
-        "shadow_walk_sw_007",
-        "shadow_walk_sw_008"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_001",
+        "shadow_walk_sw_user_002",
+        "shadow_walk_sw_user_003"
       ],
       "events": []
     },
@@ -657,17 +647,12 @@
     },
     "walk_w": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_w_000",
-        "shadow_walk_w_001",
-        "shadow_walk_w_002",
-        "shadow_walk_w_003",
-        "shadow_walk_w_004",
-        "shadow_walk_w_005",
-        "shadow_walk_w_006",
-        "shadow_walk_w_007",
-        "shadow_walk_w_008"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_001",
+        "shadow_walk_w_user_002",
+        "shadow_walk_w_user_003"
       ],
       "events": []
     },
@@ -812,17 +797,12 @@
     },
     "walk_nw": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_nw_000",
-        "shadow_walk_nw_001",
-        "shadow_walk_nw_002",
-        "shadow_walk_nw_003",
-        "shadow_walk_nw_004",
-        "shadow_walk_nw_005",
-        "shadow_walk_nw_006",
-        "shadow_walk_nw_007",
-        "shadow_walk_nw_008"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_001",
+        "shadow_walk_nw_user_002",
+        "shadow_walk_nw_user_003"
       ],
       "events": []
     },
@@ -967,17 +947,12 @@
     },
     "walk_n": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_n_000",
-        "shadow_walk_n_001",
-        "shadow_walk_n_002",
-        "shadow_walk_n_003",
-        "shadow_walk_n_004",
-        "shadow_walk_n_005",
-        "shadow_walk_n_006",
-        "shadow_walk_n_007",
-        "shadow_walk_n_008"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_001",
+        "shadow_walk_n_user_002",
+        "shadow_walk_n_user_003"
       ],
       "events": []
     },
@@ -1122,17 +1097,12 @@
     },
     "walk_ne": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_ne_000",
-        "shadow_walk_ne_001",
-        "shadow_walk_ne_002",
-        "shadow_walk_ne_003",
-        "shadow_walk_ne_004",
-        "shadow_walk_ne_005",
-        "shadow_walk_ne_006",
-        "shadow_walk_ne_007",
-        "shadow_walk_ne_008"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_001",
+        "shadow_walk_ne_user_002",
+        "shadow_walk_ne_user_003"
       ],
       "events": []
     },
@@ -1277,17 +1247,12 @@
     },
     "walk_e": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_e_000",
-        "shadow_walk_e_001",
-        "shadow_walk_e_002",
-        "shadow_walk_e_003",
-        "shadow_walk_e_004",
-        "shadow_walk_e_005",
-        "shadow_walk_e_006",
-        "shadow_walk_e_007",
-        "shadow_walk_e_008"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_001",
+        "shadow_walk_e_user_002",
+        "shadow_walk_e_user_003"
       ],
       "events": []
     },
@@ -1432,17 +1397,12 @@
     },
     "walk_se": {
       "loop": true,
-      "frame_duration_ms": 83,
+      "frame_duration_ms": 100,
       "frames": [
-        "shadow_walk_se_000",
-        "shadow_walk_se_001",
-        "shadow_walk_se_002",
-        "shadow_walk_se_003",
-        "shadow_walk_se_004",
-        "shadow_walk_se_005",
-        "shadow_walk_se_006",
-        "shadow_walk_se_007",
-        "shadow_walk_se_008"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_001",
+        "shadow_walk_se_user_002",
+        "shadow_walk_se_user_003"
       ],
       "events": []
     },
