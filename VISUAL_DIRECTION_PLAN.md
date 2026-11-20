@@ -30,6 +30,19 @@ A three-quarter/isometric camera and composition with enough screen space to rea
 - Preserve touch-to-world coordinate correctness, minimap/HUD safe areas, and map-edge clamping.
 - Test landscape aspect ratios and ensure large models/effects do not obscure objectives or enemy telegraphs.
 
+### 2.1 Canonical four-hero roster reference (visual lock)
+
+The only approved roster image for this pass is **`assets/references/approved_all/hero_roster_concept.jpg`**. Use the checked-in image itself for every comparison; do not generate, redraw, recolour, crop or substitute a new reference. The target art language is expressive chibi fantasy: oversized readable heads, large focused eyes, compact bodies, layered silhouettes, saturated signature colours and polished metallic/cloth materials.
+
+Per-hero identity that must remain recognisable:
+
+- **Ranger:** warm brown, strongly spiked/layered hair; bright green eyes; green hooded cloak/high collar and green tunic; brown leather/bronze pieces with gold edging; green-and-gold energy bow and visible arrow quiver. The face stays uncovered and readable.
+- **Flame Knight:** vivid flame-red/orange spiked hair; warm red/amber eyes; red scarf and red armour over dark underlayers; prominent gold/brass shoulder and chest armour; large fiery orange-red greatsword. Must read as a knight, not a recoloured Ranger.
+- **Shadow:** deep violet/dark-purple hood framing the face; bright violet eyes; layered dark-purple armour and cloak with purple gem accents; paired curved violet energy daggers. Keep the face visible inside the hood; no face mask that hides the reference expression.
+- **Storm:** swept white/silver hair; bright blue eyes; blue scarf and blue/white robes/armour with gold trim; blue gem details; concentrated electric-blue lightning orb/energy in the hand. Must read as a lightning mage, not a sword fighter.
+
+**Shared proportions:** preserve the reference's compact chibi body, large head, expressive face, short limbs and chunky readable boots/gauntlets. Do not stretch the models toward realistic human proportions. A visual pass is not accepted from palette alone: face, hair silhouette, costume layers, signature weapon and held/attached FX must all be checked in close-up and at gameplay scale.
+
 ### 2. Heroes
 - Render all four production GLB heroes consistently: Ranger, Flame, Shadow and Storm.
 - Improve face, head silhouette, weapon silhouette and material readability at actual gameplay zoom.
