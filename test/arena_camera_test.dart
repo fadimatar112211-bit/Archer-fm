@@ -204,7 +204,7 @@ void main() {
 
       final point = centerWorld + const Offset(0, 100);
       final screen = transform.worldToLocal(point);
-      expect(screen.dy - centerScreen.dy, closeTo(100 * 0.82 * transform.scale, 1e-9));
+      expect(screen.dy - centerScreen.dy, closeTo(100 * 0.82 * 1.15 * transform.scale, 1e-9));
       final restored = transform.localToWorld(screen);
       expect(restored.dx, closeTo(point.dx, 1e-9));
       expect(restored.dy, closeTo(point.dy, 1e-9));
@@ -449,10 +449,10 @@ void main() {
       final center = transform.worldToLocal(origin);
       final horizontal = transform.worldToLocal(origin + const Offset(100, 0));
       final vertical = transform.worldToLocal(origin + const Offset(0, 100));
-      expect(horizontal.dx - center.dx, closeTo(100 * transform.scale, 1e-8));
+      expect(horizontal.dx - center.dx, closeTo(100 * 1.15 * transform.scale, 1e-8));
       expect(horizontal.dy, closeTo(center.dy, 1e-8));
       expect(vertical.dx, closeTo(center.dx, 1e-8));
-      expect(vertical.dy - center.dy, closeTo(82 * transform.scale, 1e-8));
+      expect(vertical.dy - center.dy, closeTo(82 * 1.15 * transform.scale, 1e-8));
     });
 
     test('projection scale participates in camera forward and inverse mapping', () {
@@ -527,11 +527,11 @@ void main() {
       );
       expect(
         zoomed.visibleWorldRect.width,
-        closeTo(base.visibleWorldRect.width / 1.5, 1e-8),
+        closeTo(base.visibleWorldRect.width * 1.15 / 1.5, 1e-8),
       );
       expect(
         zoomed.visibleWorldRect.height,
-        closeTo(base.visibleWorldRect.height / 1.5, 1e-8),
+        closeTo(base.visibleWorldRect.height * 1.15 / 1.5, 1e-8),
       );
     });
 
@@ -619,8 +619,8 @@ void main() {
       ).visibleWorldRect;
       expect(rect.center.dx, closeTo(world.cameraOrigin.dx + arenaWidth / 2, 1e-9));
       expect(rect.center.dy, closeTo(world.cameraOrigin.dy + arenaHeight / 2, 1e-9));
-      expect(rect.width, closeTo(arenaWidth, 1e-9));
-      expect(rect.height, closeTo(arenaHeight / 0.82, 1e-9));
+      expect(rect.width, closeTo(arenaWidth / 1.15, 1e-9));
+      expect(rect.height, closeTo(arenaHeight / (0.82 * 1.15), 1e-9));
     });
   });
 }
