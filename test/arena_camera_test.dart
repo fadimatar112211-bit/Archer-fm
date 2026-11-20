@@ -557,6 +557,46 @@ void main() {
       }
     });
 
+    test('zoomed camera keeps the hero and visible bounds inside all four map edges', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(197),
+        spawnWaves: false,
+      );
+      const viewport = Size(1920, 1080);
+      final mapSize = world.map.size;
+      final edgeCases = [
+        (Offset(0, mapSize.height / 2), 'left'),
+        (Offset(mapSize.width, mapSize.height / 2), 'right'),
+        (Offset(mapSize.width / 2, 0), 'top'),
+        (Offset(mapSize.width / 2, mapSize.height), 'bottom'),
+      ];
+
+      for (final (position, edge) in edgeCases) {
+        world.player.position = position;
+        world.setMoveInput(Offset.zero);
+        for (var i = 0; i < 180; i++) {
+          world.update(16);
+        }
+        final transform = ArenaCameraTransform.forViewport(viewport, world);
+        final visible = transform.visibleWorldRect;
+        final heroScreen = transform.worldToLocal(world.player.position);
+
+        expect(heroScreen.dx, inInclusiveRange(0, viewport.width), reason: '$edge edge clips hero horizontally');
+        expect(heroScreen.dy, inInclusiveRange(0, viewport.height), reason: '$edge edge clips hero vertically');
+        switch (edge) {
+          case 'left':
+            expect(visible.left, closeTo(0, 1e-5));
+          case 'right':
+            expect(visible.right, closeTo(mapSize.width, 1e-5));
+          case 'top':
+            expect(visible.top, closeTo(0, 1e-5));
+          case 'bottom':
+            expect(visible.bottom, closeTo(mapSize.height, 1e-5));
+        }
+      }
+    });
+
     test('camera transform keeps its captured viewport origin immutable', () {
       final world = GameWorld(kit: rangerNewKit, random: math.Random(163), spawnWaves: false);
       final transform = ArenaCameraTransform.forViewport(const Size(1920, 1080), world);
