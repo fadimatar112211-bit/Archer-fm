@@ -797,3 +797,12 @@ Verification:
 - The new capture-test commit has been pushed to `ranger-reference-work`; its fresh CI run and artifact are pending.
 - No new analyzer/test/build pass is claimed at this checkpoint.
 - Next: inspect the fresh four-hero capture artifact; compare face/front and three-quarter views; record per-hero defects; then fix the source models/rig/materials and regenerate only the affected hero assets, followed by recapture and regression tests.
+
+
+## 2026-11-20 — Isolated hero close-up capture gate
+
+- Review of the first four gameplay face captures showed that the heroes occupy too little screen space to approve eye/face, hair, armour and weapon details. The gameplay captures remain useful for in-arena scale and facing only; they are not sufficient evidence for close-up visual acceptance.
+- Added four isolated close-up yaw captures per hero using the same runtime `Hero3DController` / `Hero3DModel.paint` renderer used by the game. Each view is framed to approximately 520 px tall in an 800×800 review image, and the test asserts the rendered bounds remain between 400 and 700 px.
+- Added capture/test change: `23bbf06bf9b9d8b9b1de62690f678265cb7fe23d`.
+- Fresh workflow run `44745932498` is in progress. Do not treat the new close-up suite as passing until its test job completes and the four-hero captures are downloaded and visually inspected.
+- No hero source mesh, rig, material or animation has been changed yet. All four heroes remain **not visually approved**. Next step after capture generation: inspect the close-up angles, identify the true front-facing view and record concrete per-hero mesh/face/material/weapon/rig defects before changing source assets.
