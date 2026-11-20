@@ -716,3 +716,32 @@ Verification:
 - The ZIP copies of `lib/game/combat/hero_kit.dart` and `docs/game/special_abilities.md` have blob SHAs `0a4f56a755f7f7f5f6dd99b054ba840d3cbe7c25` and `48284f271288e76a685353eb19d912a0279f3e51`, respectively; the current branch versions have different blob SHAs. They were **not overwritten** because the branch already contains these files and a blind replacement could discard newer work.
 - The ZIP documentation states `116/116` tests passed and `flutter analyze` reported no issues. These claims were not independently reproducible from the four-file ZIP, so they are recorded as Claude-reported results only, not accepted as verified project evidence.
 - No additional source changes were justified by this comparison. Stage One remains **OPEN**; the outdated ZIP painter is not suitable for integration, and camera reconciliation plus current-HEAD test/build evidence remain outstanding.
+
+
+## 2026-11-20 — Camera API reconciliation and 1.15 zoom
+
+### Changes committed to `ranger-reference-work`
+- Restored the shared `ArenaCameraConfig` and `defaultArenaCameraConfig` API in `lib/game/arena_camera.dart`. `ArenaCameraTransform.forViewport` now accepts the same config/projection inputs already used by the painter and pointer helper; an explicit projection overrides the config projection.
+- Set the shared default projection scale to **1.15** while preserving the existing oblique depth compression (`groundScaleY: 0.82`).
+- Updated `ArenaPainter.paint` to apply projection scale and focus offset to the actual canvas transform. Previously, the pointer transform accounted for projection scale/focus but the painter's canvas transform did not, so custom projection settings could disagree visually with touch mapping.
+- Added a camera test asserting the default config uses the shared 1.15 projection.
+- Preserved the shared projection architecture; the older Claude ZIP painter was not used.
+
+### Commits
+- `46b4b5867deed4140c3cff3662b280a5c7a0cd9b` — restore camera config API.
+- `4da845381cf799348d0bcc17d316343ff338d771` — apply projection scale in painter.
+- `37aead65333d3c7e82a95fc0b560af60e359d3a6` — add default zoom regression test.
+- `674e60775087c3d1e87cc05c3e8bf0e960ff743a` — set default projection scale to 1.15.
+- `be28138fec9d5d26d98dded877ca033a02e76e6e` — align painter focus offset with projection.
+
+### Verification and remaining gate
+- Source re-fetch confirms the camera config symbols, matching `forViewport` parameters, default 1.15 projection, and painter scale/focus transforms are now present on the branch.
+- The new test is committed but **has not been executed** in Flutter. No analyzer, test-suite, emulator, release APK, or signature result is claimed for this new HEAD.
+- The latest commit currently has no reported combined status checks from the GitHub status endpoint; the workflow lookup available here returned no PR-triggered run for this commit. This is **not** evidence of a passing CI run.
+- Stage One remains **OPEN** until current-HEAD analyze/tests, real gameplay camera capture and visual review, Android emulator smoke, release APK build, and signature verification are all evidenced on the same commit.
+
+### Next actions
+1. Run `flutter analyze` and the full `flutter test` suite on this branch HEAD.
+2. Inspect the 1.15 zoom in a real landscape gameplay capture; verify player framing, enemy/objective visibility, map edges, and HUD safe areas.
+3. Verify pointer-to-world mapping at the zoomed projection, including edge and letterbox cases.
+4. Run Android emulator smoke, build the release APK, verify its signature, and record all results against the exact tested commit.
