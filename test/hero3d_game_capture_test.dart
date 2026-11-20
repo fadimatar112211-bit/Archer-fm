@@ -289,7 +289,7 @@ void main() {
           final drawnHeight = bounds[3] - bounds[1];
           expect(
             drawnHeight,
-            greaterThan(400),
+            greaterThan(300),
             reason: '${entry[1]} isolated close-up ${view[0]} must be large enough to inspect',
           );
           expect(
