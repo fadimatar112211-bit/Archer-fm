@@ -110,3 +110,15 @@ A local processing package was prepared from the user's exact uploaded `10002413
 **Not integrated / not tested in game:** this chat's GitHub connector can create text blobs/files but does not provide a path to upload the generated local PNG binary bytes to the repository. Therefore the generated PNG atlases are not present in the branch, the manifest was not switched, the Shadow GLB path was not disabled, and no app build/emulator test was run. Do not claim this phase is complete. The extracted source is compressed and some cells may retain faint baked shadow/edge artifacts; user visual approval is still required before runtime use.
 
 Next step: import the ZIP's eight PNG atlas files and JSON metadata into `assets/heroes/shadow/renders/atlases/`, merge only the eight walk clip entries from `shadow_walk_manifest_patch.json` into `shadow_manifest.json`, then disable the Shadow GLB override and run Flutter tests/build/capture on the same commit. Verify the direction mapping against `GameWorld.octantNames` before accepting it.
+
+## Shadow pilot code integration — 2026-11-21
+
+Committed `lib/game/game_screen.dart` change at commit `1b1c496f41c198ab99b615ecca8b08992ef20fee`:
+- When the selected hero ID is `shadow` and no test-injected GLB controller/bytes are supplied, `_loadHero3D()` returns without loading the GLB.
+- This leaves the existing manifest-driven sprite path active for Shadow in the production game screen.
+- Test injection behavior and the other three heroes' GLB loading paths are unchanged.
+- This is a reversible pilot switch, not deletion of GLB files.
+
+**Important distinction:** this code currently selects the existing repository Shadow sprite atlas/manifest (including the existing 9-frame walk clips), not the newly cleaned 4-frame-per-direction pack in the local ZIP. The cleaned PNG atlas pack has not yet been uploaded to the repository, so it is not yet bundled into the app.
+
+**Verification status:** code change committed; current branch HEAD checked. No CI run was triggered for this commit and no emulator/device run was performed. Therefore in-game appearance, actual runtime animation, and build success are still unverified. Do not treat the pilot as accepted until fresh captures and tests exist.
