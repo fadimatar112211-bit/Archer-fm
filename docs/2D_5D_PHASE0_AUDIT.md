@@ -57,3 +57,14 @@ The project has a reusable sprite foundation, but it is not yet a completed 2.5D
 - No tests/builds were run.
 - No sprite or monster asset has been approved.
 - The game has not yet been converted to 2.5D.
+
+## Existing CI baseline (previous commit, not this documentation commit)
+
+The latest workflow inspected during this audit is run `44751664933`, built from commit `ecf524c0c2bdada1a129ba6694710ad75c981eb7` (2026-11-20):
+- Flutter Analyze: passed.
+- Full Flutter test suite: passed.
+- Release APK build and APK verification: passed.
+- Android emulator smoke test: failed. The test expected landscape width greater than 683.43 logical pixels but measured 411.43, so the app did not satisfy the landscape orientation lock in that emulator run.
+- The separate monster GLB generation job succeeded, but this is not evidence of approved monster sprite art.
+
+This workflow predates the current documentation commits and is a baseline only; it is not a test of the current HEAD or the new 2.5D conversion. Re-run CI after the first code/asset integration change.
