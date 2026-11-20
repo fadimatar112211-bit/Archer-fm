@@ -11,6 +11,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ArenaCameraTransform', () {
+    test('default camera config supplies the 1.15 visual zoom', () {
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(7),
+        spawnWaves: false,
+      );
+      final transform = ArenaCameraTransform.forViewport(
+        const Size(960, 540),
+        world,
+      );
+      expect(transform.projection.scale, 1.15);
+      expect(transform.projection, same(defaultArenaCameraConfig.projection));
+    });
+
     test('uses the centralized shared default projection', () {
       final world = GameWorld(
         kit: rangerNewKit,
