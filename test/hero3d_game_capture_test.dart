@@ -254,6 +254,58 @@ void main() {
             .writeAsBytesSync(faceData!.buffer.asUint8List());
         faceImage.dispose();
 
+        // Isolated close-ups use the exact runtime Hero3DController painter,
+        // but remove the arena camera/map scale from the review. Four yaw
+        // samples let reviewers identify the actual face-forward convention
+        // instead of assuming a 2D facing vector is the model's front.
+        final closeupViews = <List<Object>>[
+          ['yaw_0', const Offset(0, 1)],
+          ['yaw_45', const Offset(1, 1)],
+          ['yaw_90', const Offset(1, 0)],
+          ['yaw_135', const Offset(1, -1)],
+        ];
+        for (final view in closeupViews) {
+          final recorder = ui.PictureRecorder();
+          final canvas = Canvas(recorder);
+          canvas.drawRect(
+            const Rect.fromLTWH(0, 0, 800, 800),
+            Paint()..color = const Color(0xFF30343A),
+          );
+          canvas.drawOval(
+            const Rect.fromCenter(
+              center: Offset(400, 680),
+              width: 310,
+              height: 58,
+            ),
+            Paint()..color = const Color(0x55000000),
+          );
+          hero3d.paint(
+            canvas,
+            anchor: const Offset(400, 660),
+            facing: view[1] as Offset,
+            scale: hero3d.scaleForPixelHeight(520),
+          );
+          final bounds = hero3d.model.drawnBounds;
+          final drawnHeight = bounds[3] - bounds[1];
+          expect(
+            drawnHeight,
+            greaterThan(400),
+            reason: '${entry[1]} isolated close-up ${view[0]} must be large enough to inspect',
+          );
+          expect(
+            drawnHeight,
+            lessThan(700),
+            reason: '${entry[1]} isolated close-up ${view[0]} must remain inside its review frame',
+          );
+          final image = recorder.endRecording().toImageSync(800, 800);
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          final captureDir = Directory('build/arena-captures');
+          if (!captureDir.existsSync()) captureDir.createSync(recursive: true);
+          File('${captureDir.path}/hero_${entry[1]}_${view[0]}_closeup.png')
+              .writeAsBytesSync(data!.buffer.asUint8List());
+          image.dispose();
+        }
+
         for (var i = 0; i < facings.length; i++) {
           world.player.facing = facings[i];
           hero3d.playClip(
