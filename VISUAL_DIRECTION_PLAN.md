@@ -35,7 +35,7 @@ A three-quarter/isometric camera and composition with enough screen space to rea
 - Improve face, head silhouette, weapon silhouette and material readability at actual gameplay zoom.
 - Ensure facing direction, locomotion, attack, skill, hit and death states read clearly.
 - Weapon motion must align with hands; attack release/hit timing must remain tied to animation events where authored.
-- Compare close-up front and three-quarter captures against `assets/heroes/reference/heroes_reference_sheet.jpg`; record per-hero defects before modifying source meshes.
+- Compare close-up front and three-quarter captures against `assets/references/approved_all/hero_roster_concept.jpg`; record per-hero defects before modifying source meshes.
 
 ### 3. Monsters (same visual direction)
 - Bring all four approved monster roles into the same 3D/isometric presentation language: runner, tank, stalker and ranged.
