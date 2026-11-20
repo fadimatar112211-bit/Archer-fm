@@ -272,7 +272,7 @@ void main() {
             Paint()..color = const Color(0xFF30343A),
           );
           canvas.drawOval(
-            const Rect.fromCenter(
+            Rect.fromCenter(
               center: Offset(400, 680),
               width: 310,
               height: 58,
