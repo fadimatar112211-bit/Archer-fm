@@ -140,7 +140,8 @@ class ArenaPainter extends CustomPainter {
     canvas.rotate(cameraTransform.projection.yawRadians);
     canvas.translate(-projectionCenter.dx, -projectionCenter.dy);
     final camera = cameraTransform.cameraOrigin;
-    canvas.translate(-camera.dx, -camera.dy);
+    final focus = cameraTransform.projection.focus;
+    canvas.translate(-camera.dx - focus.dx, -camera.dy - focus.dy);
 
     _paintTerrain(canvas);
     _paintZones(canvas);
