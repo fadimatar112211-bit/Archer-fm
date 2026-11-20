@@ -64,14 +64,14 @@ A three-quarter/isometric camera and composition with enough screen space to rea
 - Keep dodge, combo, four Ultimates, HP/energy, objective indicators and minimap readable.
 - Validate multi-touch: movement while attacking, pointer cancellation, and no repeated attacks from a held pointer.
 
-## Implementation sequence (do not skip evidence gates)
+## Implementation sequence (reordered by approved visual dependency; do not skip evidence gates)
 
-1. **Baseline audit:** inspect current code paths and capture artifacts for camera, heroes, monsters and arena. Produce a defect list. Record current test/build state.
-2. **Camera and composition prototype:** tune camera angle/framing and actor presentation scale without changing simulation coordinates, collision radii or damage. Add capture tests for hero/enemy scale, map edges and touch-coordinate mapping.
-3. **Hero presentation:** close-up and gameplay-distance captures for all four heroes, eight facings, and core animation states. Fix only defects proven by comparison to the reference.
-4. **Monster presentation:** audit the existing painter/model pipeline; prototype one representative monster role first, then bring all four roles to the same standard. Keep fallback until each asset and animation is validated.
-5. **Combat/VFX pass:** verify attack timing and one-press semantics, then improve impact and signature effects for all 16 Ultimates.
-6. **Arena/environment pass:** terrain, lighting, props, castles/crystals and depth cues, while preserving readability/performance.
+1. **Baseline audit:** inspect current code paths and capture artifacts for heroes, monsters, arena and camera. Produce a defect list. Record current test/build state. Keep existing camera fixes; do not spend the final camera-tuning pass yet.
+2. **Hero completion — current active batch:** finish Ranger, Flame, Shadow and Storm as production-quality 3D chibi heroes. Audit the exact reference sheet, source meshes, rigs, face readability, materials, weapons, hand alignment, all required clips, eight facings, gameplay scale and performance. Fix and capture each hero individually; no hero passes on GLB presence or triangle counts alone.
+3. **Monster presentation:** audit the existing painter/model pipeline; prototype one representative monster role first, then bring all four approved roles to the same standard. Keep fallback until each asset and animation is validated.
+4. **Arena/environment pass:** terrain, lighting, props, castles/crystals and depth cues, while preserving readability/performance.
+5. **Shared visual polish:** unify lighting, shadows, materials, contact grounding, outlines and restrained VFX across the now-stable heroes, monsters and arena.
+6. **Final camera and composition:** tune angle/framing/zoom against the completed scene without changing simulation coordinates, collision radii or damage. Add capture tests for actor scale, map edges and touch-coordinate mapping.
 7. **HUD and mobile polish:** Arabic layout, touch targets, aspect ratios, accessibility of visual feedback.
 8. **Performance and release gate:** profile Android-class performance; run analyze, all tests, capture suite, release APK build and verification on the same commit. Inspect fresh captures and APK artifact before calling the batch complete.
 
