@@ -4,6 +4,16 @@ import 'dart:ui' show Offset, Rect, Size;
 import 'world/arena_projection.dart';
 import 'world/game_world.dart';
 
+/// Immutable camera settings shared by the arena painter and pointer mapping.
+class ArenaCameraConfig {
+  const ArenaCameraConfig({this.projection = defaultArenaWorldProjection});
+
+  final ArenaWorldProjection projection;
+}
+
+/// Default camera settings for the mobile arena.
+const ArenaCameraConfig defaultArenaCameraConfig = ArenaCameraConfig();
+
 /// One authoritative mapping between arena widget pixels and map-world units.
 /// Painting and pointer input share the same projection and camera snapshot.
 class ArenaCameraTransform {
@@ -17,8 +27,10 @@ class ArenaCameraTransform {
   factory ArenaCameraTransform.forViewport(
     Size size,
     GameWorld world, {
-    ArenaWorldProjection projection = defaultArenaWorldProjection,
+    ArenaCameraConfig config = defaultArenaCameraConfig,
+    ArenaWorldProjection? projection,
   }) {
+    final effectiveProjection = projection ?? config.projection;
     final scale = math.min(
       size.width / arenaWidth,
       size.height / arenaHeight,
@@ -32,7 +44,7 @@ class ArenaCameraTransform {
         (size.height - viewHeight) / 2,
       ),
       cameraOrigin: world.cameraOrigin,
-      projection: projection,
+      projection: effectiveProjection,
     );
   }
 
