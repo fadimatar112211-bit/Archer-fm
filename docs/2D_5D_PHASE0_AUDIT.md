@@ -68,3 +68,30 @@ The latest workflow inspected during this audit is run `44751664933`, built from
 - The separate monster GLB generation job succeeded, but this is not evidence of approved monster sprite art.
 
 This workflow predates the current documentation commits and is a baseline only; it is not a test of the current HEAD or the new 2.5D conversion. Re-run CI after the first code/asset integration change.
+
+## Phase 1 — Shadow source inspection (2026-11-21)
+
+Inspected the exact user-uploaded `1000241306.png` from Library (1536×1024 RGB; it is not an alpha PNG). It contains the intended 8 direction rows and 4 poses, but it is a presentation/reference sheet, not a clean engine-ready atlas:
+- the Arabic direction labels occupy the left margin;
+- the white background and cast shadows are baked into the pixels;
+- several lower direction rows are vertically crowded/overlap at the boundaries, so naive equal-height row cropping cuts parts of adjacent poses;
+- the source has no alpha channel. A checkerboard-looking preview must never be mistaken for true transparency.
+
+A non-destructive extraction experiment was performed locally using background segmentation and fixed 256×256 output cells. The preview is **not accepted for production** because lower-row boundaries still risk clipping/cross-contamination. No extracted image was committed to the game and the original user image remains untouched. Do not ship this prototype or claim the 8×4 atlas is production-ready.
+
+The existing runtime already supports manifest-driven sprite atlases:
+- `HeroManifest` maps animation clips to atlas entries, with frame duration, loop and event data.
+- `BundleHeroAssetLoader` loads PNG atlases and per-atlas frame rectangles.
+- `SpritePlayer` advances clips from elapsed milliseconds and has unit tests for looping, pause/resume, restart and seek.
+- `GameScreen` loads the hero's GLB asynchronously and uses the GLB painter when it succeeds; the sprite atlas is the fallback path.
+
+### Phase 1 next action / acceptance requirement
+
+Before any Shadow atlas replacement:
+1. Acquire/derive clean isolated source frames from the exact user-approved Shadow art, without inventing or redrawing the character. The supplied reference sheet alone is insufficient for clean automated cropping of every lower row.
+2. Preserve all original 32 poses; manually verify all eight directions and all four frames against the uploaded source.
+3. Remove only the plain white background and baked cast shadows; do not erase purple glow, daggers, cape edges, armor highlights or facial details.
+4. Confirm RGBA alpha programmatically, consistent scale/feet pivot, and no pixels from adjacent rows.
+5. Build the atlas/metadata using the existing manifest loader contract and test it in an isolated Shadow-only scene before changing the production renderer.
+
+**Status:** Phase 0 audit complete. Phase 1 started with source inspection; production atlas is blocked pending clean frame extraction/approval. No game runtime files changed and no tests/builds were run during this source inspection.
