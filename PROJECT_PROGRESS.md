@@ -806,3 +806,39 @@ Verification:
 - Added capture/test change: `23bbf06bf9b9d8b9b1de62690f678265cb7fe23d`.
 - Fresh workflow run `44745932498` is in progress. Do not treat the new close-up suite as passing until its test job completes and the four-hero captures are downloaded and visually inspected.
 - No hero source mesh, rig, material or animation has been changed yet. All four heroes remain **not visually approved**. Next step after capture generation: inspect the close-up angles, identify the true front-facing view and record concrete per-hero mesh/face/material/weapon/rig defects before changing source assets.
+
+## 2026-11-20 — Four-hero reference and capture audit
+
+### Reference source confirmed
+- The current branch contains the approved four-hero roster image at `assets/references/approved_all/hero_roster_concept.jpg`. It clearly defines the four distinct identities: green Ranger with bow/quiver; red Flame Knight with greatsword and gold armour; violet Shadow with hood and twin daggers; blue/white Storm mage with lightning orb.
+- The older path `assets/heroes/reference/heroes_reference_sheet.jpg` is **not present** on this branch (GitHub returned 404). Use the approved roster image above as the checked-in reference unless the user later supplies a different canonical sheet. Do not invent or substitute a new design.
+
+### Existing source/profile audit
+- All four production runtime GLBs are present and referenced by the game.
+- The procedural source profiles in `tools/blender/hero_profiles.py` define distinct palettes, armour/clothing, signature weapons and FX for Flame, Shadow and Storm. Ranger's green/brown base palette and bow/quiver are authored in `tools/blender/build_ranger_source.py`.
+- Source comments and profile code are not visual approval. The face, eye placement, expression, hair silhouette, armour proportions, weapon grip/alignment, materials and animation deformation still require close-up review against the roster image.
+- No model mesh/material/rig was changed as part of this audit; avoid regenerating production GLBs before the close-up defects are identified.
+
+### Capture evidence inspected
+- Downloaded and inspected artifact `archer-fm-3d-hero-visual-captures` (artifact ID `14632133991`). It contains gameplay captures for all four heroes and all eight facings.
+- Those gameplay captures show the models are drawn in the arena, but their on-screen size is too small to judge facial detail or approve armour/weapon craftsmanship. They are not a visual sign-off.
+- The test now includes isolated four-angle close-ups for each hero and checks the rendered height bounds. However, workflow run `44745932498` was cancelled before checkout; it did **not** execute the updated capture test or produce a fresh artifact. The older artifact must not be treated as evidence that the new close-up test passed.
+
+### Per-hero status
+| Hero | Checked-in identity | Runtime GLB | Visual sign-off |
+|---|---|---|---|
+| Ranger | Green/brown archer, bow and quiver | Present | Pending isolated close-ups |
+| Flame | Red/gold knight, greatsword | Present | Pending isolated close-ups |
+| Shadow | Violet hooded rogue, twin daggers | Present | Pending isolated close-ups |
+| Storm | Blue/white mage, lightning orb | Present | Pending isolated close-ups |
+
+### Next implementation gate
+1. Obtain a successful current-HEAD run of `hero3d_game_capture_test.dart` and inspect all 16 isolated hero close-ups (four yaw views × four heroes).
+2. Identify the actual forward-facing view and record concrete face/eye/hair/weapon/rig defects separately for each hero.
+3. Fix only evidenced defects in the relevant Blender source/profile; preserve each hero's approved identity and signature weapon.
+4. Regenerate only the affected GLB, then re-run capture tests and compare before/after images.
+5. Approve a hero only after face readability, full silhouette, weapon alignment, animation deformation and arena-scale readability all pass.
+
+### Current status
+- Hero batch: **IN PROGRESS — source assets exist; visual acceptance is not yet met.**
+- No claim of analyzer, full test-suite, Android smoke, release APK or signature success is made for the current HEAD.
