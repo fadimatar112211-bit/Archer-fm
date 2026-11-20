@@ -1,3 +1,17 @@
+# SUPERSEDING DECISION — 2.5D Sprite Heroes + Lightweight 3D World (2026-11-21)
+
+**This decision supersedes conflicting hero-rendering directions below.** The approved production direction is:
+- Playable heroes and monsters are 2D sprite characters rendered with a polished 2.5D art treatment.
+- The arena/world remains a lightweight 3D environment.
+- Characters are placed as camera-facing sprite/billboard actors in the 3D world, with grounded shadows, selection rings and correct depth/occlusion.
+- Preserve all gameplay rules, combat values, progression, controls, economy, multiplayer requirements, Arabic-first UI and approved character designs.
+- Do not delete GLB sources or legacy sprite assets until the replacement is integrated, visually approved and tested on the target branch.
+- First prove the complete pipeline with Shadow (8 directions × 4 walk frames), then migrate all four heroes and the four existing monster roles.
+
+The detailed conversion plan is documented in `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`. If any later section in this file says to make production heroes/monsters fully 3D, treat that as historical and superseded by this decision. The approved 3D world/gameplay reference remains valid for composition, camera, environment and HUD; its character-rendering method is superseded.
+
+---
+
 # Archer FM — New Visual & Combat Direction
 
 ## Decision (2026-11-18)
