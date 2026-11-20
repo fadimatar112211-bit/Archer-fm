@@ -54,6 +54,9 @@ void main() {
         final player = SpritePlayer(clip: clip);
         player.advance(clip.frameDurationMs * 2);
         final frameId = player.frameId;
+        for (final frame in clip.frames) {
+          expect(sheet.rectFor(frame), isNotNull, reason: '$clipName/$frame');
+        }
         expect(sheet.rectFor(frameId), isNotNull, reason: '$clipName/$frameId');
 
         world.player.facing = facings[i];
