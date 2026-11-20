@@ -204,7 +204,7 @@ jobs:
 
   generate-monster-glbs:
     runs-on: ubuntu-22.04
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -212,7 +212,7 @@ jobs:
       - name: Install free Blender runtime
         run: |
           sudo timeout 10m apt-get update
-          sudo timeout 8m apt-get install -y blender python3-numpy xvfb
+          sudo timeout 18m apt-get install -y --no-install-recommends blender python3-numpy xvfb
 
       - name: Generate four rigged monster models
         run: |
