@@ -255,7 +255,7 @@ void main() {
         faceImage.dispose();
 
         // Isolated close-ups use the exact runtime Hero3DController painter,
-        // but remove the arena camera/map scale from the review. Four yaw
+        // but remove the arena camera/map scale from the review. Eight yaw
         // samples let reviewers identify the actual face-forward convention
         // instead of assuming a 2D facing vector is the model's front.
         final closeupViews = <List<Object>>[
@@ -263,6 +263,10 @@ void main() {
           ['yaw_45', const Offset(1, 1)],
           ['yaw_90', const Offset(1, 0)],
           ['yaw_135', const Offset(1, -1)],
+          ['yaw_180', const Offset(0, -1)],
+          ['yaw_225', const Offset(-1, -1)],
+          ['yaw_270', const Offset(-1, 0)],
+          ['yaw_315', const Offset(-1, 1)],
         ];
         for (final view in closeupViews) {
           final recorder = ui.PictureRecorder();
