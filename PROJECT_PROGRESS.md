@@ -745,3 +745,27 @@ Verification:
 2. Inspect the 1.15 zoom in a real landscape gameplay capture; verify player framing, enemy/objective visibility, map edges, and HUD safe areas.
 3. Verify pointer-to-world mapping at the zoomed projection, including edge and letterbox cases.
 4. Run Android emulator smoke, build the release APK, verify its signature, and record all results against the exact tested commit.
+
+
+## 2026-11-20 — First CI results after camera zoom change
+
+### Run evidence
+- GitHub Actions run `44732950237` tested commit `39f80a6345b052d94369b48e6c584f0328e52a87`.
+- `flutter analyze --no-fatal-infos`: **passed**.
+- `flutter test --reporter expanded`: **failed with 5 assertions**; the run reached 468 reported test cases before exiting.
+- The failures were:
+  1. `hero_consistency_test.dart`: Storm `tempest_rage` Arabic name in the documentation did not match the code's `هيجان العاصفة`.
+  2. `arena_camera_test.dart`: four assertions still expected pre-zoom geometry (scale 1.0), while the approved default projection is now 1.15.
+- The failing test cases were the oblique depth delta, default horizontal/vertical scale, visible-bounds comparison against an explicit 1.5 projection, and default visible-world rectangle dimensions.
+
+### Corrections committed after that run
+- Updated the four camera assertions to include the default projection zoom of 1.15 and its effect on visible world bounds.
+- Corrected the Storm ability row in `docs/game/special_abilities.md` to use the exact Arabic name already defined by `hero_kit.dart`: **هيجان العاصفة**.
+- These changes are committed after the failing CI run; they have **not yet been validated by a new run**. A fresh push-triggered workflow is expected from this progress update.
+
+### Current gate
+- Analyze passed on the earlier camera-fix commit, but full tests failed on that commit.
+- The new camera-test/documentation corrections are awaiting CI on the resulting HEAD.
+- Android emulator smoke and four-monster GLB generation were still running in run `44732950237` at the time its jobs were inspected; their results must not be transferred to a later commit.
+- Release APK build and signature verification were skipped because the test step failed.
+- Stage One remains **OPEN**. Do not begin Stage Two until the latest HEAD passes the complete gate and the 1.15 gameplay framing is visually accepted.
