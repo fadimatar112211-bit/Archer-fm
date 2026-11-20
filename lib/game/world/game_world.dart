@@ -1,10 +1,11 @@
 import 'dart:math' as math;
-import 'dart:ui' show Offset;
+import 'dart:ui' show Offset, Rect;
 
 import '../combat/combo.dart';
 import '../combat/hero_kit.dart';
 import '../monsters/monster_models.dart';
 import 'arena_map.dart';
+import 'arena_projection.dart';
 import '../progress/equipment.dart';
 import '../progress/match_xp.dart';
 import '../progress/progression.dart';
@@ -1242,12 +1243,28 @@ class GameWorld {
   /// the map bounds.
   Offset _idealCameraOrigin() {
     final map = this.map;
-    final maxX = math.max(0.0, map.size.width - arenaWidth);
-    final maxY = math.max(0.0, map.size.height - arenaHeight);
-    return Offset(
-      (player.position.dx - arenaWidth / 2).clamp(0.0, maxX).toDouble(),
-      (player.position.dy - arenaHeight / 2).clamp(0.0, maxY).toDouble(),
+    // The projected viewport is smaller than the logical camera window at
+    // zoom > 1. Clamp its actual visible bounds to the map, not the old
+    // unzoomed 960×540 rectangle; otherwise the hero can leave the screen
+    // when following against a map edge.
+    final visibleBounds = defaultArenaWorldProjection.visibleWorldBounds(
+      Rect.fromCenter(
+        center: Offset.zero,
+        width: arenaWidth,
+        height: arenaHeight,
+      ),
     );
+    final halfVisibleWidth = visibleBounds.width / 2;
+    final halfVisibleHeight = visibleBounds.height / 2;
+    final minCenterX = math.min(halfVisibleWidth, map.size.width / 2);
+    final maxCenterX = math.max(minCenterX, map.size.width - halfVisibleWidth);
+    final minCenterY = math.min(halfVisibleHeight, map.size.height / 2);
+    final maxCenterY = math.max(minCenterY, map.size.height - halfVisibleHeight);
+    final center = Offset(
+      player.position.dx.clamp(minCenterX, maxCenterX).toDouble(),
+      player.position.dy.clamp(minCenterY, maxCenterY).toDouble(),
+    );
+    return center - const Offset(arenaWidth / 2, arenaHeight / 2);
   }
 
   List<WorldEvent> drainEvents() {
