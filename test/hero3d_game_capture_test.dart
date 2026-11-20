@@ -208,6 +208,52 @@ void main() {
           ),
         );
 
+        // A dedicated front/three-quarter idle frame is required for
+        // every production hero. Triangle-count-only directional captures
+        // cannot prove that the face, eyes, weapon and silhouette are readable.
+        world.player.facing = const Offset(1, 1);
+        hero3d.playClip(
+          'idle',
+          loop: true,
+          pace: 1.0,
+          nowMs: world.nowMs,
+          events: const [],
+        );
+        hero3d.advance(world.nowMs + 180, onEvent: (_) {});
+        final facePainter = ArenaPainter(
+          world: world,
+          presentation: ArenaPresentation(
+            kit: kit,
+            theme: ThemeData(brightness: Brightness.dark),
+            sheet: null,
+            frameId: null,
+            pivotX: 0.5,
+            pivotY: 0.85,
+            frameWidth: 192,
+            frameHeight: 192,
+            labels: const [],
+            timeMs: world.nowMs,
+            comboText: null,
+            hero3d: hero3d,
+          ),
+        );
+        final faceRecorder = ui.PictureRecorder();
+        facePainter.paint(Canvas(faceRecorder), const Size(800, 450));
+        expect(
+          hero3d.model.drawnTriangles,
+          greaterThan(0),
+          reason: '${entry[1]} front/three-quarter idle face capture',
+        );
+        final faceImage = faceRecorder.endRecording().toImageSync(800, 450);
+        final faceData = await faceImage.toByteData(
+          format: ui.ImageByteFormat.png,
+        );
+        final captureDir = Directory('build/arena-captures');
+        if (!captureDir.existsSync()) captureDir.createSync(recursive: true);
+        File('${captureDir.path}/hero_${entry[1]}_face_idle.png')
+            .writeAsBytesSync(faceData!.buffer.asUint8List());
+        faceImage.dispose();
+
         for (var i = 0; i < facings.length; i++) {
           world.player.facing = facings[i];
           hero3d.playClip(
