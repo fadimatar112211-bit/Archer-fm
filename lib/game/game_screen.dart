@@ -343,6 +343,15 @@ class _GameScreenState extends State<GameScreen>
   /// in-arena visual to the 3D model. Falls back to the atlas sprite when no
   /// model is bundled for this hero.
   Future<void> _loadHero3D() async {
+    // Shadow is the first 2.5D migration pilot. Keep its existing
+    // manifest-driven sprite renderer active in the arena; do not let the
+    // bundled GLB override the sprite path. Test injection remains supported.
+    if (widget.hero.id == 'shadow' &&
+        widget.hero3dController == null &&
+        widget.hero3dBytes == null) {
+      debugPrint('Shadow 2.5D pilot: using sprite atlas renderer');
+      return;
+    }
     if (widget.hero3dController != null) {
       _hero3d = widget.hero3dController;
       return;
