@@ -708,3 +708,11 @@ Verification:
 - GitHub commit adding the test: `77ffc29dd4cd8d80b79b4710fe1ba676f98c775e`.
 - The test has been committed but has **not yet been executed** in a Flutter environment. No test pass or build success is claimed.
 - This ZIP review does not resolve the previously recorded camera API mismatch. Stage One remains **OPEN**; the camera fix and current-HEAD Android/release evidence are still required.
+
+
+### Follow-up comparison of the ZIP contents
+- Re-opened the uploaded ZIP and computed Git blob hashes for all four files.
+- `test/hero_consistency_test.dart` has blob SHA `28493cf261aa1c7d48c911a576ed94e0759c0a42`, identical to the file currently on this branch. No second copy or duplicate update was needed.
+- The ZIP copies of `lib/game/combat/hero_kit.dart` and `docs/game/special_abilities.md` have blob SHAs `0a4f56a755f7f7f5f6dd99b054ba840d3cbe7c25` and `48284f271288e76a685353eb19d912a0279f3e51`, respectively; the current branch versions have different blob SHAs. They were **not overwritten** because the branch already contains these files and a blind replacement could discard newer work.
+- The ZIP documentation states `116/116` tests passed and `flutter analyze` reported no issues. These claims were not independently reproducible from the four-file ZIP, so they are recorded as Claude-reported results only, not accepted as verified project evidence.
+- No additional source changes were justified by this comparison. Stage One remains **OPEN**; the outdated ZIP painter is not suitable for integration, and camera reconciliation plus current-HEAD test/build evidence remain outstanding.
