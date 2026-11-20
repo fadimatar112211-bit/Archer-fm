@@ -769,3 +769,31 @@ Verification:
 - Android emulator smoke and four-monster GLB generation were still running in run `44732950237` at the time its jobs were inspected; their results must not be transferred to a later commit.
 - Release APK build and signature verification were skipped because the test step failed.
 - Stage One remains **OPEN**. Do not begin Stage Two until the latest HEAD passes the complete gate and the 1.15 gameplay framing is visually accepted.
+
+
+## 2026-11-20 — Hero completion batch opened
+
+### Active scope
+- The user approved starting with all four heroes and finishing their visual presentation before moving to monsters.
+- Work order is now: baseline audit → heroes → monsters → arena/environment → shared visual polish → final camera tuning → HUD → performance/release. Existing camera work is preserved; final framing is intentionally postponed until actor and environment scale are stable.
+- Production runtime assets listed in `pubspec.yaml`:
+  - Ranger: `assets/heroes/ranger_new/ranger_animated.glb`
+  - Flame: `assets/heroes/flame/model/flame_animated.glb`
+  - Shadow: `assets/heroes/shadow/model/shadow_animated.glb`
+  - Storm: `assets/heroes/storm/model/storm_animated.glb`
+- `GameScreen._glbCandidatePaths` resolves these paths and falls back to atlas sprites if loading fails. This fallback must remain until each 3D hero is visually and functionally accepted.
+- Existing `test/hero3d_game_capture_test.dart` checked all eight facings for every hero but only asserted triangle count; its dedicated face-readability capture covered Ranger only.
+- Added a dedicated front/three-quarter idle PNG capture for each of the four heroes, retaining the eight-direction captures. This gives reviewers an actual face-facing frame for Ranger, Flame, Shadow and Storm rather than treating a successful draw call as visual approval.
+- Test/capture change commit: `d34b9fae6ce40dc093c84f50e752f5f7ac5debe4`.
+- Reordered `VISUAL_DIRECTION_PLAN.md` to make hero completion the active visual phase and final camera tuning follow the stable hero/monster/arena scale.
+
+### Current hero acceptance status
+- Runtime GLB loading path exists for all four heroes; this proves integration wiring only, not visual quality.
+- The capture suite requires each GLB to contain a skeleton and the core `idle/walk/run/attack/skill/hit/death` clips.
+- Face, eyes, hair, armor, weapon silhouette, hand/weapon alignment, material response, animation deformation and gameplay-scale readability remain **not visually approved** until fresh captures are generated and inspected against `assets/heroes/reference/heroes_reference_sheet.jpg`.
+- No GLB mesh has been modified in this batch yet. Do not claim any hero complete until actual visual defects are fixed and recaptured.
+
+### Verification
+- The new capture-test commit has been pushed to `ranger-reference-work`; its fresh CI run and artifact are pending.
+- No new analyzer/test/build pass is claimed at this checkpoint.
+- Next: inspect the fresh four-hero capture artifact; compare face/front and three-quarter views; record per-hero defects; then fix the source models/rig/materials and regenerate only the affected hero assets, followed by recapture and regression tests.
