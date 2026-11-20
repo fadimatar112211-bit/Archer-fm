@@ -138,3 +138,26 @@ Latest workflow inspected: `44831375138`, commit `1b1c496f41c198ab99b615ecca8b08
 - Android emulator smoke test: failed at `integration_test/app_smoke_test.dart:61` because the expected `home_3d_loaded` widget key was not found after opening army selection. This is not a Shadow sprite rendering test and does not validate the new extracted atlas.
 
 **Current truthful status:** extraction package exists and has genuine alpha; the new atlas is not committed to the repository; production manifest/runtime still uses the old incorrect Shadow atlas; no in-game validation of the new 8×4 frames has occurred.
+
+## Shadow walk atlas integration prep — 2026-11-21
+
+Added eight TexturePacker-compatible metadata JSON files for the user's 8×4 directional walk sheet:
+- `atlases/walk_s_user.json`
+- `atlases/walk_se_user.json`
+- `atlases/walk_e_user.json`
+- `atlases/walk_ne_user.json`
+- `atlases/walk_n_user.json`
+- `atlases/walk_nw_user.json`
+- `atlases/walk_w_user.json`
+- `atlases/walk_sw_user.json`
+
+Each file maps four 192×192 frames into the corresponding row of the single 768×1536 atlas. Direction order follows the existing `GameWorld.octantNames` convention: front/s, front-right/se, right/e, back-right/ne, back/n, back-left/nw, left/w, front-left/sw.
+
+A corrected transparent atlas was re-extracted from the unchanged user source image at `/mnt/data/shadow_walk_8dir_4frames_FINAL.png` (768×1536 RGBA; alpha min/max 0/255; 945,579 fully transparent pixels). The first uploaded atlas `shadow_walk_8dir_4frames(2).png` is not used because inspection found cutout artifacts around the face and leftover row contamination. The corrected file still requires the user to upload it to the same repository folder as `shadow_walk_8dir_4frames_FINAL.png`.
+
+Until that exact binary exists in the repository:
+- do not switch the manifest to it;
+- do not claim the game uses the corrected sheet;
+- do not run a production screenshot test against the stale uploaded PNG.
+
+Next: after the final PNG is uploaded, update only Shadow's eight `walk_*` atlas entries and clip frame IDs in `shadow_manifest.json`, add asset-contract tests, and run CI. Keep all other Shadow states and all other heroes unchanged.
