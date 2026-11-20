@@ -2163,10 +2163,10 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    // Shadow's authored atlas has generous transparent padding around the
-    // character. Give it a larger logical cell so its visible body matches
-    // the previous 3D hero's on-screen footprint without scaling other heroes.
-    final drawHeight = presentation.kit.heroId == 'shadow' ? 210.0 : 120.0;
+    // Keep the 2.5D sprite at the same 120 logical-pixel draw height used
+    // by the approved arena composition; the full 800×450 capture confirms
+    // this gives Shadow a readable on-screen size without crowding crystals.
+    const drawHeight = 120.0;
     final drawWidth = drawHeight *
         presentation.frameWidth /
         presentation.frameHeight;
