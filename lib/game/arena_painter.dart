@@ -133,7 +133,10 @@ class ArenaPainter extends CustomPainter {
     canvas.translate(projectionCenter.dx, projectionCenter.dy);
     // Same order as ArenaWorldProjection.projectGround: rotate first,
     // then compress depth. This is what makes painting == touch math.
-    canvas.scale(1, cameraTransform.projection.groundScaleY);
+    canvas.scale(
+      cameraTransform.projection.scale,
+      cameraTransform.projection.scale * cameraTransform.projection.groundScaleY,
+    );
     canvas.rotate(cameraTransform.projection.yawRadians);
     canvas.translate(-projectionCenter.dx, -projectionCenter.dy);
     final camera = cameraTransform.cameraOrigin;
