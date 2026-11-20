@@ -64,7 +64,7 @@
 | 1 | طعنة الصاعقة `thunder_thrust` | 25 | 6s | 160% طعنة + سلسلة 60% من الضرر لأقرب جار ≤200 مع رسم برق | attack → `melee_impact@3` | `18_storm_thunder_thrust.png` |
 | 10 | برق متسلسل `chain_lightning` | 30 | 9s | 3 أقرب أعداء ≤180 بـ130% لكل واحد + برق متعرج `bolt` لكل هدف | skill → `storm_burst@4` | `19_storm_chain_lightning.png` |
 | 20 | حقل السكون `static_field` | 40 | 15s | 8s: كل طعنة تطلق شحنة ثانية 40% وتجمّد الهدف 900ms + تجميد فوري للقريبين + حلقة صدمة | skill → `storm_burst@4` | `32_storm_static_field.png` |
-| 30 | غضب العاصفة `tempest_rage` | 35 | 20s | 6s: ضرر ×1.2، وتيرة ×1.3، مدى الرمح ×1.25 (125→156) + حلقة | skill → `storm_burst@4` | `33_storm_tempest_rage.png` |
+| 30 | هيجان العاصفة `tempest_rage` | 35 | 20s | 6s: ضرر ×1.2، وتيرة ×1.3، مدى الرمح ×1.25 (125→156) + حلقة | skill → `storm_burst@4` | `33_storm_tempest_rage.png` |
 
 ## 3) الإثبات البصري داخل اللعبة
 
