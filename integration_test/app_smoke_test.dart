@@ -46,10 +46,27 @@ void main() {
 
     debugPrint('SMOKE: army selection opened');
     expect(find.text('اختيار البطل والجيش'), findsOneWidget);
+
+    // The setup screen is a vertical ListView. Its lower army controls are
+    // lazily built, so explicitly scroll them into view before finding them.
+    final setupScroll = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('army_total')),
+      240,
+      scrollable: setupScroll,
+    );
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('army_total')), findsOneWidget);
     expect(find.text('الموزَّع: 20/20'), findsOneWidget);
-    expect(find.byKey(const ValueKey('start_with_army')), findsOneWidget);
     expect(find.byKey(const ValueKey('home_3d_loaded')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('start_with_army')),
+      240,
+      scrollable: setupScroll,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('start_with_army')), findsOneWidget);
 
     debugPrint('SMOKE: starting match');
     await tester.tap(find.byKey(const ValueKey('start_with_army')));
