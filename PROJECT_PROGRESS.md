@@ -1162,3 +1162,13 @@ Verification:
 - These are improvements to the procedural fallback only. They are not the final approved sprite actors; the reference-faithful 2.5D monster sprite pipeline remains required.
 - Fixed the Flutter analyzer warning from an unused bridge paint local and removed an unnecessary test import.
 - Commits: `276c6e8` palette, `bd1f74c` body silhouettes, `d200486` weapons, `5f063cc` regression test.
+
+
+## 2026-11-21 — Correct the hero matrix to the actual playable roster
+
+- Audited `lib/hero/hero_catalog.dart`: the selectable Ranger is `ranger_new`; `ranger` is explicitly legacy-only and must not be treated as the fourth playable hero.
+- Corrected `assets/heroes/ranger_new/source/render_config.json` so its sprite renderer writes into `assets/heroes/ranger_new/renders`, not the legacy Ranger folder.
+- Added `tools/blender/validate_ranger_new_source.py` to validate the original playable Ranger's armature, skinned mesh, camera, eight named actions and configured frame ranges.
+- Updated `.github/workflows/flame-2d5-sprites.yml`: Flame, Shadow and Storm use the shared per-profile build matrix; the actual playable Ranger gets its own job using the checked-in original `ranger_new_source.blend` and its own render config. The matrix no longer mistakes legacy Ranger assets for the playable hero.
+- Commits: `333d053` render-root correction, `05b6dbb` dedicated Ranger validator, `f1d9979` playable Ranger job.
+- These workflow changes are queued for CI; do not claim the new four-playable-hero packs passed until each job completes validation and uploads its artifact.
