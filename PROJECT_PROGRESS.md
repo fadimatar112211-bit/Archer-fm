@@ -914,3 +914,23 @@ Verification:
 - Commits: `e72d603` (parser), `8268e5e` (manifest test).
 - Verification status: source changes committed; a fresh CI run for these commits has not yet appeared. Do not mark Phase 1 complete until the full test suite, capture checks, and Android build pass.
 - Known outstanding failure from the previous CI run `44892099544`: the five-hit normal attack-chain widget test failed in addition to the two Shadow single-frame-idle assumptions. Its detailed assertion was not present in the available job log excerpt and must be isolated in a focused rerun.
+
+
+## 2026-11-21 — Current-HEAD Android verification and visual acceptance checkpoint
+
+- Tested branch: `ranger-reference-work`.
+- Tested commit: `c8bad8df47f8d44a10195946d2ea531d66856e97` (`Add close-up Shadow ground-contact captures`).
+- GitHub Actions run: `44935787919`.
+- Flutter Analyze: **passed**.
+- Full Flutter test suite: **passed**.
+- Visual capture artifact upload: **passed**; artifact `archer-fm-3d-hero-visual-captures` (ID `14719378531`).
+- Android emulator boot and `integration_test/app_smoke_test.dart`: **passed**.
+- Release APK build: **passed**.
+- APK verification/signature check: **passed**.
+- Actions APK artifact upload: **passed**; artifact `archer-fm-release-apk` (ID `14719733122`, ZIP size 102,246,340 bytes).
+- GitHub Release publish step: **passed**; release page `v1.0.342` includes `app-release.apk` (130,126,135 bytes).
+- Important release metadata mismatch: the existing tag `v1.0.342` still resolves to commit `029147b71e0dd7fe7e2a0c01c75bdd778d6ebb62` from 2026-11-18, not tested commit `c8bad8d`. The current run uploaded its APK asset to that pre-existing release/tag. Do not claim the release tag points at the tested commit; use the Actions artifact for an unambiguous run-specific build, and fix release-tag uniqueness before treating future release pages as canonical.
+- Shadow contact review: the eight-direction capture set and zoomed south-facing capture were inspected. The current manifest pivot remains `(0.50, 0.86)`; visible feet align closely with the pivot line, so no production pivot change was justified by the evidence.
+- Hero face review: close-up/gameplay captures are available, but they do not yet establish reference-faithful facial detail and clean geometry for all four heroes. Face/material/mesh visual sign-off remains **OPEN**; do not claim all heroes complete.
+- Production visual direction is the approved 2D/2.5D sprite actor pipeline in the lightweight 3D arena. The older full-3D GLB hero path is historical/test/reference-only and must not be used as proof of current 2.5D art acceptance.
+- Next steps: (1) correct the release workflow's tag collision/uniqueness policy before the next release; (2) inspect and accept reference-matched sprite art for each hero, especially Flame/Ranger/Storm and Shadow's missing action states; (3) continue arena/actor visual acceptance only after fresh captures; (4) retain the successful current-HEAD Analyze/tests/emulator/APK evidence above.
