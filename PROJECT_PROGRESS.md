@@ -886,3 +886,11 @@ Verification:
 ### Follow-up alignment — production pipeline
 - Disabled the obsolete `generate-monster-glbs` job in `.github/workflows/flutter-android.yml` (commit `cd19aee969cfa6feb3dcc5e9eb13d6f033ff6273`). The generated GLBs from the already-running earlier workflow remain isolated artifacts and are not production monster assets.
 - Future production monster work must use reference-approved 2D/2.5D sprite sheets. No GLB monster generation should be re-enabled as a substitute.
+
+
+### 2026-11-21 — enforce 2.5D across the full playable roster
+- Updated `lib/game/game_screen.dart`: production gameplay no longer loads or displays a GLB for *any* selectable hero. All four production heroes now stay on their manifest-driven 2D sprite path. Explicit GLB injection remains available only for isolated renderer tests.
+- Updated `integration_test/app_smoke_test.dart`: after tapping Start Match, wait 400 ms for the MaterialPageRoute transition before checking the arena controls. The previous smoke failure was a timing race: the test queried `joystick_zone` after only one frame while the route was still transitioning; logs showed app startup, home, army selection and start tap all completed.
+- Latest verified prior run `44889367500` at `319fe4a55f297365bf0e6090a3b51aad24511604`: Flutter Analyze passed, full Flutter test suite passed, release APK built and verified; Android smoke failed only at the too-early `joystick_zone` lookup. This is not yet proof that the patched smoke test passes.
+- New run `44891945537` is testing commit `0a1123926718a838abb8b58510f0c946dd9a91fd`; wait for its result before calling the new smoke fix verified.
+- The legacy 3D hero assets remain archived in the repository for source/provenance and test injection, but are not loaded by production gameplay.
