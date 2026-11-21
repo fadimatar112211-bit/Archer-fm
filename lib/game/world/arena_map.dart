@@ -463,16 +463,23 @@ class ArenaMap {
   }
 
   static List<BiomePatch> _generateBiomes(math.Random rng, Size size) {
-    final patches = <BiomePatch>[];
-    for (final kind in TerrainKind.values) {
-      final radius = 220.0 + rng.nextDouble() * 170;
-      final point = Offset(
-        radius * 0.6 + rng.nextDouble() * (size.width - radius * 1.2),
-        radius * 0.6 + rng.nextDouble() * (size.height - radius * 1.2),
-      );
-      patches.add(BiomePatch(kind: kind, center: point, radius: radius));
-    }
-    return patches;
+    // Give each player quadrant a distinct biome so every match visibly
+    // contains all four environments instead of scattering four small,
+    // sometimes overlapping circles at arbitrary locations. Shuffle the
+    // biome assignment per match while keeping each zone centered on its
+    // corresponding castle quadrant.
+    final kinds = TerrainKind.values.toList()..shuffle(rng);
+    final centers = [
+      Offset(size.width * 0.25, size.height * 0.25),
+      Offset(size.width * 0.75, size.height * 0.25),
+      Offset(size.width * 0.25, size.height * 0.75),
+      Offset(size.width * 0.75, size.height * 0.75),
+    ];
+    final radius = math.min(size.width, size.height) * 0.34;
+    return [
+      for (var i = 0; i < kinds.length; i++)
+        BiomePatch(kind: kinds[i], center: centers[i], radius: radius),
+    ];
   }
 
   static List<MapPickup> _generatePickups(
