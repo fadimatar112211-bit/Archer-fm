@@ -1113,3 +1113,10 @@ Verification:
 - The existing painter already iterates all river objects for bank shading, water fill, moving glints, foam and bridge decks, and the existing water-speed/collision queries already operate across all rivers. Mines, pickups and obstacles are also generated against the full river list, so the new branch participates in the existing world rules.
 - Hero pipeline investigation: the current renderer intentionally writes all active heroes to the fixed Ranger render folder because the CI workflow is pinned there; the packer then bundles non-Ranger outputs. The workflow is still failing, and GitHub returned no job records for the failed run, so the exact failing step is not proven. The repository tree currently contains Flame and Shadow source BLEND files; Storm has an animated GLB but no `assets/heroes/storm/source/storm_source.blend` at the active branch head. Do not claim all four sprite atlases exist.
 - Verification status: code and regression test committed; no green Android build or test run observed yet. Need a full run without pushing superseding commits, then inspect the actual 16:9 game capture.
+
+### 2026-11-21 — Strengthen river-network regression coverage
+
+- Expanded the river test to inspect every bridge on every generated channel, not only the first/main river.
+- Each bridge must lie on its own river, be recognized by the map as a bridge, remain dry, and preserve full movement speed.
+- Added a direct check that the tributary's water slows movement using the same water-speed rule as the main channel.
+- Latest verification remains pending: the Android workflow was cancelled by a later push before it produced a completed result. The Ranger asset workflow returned a failed run with zero jobs exposed by GitHub's jobs endpoint; no failing step or log is available, so its cause remains undiagnosed.
