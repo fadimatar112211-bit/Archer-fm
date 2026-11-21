@@ -162,19 +162,23 @@ def build(kind):
             ear=primitive("cone",kind+"_pointed_ear_"+str(side),(side*0.43,0.02,2.08),(0.18,0.15,0.38),mats["accent"],rig,"head")
             ear.rotation_euler[1]=side*-0.70
         primitive("sphere",kind+"_goblin_nose",(0,-0.49,1.77),(0.18,0.16,0.16),mats["accent"],rig,"head")
-        primitive("cube",kind+"_sword_grip",(0.58,-0.08,0.88),(0.12,0.13,0.30),mats["dark"],rig,"forearm.R")
-        primitive("cube",kind+"_sword_guard",(0.58,-0.10,1.06),(0.34,0.12,0.09),mats["metal"],rig,"forearm.R")
-        primitive("cone",kind+"_single_sword",(0.58,-0.10,1.36),(0.12,0.12,0.40),mats["metal"],rig,"forearm.R")
-        primitive("cube",kind+"_leather_tunic",(0,-0.34,1.12),(0.58,0.12,0.42),mats["dark"],rig,"spine")
+        primitive("cylinder",kind+"_sword_grip",(0.57,-0.18,0.88),(0.045,0.045,0.18),mats["dark"],rig,"forearm.R")
+        primitive("cube",kind+"_sword_guard",(0.57,-0.19,1.06),(0.24,0.07,0.055),mats["metal"],rig,"forearm.R",0.025)
+        primitive("cube",kind+"_single_sword_blade",(0.57,-0.19,1.29),(0.105,0.055,0.42),mats["metal"],rig,"forearm.R",0.035)
+        primitive("cone",kind+"_sword_tip",(0.57,-0.19,1.52),(0.075,0.055,0.12),mats["metal"],rig,"forearm.R")
+        primitive("sphere",kind+"_leather_tunic",(0,-0.31,1.12),(0.63,0.34,0.48),mats["dark"],rig,"spine")
+        primitive("sphere",kind+"_tunic_collar",(0,-0.36,1.42),(0.36,0.08,0.10),mats["accent"],rig,"spine")
         primitive("sphere",kind+"_belt",(0,-0.39,0.91),(0.52,0.08,0.10),mats["accent"],rig,"spine")
     elif kind=="tank":
         # Horned heavy brute with oversized spiked mace and layered armour.
-        primitive("cube",kind+"_heavy_chestplate",(0,-0.36,1.18),(0.96,0.18,0.58),mats["metal"],rig,"spine",0.16)
+        primitive("sphere",kind+"_heavy_chestplate",(0,-0.34,1.18),(1.02,0.19,0.62),mats["metal"],rig,"spine")
+        primitive("sphere",kind+"_chest_center_gem",(0,-0.525,1.22),(0.17,0.055,0.19),mats["accent"],rig,"spine")
         for side in (-1,1):
             horn=primitive("cone",kind+"_horn_"+str(side),(side*0.34,-0.02,2.28),(0.18,0.18,0.48),mats["accent"],rig,"head")
             horn.rotation_euler[1]=side*-0.55
-            primitive("cube",kind+"_massive_shoulder_"+str(side),(side*0.55,-0.03,1.48),(0.52,0.48,0.38),mats["metal"],rig,"upper_arm.L" if side<0 else "upper_arm.R",0.12)
-            primitive("cube",kind+"_arm_bracer_"+str(side),(side*0.59,-0.12,0.91),(0.42,0.40,0.34),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R",0.08)
+            primitive("sphere",kind+"_massive_shoulder_"+str(side),(side*0.55,-0.06,1.48),(0.56,0.48,0.44),mats["metal"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
+            primitive("sphere",kind+"_shoulder_rivet_"+str(side),(side*0.55,-0.455,1.49),(0.09,0.045,0.09),mats["accent"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
+            primitive("sphere",kind+"_arm_bracer_"+str(side),(side*0.59,-0.12,0.91),(0.40,0.34,0.32),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
         primitive("sphere",kind+"_mace_head",(0.80,-0.10,1.03),(0.52,0.52,0.52),mats["metal"],rig,"forearm.R")
         primitive("cylinder",kind+"_mace_handle",(0.68,-0.08,0.66),(0.095,0.095,0.62),mats["dark"],rig,"forearm.R")
         for i in range(8):
@@ -191,6 +195,11 @@ def build(kind):
         primitive("sphere",kind+"_eye_socket_L",(-0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
         primitive("sphere",kind+"_eye_socket_R",(0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
         primitive("sphere",kind+"_jaw",(0,-0.36,1.69),(0.38,0.18,0.16),mats["body"],rig,"head")
+        primitive("sphere",kind+"_nasal_bridge",(0,-0.425,1.88),(0.10,0.08,0.22),mats["accent"],rig,"head")
+        for side in (-1,1):
+            primitive("sphere",kind+"_cheekbone_"+str(side),(side*0.31,-0.34,1.82),(0.16,0.10,0.10),mats["accent"],rig,"head")
+            for tooth in range(2):
+                primitive("cube",kind+"_tooth_"+str(side)+"_"+str(tooth),(side*(0.12+tooth*0.10),-0.505,1.65),(0.045,0.035,0.07),mats["accent"],rig,"head",0.01)
         for rib in range(4):
             z=1.30-rib*0.13
             primitive("sphere",kind+"_rib_"+str(rib),(0,-0.34,z),(0.48-rib*0.035,0.09,0.07),mats["accent"],rig,"spine")
@@ -201,11 +210,15 @@ def build(kind):
             primitive("sphere",kind+"_wrist_bone_"+str(side),(side*0.53,-0.06,0.88),(0.13,0.13,0.14),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
     elif kind=="ranged":
         # Purple infiltrator: deep hood, face wrap and twin violet energy blades.
-        primitive("sphere",kind+"_hood_shell",(0,0.16,1.96),(1.02,0.52,0.96),mats["dark"],rig,"head")
-        primitive("sphere",kind+"_hood_crown",(0,0.18,2.34),(0.70,0.46,0.34),mats["body"],rig,"head")
-        primitive("cube",kind+"_face_mask",(0,-0.43,1.78),(0.62,0.12,0.30),mats["dark"],rig,"head",0.08)
+        primitive("sphere",kind+"_hood_shell",(0,0.28,1.98),(0.98,0.42,0.90),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_crown",(0,0.25,2.34),(0.70,0.40,0.30),mats["body"],rig,"head")
         for side in (-1,1):
-            primitive("sphere",kind+"_violet_eye_"+str(side),(side*0.21,-0.505,1.99),(0.10,0.045,0.075),mats["eye"],rig,"head")
+            primitive("sphere",kind+"_hood_edge_"+str(side),(side*0.40,-0.18,1.96),(0.18,0.22,0.52),mats["body"],rig,"head")
+        primitive("sphere",kind+"_face_wrap",(0,-0.46,1.77),(0.48,0.12,0.19),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_mask_seam",(0,-0.565,1.78),(0.32,0.025,0.025),mats["accent"],rig,"head")
+        for side in (-1,1):
+            primitive("sphere",kind+"_violet_eye_"+str(side),(side*0.21,-0.515,1.99),(0.095,0.05,0.075),mats["eye"],rig,"head")
+            primitive("sphere",kind+"_eye_brow_"+str(side),(side*0.21,-0.48,2.105),(0.14,0.045,0.045),mats["dark"],rig,"head")
             blade=primitive("cone",kind+"_violet_energy_blade_"+str(side),(side*0.70,-0.12,1.06),(0.105,0.105,0.62),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
             blade.rotation_euler[1]=math.pi
             primitive("cube",kind+"_blade_guard_"+str(side),(side*0.70,-0.12,0.77),(0.30,0.10,0.10),mats["metal"],rig,"forearm.L" if side<0 else "forearm.R",0.04)
