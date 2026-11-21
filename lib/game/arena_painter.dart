@@ -2046,34 +2046,47 @@ class ArenaPainter extends CustomPainter {
     Color dark,
     Color accent,
   ) {
-    // Hooded cloak: wide at the hem, narrow at the shoulders.
-    final cloak = Path()
-      ..moveTo(-size * 0.3, -size * 0.82)
-      ..lineTo(size * 0.3, -size * 0.82)
-      ..lineTo(size * 0.46, -size * 0.06)
-      ..lineTo(-size * 0.46, -size * 0.06)
-      ..close();
-    canvas.drawPath(cloak, Paint()..color = body);
-    canvas.drawPath(
-      Path()
-        ..moveTo(-size * 0.3, -size * 0.82)
-        ..lineTo(0, -size * 0.8)
-        ..lineTo(-size * 0.46, -size * 0.06)
-        ..close(),
-      Paint()..color = dark,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: Offset(0, -size * 0.86),
-        width: size * 0.52,
-        height: size * 0.5,
+    // Ivory skeleton: exposed rib cage and narrow pelvis, not a recoloured hood.
+    final bone = Paint()..color = body;
+    final socket = Paint()..color = dark;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(0, -size * 0.60),
+          width: size * 0.43,
+          height: size * 0.30,
+        ),
+        Radius.circular(size * 0.11),
       ),
-      math.pi,
-      math.pi,
-      true,
-      Paint()..color = accent,
+      bone,
     );
-    _monsterHead(canvas, size, body, dark, accent, hooded: true);
+    canvas.drawLine(
+      Offset(0, -size * 0.82),
+      Offset(0, -size * 0.32),
+      Paint()..color = accent..strokeWidth = size * 0.085..strokeCap = StrokeCap.round,
+    );
+    for (var rib = 0; rib < 3; rib++) {
+      final y = -size * (0.76 - rib * 0.105);
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset(0, y), width: size * 0.40, height: size * 0.16),
+        0, math.pi, false,
+        Paint()..color = accent..style = PaintingStyle.stroke..strokeWidth = size * 0.055,
+      );
+    }
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(0, -size * 0.28), width: size * 0.26, height: size * 0.14),
+      bone,
+    );
+    _monsterHead(canvas, size, body, dark, accent, skeletal: true);
+    // A pair of short ivory blades remains visible even at arena zoom.
+    for (final side in const [-1.0, 1.0]) {
+      final blade = Path()
+        ..moveTo(side * size * 0.24, -size * 0.47)
+        ..lineTo(side * size * 0.47, -size * 0.94)
+        ..lineTo(side * size * 0.34, -size * 0.42)
+        ..close();
+      canvas.drawPath(blade, Paint()..color = accent);
+    }
   }
 
   void _paintRangedBody(
@@ -2083,16 +2096,40 @@ class ArenaPainter extends CustomPainter {
     Color dark,
     Color accent,
   ) {
-    final rect = Rect.fromLTWH(-size * 0.34, -size * 0.86, size * 0.68, size * 0.5);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, Radius.circular(size * 0.14)),
-      Paint()..color = body,
+    final hood = Path()
+      ..moveTo(-size * 0.42, -size * 0.72)
+      ..quadraticBezierTo(-size * 0.48, -size * 1.22, 0, -size * 1.34)
+      ..quadraticBezierTo(size * 0.48, -size * 1.22, size * 0.42, -size * 0.72)
+      ..lineTo(size * 0.32, -size * 0.18)
+      ..lineTo(-size * 0.32, -size * 0.18)
+      ..close();
+    canvas.drawPath(hood, Paint()..color = body);
+    canvas.drawPath(
+      Path()..moveTo(-size * 0.31, -size * 0.88)
+        ..lineTo(0, -size * 1.28)..lineTo(size * 0.31, -size * 0.88)
+        ..close(),
+      Paint()..color = dark,
     );
-    canvas.drawRect(
-      Rect.fromLTWH(-size * 0.05, -size * 0.86, size * 0.1, size * 0.5),
-      Paint()..color = accent,
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(0, -size * 0.88), width: size * 0.46, height: size * 0.19),
+        Radius.circular(size * 0.07),
+      ),
+      Paint()..color = dark,
     );
     _monsterHead(canvas, size, body, dark, accent, hooded: true);
+    // Violet energy blades are the signature silhouette. Ranged combat still
+    // launches the existing projectile; these blades are visual identity only.
+    for (final side in const [-1.0, 1.0]) {
+      final blade = Path()
+        ..moveTo(side * size * 0.30, -size * 0.38)
+        ..lineTo(side * size * 0.62, -size * 1.00)
+        ..lineTo(side * size * 0.43, -size * 0.30)
+        ..close();
+      canvas.drawPath(blade, Paint()..color = accent);
+      canvas.drawPath(blade, Paint()..color = accent.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+    }
   }
 
   void _monsterHead(
@@ -2104,6 +2141,7 @@ class ArenaPainter extends CustomPainter {
     bool horned = false,
     bool earred = false,
     bool hooded = false,
+    bool skeletal = false,
   }) {
     final center = Offset(0, -size * 1.0);
     final radius = size * 0.23;
@@ -2137,17 +2175,31 @@ class ArenaPainter extends CustomPainter {
         canvas.drawPath(ear, Paint()..color = dark);
       }
     }
-    // Eyes: two highlights, always looking forward.
-    canvas.drawCircle(
-      center + Offset(radius * 0.34, -radius * 0.06),
-      radius * 0.16,
-      Paint()..color = const Color(0xFFFFF4D8),
-    );
-    canvas.drawCircle(
-      center + Offset(radius * 0.72, -radius * 0.02),
-      radius * 0.1,
-      Paint()..color = const Color(0xFFFFF4D8),
-    );
+    // The skeleton has deep dark sockets; the other three keep bright eyes.
+    if (skeletal) {
+      canvas.drawOval(
+        Rect.fromCenter(center: center + Offset(-radius * 0.34, 0), width: radius * 0.48, height: radius * 0.58),
+        Paint()..color = dark,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: center + Offset(radius * 0.34, 0), width: radius * 0.48, height: radius * 0.58),
+        Paint()..color = dark,
+      );
+      canvas.drawArc(
+        Rect.fromCenter(center: center + Offset(0, radius * 0.48), width: radius * 0.78, height: radius * 0.40),
+        0, math.pi, false,
+        Paint()..color = dark..style = PaintingStyle.stroke..strokeWidth = radius * 0.12,
+      );
+    } else {
+      final eyeColor = hooded ? const Color(0xFFD9A6FF) : const Color(0xFFFFF4D8);
+      for (final side in const [-1.0, 1.0]) {
+        final eye = center + Offset(side * radius * 0.34, -radius * 0.06);
+        canvas.drawCircle(eye, radius * 0.18, Paint()..color = eyeColor);
+        canvas.drawCircle(eye, radius * 0.34,
+            Paint()..color = eyeColor.withValues(alpha: 0.20)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+      }
+    }
   }
 
   void _paintMonsterWeapon(
