@@ -81,10 +81,11 @@ void main() {
         for (final frame in clip.frames) {
           final rect = sheet.rectFor(frame);
           expect(rect, isNotNull, reason: '$clipName/$frame');
-          expect(rect!.width, 192, reason: '$clipName/$frame width');
-          expect(rect.height, 192, reason: '$clipName/$frame height');
+          final frameRect = rect!;
+          expect(frameRect.width, 192, reason: '$clipName/$frame width');
+          expect(frameRect.height, 192, reason: '$clipName/$frame height');
           expect(
-            visiblePixelsIn(rect),
+            visiblePixelsIn(frameRect),
             greaterThan(4000),
             reason: '$clipName/$frame must contain the visible Shadow sprite',
           );
