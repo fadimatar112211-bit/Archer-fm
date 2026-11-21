@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,7 +10,7 @@ const _atlasPath = 'atlases/shadow_walk_8dir_4frames_FINAL.png';
 const _directions = ['s', 'se', 'e', 'ne', 'n', 'nw', 'w', 'sw'];
 
 void main() {
-  test('Shadow user walk atlas is an RGBA 8x4 sheet with all 32 frames', () {
+  test('Shadow user walk atlas is transparent RGBA 8x4 with all 32 frames', () async {
     final manifest = jsonDecode(
       File('$_root/shadow_manifest.json').readAsStringSync(),
     ) as Map<String, dynamic>;
@@ -25,6 +26,37 @@ void main() {
     expect(data.getUint32(20), 1536);
     expect(bytes[24], 8);
     expect(bytes[25], 6, reason: 'the atlas must retain a real alpha channel');
+
+    // Decode the actual PNG rather than trusting its file extension or IHDR
+    // alone. All four outer corners must be transparent, and the atlas must
+    // contain both visible character pixels and transparent background pixels.
+    final codec = await ui.instantiateImageCodec(bytes);
+    addTearDown(codec.dispose);
+    final decoded = await codec.getNextFrame();
+    addTearDown(decoded.image.dispose);
+    expect(decoded.image.width, 768);
+    expect(decoded.image.height, 1536);
+    final rgba = await decoded.image.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    );
+    expect(rgba, isNotNull);
+    final pixels = rgba!.buffer.asUint8List();
+    int alphaAt(int x, int y) => pixels[(y * 768 + x) * 4 + 3];
+    expect(alphaAt(0, 0), 0, reason: 'top-left must be transparent');
+    expect(alphaAt(767, 0), 0, reason: 'top-right must be transparent');
+    expect(alphaAt(0, 1535), 0, reason: 'bottom-left must be transparent');
+    expect(alphaAt(767, 1535), 0, reason: 'bottom-right must be transparent');
+    var transparentPixels = 0;
+    var opaquePixels = 0;
+    for (var i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] == 0) {
+        transparentPixels++;
+      } else if (pixels[i] == 255) {
+        opaquePixels++;
+      }
+    }
+    expect(transparentPixels, greaterThan(10000));
+    expect(opaquePixels, greaterThan(10000));
 
     for (var row = 0; row < _directions.length; row++) {
       final direction = _directions[row];
