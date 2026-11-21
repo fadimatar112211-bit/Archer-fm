@@ -1664,9 +1664,6 @@ class ArenaPainter extends CustomPainter {
       Offset(rect.right - 3, rect.bottom - 4),
       rail,
     );
-    final planks = Paint()
-      ..color = _bridgePlankColor
-      ..strokeWidth = 2;
     var plankIndex = 0;
     for (var x = rect.left + 8; x < rect.right; x += 12) {
       final shade = plankIndex.isEven
