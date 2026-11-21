@@ -274,6 +274,11 @@ class ArenaPainter extends CustomPainter {
       );
     }
 
+    // Worn stone approaches visually connect castle clearings to the
+    // nearest river crossing. These pavers are decoration only; navigation,
+    // collision and bridge placement remain unchanged.
+    _paintStoneApproaches(canvas);
+
     // River banks, water and bridges.
     for (final river in map.rivers) {
       final path = Path()
@@ -353,6 +358,70 @@ class ArenaPainter extends CustomPainter {
 
 
 
+  }
+
+  void _paintStoneApproaches(Canvas canvas) {
+    final map = world.map;
+    final bridges = [
+      for (final river in map.rivers) ...river.bridges,
+    ];
+    if (bridges.isEmpty) return;
+
+    for (var castleIndex = 0; castleIndex < map.castleAnchors.length; castleIndex++) {
+      final castle = map.castleAnchors[castleIndex];
+      Bridge? nearest;
+      var nearestDistance = double.infinity;
+      for (final bridge in bridges) {
+        final distance = (bridge.center - castle).distance;
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = bridge;
+        }
+      }
+      if (nearest == null) continue;
+      final delta = nearest.center - castle;
+      final length = delta.distance;
+      if (length < 1) continue;
+      final direction = delta / length;
+      final perpendicular = Offset(-direction.dy, direction.dx);
+      final paverCount = (length / 28).floor();
+      for (var i = 5; i < paverCount; i++) {
+        final t = i / paverCount;
+        final center = castle + delta * t +
+            perpendicular * math.sin(i * 1.73 + castleIndex) * 13;
+        if (map.isWater(center) && !map.isBridge(center)) continue;
+        if (map.mines.any((mine) => (mine.position - center).distance < mine.radius + 24)) continue;
+        final width = 15.0 + (i % 3) * 2;
+        final height = 9.0 + (i % 2) * 2;
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(math.atan2(direction.dy, direction.dx));
+        canvas.drawOval(
+          Rect.fromCenter(center: const Offset(1, 2), width: width + 2, height: height + 2),
+          Paint()..color = const Color(0x33201913),
+        );
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: width, height: height),
+          Paint()
+            ..shader = ui.Gradient.linear(
+              Offset(-width / 2, -height / 2),
+              Offset(width / 2, height / 2),
+              const [Color(0xFF92958B), Color(0xFF626A61), Color(0xFF444E47)],
+            ),
+        );
+        canvas.drawArc(
+          Rect.fromCenter(center: Offset.zero, width: width - 3, height: height - 3),
+          math.pi * 1.05,
+          math.pi * 0.72,
+          false,
+          Paint()
+            ..color = const Color(0x559EA99A)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.2,
+        );
+        canvas.restore();
+      }
+    }
   }
 
   void _paintGroundDetails(Canvas canvas) {
