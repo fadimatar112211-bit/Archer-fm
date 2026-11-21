@@ -33,16 +33,16 @@ jobs:
       - name: Render eight directions and all authored states
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
+          xvfb-run -a blender --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
 
       - name: Validate transparent frames, alignment and motion
         run: |
-          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/flame/renders --resolution 192
+          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
 
       - name: Pack atlases and publish the Flame bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/flame/renders/ranger_manifest.json
+          xvfb-run -a blender --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
 
       - name: Upload Flame 2.5D source and render bundle
         uses: actions/upload-artifact@v4
