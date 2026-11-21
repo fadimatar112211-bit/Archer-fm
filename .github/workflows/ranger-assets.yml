@@ -22,8 +22,11 @@ jobs:
       - name: Install Blender
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender libegl1 libgl1 python3-pil
-          blender --version
+          sudo apt-get install -y libegl1 libgl1 python3-pil
+          curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          sudo tar -xJf /tmp/blender.tar.xz -C /opt
+          echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
+          /opt/blender-3.6.13-linux-x64/blender --version
 
       - name: Python syntax check
         run: |
@@ -35,16 +38,16 @@ jobs:
             tools/blender/validate_rendered_frames.py
 
       - name: Build editable Ranger source
-        run: blender -b --python tools/blender/build_ranger_source.py
+        run: "$BLENDER" -b --python tools/blender/build_ranger_source.py
 
       - name: Validate Blender scene and rig
         run: |
-          blender -b assets/heroes/ranger/source/ranger_source.blend \
+          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
             --python tools/blender/validate_ranger_source.py
 
       - name: Render all states and directions
         run: |
-          blender -b assets/heroes/ranger/source/ranger_source.blend \
+          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
             --python tools/blender/render_hero.py -- \
             --config assets/heroes/ranger/source/render_config.json
 
@@ -55,7 +58,7 @@ jobs:
 
       - name: Pack sprite atlases
         run: |
-          blender -b assets/heroes/ranger/source/ranger_source.blend \
+          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
             --python tools/blender/pack_hero_atlases.py -- \
             --manifest assets/heroes/ranger/renders/ranger_manifest.json
 
