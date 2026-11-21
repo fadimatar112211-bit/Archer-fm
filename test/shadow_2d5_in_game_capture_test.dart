@@ -140,6 +140,26 @@ void main() {
         if (!dir.existsSync()) dir.createSync(recursive: true);
         File('${dir.path}/shadow_2d5_$direction.png').writeAsBytesSync(bytes);
         image.dispose();
+
+        // Add a close-up at the same world position so visual review can
+        // judge feet-to-ground contact, pivot alignment and face readability.
+        // The zoom is applied to the captured view only; it does not change
+        // the production camera, sprite scale, or gameplay coordinates.
+        final closeRecorder = ui.PictureRecorder();
+        final closeCanvas = Canvas(closeRecorder);
+        closeCanvas
+          ..translate(400, 225)
+          ..scale(2.5)
+          ..translate(-400, -225);
+        painter.paint(closeCanvas, const Size(800, 450));
+        final closeImage =
+            closeRecorder.endRecording().toImageSync(800, 450);
+        final closeData =
+            await closeImage.toByteData(format: ui.ImageByteFormat.png);
+        expect(closeData, isNotNull, reason: '$clipName close-up');
+        File('${dir.path}/shadow_2d5_closeup_$direction.png')
+            .writeAsBytesSync(closeData!.buffer.asUint8List());
+        closeImage.dispose();
         player.dispose();
       }
     },
