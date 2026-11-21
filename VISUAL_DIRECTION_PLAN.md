@@ -12,9 +12,11 @@ The detailed conversion plan is documented in `docs/2D_5D_SPRITE_CONVERSION_PLAN
 
 ---
 
-# Archer FM — New Visual & Combat Direction
+# Archer FM — Historical Visual & Combat Direction (Superseded 2026-11-21)
 
-## Decision (2026-11-18)
+> **HISTORICAL ONLY:** The full-3D hero/monster instructions in this section are obsolete. The binding production decision is 2D heroes and monsters with a polished 2.5D art treatment inside a lightweight 3D world, as specified at the top of this file and in `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`. Do not resume GLB-based production hero rendering.
+
+## Previous decision (2026-11-18; superseded)
 
 Move the **whole battlefield presentation** toward a polished, readable, isometric 3D action look inspired by League of Legends: heroes, monsters, attacks, abilities, terrain, props, shadows and combat feedback must share one coherent visual language.
 
@@ -33,9 +35,9 @@ This is a visual/presentation upgrade, **not** a conversion into a MOBA and **no
 - Keep the existing GLB hero pipeline and legacy atlas/SVG fallback until replacements are proven.
 - Do not change main; work on `ranger-reference-work`.
 
-## Visual target
+## Historical visual target (environment/composition only)
 
-A three-quarter/isometric camera and composition with enough screen space to read the hero and nearby enemies. The target is inspired by LoL's clarity and presentation, adapted to a mobile screen and Archer FM's compact arena gameplay; it is not a claim that the current renderer is already a full 3D LoL-style engine.
+The three-quarter/isometric camera and composition remain useful for the world. Character rendering is superseded: heroes and monsters must be 2D sprites with a polished 2.5D appearance, not production 3D models. The world/arena is planned as lightweight 3D.
 
 ### 1. Camera, scale and framing
 - Establish a consistent elevated three-quarter view across the entire scene.
@@ -57,15 +59,14 @@ Per-hero identity that must remain recognisable:
 
 **Shared proportions:** preserve the reference's compact chibi body, large head, expressive face, short limbs and chunky readable boots/gauntlets. Do not stretch the models toward realistic human proportions. A visual pass is not accepted from palette alone: face, hair silhouette, costume layers, signature weapon and held/attached FX must all be checked in close-up and at gameplay scale.
 
-### 2. Heroes
-- Render all four production GLB heroes consistently: Ranger, Flame, Shadow and Storm.
-- Improve face, head silhouette, weapon silhouette and material readability at actual gameplay zoom.
-- Ensure facing direction, locomotion, attack, skill, hit and death states read clearly.
-- Weapon motion must align with hands; attack release/hit timing must remain tied to animation events where authored.
-- Compare close-up front and three-quarter captures against `assets/references/approved_all/hero_roster_concept.jpg`; record per-hero defects before modifying source meshes.
+### 2. Heroes — historical GLB direction, superseded
+- The previous instruction to render production heroes as GLBs is cancelled.
+- Production heroes must be 2D sprites with a polished 2.5D look, using the approved eight-direction reference identity and sprite conversion plan.
+- GLB files may remain as archived/source/diagnostic assets during migration, but must not override the approved sprite renderer in production.
 
-### 3. Monsters (same visual direction)
-- Bring all four approved monster roles into the same 3D/isometric presentation language: runner, tank, stalker and ranged.
+### 3. Monsters — historical full-3D direction, superseded
+- The previous instruction to render all monster roles as production 3D models is cancelled. The four approved monster roles must use 2D sprites with a polished 2.5D look in the lightweight 3D world.
+- Bring all four approved monster roles into the same 2.5D/isometric presentation language: runner, tank, stalker and ranged.
 - Each role needs a distinct silhouette, readable scale/weight, facing, locomotion and attack wind-up.
 - Preserve existing role identity and stats: runner = fast dash, tank = durable slow unit, stalker = flanking harasser, ranged = ranged attacker.
 - Make damage, stun/freeze, death and team ownership legible with restrained materials, outlines/shadows and effects.
@@ -91,9 +92,11 @@ Per-hero identity that must remain recognisable:
 - Keep dodge, combo, four Ultimates, HP/energy, objective indicators and minimap readable.
 - Validate multi-touch: movement while attacking, pointer cancellation, and no repeated attacks from a held pointer.
 
-## Implementation sequence (reordered by approved visual dependency; do not skip evidence gates)
+## Historical implementation sequence — superseded
 
-1. **Baseline audit:** inspect current code paths and capture artifacts for heroes, monsters, arena and camera. Produce a defect list. Record current test/build state. Keep existing camera fixes; do not spend the final camera-tuning pass yet.
+The following sequence was written for the cancelled full-3D hero/monster direction. Do not execute it as written. Follow `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` instead: Shadow sprite proof → reusable 2D/2.5D sprite system → Flame/Ranger/Storm sprite conversion → monster sprites → lightweight 3D world integration → visual polish and release tests.
+
+1. **Baseline audit (historical):** inspect current code paths and capture artifacts for heroes, monsters, arena and camera. Produce a defect list. Record current test/build state. Keep existing camera fixes; do not spend the final camera-tuning pass yet.
 2. **Hero completion — current active batch:** finish Ranger, Flame, Shadow and Storm as production-quality 3D chibi heroes. Audit the exact reference sheet, source meshes, rigs, face readability, materials, weapons, hand alignment, all required clips, eight facings, gameplay scale and performance. Fix and capture each hero individually; no hero passes on GLB presence or triangle counts alone.
 3. **Monster presentation:** audit the existing painter/model pipeline; prototype one representative monster role first, then bring all four approved roles to the same standard. Keep fallback until each asset and animation is validated.
 4. **Arena/environment pass:** terrain, lighting, props, castles/crystals and depth cues, while preserving readability/performance.
