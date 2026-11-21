@@ -1141,3 +1141,12 @@ Verification:
 - Each matrix runner has an isolated checkout, so writing its own `active_hero.txt` cannot race with another hero's build.
 - Commit: `a3a1d4f` — four-hero isolated matrix workflow.
 - Verification status: workflow YAML and actual Blender execution have not yet been confirmed by a completed Actions run. The workflow is now configured to trigger on relevant pushes; wait for the run and inspect each hero job before accepting any atlas. A successful technical validation still does not replace visual review against the approved roster reference.
+
+
+## 2026-11-21 — Isolate the four-hero sprite pipeline
+
+- The four-job matrix run `44945324378` started from commit `a3a1d4f`.
+- All four jobs (Ranger, Flame, Shadow, Storm) completed their dedicated source-scene build and passed the source rig/authored-animation validation step.
+- Rendering all eight directions and eight states is still running; no atlas pack is considered complete or visually accepted until the remaining frame validation, packing, manifest validation and artifact upload steps pass.
+- The old Ranger-only workflow was firing automatically on the same Blender tool changes, creating redundant failing runs against the new shared multi-hero setup. It is now manual-only; the four-hero matrix is the only automatic sprite pipeline.
+- Commit: `870cc16` — Retire duplicate automatic Ranger-only sprite workflow.
