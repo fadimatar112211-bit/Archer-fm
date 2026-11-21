@@ -976,3 +976,13 @@ Verification:
 - Expanded `shadow_2d5_in_game_capture_test.dart` to emit one four-frame walk-cycle strip for each of the eight directions, enabling direct foot-contact and motion review.
 - No source reference image was altered. No other hero's artwork was modified.
 - CI verification for this batch is pending; do not mark Shadow action art complete.
+
+## 2026-11-21 — Full roster sprite audit
+
+- Inspected the canonical reference and representative front/back/side atlas frames for Ranger, Flame and Storm, plus the Shadow approved source.
+- Ranger atlas: 64 declared clips across 8 states/directions and 496 declared frames. Preserve current work; keep GLB primary pending full acceptance.
+- Flame atlas: 64 clips and 496 declared frames, but the inspected front sprite is a simplified brown-haired fighter with a small flame, unlike the canonical red-spiky-haired gold-armored knight with a greatsword. Keep GLB primary; do not promote current atlas.
+- Storm atlas: inspected idle/walk sheets for S/N/W; they are flat blue tiles with no visible character. Keep GLB primary and reject these atlases as placeholders.
+- Shadow remains the only approved 2.5D pilot. Dedicated action art is still missing; temporary held poses preserve approved identity and combat event timing.
+- Added `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` with evidence, production route decisions, per-hero acceptance checklist and next tasks.
+- No canonical reference, source GLB or user-provided sprite artwork was changed.
