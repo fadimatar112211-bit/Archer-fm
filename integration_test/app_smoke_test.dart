@@ -71,7 +71,10 @@ void main() {
     debugPrint('SMOKE: starting match');
     await tester.tap(find.byKey(const ValueKey('start_with_army')));
     debugPrint('SMOKE: start button tap returned');
-    await tester.pump();
+    // MaterialPageRoute needs its transition to finish before the arena's
+    // positioned controls are mounted. The game ticker never settles, so use
+    // a bounded pump rather than pumpAndSettle().
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const ValueKey('joystick_zone')), findsOneWidget);
     expect(find.byKey(const ValueKey('btn_attack')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('btn_attack')));
