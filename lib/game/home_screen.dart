@@ -117,22 +117,31 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         for (final path in _candidatePaths(_hero.id)) {
           try {
             bytes = (await rootBundle.load(path)).buffer.asUint8List();
+            debugPrint('Home 3D: loaded $path (${bytes.length} bytes)');
             break;
-          } catch (_) {
-            // Try the next bundled location.
+          } catch (error) {
+            debugPrint('Home 3D: asset unavailable at $path: $error');
           }
         }
       }
     } catch (_) {
       bytes = null;
     }
-    if (!mounted || bytes == null) return;
+    if (!mounted) return;
+    if (bytes == null) {
+      debugPrint('Home 3D: no bundled GLB found for ${_hero.id}');
+      return;
+    }
     try {
+      debugPrint('Home 3D: parsing ${_hero.id} GLB');
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
       setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
+      debugPrint('Home 3D: ${_hero.id} GLB ready');
       if (_ticker != null && !_ticker!.isActive) _ticker!.start();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Home 3D: failed to load ${_hero.id}: $error');
+      debugPrintStack(stackTrace: stackTrace);
       // Fallback to the hero icon inside the 3D slot.
     }
   }
