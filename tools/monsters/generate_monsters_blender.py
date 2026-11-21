@@ -1,11 +1,14 @@
-"""Generate four original, low-poly, rigged Archer FM monster GLBs.
+"""Generate four reference-directed, low-poly, rigged Archer FM monster prototypes.
 
 Run with Blender 3.x or newer:
   blender -b -noaudio --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
 
-The models are procedural production prototypes, not replacements for final art
-approval. They include distinct silhouettes, face details, weapons, skinning,
-and named gameplay animation clips. No external assets or paid services.
+Visual authority: assets/references/approved_all/archer_fm_monsters_reference.png
+Order-to-role mapping for this prototype:
+  runner = green goblin (ordinary), stalker = skeleton (fast),
+  tank = horned mace brute (heavy), ranged = purple masked infiltrator.
+These are technical prototypes only; never mark them visually accepted without
+side-by-side human review against the source image.
 """
 import bpy
 import math
@@ -21,10 +24,14 @@ if "--output" in ARGS:
 os.makedirs(OUT, exist_ok=True)
 
 PALETTES = {
-    "runner": {"body": (0.82,0.22,0.055,1), "accent": (1.0,0.62,0.16,1), "dark": (0.20,0.07,0.035,1), "eye": (1.0,0.92,0.56,1), "metal": (0.42,0.28,0.12,1)},
-    "tank": {"body": (0.25,0.16,0.10,1), "accent": (0.72,0.48,0.22,1), "dark": (0.10,0.075,0.055,1), "eye": (1.0,0.48,0.12,1), "metal": (0.72,0.58,0.36,1)},
-    "stalker": {"body": (0.20,0.11,0.38,1), "accent": (0.62,0.43,0.92,1), "dark": (0.055,0.035,0.10,1), "eye": (0.72,0.95,1.0,1), "metal": (0.55,0.45,0.72,1)},
-    "ranged": {"body": (0.055,0.30,0.34,1), "accent": (0.30,0.82,0.88,1), "dark": (0.025,0.10,0.14,1), "eye": (0.70,1.0,0.95,1), "metal": (0.58,0.76,0.72,1)},
+    # Green goblin sword wielder — ordinary enemy.
+    "runner": {"body": (0.12,0.43,0.16,1), "accent": (0.34,0.72,0.22,1), "dark": (0.035,0.13,0.055,1), "eye": (1.0,0.82,0.28,1), "metal": (0.34,0.39,0.31,1)},
+    # Horned, heavily armoured brute — heavy enemy.
+    "tank": {"body": (0.24,0.20,0.17,1), "accent": (0.48,0.37,0.25,1), "dark": (0.07,0.065,0.06,1), "eye": (1.0,0.35,0.12,1), "metal": (0.62,0.55,0.42,1)},
+    # Exposed bone and dark eye sockets — fast skeleton.
+    "stalker": {"body": (0.78,0.75,0.63,1), "accent": (0.94,0.89,0.73,1), "dark": (0.09,0.075,0.07,1), "eye": (0.16,0.12,0.11,1), "metal": (0.48,0.49,0.52,1)},
+    # Purple hood, face wrap and violet energy blades — infiltrator.
+    "ranged": {"body": (0.20,0.08,0.34,1), "accent": (0.55,0.25,0.82,1), "dark": (0.055,0.025,0.095,1), "eye": (0.76,0.36,1.0,1), "metal": (0.35,0.22,0.48,1)},
 }
 REQUIRED = {
     "runner": ["Idle","Walk","Run","Attack","Hit","Death"],
@@ -146,46 +153,56 @@ def build(kind):
         primitive("sphere",kind+"_boot_"+str(side),(side*0.24,-0.09,0.11),(0.21,0.30,0.15),mats["dark"],rig,"shin.L" if side<0 else "shin.R")
 
     if kind=="runner":
-        # Swept ears/scarf and light twin short blades.
-        for s in (-1,1):
-            ear=primitive("cone",kind+"_ear_"+str(s),(s*0.30,0.02,2.25),(0.13,0.13,0.36),mats["accent"],rig,"head")
-            ear.rotation_euler[1]=s*-0.42
-        for s in (-1,1):
-            blade=primitive("cone",kind+"_dagger_"+str(s),(s*0.62,-0.08,0.92),(0.075,0.075,0.34),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
-            blade.rotation_euler[1]=math.pi
-        primitive("cube",kind+"_scarf",(0,0.22,1.38),(0.34,0.72,0.18),mats["accent"],rig,"spine")
-        for s in (-1,1):
-            tail=primitive("cone",kind+"_scarf_tail_"+str(s),(s*0.25,0.40,1.48),(0.13,0.13,0.48),mats["accent"],rig,"spine")
-            tail.rotation_euler[1]=s*0.65
-        primitive("sphere",kind+"_scarf_collar",(0,-0.34,1.43),(0.43,0.10,0.16),mats["accent"],rig,"spine")
-        primitive("sphere",kind+"_chest_badge",(0,-0.35,1.18),(0.16,0.07,0.17),mats["accent"],rig,"spine")
+        # Green goblin: pointed ears, broad nose, one readable short sword.
+        for side in (-1,1):
+            ear=primitive("cone",kind+"_pointed_ear_"+str(side),(side*0.43,0.02,2.08),(0.18,0.15,0.38),mats["accent"],rig,"head")
+            ear.rotation_euler[1]=side*-0.70
+        primitive("sphere",kind+"_goblin_nose",(0,-0.49,1.77),(0.18,0.16,0.16),mats["accent"],rig,"head")
+        primitive("cube",kind+"_sword_grip",(0.58,-0.08,0.88),(0.12,0.13,0.30),mats["dark"],rig,"forearm.R")
+        primitive("cube",kind+"_sword_guard",(0.58,-0.10,1.06),(0.34,0.12,0.09),mats["metal"],rig,"forearm.R")
+        primitive("cone",kind+"_single_sword",(0.58,-0.10,1.36),(0.12,0.12,0.40),mats["metal"],rig,"forearm.R")
+        primitive("cube",kind+"_leather_tunic",(0,-0.34,1.12),(0.58,0.12,0.42),mats["dark"],rig,"spine")
+        primitive("sphere",kind+"_belt",(0,-0.39,0.91),(0.52,0.08,0.10),mats["accent"],rig,"spine")
     elif kind=="tank":
-        primitive("cube",kind+"_chestplate",(0,-0.34,1.17),(0.82,0.14,0.50),mats["metal"],rig,"spine",0.18)
-        primitive("cube",kind+"_helmet_brow",(0,-0.35,2.14),(0.78,0.18,0.18),mats["metal"],rig,"head",0.06)
-        primitive("sphere",kind+"_helmet_cheek_L",(-0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
-        primitive("sphere",kind+"_helmet_cheek_R",(0.42,-0.27,1.86),(0.18,0.18,0.24),mats["metal"],rig,"head")
-        for s in (-1,1):
-            primitive("cube",kind+"_shoulder_plate_"+str(s),(s*0.49,-0.02,1.48),(0.40,0.42,0.26),mats["metal"],rig,"upper_arm.L" if s<0 else "upper_arm.R",0.12)
-            primitive("cube",kind+"_gauntlet_"+str(s),(s*0.57,-0.11,0.88),(0.35,0.36,0.28),mats["accent"],rig,"forearm.L" if s<0 else "forearm.R",0.06)
-        primitive("cone",kind+"_helmet_spike",(0,0,2.25),(0.17,0.17,0.34),mats["metal"],rig,"head")
+        # Horned heavy brute with oversized spiked mace and layered armour.
+        primitive("cube",kind+"_heavy_chestplate",(0,-0.36,1.18),(0.96,0.18,0.58),mats["metal"],rig,"spine",0.16)
+        for side in (-1,1):
+            horn=primitive("cone",kind+"_horn_"+str(side),(side*0.34,-0.02,2.28),(0.18,0.18,0.48),mats["accent"],rig,"head")
+            horn.rotation_euler[1]=side*-0.55
+            primitive("cube",kind+"_massive_shoulder_"+str(side),(side*0.55,-0.03,1.48),(0.52,0.48,0.38),mats["metal"],rig,"upper_arm.L" if side<0 else "upper_arm.R",0.12)
+            primitive("cube",kind+"_arm_bracer_"+str(side),(side*0.59,-0.12,0.91),(0.42,0.40,0.34),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R",0.08)
+        primitive("sphere",kind+"_mace_head",(0.80,-0.10,1.03),(0.52,0.52,0.52),mats["metal"],rig,"forearm.R")
+        primitive("cylinder",kind+"_mace_handle",(0.68,-0.08,0.66),(0.095,0.095,0.62),mats["dark"],rig,"forearm.R")
+        for i in range(8):
+            a=i*math.pi/4
+            spike=primitive("cone",kind+"_mace_spike_"+str(i),(0.80+math.cos(a)*0.40,-0.10,1.03+math.sin(a)*0.40),(0.11,0.11,0.23),mats["accent"],rig,"forearm.R")
+            spike.rotation_euler[1]=a
     elif kind=="stalker":
-        primitive("sphere",kind+"_hood_shell",(0,0.16,1.94),(0.98,0.48,0.91),mats["dark"],rig,"head")
-        primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
-        for s in (-1,1):
-            blade=primitive("cone",kind+"_short_blade_"+str(s),(s*0.70,-0.10,0.92),(0.12,0.12,0.48),mats["metal"],rig,"forearm.L" if s<0 else "forearm.R")
+        # Fast skeleton: exposed ivory skull, rib cage and paired short blades.
+        primitive("sphere",kind+"_skull",(0,-0.08,1.94),(0.72,0.62,0.68),mats["accent"],rig,"head")
+        primitive("sphere",kind+"_eye_socket_L",(-0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_eye_socket_R",(0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_jaw",(0,-0.36,1.69),(0.38,0.18,0.16),mats["body"],rig,"head")
+        for rib in range(4):
+            z=1.30-rib*0.13
+            primitive("sphere",kind+"_rib_"+str(rib),(0,-0.34,z),(0.48-rib*0.035,0.09,0.07),mats["accent"],rig,"spine")
+        primitive("sphere",kind+"_pelvis_bone",(0,-0.28,0.78),(0.48,0.16,0.20),mats["accent"],rig,"root")
+        for side in (-1,1):
+            blade=primitive("cone",kind+"_dual_blade_"+str(side),(side*0.70,-0.10,0.92),(0.12,0.12,0.50),mats["metal"],rig,"forearm.L" if side<0 else "forearm.R")
             blade.rotation_euler[1]=math.pi
-        primitive("cone",kind+"_cloak",(0,0.24,0.94),(0.48,0.48,0.78),mats["dark"],rig,"spine")
-        primitive("sphere",kind+"_belt",(0,-0.32,1.03),(0.62,0.08,0.13),mats["accent"],rig,"spine")
-        primitive("sphere",kind+"_hood_lining",(0,-0.23,1.90),(0.68,0.16,0.72),mats["body"],rig,"head")
+            primitive("sphere",kind+"_wrist_bone_"+str(side),(side*0.53,-0.06,0.88),(0.13,0.13,0.14),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
     elif kind=="ranged":
-        primitive("sphere",kind+"_hood_shell",(0,0.16,1.94),(0.98,0.48,0.91),mats["dark"],rig,"head")
-        primitive("sphere",kind+"_hood_brow",(0,-0.26,2.25),(0.72,0.16,0.22),mats["dark"],rig,"head")
-        primitive("cone",kind+"_robe",(0,0.20,0.94),(0.49,0.48,0.82),mats["body"],rig,"spine")
-        primitive("sphere",kind+"_robe_collar",(0,-0.32,1.42),(0.55,0.12,0.18),mats["accent"],rig,"spine")
-        primitive("cylinder",kind+"_staff",(0.72,0.02,1.62),(0.085,0.085,1.34),mats["metal"],rig,"forearm.R")
-        primitive("sphere",kind+"_staff_grip",(0.72,-0.02,1.18),(0.12,0.12,0.14),mats["accent"],rig,"forearm.R")
-        primitive("sphere",kind+"_orb_socket",(0.72,-0.02,2.24),(0.20,0.20,0.16),mats["metal"],rig,"forearm.R")
-        primitive("ico",kind+"_fire_orb",(0.72,-0.02,2.38),(0.27,0.27,0.27),mats["eye"],rig,"forearm.R")
+        # Purple infiltrator: deep hood, face wrap and twin violet energy blades.
+        primitive("sphere",kind+"_hood_shell",(0,0.16,1.96),(1.02,0.52,0.96),mats["dark"],rig,"head")
+        primitive("sphere",kind+"_hood_crown",(0,0.18,2.34),(0.70,0.46,0.34),mats["body"],rig,"head")
+        primitive("cube",kind+"_face_mask",(0,-0.43,1.78),(0.62,0.12,0.30),mats["dark"],rig,"head",0.08)
+        for side in (-1,1):
+            primitive("sphere",kind+"_violet_eye_"+str(side),(side*0.21,-0.505,1.99),(0.10,0.045,0.075),mats["eye"],rig,"head")
+            blade=primitive("cone",kind+"_violet_energy_blade_"+str(side),(side*0.70,-0.12,1.06),(0.105,0.105,0.62),mats["accent"],rig,"forearm.L" if side<0 else "forearm.R")
+            blade.rotation_euler[1]=math.pi
+            primitive("cube",kind+"_blade_guard_"+str(side),(side*0.70,-0.12,0.77),(0.30,0.10,0.10),mats["metal"],rig,"forearm.L" if side<0 else "forearm.R",0.04)
+        primitive("cone",kind+"_hood_cloak",(0,0.25,0.94),(0.52,0.48,0.84),mats["body"],rig,"spine")
+        primitive("sphere",kind+"_cloak_trim",(0,-0.34,1.35),(0.56,0.09,0.12),mats["accent"],rig,"spine")
     # Ensure GLB exporter sees the rig and meshes, with no camera/light clutter.
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
