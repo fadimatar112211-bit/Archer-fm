@@ -2,6 +2,11 @@ name: Build Flame 2.5D Sprite Pack
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - ranger-reference-work
+    paths:
+      - 'tools/blender/active_hero.txt'
 
 permissions:
   contents: read
