@@ -513,6 +513,7 @@ class ArenaPainter extends CustomPainter {
                     ..style = PaintingStyle.stroke
                     ..strokeWidth = 1.2);
             }
+            break;
 
           case TerrainKind.snow:
             // Small angular ice crystals with a cool highlight.
@@ -528,6 +529,7 @@ class ArenaPainter extends CustomPainter {
               canvas.drawCircle(point + Offset(arm + 3, -arm), 1.8,
                   Paint()..color = const Color(0x99B8E7F4));
             }
+            break;
 
           case TerrainKind.volcanic:
             // Dark fissures with a narrow ember core; all marks are decals
@@ -553,6 +555,7 @@ class ArenaPainter extends CustomPainter {
                 ..strokeWidth = 1.1
                 ..strokeCap = StrokeCap.round,
             );
+            break;
 
           case TerrainKind.forest:
             // Dense, varied grass blades and occasional tiny wildflowers.
@@ -568,6 +571,7 @@ class ArenaPainter extends CustomPainter {
               canvas.drawCircle(point + const Offset(5, 2), 1.5,
                   Paint()..color = const Color(0x88D9C77A));
             }
+            break;
         }
       }
     }
