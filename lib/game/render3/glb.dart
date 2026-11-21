@@ -24,6 +24,10 @@ class GlbModel {
     required this.jointOrder,
     required this.inverseBinds,
     required this.restGlobal,
+    required this.restLocal,
+    required this.restTranslations,
+    required this.restRotations,
+    required this.restScales,
     required this.clips,
     required this.baseColor,
     required this.materialColors,
@@ -46,6 +50,10 @@ class GlbModel {
   final List<int> jointOrder;
   final Float32List inverseBinds; // 16 floats per joint
   final Float32List restGlobal; // rest-pose global matrices, 16 per joint
+  final Float32List restLocal; // rest-pose local matrices, 16 per joint
+  final Float32List restTranslations; // 3 floats per joint
+  final Float32List restRotations; // xyzw quaternion, 4 floats per joint
+  final Float32List restScales; // 3 floats per joint
   final Map<String, HeroClip> clips;
   final ui.Image? baseColor;
 
@@ -301,8 +309,18 @@ class GlbModel {
     }
 
     final restGlobal = Float32List(16 * jointNodes.length);
+    final restLocal = Float32List(16 * jointNodes.length);
+    final restTranslations = Float32List(3 * jointNodes.length);
+    final restRotations = Float32List(4 * jointNodes.length);
+    final restScales = Float32List(3 * jointNodes.length);
     for (var j = 0; j < jointNodes.length; j++) {
-      restGlobal.setRange(j * 16, j * 16 + 16, nodeGlobal[jointNodes[j]]!);
+      final nodeIndex = jointNodes[j];
+      final node = nodes[nodeIndex] as Map<String, dynamic>;
+      final local = localOf(nodeIndex);
+      restLocal.setRange(j * 16, j * 16 + 16, local);
+      restGlobal.setRange(j * 16, j * 16 + 16, nodeGlobal[nodeIndex]!);
+      _readRestTrs(node, local, restTranslations, j * 3,
+          restRotations, j * 4, restScales, j * 3);
     }
 
     // --- animations ---
@@ -387,6 +405,10 @@ class GlbModel {
       jointOrder: jointOrder,
       inverseBinds: inverseBinds,
       restGlobal: restGlobal,
+      restLocal: restLocal,
+      restTranslations: restTranslations,
+      restRotations: restRotations,
+      restScales: restScales,
       clips: clips,
       baseColor: baseColor,
       materialColors: Float32List.fromList(materialColors),
@@ -423,6 +445,88 @@ int? _findParentNode(List nodesList, int node) {
     if (kids != null && kids.contains(node)) return i;
   }
   return null;
+}
+
+
+/// Reads the node's rest TRS. Animation channels are sparse in glTF: a joint
+/// may animate only its rotation, or may have no channel in a clip at all.
+/// Missing channels must retain the bind-pose component, not reset to zero /
+/// identity / unit scale (which collapses rigidly-bound hero parts).
+void _readRestTrs(
+  Map<String, dynamic> node,
+  Float32List local,
+  Float32List translations,
+  int tOffset,
+  Float32List rotations,
+  int rOffset,
+  Float32List scales,
+  int sOffset,
+) {
+  if (!node.containsKey('matrix')) {
+    final t = (node['translation'] as List?) ?? const [0, 0, 0];
+    final r = (node['rotation'] as List?) ?? const [0, 0, 0, 1];
+    final s = (node['scale'] as List?) ?? const [1, 1, 1];
+    for (var i = 0; i < 3; i++) {
+      translations[tOffset + i] = (t[i] as num).toDouble();
+      scales[sOffset + i] = (s[i] as num).toDouble();
+    }
+    for (var i = 0; i < 4; i++) {
+      rotations[rOffset + i] = (r[i] as num).toDouble();
+    }
+    return;
+  }
+
+  // glTF matrices are column-major. Decompose translation and scale, then
+  // recover a normalized quaternion from the rotation basis.
+  final sx = math.sqrt(local[0] * local[0] + local[1] * local[1] + local[2] * local[2]);
+  final sy = math.sqrt(local[4] * local[4] + local[5] * local[5] + local[6] * local[6]);
+  final sz = math.sqrt(local[8] * local[8] + local[9] * local[9] + local[10] * local[10]);
+  translations[tOffset] = local[12];
+  translations[tOffset + 1] = local[13];
+  translations[tOffset + 2] = local[14];
+  scales[sOffset] = sx;
+  scales[sOffset + 1] = sy;
+  scales[sOffset + 2] = sz;
+  final m00 = sx == 0 ? 1.0 : local[0] / sx;
+  final m10 = sx == 0 ? 0.0 : local[1] / sx;
+  final m20 = sx == 0 ? 0.0 : local[2] / sx;
+  final m01 = sy == 0 ? 0.0 : local[4] / sy;
+  final m11 = sy == 0 ? 1.0 : local[5] / sy;
+  final m21 = sy == 0 ? 0.0 : local[6] / sy;
+  final m02 = sz == 0 ? 0.0 : local[8] / sz;
+  final m12 = sz == 0 ? 0.0 : local[9] / sz;
+  final m22 = sz == 0 ? 1.0 : local[10] / sz;
+  final trace = m00 + m11 + m22;
+  double x, y, z, w;
+  if (trace > 0) {
+    final q = math.sqrt(trace + 1.0) * 2.0;
+    w = 0.25 * q;
+    x = (m21 - m12) / q;
+    y = (m02 - m20) / q;
+    z = (m10 - m01) / q;
+  } else if (m00 > m11 && m00 > m22) {
+    final q = math.sqrt(1.0 + m00 - m11 - m22) * 2.0;
+    w = (m21 - m12) / q;
+    x = 0.25 * q;
+    y = (m01 + m10) / q;
+    z = (m02 + m20) / q;
+  } else if (m11 > m22) {
+    final q = math.sqrt(1.0 + m11 - m00 - m22) * 2.0;
+    w = (m02 - m20) / q;
+    x = (m01 + m10) / q;
+    y = 0.25 * q;
+    z = (m12 + m21) / q;
+  } else {
+    final q = math.sqrt(1.0 + m22 - m00 - m11) * 2.0;
+    w = (m10 - m01) / q;
+    x = (m02 + m20) / q;
+    y = (m12 + m21) / q;
+    z = 0.25 * q;
+  }
+  rotations[rOffset] = x;
+  rotations[rOffset + 1] = y;
+  rotations[rOffset + 2] = z;
+  rotations[rOffset + 3] = w;
 }
 
 /// One skeletal animation clip: per-joint TRS tracks.
@@ -568,31 +672,18 @@ class Poser {
       final tr = _trBuffer;
       final rot = _rotBuffer;
       final sc = _scBuffer;
-      if (tracks == null) {
-        tr[0] = tr[1] = tr[2] = 0;
-        rot[0] = rot[1] = rot[2] = 0;
-        rot[3] = 1;
-        sc[0] = sc[1] = sc[2] = 1;
-      } else {
+      final tBase = j * 3;
+      final rBase = j * 4;
+      tr.setRange(0, 3, model.restTranslations, tBase);
+      rot.setRange(0, 4, model.restRotations, rBase);
+      sc.setRange(0, 3, model.restScales, tBase);
+      if (tracks != null) {
         final tt = tracks.translation;
-        if (tt != null) {
-          tt.sample(t, tr, 0, loop: loop);
-        } else {
-          tr[0] = tr[1] = tr[2] = 0;
-        }
+        if (tt != null) tt.sample(t, tr, 0, loop: loop);
         final trk = tracks.rotation;
-        if (trk != null) {
-          trk.sample(t, rot, 0, loop: loop);
-        } else {
-          rot[0] = rot[1] = rot[2] = 0;
-          rot[3] = 1;
-        }
+        if (trk != null) trk.sample(t, rot, 0, loop: loop);
         final ts = tracks.scale;
-        if (ts != null) {
-          ts.sample(t, sc, 0, loop: loop);
-        } else {
-          sc[0] = sc[1] = sc[2] = 1;
-        }
+        if (ts != null) ts.sample(t, sc, 0, loop: loop);
       }
       _composeTrs(local, base, tr, rot, sc);
     }
