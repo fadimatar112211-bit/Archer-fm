@@ -903,3 +903,14 @@ Verification:
 - Therefore the all-roster GLB shutdown was rolled back for the transition: Shadow remains on its 2.5D sprite pilot; Flame, Storm and Ranger keep their current verified visuals until their reference-matched sprite atlases are validated. This is a temporary migration stage, not a change to the final 2D/2.5D decision.
 - Added assertions in `test/shadow_user_walk_atlas_test.dart` ensuring all eight idle directions use the approved user atlas rather than the mismatched legacy idle art.
 - Final acceptance still requires review of Shadow attack/skill/hit/death source frames and visual gameplay capture, followed by Flame/Ranger/Storm sprite conversion from their own approved references.
+
+
+## 2026-11-21 — Shadow static-idle manifest compatibility fix
+
+- Branch: `ranger-reference-work`
+- Fixed `lib/hero/hero_manifest.dart`: a one-frame looping clip is now accepted as a valid static pose; non-looping clips still require at least two frames.
+- Updated `test/all_hero_render_manifest_test.dart`: idle clips may contain one or more frames, while all animated/action states still require at least two.
+- This matches the approved Shadow pilot: each of its eight directional idle clips deliberately holds frame 0 from the user-supplied walk sheet until dedicated idle artwork is approved.
+- Commits: `e72d603` (parser), `8268e5e` (manifest test).
+- Verification status: source changes committed; a fresh CI run for these commits has not yet appeared. Do not mark Phase 1 complete until the full test suite, capture checks, and Android build pass.
+- Known outstanding failure from the previous CI run `44892099544`: the five-hit normal attack-chain widget test failed in addition to the two Shadow single-frame-idle assumptions. Its detailed assertion was not present in the available job log excerpt and must be isolated in a focused rerun.
