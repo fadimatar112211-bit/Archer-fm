@@ -116,6 +116,14 @@ void main() {
       for (final patch in map.biomes) {
         expect(patch.radius, greaterThan(150));
       }
+      // Each of the four player/castle quadrants belongs to one of the
+      // four distinct biome regions, rather than all biomes clustering
+      // randomly in one corner of the map.
+      final castleBiomes = map.castleAnchors
+          .map((castle) => map.biomeAt(castle)?.kind)
+          .toList();
+      expect(castleBiomes, everyElement(isNotNull));
+      expect(castleBiomes.toSet(), TerrainKind.values.toSet());
     });
 
     test('places indestructible trees and rocks out of the water', () {
