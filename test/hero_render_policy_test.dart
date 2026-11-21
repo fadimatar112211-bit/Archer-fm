@@ -9,6 +9,17 @@ void main() {
     );
   });
 
+  test('only Shadow may display its sprite atlas in production', () {
+    expect(HeroRenderPolicy.allowsSpriteAtlas('shadow'), isTrue);
+    for (final heroId in ['ranger_new', 'flame', 'storm']) {
+      expect(
+        HeroRenderPolicy.allowsSpriteAtlas(heroId),
+        isFalse,
+        reason: '$heroId atlas has not passed visual acceptance',
+      );
+    }
+  });
+
   test('Ranger, Flame and Storm retain GLB visuals until sprite approval', () {
     for (final heroId in ['ranger_new', 'flame', 'storm']) {
       expect(
