@@ -1032,3 +1032,12 @@ Verification:
   - `4c3f29e5e271a76cd5ba7b0868bbc3d0e7dbd57d` — align monster production spec with approved designs.
 - Current acceptance status: all four monster models remain PROTOTYPE / NOT VISUALLY ACCEPTED; Storm sprite render remains pending; hero visual readiness is unchanged (Shadow limited pilot, Ranger pending review, Flame atlas rejected, Storm atlas rejected).
 - Next: finish and inspect the monster build artifact, fix any exporter/validator errors, then visually review the four previews against the approved sheet. In parallel, wait for Storm render/validation and the Android build/smoke-test result. Do not integrate any unapproved monster atlas or hero atlas.
+
+
+### 2026-11-21 — Blender headless preview environment fix
+
+- The NumPy-enabled prototype run `44942594455` successfully started GLB export, but Blender aborted when it entered preview rendering because `libEGL.so.1` was unavailable.
+- Updated `.github/workflows/monster-reference-prototypes.yml` to install Xvfb and Mesa/EGL runtime libraries, and run Blender under `xvfb-run` with software rendering enabled.
+- Fix commit: `0e9223961a8688998c4decfd8787661d353fd5a6`.
+- Corrected workflow run `44942727221` is queued/in progress; no preview or final GLB validation result is available yet.
+- Storm render run `44940626160` is still running its eight-direction/state render stage; do not treat the render as accepted until the remaining validation, packing and artifact review steps finish.
