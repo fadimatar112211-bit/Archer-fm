@@ -364,10 +364,10 @@ class ArenaPainter extends CustomPainter {
     ).shift(world.cameraOrigin + const Offset(arenaWidth / 2, arenaHeight / 2));
     final maxX = (map.size.width / spacing).ceil();
     final maxY = (map.size.height / spacing).ceil();
-    final left = (view.left / spacing).floor().clamp(0, maxX);
-    final right = (view.right / spacing).ceil().clamp(0, maxX);
-    final top = (view.top / spacing).floor().clamp(0, maxY);
-    final bottom = (view.bottom / spacing).ceil().clamp(0, maxY);
+    final left = (view.left / spacing).floor().clamp(0, maxX).toInt();
+    final right = (view.right / spacing).ceil().clamp(0, maxX).toInt();
+    final top = (view.top / spacing).floor().clamp(0, maxY).toInt();
+    final bottom = (view.bottom / spacing).ceil().clamp(0, maxY).toInt();
 
     for (var gy = top; gy <= bottom; gy++) {
       for (var gx = left; gx <= right; gx++) {
