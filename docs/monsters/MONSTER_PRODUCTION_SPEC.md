@@ -10,6 +10,13 @@
 
 ## Scope lock
 
+## Final runtime art direction — 2.5D
+
+All four monster types must ship as reference-faithful 2D/2.5D animated sprite actors inside the lightweight 3D arena. Do not make the procedural GLB prototypes the final in-match presentation and do not leave a mixed final roster of some GLB monsters and some sprite monsters. GLB/BLEND files may remain as source, rigging, animation and sprite-render inputs only.
+
+The final sprite pack must provide the same eight-direction coverage and consistent ground pivot used by the hero pipeline, with readable face and weapon silhouettes at normal mobile gameplay zoom. Required states are idle, walk, attack, hit and death; preserve each type's existing combat timing and gameplay events. Keep the current procedural Canvas renderer as the safe fallback until each type passes technical validation and visual review against the approved monster sheet. Never integrate placeholder or rejected atlases.
+
+
 - Keep exactly four types: Runner, Tank, Stalker, Ranged.
 - Preserve the current game rules, target selection, army roster, purchases, progression, crystal objectives, and resource economy.
 - Do not add new monster classes, minion waves, shops, towers, lanes, or win conditions.
