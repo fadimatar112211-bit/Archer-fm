@@ -6,7 +6,7 @@ Canonical visual reference: `assets/references/approved_all/hero_roster_concept.
 
 ## Production rule
 
-The approved target is a lightweight 3D arena with reference-approved 2D/2.5D hero sprites. GLB files remain source/reference assets and are not, by themselves, proof that a hero is accepted for production sprite rendering.
+Current runtime routing is GLB-primary for Ranger, Flame and Storm; Shadow is the single approved 2.5D sprite pilot. The target remains reference-faithful chibi heroes in the arena. A GLB file or a non-empty sprite manifest is not, by itself, proof that a hero is visually accepted. Do not silently switch routes; review the actual runtime captures first.
 
 Do not generate substitute character art or silently promote an atlas because it has a manifest. A hero may switch to the sprite route only after its front/side/back views, all eight directions, action states, foot contact, transparency, and in-game captures are reviewed against the canonical reference.
 
@@ -48,6 +48,48 @@ Keep these source assets intact while producing and reviewing replacement sprite
 4. Ranger: leave the existing benchmark unchanged until its full sprite set has passed the same visual acceptance checklist.
 5. After each hero passes visual review, update `HeroRenderPolicy` and add a regression test for the approved route. Do not switch multiple heroes at once.
 
+
+## 2026-11-21 — Review actual in-game GLB captures and bind-pose fix
+
+Reviewed the 3D hero capture artifact from Android run `44943067801`
+(`archer-fm-3d-hero-visual-captures`). Flutter analysis and the full test
+step completed before the APK job was cancelled during the release build; the
+capture artifact was uploaded.
+
+The isolated close-ups show that the existing "all eight directions" test is
+not a visual acceptance test: it asserts that triangles were drawn and that
+the projected bounds fit, but does not assert a readable face, intact mesh,
+correct front-facing orientation or recognizable weapon.
+
+Observed capture concerns:
+- Ranger: several yaw views show severe fragmented/overlapping geometry and
+  the face/weapon are not consistently readable.
+- Flame: the large foreground weapon/round geometry dominates the front view
+  and obscures the face; the reference identity is not yet clear at game scale.
+- Storm: the close-ups show fragmented-looking armor/mesh and no consistently
+  readable face.
+- Shadow: the GLB test capture is not proof of the production route; Shadow
+  remains on the approved 2.5D sprite pilot while its GLB is only a test/source.
+
+A renderer defect was identified in `lib/game/render3/glb.dart`: glTF
+animation channels are sparse, but the poser reset joints without a channel
+(and missing individual TRS channels) to zero translation, identity rotation
+and unit scale instead of preserving their bind-pose values. This can collapse
+or displace rigidly bound mesh parts.
+
+Fix and regression coverage added:
+- Preserve each joint's rest-local matrix and decomposed translation, rotation
+  and scale when loading a GLB.
+- Initialize every animated joint from those rest values, then override only
+  the channels actually authored by the current clip.
+- Add `test/glb_rest_pose_test.dart` across all four hero GLBs to verify that
+  joints without animation tracks retain their bind pose.
+
+The new Flutter CI run must complete without cancellation before this fix is
+considered verified. Then regenerate the four face/yaw capture sets and compare
+them again. If fragmentation remains, investigate mesh-node transforms,
+inverse-bind handling and the original GLB source rather than weakening the
+visual acceptance checks.
 
 ## 2026-11-21 — Prevent rejected sprite atlases from appearing after GLB failure
 
