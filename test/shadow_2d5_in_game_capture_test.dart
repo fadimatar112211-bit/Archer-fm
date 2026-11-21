@@ -56,6 +56,40 @@ void main() {
         expect(clip!.frames, hasLength(4), reason: clipName);
 
         final sheet = await loader.loadSheet(manifest, clipName);
+        final atlasRgba = await sheet.image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        expect(atlasRgba, isNotNull, reason: clipName);
+        final atlasPixels = atlasRgba!.buffer.asUint8List();
+        int visiblePixelsIn(ui.Rect rect) {
+          var visible = 0;
+          final left = rect.left.toInt();
+          final top = rect.top.toInt();
+          final right = rect.right.toInt();
+          final bottom = rect.bottom.toInt();
+          for (var y = top; y < bottom; y++) {
+            for (var x = left; x < right; x++) {
+              final alpha = atlasPixels[(y * sheet.width + x) * 4 + 3];
+              if (alpha > 0) visible++;
+            }
+          }
+          return visible;
+        }
+
+        // Every direction/frame cell must contain actual non-transparent
+        // character pixels; a valid JSON rectangle alone is not enough.
+        for (final frame in clip.frames) {
+          final rect = sheet.rectFor(frame);
+          expect(rect, isNotNull, reason: '$clipName/$frame');
+          expect(rect!.width, 192, reason: '$clipName/$frame width');
+          expect(rect.height, 192, reason: '$clipName/$frame height');
+          expect(
+            visiblePixelsIn(rect),
+            greaterThan(4000),
+            reason: '$clipName/$frame must contain the visible Shadow sprite',
+          );
+        }
+
         final player = SpritePlayer(clip: clip);
         player.advance(clip.frameDurationMs * 2);
         final frameId = player.frameId;
