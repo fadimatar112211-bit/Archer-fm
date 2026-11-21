@@ -340,13 +340,14 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  /// Loads the hero's real GLB (bones/rig/animations) and switches the hero's
-  /// in-arena visual to the 3D model. Falls back to the atlas sprite when no
-  /// model is bundled for this hero.
+  /// Temporary migration fallback: loads a retained GLB source while a
+  /// reference-approved 2.5D sprite pack is being completed for this hero.
+  /// The final roster renderer is sprite-based for Ranger, Flame, Shadow and
+  /// Storm; do not treat this transitional GLB route as the art target.
   Future<void> _loadHero3D() async {
-    // Shadow is the first 2.5D migration pilot. Keep its sprite renderer active
-    // while the remaining heroes stay on their verified legacy visuals until
-    // their reference-matched sprite sheets pass review.
+    // Shadow is currently the only approved sprite pilot. This is a temporary
+    // migration gate only: all four heroes must move to approved 2.5D packs.
+    // Never expose an unapproved atlas just to avoid loading a retained GLB.
     if (HeroRenderPolicy.routeFor(widget.hero.id) ==
             HeroVisualRoute.approvedSpritePilot &&
         widget.hero3dController == null &&
