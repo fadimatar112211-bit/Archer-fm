@@ -13,9 +13,11 @@ class AtlasSheet {
     required this.frames,
     required this.width,
     required this.height,
+    this.ownsImage = true,
   });
 
   final ui.Image image;
+  final bool ownsImage;
   final Map<String, ui.Rect> frames;
   final int width;
   final int height;
@@ -23,7 +25,7 @@ class AtlasSheet {
   ui.Rect? rectFor(String frameId) => frames[frameId];
 
   void dispose() {
-    image.dispose();
+    if (ownsImage) image.dispose();
   }
 }
 
@@ -57,6 +59,11 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
   final HeroDefinition hero;
 
   final Map<String, AtlasSheet> _cache = {};
+
+  // Multiple directional clips may reference one shared sprite sheet. Keep
+  // one decoded ui.Image per asset path instead of decoding the same 4x8
+  // Shadow atlas eight times (which would multiply GPU/CPU image memory).
+  final Map<String, Future<ui.Image>> _imageCache = {};
 
   HeroManifest? _manifestCache;
 
@@ -92,19 +99,11 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
     if (encodedMeta is! Map<String, dynamic>) {
       throw FormatException('Atlas metadata for $animation must be an object');
     }
-    final imageData = await rootBundle.load('$assetRoot/${entry.image}');
-    final bytes = imageData.buffer.asUint8List(
-      imageData.offsetInBytes,
-      imageData.lengthInBytes,
-    );
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    codec.dispose();
-    final image = frame.image;
+    final imagePath = '$assetRoot/${entry.image}';
+    final image = await _loadSharedImage(imagePath);
 
     final framesJson = encodedMeta['frames'];
     if (framesJson is! Map) {
-      image.dispose();
       throw FormatException('Atlas metadata for $animation has no frames');
     }
     final frames = <String, ui.Rect>{};
@@ -131,9 +130,33 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
       frames: frames,
       width: image.width,
       height: image.height,
+      ownsImage: false,
     );
     _cache[animation] = sheet;
     return sheet;
+  }
+
+  Future<ui.Image> _loadSharedImage(String path) async {
+    final future = _imageCache.putIfAbsent(path, () async {
+      final imageData = await rootBundle.load(path);
+      final bytes = imageData.buffer.asUint8List(
+        imageData.offsetInBytes,
+        imageData.lengthInBytes,
+      );
+      final codec = await ui.instantiateImageCodec(bytes);
+      try {
+        final frame = await codec.getNextFrame();
+        return frame.image;
+      } finally {
+        codec.dispose();
+      }
+    });
+    try {
+      return await future;
+    } catch (_) {
+      if (identical(_imageCache[path], future)) _imageCache.remove(path);
+      rethrow;
+    }
   }
 
   @override
@@ -142,5 +165,10 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
       sheet.dispose();
     }
     _cache.clear();
+    // Dispose each shared image exactly once, including loads still in flight.
+    for (final future in _imageCache.values) {
+      future.then((image) => image.dispose(), onError: (_) {});
+    }
+    _imageCache.clear();
   }
 }
