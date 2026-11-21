@@ -310,7 +310,7 @@ def main():
     for kind in REQUIRED:
         os.makedirs(os.path.join(OUT,kind),exist_ok=True)
         build(kind)
-        clips={state.lower():state for state in REQUIRED[kind]}
+        clips={state.lower():kind+"_"+state for state in REQUIRED[kind]}
         entry={"file":kind+"/monster.glb","scale":1.0,"forward":"-Y","groundOffset":[0,0,0],"clips":clips}
         if kind=="ranged": entry["events"]={"projectileRelease":0.58}
         manifest["monsters"][kind]=entry
