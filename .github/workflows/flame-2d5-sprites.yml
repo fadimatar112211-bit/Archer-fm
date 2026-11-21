@@ -33,6 +33,7 @@ jobs:
           HERO="$(tr -d '[:space:]' < tools/blender/active_hero.txt | tr '[:upper:]' '[:lower:]')"
           case "$HERO" in ranger|flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
           echo "Rendering approved profile: $HERO"
+          echo "HERO=$HERO" >> "$GITHUB_ENV"
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
 
@@ -43,13 +44,14 @@ jobs:
 
       - name: Validate transparent frames, alignment and motion
         run: |
-          python3 tools/blender/validate_rendered_frames.py --root "assets/heroes/$HERO/renders" --resolution 192
+          # render_hero.py writes selected heroes into the fixed Ranger render root.
+          # The validator reads active_hero.txt to verify which hero owns the frames.
+          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
 
       - name: Pack atlases and publish selected hero bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          MANIFEST="assets/heroes/$HERO/renders/${HERO}_manifest.json"
-          if [ "$HERO" = "ranger" ]; then MANIFEST="assets/heroes/ranger/renders/ranger_manifest.json"; fi
+          MANIFEST="assets/heroes/ranger/renders/ranger_manifest.json"
           xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
 
       - name: Upload selected hero source and render bundle
