@@ -130,8 +130,16 @@ class AnimationClip {
       throw FormatException('$name.frame_duration_ms must be a positive integer');
     }
     final framesJson = json['frames'];
-    if (framesJson is! List || framesJson.length < 2) {
-      throw FormatException('$name.frames must contain at least two frames');
+    // A looping one-frame clip is a valid static pose (for example, Shadow's
+    // current user-approved directional idle frame). Non-looping actions need
+    // at least two frames so their timing/events can advance meaningfully.
+    if (framesJson is! List ||
+        framesJson.isEmpty ||
+        (!loop && framesJson.length < 2)) {
+      throw FormatException(
+        '$name.frames must contain at least one frame; non-looping clips '
+        'must contain at least two',
+      );
     }
     final frames = <String>[];
     for (final frame in framesJson) {
