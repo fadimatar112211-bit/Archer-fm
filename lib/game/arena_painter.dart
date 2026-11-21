@@ -353,6 +353,34 @@ class ArenaPainter extends CustomPainter {
         );
         canvas.drawLine(start - normal, start + normal, shimmer);
       }
+
+      // Broken foam glints along both banks add depth without painting over
+      // bridge decks. Their positions are deterministic; only the shimmer
+      // offset moves, so the map does not flicker as the camera pans.
+      final foam = Paint()
+        ..color = const Color(0x668ED8E8)
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < river.points.length - 1; i++) {
+        final a = river.points[i];
+        final b = river.points[i + 1];
+        final tangent = b - a;
+        final segmentLength = tangent.distance;
+        if (segmentLength < 24) continue;
+        final direction = tangent / segmentLength;
+        final normal = Offset(-direction.dy, direction.dx);
+        for (final side in const [-1.0, 1.0]) {
+          for (final fraction in const [0.22, 0.48, 0.74]) {
+            final drift = ((phase + fraction * 0.37) % 1.0) * 0.08;
+            final t = (fraction + drift).clamp(0.08, 0.92);
+            final center = a + tangent * t +
+                normal * side * (river.width / 2 + 5);
+            if (map.isBridge(center)) continue;
+            final dash = center - direction * 4;
+            canvas.drawLine(dash, dash + direction * 8, foam);
+          }
+        }
+      }
     }
 
 
