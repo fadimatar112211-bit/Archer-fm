@@ -343,33 +343,44 @@ class _GameScreenState extends State<GameScreen>
   /// in-arena visual to the 3D model. Falls back to the atlas sprite when no
   /// model is bundled for this hero.
   Future<void> _loadHero3D() async {
-    // Production direction: every playable hero is a 2D sprite with a 2.5D
-    // presentation. Do not load or display bundled GLBs for any hero.
-    // Explicit injection remains available to isolated renderer tests only.
+    // Shadow is the first 2.5D migration pilot. Keep its sprite renderer active
+    // while the remaining heroes stay on their verified legacy visuals until
+    // their reference-matched sprite sheets pass review.
+    if (widget.hero.id == 'shadow' &&
+        widget.hero3dController == null &&
+        widget.hero3dBytes == null) {
+      debugPrint('Shadow 2.5D pilot: using sprite atlas renderer');
+      return;
+    }
     if (widget.hero3dController != null) {
       _hero3d = widget.hero3dController;
       return;
     }
-    if (widget.hero3dBytes == null) {
-      debugPrint(
-        '${widget.hero.id} 2.5D production renderer: using sprite atlas',
-      );
-      return;
-    }
-
     Uint8List? bytes;
     try {
-      bytes = await widget.hero3dBytes!(widget.hero);
+      if (widget.hero3dBytes != null) {
+        bytes = await widget.hero3dBytes!(widget.hero);
+      } else {
+        for (final path in _glbCandidatePaths(widget.hero.id)) {
+          try {
+            final data = await rootBundle.load(path);
+            bytes = data.buffer.asUint8List();
+            break;
+          } catch (_) {
+            // Try the next candidate.
+          }
+        }
+      }
     } catch (_) {
       bytes = null;
     }
-    if (!mounted || bytes == null) return;
+    if (!mounted || bytes == null) return; // atlas fallback stays active
     try {
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
       setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
     } catch (error) {
-      debugPrint('injected hero3d test model load failed: $error');
+      debugPrint('hero3d load failed: $error');
     }
   }
 
