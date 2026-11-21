@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        hero: [ranger, flame, shadow, storm]
+        hero: [flame, shadow, storm]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,5 +78,60 @@ jobs:
           path: |
             assets/heroes/ranger/renders/_bundle/${{ matrix.hero }}/
             assets/heroes/${{ matrix.hero }}/source/${{ matrix.hero }}_source.blend
+          if-no-files-found: error
+          retention-days: 30
+
+  build-ranger-new:
+    name: Build playable Ranger sprites
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender and image validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-pil xvfb libegl1 libgl1
+          curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          sudo tar -xJf /tmp/blender.tar.xz -C /opt
+          echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
+          /opt/blender-3.6.13-linux-x64/blender --version
+
+      - name: Select the actual playable Ranger
+        run: |
+          echo "ranger_new" > tools/blender/active_hero.txt
+          test -s assets/heroes/ranger_new/source/ranger_new_source.blend
+          echo "BLEND=assets/heroes/ranger_new/source/ranger_new_source.blend" >> "$GITHUB_ENV"
+          echo "RENDER_ROOT=assets/heroes/ranger_new/renders" >> "$GITHUB_ENV"
+          echo "MANIFEST=assets/heroes/ranger_new/renders/ranger_new_manifest.json" >> "$GITHUB_ENV"
+
+      - name: Validate original Ranger rig and authored actions
+        run: |
+          "$BLENDER" --background "$BLEND" --python tools/blender/validate_ranger_new_source.py
+
+      - name: Render Ranger in eight directions and all states
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/ranger_new/source/render_config.json
+
+      - name: Validate Ranger frames and motion
+        run: |
+          test -s "$MANIFEST"
+          python3 tools/blender/validate_rendered_frames.py --root "$RENDER_ROOT" --resolution 192
+
+      - name: Pack and validate playable Ranger atlases
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
+          python3 tools/validate_hero_assets.py "$MANIFEST"
+
+      - name: Upload playable Ranger source and sprite bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-ranger-new-2d5-sprite-pack
+          path: |
+            assets/heroes/ranger/renders/_bundle/ranger_new/
+            assets/heroes/ranger_new/source/ranger_new_source.blend
           if-no-files-found: error
           retention-days: 30
