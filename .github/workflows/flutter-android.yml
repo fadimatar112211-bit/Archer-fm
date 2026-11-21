@@ -159,7 +159,7 @@ jobs:
           test "$LICENSE_STATUS" -eq 0
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
-          "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 3072 -cores 2 > /tmp/archer-emulator.log 2>&1 &
+          "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -memory 2048 -cores 2 > /tmp/archer-emulator.log 2>&1 &
           EMULATOR_PID=$!
           echo "$EMULATOR_PID" > /tmp/archer-emulator.pid
           adb start-server
@@ -206,8 +206,12 @@ jobs:
         if: always()
         run: |
           mkdir -p build/android-emulator-diagnostics
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -n "$SDK" ]; then export PATH="$SDK/platform-tools:$PATH"; fi
           adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
           adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
+          free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
+          dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
           if [ -f /tmp/archer-emulator.log ]; then
             cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
           fi
