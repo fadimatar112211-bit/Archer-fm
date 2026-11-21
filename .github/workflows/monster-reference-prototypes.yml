@@ -1,0 +1,47 @@
+name: Monster Reference Prototype Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ranger-reference-work]
+    paths:
+      - "tools/monsters/generate_monsters_blender.py"
+      - "tools/validate_monster_glb.py"
+      - ".github/workflows/monster-reference-prototypes.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-prototypes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --version
+
+      - name: Python syntax check
+        run: python3 -m py_compile tools/monsters/generate_monsters_blender.py tools/validate_monster_glb.py
+
+      - name: Generate reference-directed prototypes and previews
+        env:
+          ARCHER_MONSTER_PREVIEWS: "1"
+        run: |
+          blender -b -noaudio --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+
+      - name: Validate GLB structure and required clips
+        run: python3 tools/validate_monster_glb.py --root build/monster-glb
+
+      - name: Upload review-only prototypes
+        uses: actions/upload-artifact@v4
+        with:
+          name: monster-reference-prototypes
+          path: build/monster-glb/
+          if-no-files-found: error
+          retention-days: 14
