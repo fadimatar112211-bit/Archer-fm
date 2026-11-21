@@ -13,163 +13,163 @@
   "atlases": [
     {
       "animation": "attack_e",
-      "image": "atlases/attack_e.png",
-      "meta": "atlases/attack_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "attack_n",
-      "image": "atlases/attack_n.png",
-      "meta": "atlases/attack_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "attack_ne",
-      "image": "atlases/attack_ne.png",
-      "meta": "atlases/attack_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "attack_nw",
-      "image": "atlases/attack_nw.png",
-      "meta": "atlases/attack_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "attack_s",
-      "image": "atlases/attack_s.png",
-      "meta": "atlases/attack_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "attack_se",
-      "image": "atlases/attack_se.png",
-      "meta": "atlases/attack_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "attack_sw",
-      "image": "atlases/attack_sw.png",
-      "meta": "atlases/attack_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "attack_w",
-      "image": "atlases/attack_w.png",
-      "meta": "atlases/attack_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "death_e",
-      "image": "atlases/death_e.png",
-      "meta": "atlases/death_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "death_n",
-      "image": "atlases/death_n.png",
-      "meta": "atlases/death_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "death_ne",
-      "image": "atlases/death_ne.png",
-      "meta": "atlases/death_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "death_nw",
-      "image": "atlases/death_nw.png",
-      "meta": "atlases/death_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "death_s",
-      "image": "atlases/death_s.png",
-      "meta": "atlases/death_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "death_se",
-      "image": "atlases/death_se.png",
-      "meta": "atlases/death_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "death_sw",
-      "image": "atlases/death_sw.png",
-      "meta": "atlases/death_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "death_w",
-      "image": "atlases/death_w.png",
-      "meta": "atlases/death_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "dodge_e",
-      "image": "atlases/dodge_e.png",
-      "meta": "atlases/dodge_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "dodge_n",
-      "image": "atlases/dodge_n.png",
-      "meta": "atlases/dodge_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "dodge_ne",
-      "image": "atlases/dodge_ne.png",
-      "meta": "atlases/dodge_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "dodge_nw",
-      "image": "atlases/dodge_nw.png",
-      "meta": "atlases/dodge_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "dodge_s",
-      "image": "atlases/dodge_s.png",
-      "meta": "atlases/dodge_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "dodge_se",
-      "image": "atlases/dodge_se.png",
-      "meta": "atlases/dodge_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "dodge_sw",
-      "image": "atlases/dodge_sw.png",
-      "meta": "atlases/dodge_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "dodge_w",
-      "image": "atlases/dodge_w.png",
-      "meta": "atlases/dodge_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "hit_e",
-      "image": "atlases/hit_e.png",
-      "meta": "atlases/hit_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "hit_n",
-      "image": "atlases/hit_n.png",
-      "meta": "atlases/hit_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "hit_ne",
-      "image": "atlases/hit_ne.png",
-      "meta": "atlases/hit_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "hit_nw",
-      "image": "atlases/hit_nw.png",
-      "meta": "atlases/hit_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "hit_s",
-      "image": "atlases/hit_s.png",
-      "meta": "atlases/hit_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "hit_se",
-      "image": "atlases/hit_se.png",
-      "meta": "atlases/hit_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "hit_sw",
-      "image": "atlases/hit_sw.png",
-      "meta": "atlases/hit_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "hit_w",
-      "image": "atlases/hit_w.png",
-      "meta": "atlases/hit_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "idle_e",
@@ -213,83 +213,83 @@
     },
     {
       "animation": "run_e",
-      "image": "atlases/run_e.png",
-      "meta": "atlases/run_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "run_n",
-      "image": "atlases/run_n.png",
-      "meta": "atlases/run_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "run_ne",
-      "image": "atlases/run_ne.png",
-      "meta": "atlases/run_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "run_nw",
-      "image": "atlases/run_nw.png",
-      "meta": "atlases/run_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "run_s",
-      "image": "atlases/run_s.png",
-      "meta": "atlases/run_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "run_se",
-      "image": "atlases/run_se.png",
-      "meta": "atlases/run_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "run_sw",
-      "image": "atlases/run_sw.png",
-      "meta": "atlases/run_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "run_w",
-      "image": "atlases/run_w.png",
-      "meta": "atlases/run_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "skill_e",
-      "image": "atlases/skill_e.png",
-      "meta": "atlases/skill_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "skill_n",
-      "image": "atlases/skill_n.png",
-      "meta": "atlases/skill_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "skill_ne",
-      "image": "atlases/skill_ne.png",
-      "meta": "atlases/skill_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "skill_nw",
-      "image": "atlases/skill_nw.png",
-      "meta": "atlases/skill_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "skill_s",
-      "image": "atlases/skill_s.png",
-      "meta": "atlases/skill_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "skill_se",
-      "image": "atlases/skill_se.png",
-      "meta": "atlases/skill_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "skill_sw",
-      "image": "atlases/skill_sw.png",
-      "meta": "atlases/skill_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "skill_w",
-      "image": "atlases/skill_w.png",
-      "meta": "atlases/skill_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "walk_e",
@@ -356,15 +356,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_s_000",
-        "shadow_run_s_001",
-        "shadow_run_s_002",
-        "shadow_run_s_003",
-        "shadow_run_s_004",
-        "shadow_run_s_005",
-        "shadow_run_s_006",
-        "shadow_run_s_007",
-        "shadow_run_s_008"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_001",
+        "shadow_walk_s_user_002",
+        "shadow_walk_s_user_003"
       ],
       "events": []
     },
@@ -372,13 +367,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_s_000",
-        "shadow_attack_s_001",
-        "shadow_attack_s_002",
-        "shadow_attack_s_003",
-        "shadow_attack_s_004",
-        "shadow_attack_s_005",
-        "shadow_attack_s_006"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000"
       ],
       "events": [
         {
@@ -395,15 +390,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_s_000",
-        "shadow_skill_s_001",
-        "shadow_skill_s_002",
-        "shadow_skill_s_003",
-        "shadow_skill_s_004",
-        "shadow_skill_s_005",
-        "shadow_skill_s_006",
-        "shadow_skill_s_007",
-        "shadow_skill_s_008"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000"
       ],
       "events": [
         {
@@ -420,15 +415,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_s_000",
-        "shadow_dodge_s_001",
-        "shadow_dodge_s_002",
-        "shadow_dodge_s_003",
-        "shadow_dodge_s_004",
-        "shadow_dodge_s_005",
-        "shadow_dodge_s_006",
-        "shadow_dodge_s_007",
-        "shadow_dodge_s_008"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000"
       ],
       "events": [
         {
@@ -445,11 +440,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_s_000",
-        "shadow_hit_s_001",
-        "shadow_hit_s_002",
-        "shadow_hit_s_003",
-        "shadow_hit_s_004"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000"
       ],
       "events": [
         {
@@ -462,15 +457,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_s_000",
-        "shadow_death_s_001",
-        "shadow_death_s_002",
-        "shadow_death_s_003",
-        "shadow_death_s_004",
-        "shadow_death_s_005",
-        "shadow_death_s_006",
-        "shadow_death_s_007",
-        "shadow_death_s_008"
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000",
+        "shadow_walk_s_user_000"
       ],
       "events": [
         {
@@ -502,15 +497,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_sw_000",
-        "shadow_run_sw_001",
-        "shadow_run_sw_002",
-        "shadow_run_sw_003",
-        "shadow_run_sw_004",
-        "shadow_run_sw_005",
-        "shadow_run_sw_006",
-        "shadow_run_sw_007",
-        "shadow_run_sw_008"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_001",
+        "shadow_walk_sw_user_002",
+        "shadow_walk_sw_user_003"
       ],
       "events": []
     },
@@ -518,13 +508,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_sw_000",
-        "shadow_attack_sw_001",
-        "shadow_attack_sw_002",
-        "shadow_attack_sw_003",
-        "shadow_attack_sw_004",
-        "shadow_attack_sw_005",
-        "shadow_attack_sw_006"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000"
       ],
       "events": [
         {
@@ -541,15 +531,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_sw_000",
-        "shadow_skill_sw_001",
-        "shadow_skill_sw_002",
-        "shadow_skill_sw_003",
-        "shadow_skill_sw_004",
-        "shadow_skill_sw_005",
-        "shadow_skill_sw_006",
-        "shadow_skill_sw_007",
-        "shadow_skill_sw_008"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000"
       ],
       "events": [
         {
@@ -566,15 +556,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_sw_000",
-        "shadow_dodge_sw_001",
-        "shadow_dodge_sw_002",
-        "shadow_dodge_sw_003",
-        "shadow_dodge_sw_004",
-        "shadow_dodge_sw_005",
-        "shadow_dodge_sw_006",
-        "shadow_dodge_sw_007",
-        "shadow_dodge_sw_008"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000"
       ],
       "events": [
         {
@@ -591,11 +581,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_sw_000",
-        "shadow_hit_sw_001",
-        "shadow_hit_sw_002",
-        "shadow_hit_sw_003",
-        "shadow_hit_sw_004"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000"
       ],
       "events": [
         {
@@ -608,15 +598,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_sw_000",
-        "shadow_death_sw_001",
-        "shadow_death_sw_002",
-        "shadow_death_sw_003",
-        "shadow_death_sw_004",
-        "shadow_death_sw_005",
-        "shadow_death_sw_006",
-        "shadow_death_sw_007",
-        "shadow_death_sw_008"
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000",
+        "shadow_walk_sw_user_000"
       ],
       "events": [
         {
@@ -648,15 +638,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_w_000",
-        "shadow_run_w_001",
-        "shadow_run_w_002",
-        "shadow_run_w_003",
-        "shadow_run_w_004",
-        "shadow_run_w_005",
-        "shadow_run_w_006",
-        "shadow_run_w_007",
-        "shadow_run_w_008"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_001",
+        "shadow_walk_w_user_002",
+        "shadow_walk_w_user_003"
       ],
       "events": []
     },
@@ -664,13 +649,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_w_000",
-        "shadow_attack_w_001",
-        "shadow_attack_w_002",
-        "shadow_attack_w_003",
-        "shadow_attack_w_004",
-        "shadow_attack_w_005",
-        "shadow_attack_w_006"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000"
       ],
       "events": [
         {
@@ -687,15 +672,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_w_000",
-        "shadow_skill_w_001",
-        "shadow_skill_w_002",
-        "shadow_skill_w_003",
-        "shadow_skill_w_004",
-        "shadow_skill_w_005",
-        "shadow_skill_w_006",
-        "shadow_skill_w_007",
-        "shadow_skill_w_008"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000"
       ],
       "events": [
         {
@@ -712,15 +697,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_w_000",
-        "shadow_dodge_w_001",
-        "shadow_dodge_w_002",
-        "shadow_dodge_w_003",
-        "shadow_dodge_w_004",
-        "shadow_dodge_w_005",
-        "shadow_dodge_w_006",
-        "shadow_dodge_w_007",
-        "shadow_dodge_w_008"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000"
       ],
       "events": [
         {
@@ -737,11 +722,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_w_000",
-        "shadow_hit_w_001",
-        "shadow_hit_w_002",
-        "shadow_hit_w_003",
-        "shadow_hit_w_004"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000"
       ],
       "events": [
         {
@@ -754,15 +739,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_w_000",
-        "shadow_death_w_001",
-        "shadow_death_w_002",
-        "shadow_death_w_003",
-        "shadow_death_w_004",
-        "shadow_death_w_005",
-        "shadow_death_w_006",
-        "shadow_death_w_007",
-        "shadow_death_w_008"
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000",
+        "shadow_walk_w_user_000"
       ],
       "events": [
         {
@@ -794,15 +779,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_nw_000",
-        "shadow_run_nw_001",
-        "shadow_run_nw_002",
-        "shadow_run_nw_003",
-        "shadow_run_nw_004",
-        "shadow_run_nw_005",
-        "shadow_run_nw_006",
-        "shadow_run_nw_007",
-        "shadow_run_nw_008"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_001",
+        "shadow_walk_nw_user_002",
+        "shadow_walk_nw_user_003"
       ],
       "events": []
     },
@@ -810,13 +790,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_nw_000",
-        "shadow_attack_nw_001",
-        "shadow_attack_nw_002",
-        "shadow_attack_nw_003",
-        "shadow_attack_nw_004",
-        "shadow_attack_nw_005",
-        "shadow_attack_nw_006"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000"
       ],
       "events": [
         {
@@ -833,15 +813,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_nw_000",
-        "shadow_skill_nw_001",
-        "shadow_skill_nw_002",
-        "shadow_skill_nw_003",
-        "shadow_skill_nw_004",
-        "shadow_skill_nw_005",
-        "shadow_skill_nw_006",
-        "shadow_skill_nw_007",
-        "shadow_skill_nw_008"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000"
       ],
       "events": [
         {
@@ -858,15 +838,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_nw_000",
-        "shadow_dodge_nw_001",
-        "shadow_dodge_nw_002",
-        "shadow_dodge_nw_003",
-        "shadow_dodge_nw_004",
-        "shadow_dodge_nw_005",
-        "shadow_dodge_nw_006",
-        "shadow_dodge_nw_007",
-        "shadow_dodge_nw_008"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000"
       ],
       "events": [
         {
@@ -883,11 +863,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_nw_000",
-        "shadow_hit_nw_001",
-        "shadow_hit_nw_002",
-        "shadow_hit_nw_003",
-        "shadow_hit_nw_004"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000"
       ],
       "events": [
         {
@@ -900,15 +880,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_nw_000",
-        "shadow_death_nw_001",
-        "shadow_death_nw_002",
-        "shadow_death_nw_003",
-        "shadow_death_nw_004",
-        "shadow_death_nw_005",
-        "shadow_death_nw_006",
-        "shadow_death_nw_007",
-        "shadow_death_nw_008"
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000",
+        "shadow_walk_nw_user_000"
       ],
       "events": [
         {
@@ -940,15 +920,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_n_000",
-        "shadow_run_n_001",
-        "shadow_run_n_002",
-        "shadow_run_n_003",
-        "shadow_run_n_004",
-        "shadow_run_n_005",
-        "shadow_run_n_006",
-        "shadow_run_n_007",
-        "shadow_run_n_008"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_001",
+        "shadow_walk_n_user_002",
+        "shadow_walk_n_user_003"
       ],
       "events": []
     },
@@ -956,13 +931,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_n_000",
-        "shadow_attack_n_001",
-        "shadow_attack_n_002",
-        "shadow_attack_n_003",
-        "shadow_attack_n_004",
-        "shadow_attack_n_005",
-        "shadow_attack_n_006"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000"
       ],
       "events": [
         {
@@ -979,15 +954,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_n_000",
-        "shadow_skill_n_001",
-        "shadow_skill_n_002",
-        "shadow_skill_n_003",
-        "shadow_skill_n_004",
-        "shadow_skill_n_005",
-        "shadow_skill_n_006",
-        "shadow_skill_n_007",
-        "shadow_skill_n_008"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000"
       ],
       "events": [
         {
@@ -1004,15 +979,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_n_000",
-        "shadow_dodge_n_001",
-        "shadow_dodge_n_002",
-        "shadow_dodge_n_003",
-        "shadow_dodge_n_004",
-        "shadow_dodge_n_005",
-        "shadow_dodge_n_006",
-        "shadow_dodge_n_007",
-        "shadow_dodge_n_008"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000"
       ],
       "events": [
         {
@@ -1029,11 +1004,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_n_000",
-        "shadow_hit_n_001",
-        "shadow_hit_n_002",
-        "shadow_hit_n_003",
-        "shadow_hit_n_004"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000"
       ],
       "events": [
         {
@@ -1046,15 +1021,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_n_000",
-        "shadow_death_n_001",
-        "shadow_death_n_002",
-        "shadow_death_n_003",
-        "shadow_death_n_004",
-        "shadow_death_n_005",
-        "shadow_death_n_006",
-        "shadow_death_n_007",
-        "shadow_death_n_008"
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000",
+        "shadow_walk_n_user_000"
       ],
       "events": [
         {
@@ -1086,15 +1061,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_ne_000",
-        "shadow_run_ne_001",
-        "shadow_run_ne_002",
-        "shadow_run_ne_003",
-        "shadow_run_ne_004",
-        "shadow_run_ne_005",
-        "shadow_run_ne_006",
-        "shadow_run_ne_007",
-        "shadow_run_ne_008"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_001",
+        "shadow_walk_ne_user_002",
+        "shadow_walk_ne_user_003"
       ],
       "events": []
     },
@@ -1102,13 +1072,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_ne_000",
-        "shadow_attack_ne_001",
-        "shadow_attack_ne_002",
-        "shadow_attack_ne_003",
-        "shadow_attack_ne_004",
-        "shadow_attack_ne_005",
-        "shadow_attack_ne_006"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000"
       ],
       "events": [
         {
@@ -1125,15 +1095,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_ne_000",
-        "shadow_skill_ne_001",
-        "shadow_skill_ne_002",
-        "shadow_skill_ne_003",
-        "shadow_skill_ne_004",
-        "shadow_skill_ne_005",
-        "shadow_skill_ne_006",
-        "shadow_skill_ne_007",
-        "shadow_skill_ne_008"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000"
       ],
       "events": [
         {
@@ -1150,15 +1120,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_ne_000",
-        "shadow_dodge_ne_001",
-        "shadow_dodge_ne_002",
-        "shadow_dodge_ne_003",
-        "shadow_dodge_ne_004",
-        "shadow_dodge_ne_005",
-        "shadow_dodge_ne_006",
-        "shadow_dodge_ne_007",
-        "shadow_dodge_ne_008"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000"
       ],
       "events": [
         {
@@ -1175,11 +1145,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_ne_000",
-        "shadow_hit_ne_001",
-        "shadow_hit_ne_002",
-        "shadow_hit_ne_003",
-        "shadow_hit_ne_004"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000"
       ],
       "events": [
         {
@@ -1192,15 +1162,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_ne_000",
-        "shadow_death_ne_001",
-        "shadow_death_ne_002",
-        "shadow_death_ne_003",
-        "shadow_death_ne_004",
-        "shadow_death_ne_005",
-        "shadow_death_ne_006",
-        "shadow_death_ne_007",
-        "shadow_death_ne_008"
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000",
+        "shadow_walk_ne_user_000"
       ],
       "events": [
         {
@@ -1232,15 +1202,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_e_000",
-        "shadow_run_e_001",
-        "shadow_run_e_002",
-        "shadow_run_e_003",
-        "shadow_run_e_004",
-        "shadow_run_e_005",
-        "shadow_run_e_006",
-        "shadow_run_e_007",
-        "shadow_run_e_008"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_001",
+        "shadow_walk_e_user_002",
+        "shadow_walk_e_user_003"
       ],
       "events": []
     },
@@ -1248,13 +1213,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_e_000",
-        "shadow_attack_e_001",
-        "shadow_attack_e_002",
-        "shadow_attack_e_003",
-        "shadow_attack_e_004",
-        "shadow_attack_e_005",
-        "shadow_attack_e_006"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000"
       ],
       "events": [
         {
@@ -1271,15 +1236,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_e_000",
-        "shadow_skill_e_001",
-        "shadow_skill_e_002",
-        "shadow_skill_e_003",
-        "shadow_skill_e_004",
-        "shadow_skill_e_005",
-        "shadow_skill_e_006",
-        "shadow_skill_e_007",
-        "shadow_skill_e_008"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000"
       ],
       "events": [
         {
@@ -1296,15 +1261,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_e_000",
-        "shadow_dodge_e_001",
-        "shadow_dodge_e_002",
-        "shadow_dodge_e_003",
-        "shadow_dodge_e_004",
-        "shadow_dodge_e_005",
-        "shadow_dodge_e_006",
-        "shadow_dodge_e_007",
-        "shadow_dodge_e_008"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000"
       ],
       "events": [
         {
@@ -1321,11 +1286,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_e_000",
-        "shadow_hit_e_001",
-        "shadow_hit_e_002",
-        "shadow_hit_e_003",
-        "shadow_hit_e_004"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000"
       ],
       "events": [
         {
@@ -1338,15 +1303,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_e_000",
-        "shadow_death_e_001",
-        "shadow_death_e_002",
-        "shadow_death_e_003",
-        "shadow_death_e_004",
-        "shadow_death_e_005",
-        "shadow_death_e_006",
-        "shadow_death_e_007",
-        "shadow_death_e_008"
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000",
+        "shadow_walk_e_user_000"
       ],
       "events": [
         {
@@ -1378,15 +1343,10 @@
       "loop": true,
       "frame_duration_ms": 66,
       "frames": [
-        "shadow_run_se_000",
-        "shadow_run_se_001",
-        "shadow_run_se_002",
-        "shadow_run_se_003",
-        "shadow_run_se_004",
-        "shadow_run_se_005",
-        "shadow_run_se_006",
-        "shadow_run_se_007",
-        "shadow_run_se_008"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_001",
+        "shadow_walk_se_user_002",
+        "shadow_walk_se_user_003"
       ],
       "events": []
     },
@@ -1394,13 +1354,13 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_attack_se_000",
-        "shadow_attack_se_001",
-        "shadow_attack_se_002",
-        "shadow_attack_se_003",
-        "shadow_attack_se_004",
-        "shadow_attack_se_005",
-        "shadow_attack_se_006"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000"
       ],
       "events": [
         {
@@ -1417,15 +1377,15 @@
       "loop": false,
       "frame_duration_ms": 90,
       "frames": [
-        "shadow_skill_se_000",
-        "shadow_skill_se_001",
-        "shadow_skill_se_002",
-        "shadow_skill_se_003",
-        "shadow_skill_se_004",
-        "shadow_skill_se_005",
-        "shadow_skill_se_006",
-        "shadow_skill_se_007",
-        "shadow_skill_se_008"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000"
       ],
       "events": [
         {
@@ -1442,15 +1402,15 @@
       "loop": false,
       "frame_duration_ms": 60,
       "frames": [
-        "shadow_dodge_se_000",
-        "shadow_dodge_se_001",
-        "shadow_dodge_se_002",
-        "shadow_dodge_se_003",
-        "shadow_dodge_se_004",
-        "shadow_dodge_se_005",
-        "shadow_dodge_se_006",
-        "shadow_dodge_se_007",
-        "shadow_dodge_se_008"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000"
       ],
       "events": [
         {
@@ -1467,11 +1427,11 @@
       "loop": false,
       "frame_duration_ms": 70,
       "frames": [
-        "shadow_hit_se_000",
-        "shadow_hit_se_001",
-        "shadow_hit_se_002",
-        "shadow_hit_se_003",
-        "shadow_hit_se_004"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000"
       ],
       "events": [
         {
@@ -1484,15 +1444,15 @@
       "loop": false,
       "frame_duration_ms": 120,
       "frames": [
-        "shadow_death_se_000",
-        "shadow_death_se_001",
-        "shadow_death_se_002",
-        "shadow_death_se_003",
-        "shadow_death_se_004",
-        "shadow_death_se_005",
-        "shadow_death_se_006",
-        "shadow_death_se_007",
-        "shadow_death_se_008"
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000",
+        "shadow_walk_se_user_000"
       ],
       "events": [
         {

@@ -962,3 +962,17 @@ Verification:
 - The prior current-head workflow run `44935787919` passed Analyze, all Flutter tests, Android smoke, APK build and signature verification for commit `c8bad8df47f8d44a10195946d2ea531d66856e97`.
 - Workflow run `44936501289` is testing the release-tag uniqueness fix at commit `660daeee90e1da38e15a307d81e64365c4ee8f32`; Analyze, all tests and visual-capture upload passed, while Android smoke and APK build were still running at the time of this note.
 - This new policy/test change must receive its own CI run before it is considered verified.
+
+
+## 2026-11-21 — Remove unapproved Shadow action art from the pilot
+
+- A fresh visual inspection of the committed Shadow atlases found that `run`, `attack`, `skill`, `hit` and `death` still showed a bald/moustached character, visibly different from the approved hooded purple Shadow. The same legacy atlas family was also used for `dodge`.
+- Updated all eight directions in `shadow_manifest.json`:
+  - `idle` continues to hold the first approved user frame.
+  - `walk` uses the four approved user frames.
+  - `run` reuses the same four approved frames at 66 ms/frame.
+  - `attack`, `skill`, `dodge`, `hit` and `death` temporarily hold the first approved frame for their original clip duration. Their gameplay animation events and timings are preserved exactly. This intentionally favors consistent approved character identity over showing the mismatched legacy art; dedicated action artwork is still required for final polish.
+- Expanded `shadow_user_walk_atlas_test.dart` to enforce that every Shadow state/direction loads the approved user atlas and that all original combat event schedules remain intact.
+- Expanded `shadow_2d5_in_game_capture_test.dart` to emit one four-frame walk-cycle strip for each of the eight directions, enabling direct foot-contact and motion review.
+- No source reference image was altered. No other hero's artwork was modified.
+- CI verification for this batch is pending; do not mark Shadow action art complete.

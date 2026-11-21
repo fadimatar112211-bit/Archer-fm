@@ -109,6 +109,31 @@ void main() {
         }
         expect(sheet.rectFor(frameId), isNotNull, reason: '$clipName/$frameId');
 
+        // Preserve all four user-supplied walk frames in a compact review
+        // strip so foot contact and motion continuity can be inspected.
+        final cycleRecorder = ui.PictureRecorder();
+        final cycleCanvas = Canvas(cycleRecorder);
+        for (var frameIndex = 0; frameIndex < clip.frames.length; frameIndex++) {
+          final sourceRect = sheet.rectFor(clip.frames[frameIndex]);
+          expect(sourceRect, isNotNull, reason: '$clipName cycle frame $frameIndex');
+          cycleCanvas.drawImageRect(
+            sheet.image,
+            sourceRect!,
+            Rect.fromLTWH(frameIndex * 192.0, 0, 192, 192),
+            Paint()..filterQuality = FilterQuality.none,
+          );
+        }
+        final cycleImage =
+            cycleRecorder.endRecording().toImageSync(clip.frames.length * 192, 192);
+        final cycleData =
+            await cycleImage.toByteData(format: ui.ImageByteFormat.png);
+        expect(cycleData, isNotNull, reason: '$clipName walk cycle strip');
+        final cycleDir = Directory('build/arena-captures');
+        if (!cycleDir.existsSync()) cycleDir.createSync(recursive: true);
+        File('${cycleDir.path}/shadow_2d5_cycle_$direction.png')
+            .writeAsBytesSync(cycleData!.buffer.asUint8List());
+        cycleImage.dispose();
+
         world.player.facing = facings[i];
         final painter = ArenaPainter(
           world: world,
@@ -163,6 +188,6 @@ void main() {
         player.dispose();
       }
     },
-    timeout: const Timeout(Duration(minutes: 5)),
+    timeout: const Timeout(Duration(minutes: 8)),
   );
 }
