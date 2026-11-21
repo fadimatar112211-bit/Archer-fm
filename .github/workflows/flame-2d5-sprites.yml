@@ -1,4 +1,4 @@
-name: Build Selected Hero 2.5D Sprite Pack
+name: Build All Four Hero 2.5D Sprite Packs
 
 on:
   workflow_dispatch:
@@ -6,15 +6,24 @@ on:
     branches:
       - ranger-reference-work
     paths:
-      - 'tools/blender/active_hero.txt'
+      - 'tools/blender/**'
+      - 'tools/pack_hero_atlases.py'
+      - 'tools/validate_hero_assets.py'
+      - 'assets/heroes/ranger/source/render_config.json'
+      - '.github/workflows/flame-2d5-sprites.yml'
 
 permissions:
   contents: read
 
 jobs:
   render-hero:
+    name: Build ${{ matrix.hero }} sprites
     runs-on: ubuntu-22.04
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [ranger, flame, shadow, storm]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,42 +37,46 @@ jobs:
           echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
           /opt/blender-3.6.13-linux-x64/blender --version
 
-      - name: Validate selected hero and build source scene
+      - name: Select hero and build its dedicated source scene
+        env:
+          HERO: ${{ matrix.hero }}
         run: |
-          HERO="$(tr -d '[:space:]' < tools/blender/active_hero.txt | tr '[:upper:]' '[:lower:]')"
+          echo "$HERO" > tools/blender/active_hero.txt
           case "$HERO" in ranger|flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
-          echo "Rendering approved profile: $HERO"
-          echo "HERO=$HERO" >> "$GITHUB_ENV"
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
+          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
+          test -s "$BLEND"
+          echo "BLEND=$BLEND" >> "$GITHUB_ENV"
+          echo "RENDER_ROOT=assets/heroes/$HERO/renders" >> "$GITHUB_ENV"
+          echo "MANIFEST=assets/heroes/$HERO/renders/${HERO}_manifest.json" >> "$GITHUB_ENV"
+
+      - name: Validate source rig and authored animations
+        run: |
+          "$BLENDER" --background "$BLEND" --python tools/blender/validate_ranger_source.py
 
       - name: Render eight directions and all authored states
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
-          test -s "$BLEND"
           xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
 
       - name: Validate transparent frames, alignment and motion
         run: |
-          RENDER_ROOT="assets/heroes/$HERO/renders"
-          test -s "$RENDER_ROOT/${HERO}_manifest.json"
+          test -s "$MANIFEST"
           python3 tools/blender/validate_rendered_frames.py --root "$RENDER_ROOT" --resolution 192
 
-      - name: Pack atlases and publish selected hero bundle
+      - name: Pack atlases and validate final sprite manifest
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
-          MANIFEST="assets/heroes/$HERO/renders/${HERO}_manifest.json"
           xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
           python3 tools/validate_hero_assets.py "$MANIFEST"
 
-      - name: Upload selected hero source and render bundle
+      - name: Upload generated hero source and sprite bundle
         uses: actions/upload-artifact@v4
         with:
-          name: archer-fm-hero-2d5-sprite-pack
+          name: archer-fm-${{ matrix.hero }}-2d5-sprite-pack
           path: |
-            assets/heroes/ranger/renders/_bundle/${{ env.HERO }}/
-            assets/heroes/${{ env.HERO }}/source/${{ env.HERO }}_source.blend
+            assets/heroes/ranger/renders/_bundle/${{ matrix.hero }}/
+            assets/heroes/${{ matrix.hero }}/source/${{ matrix.hero }}_source.blend
           if-no-files-found: error
           retention-days: 30
