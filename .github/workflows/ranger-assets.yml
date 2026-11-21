@@ -45,6 +45,9 @@ jobs:
           "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
             --python tools/blender/validate_ranger_source.py
 
+      - name: Select Ranger for this Ranger-only workflow
+        run: echo "ranger" > tools/blender/active_hero.txt
+
       - name: Render all states and directions
         run: |
           "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
