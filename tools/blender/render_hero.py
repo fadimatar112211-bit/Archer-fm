@@ -308,12 +308,10 @@ def main():
             "pivot margins leave no room around the pivot")
     ground = Vector(config.get("ground_anchor", (0.0, 0.0, 0.0)))
 
-    # The CI workflow's validation, packing and upload steps are pinned to the
-    # Ranger directories and cannot be edited (the push token has no `workflow`
-    # scope). Every hero therefore renders into that fixed directory; the
-    # packer publishes non-Ranger output under `renders/_bundle/<hero>/`, which
-    # the existing artifact upload already carries to the committing machine.
-    output_root = (root / "assets/heroes/ranger/renders").resolve()
+    # Each hero owns its render directory. Never mix frame sets between heroes.
+    output_root = (root / config["output_directory"]).resolve()
+    require(output_root.is_relative_to(root),
+            f"output_directory escapes repository root: {output_root}")
     output_root.mkdir(parents=True, exist_ok=True)
     # Stale frames from an older frame count silently inflate the atlas input
     # set and make the visual validator inspect images that are no longer part
@@ -461,7 +459,7 @@ def main():
     require(render_count == len(pose_bounds) * len(DIRECTIONS),
             f"Rendered {render_count} frames, expected "
             f"{len(pose_bounds) * len(DIRECTIONS)}")
-    manifest_path = output_root / "ranger_manifest.json"
+    manifest_path = output_root / f"{hero_id}_manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                               encoding="utf-8")
     print(f"Rendered {render_count} frames across {len(states)} states and "
