@@ -1087,3 +1087,12 @@ Verification:
 - The next gate failed because the workflow did not persist `HERO` between steps and passed `assets/heroes/storm/renders` to the validator, while `render_hero.py` deliberately writes into the fixed `assets/heroes/ranger/renders` working directory. The pack step also constructed a hero-specific manifest path even though the renderer always writes `ranger_manifest.json` there.
 - Fixed `.github/workflows/flame-2d5-sprites.yml`: persist `HERO` through `GITHUB_ENV`, validate the actual fixed render root (the validator itself checks `active_hero.txt` and manifest hero_id), and pass the actual working manifest to the packer. The packer then publishes the non-Ranger hero bundle to the selected hero path.
 - Fix commit: `2a1bc6f7020c60a3f77bb7f009ba384f25e9de8e`. A fresh selected-hero run is triggered; Storm is not accepted until frame validation, atlas packing, and artifact review succeed.
+
+### 2026-11-21 — Continue 2.5D roster and arena environment pass
+
+- Reconfirmed the active branch head before editing: `ranger-reference-work`.
+- Added restrained animated riverbank foam highlights in `lib/game/arena_painter.dart`. The accents are deterministic and presentation-only; they skip bridge decks and do not modify river geometry, movement, collision, or map rules.
+- Locked the monster production spec to the same final runtime direction as the heroes: all four monsters must be reference-faithful 2D/2.5D animated sprite actors in the lightweight 3D arena. GLB/BLEND prototypes remain source/render inputs only; the procedural Canvas fallback stays active until each sprite pack passes visual and technical acceptance.
+- Verified that `ArenaMap.isBridge(Offset)` exists and that the stone approach pass uses the real map bridge query.
+- Current verification limitation: the Android workflow for commit `770678e` was queued/pending at the latest check, not yet green. The legacy `ranger-assets.yml` run reports failure but the Actions API returned zero jobs for that run, so its failing step cannot yet be identified from the available run metadata. Do not treat the current hero or monster atlases as accepted.
+- Next batch: isolate the legacy Ranger workflow failure, make the selected-hero render/pack/validation path reproducible for each of Ranger, Flame, Shadow and Storm, then review the generated 2.5D previews against the approved sheets. Continue map dressing in parallel without changing gameplay rules.
