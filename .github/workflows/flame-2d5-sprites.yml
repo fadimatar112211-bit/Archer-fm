@@ -1,0 +1,48 @@
+name: Build Flame 2.5D Sprite Pack
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-flame:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender and image validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends blender python3-pil xvfb
+
+      - name: Build Flame from the checked-in hero identity profile
+        run: |
+          echo flame > tools/blender/active_hero.txt
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a blender --background --factory-startup --python tools/blender/build_ranger_source.py
+
+      - name: Render eight directions and all authored states
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
+
+      - name: Validate transparent frames, alignment and motion
+        run: |
+          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/flame/renders --resolution 192
+
+      - name: Pack atlases and publish the Flame bundle
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/flame/renders/ranger_manifest.json
+
+      - name: Upload Flame 2.5D source and render bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-flame-2d5-sprite-pack
+          path: assets/heroes/ranger/renders/_bundle/flame/
+          if-no-files-found: error
+          retention-days: 30
