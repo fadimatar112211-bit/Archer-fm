@@ -135,15 +135,19 @@ def build(kind):
     body_w={"runner":0.78,"tank":1.30,"stalker":0.72,"ranged":0.82}[kind]
     # A compact chibi silhouette: broad readable head, connected shoulders,
     # and a slightly tapered body. All face pieces sit on the forward (-Y) side.
-    primitive("sphere",kind+"_torso",(0,0,1.10),(body_w,0.66 if kind=="tank" else 0.58,0.96),mats["body"],rig,"spine")
-    primitive("sphere",kind+"_neck",(0,-0.015,1.52),(0.34,0.36,0.34),mats["body"],rig,"spine")
-    primitive("sphere",kind+"_head",(0,-0.055,1.88),(0.84,0.70,0.78),mats["body"],rig,"head")
-    primitive("sphere",kind+"_muzzle",(0,-0.365,1.66),(0.25,0.15,0.14),mats["accent"],rig,"head")
-    primitive("sphere",kind+"_mouth",(0,-0.405,1.535),(0.15,0.035,0.045),mats["dark"],rig,"head")
+    # Skeleton must read as exposed bones, not an ivory humanoid hidden under ribs.
+    # Other monsters retain the shared chibi torso/face foundation.
+    if kind != "stalker":
+        primitive("sphere",kind+"_torso",(0,0,1.10),(body_w,0.66 if kind=="tank" else 0.58,0.96),mats["body"],rig,"spine")
+        primitive("sphere",kind+"_neck",(0,-0.015,1.52),(0.34,0.36,0.34),mats["body"],rig,"spine")
+        primitive("sphere",kind+"_head",(0,-0.055,1.88),(0.84,0.70,0.78),mats["body"],rig,"head")
+        primitive("sphere",kind+"_muzzle",(0,-0.365,1.66),(0.25,0.15,0.14),mats["accent"],rig,"head")
+        primitive("sphere",kind+"_mouth",(0,-0.405,1.535),(0.15,0.035,0.045),mats["dark"],rig,"head")
     for side in (-1,1):
-        primitive("sphere",kind+"_eye_"+str(side),(side*0.225,-0.365,1.98),(0.165,0.105,0.19),mats["eye"],rig,"head")
-        primitive("sphere",kind+"_pupil_"+str(side),(side*0.225,-0.458,1.98),(0.066,0.035,0.105),mats["dark"],rig,"head")
-        primitive("sphere",kind+"_brow_"+str(side),(side*0.225,-0.405,2.17),(0.17,0.045,0.055),mats["dark"],rig,"head")
+        if kind != "stalker":
+            primitive("sphere",kind+"_eye_"+str(side),(side*0.225,-0.365,1.98),(0.165,0.105,0.19),mats["eye"],rig,"head")
+            primitive("sphere",kind+"_pupil_"+str(side),(side*0.225,-0.458,1.98),(0.066,0.035,0.105),mats["dark"],rig,"head")
+            primitive("sphere",kind+"_brow_"+str(side),(side*0.225,-0.405,2.17),(0.17,0.045,0.055),mats["dark"],rig,"head")
         # Continuous tapered limbs: avoid stacked spherical joints at arena scale.
         bridge(kind+"_upperarm_bridge_"+str(side),(side*0.40,0,1.42),(side*0.47,0,1.13),0.29,mats["body"],rig,"upper_arm.L" if side<0 else "upper_arm.R")
         bridge(kind+"_forearm_bridge_"+str(side),(side*0.47,0,1.13),(side*0.56,-0.07,0.82),0.23,mats["body"],rig,"forearm.L" if side<0 else "forearm.R")
@@ -178,8 +182,12 @@ def build(kind):
             spike=primitive("cone",kind+"_mace_spike_"+str(i),(0.80+math.cos(a)*0.40,-0.10,1.03+math.sin(a)*0.40),(0.11,0.11,0.23),mats["accent"],rig,"forearm.R")
             spike.rotation_euler[1]=a
     elif kind=="stalker":
-        # Fast skeleton: exposed ivory skull, rib cage and paired short blades.
+        # Fast skeleton: exposed ivory skull, visible vertebrae/rib cage and paired short blades.
         primitive("sphere",kind+"_skull",(0,-0.08,1.94),(0.72,0.62,0.68),mats["accent"],rig,"head")
+        for vertebra in range(5):
+            primitive("sphere",kind+"_vertebra_"+str(vertebra),(0,-0.22,1.47-vertebra*0.13),(0.14,0.12,0.11),mats["accent"],rig,"spine")
+        primitive("sphere",kind+"_collarbone_L",(-0.27,-0.27,1.48),(0.34,0.10,0.09),mats["accent"],rig,"spine")
+        primitive("sphere",kind+"_collarbone_R",(0.27,-0.27,1.48),(0.34,0.10,0.09),mats["accent"],rig,"spine")
         primitive("sphere",kind+"_eye_socket_L",(-0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
         primitive("sphere",kind+"_eye_socket_R",(0.20,-0.405,2.00),(0.19,0.09,0.22),mats["dark"],rig,"head")
         primitive("sphere",kind+"_jaw",(0,-0.36,1.69),(0.38,0.18,0.16),mats["body"],rig,"head")
