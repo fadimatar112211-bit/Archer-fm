@@ -45,6 +45,11 @@ void main() {
 
       for (var i = 0; i < directions.length; i++) {
         final direction = directions[i];
+        expect(
+          GameWorld.octantNames[GameWorld.octantIndexOf(facings[i])],
+          direction,
+          reason: 'world facing must select the matching 2.5D row',
+        );
         final clipName = 'walk_$direction';
         final clip = manifest.clipFor('walk', direction);
         expect(clip, isNotNull, reason: clipName);
