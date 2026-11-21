@@ -997,3 +997,15 @@ Verification:
 - Updated `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` with the failure mode and fix.
 - No hero artwork, canonical references, GLB source files, gameplay, camera, hitboxes or combat timing were changed.
 - Verification: CI has not yet produced a usable job result for these latest commits; final verification is pending. Do not mark the change verified until a clean run completes.
+
+
+
+## 2026-11-21 — Monster visual acceptance audit and Storm render status
+
+- Added `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` using the exact approved four-enemy reference sheet as the source of truth.
+- Recorded the four canonical enemy identities: green goblin sword wielder, dual-blade skeleton, horned armored mace brute, and purple hooded masked fighter with violet energy blades.
+- The prior Phase 0 audit found no `assets/monsters/` production asset directory. No verified monster model/rig/animation pack or in-game acceptance evidence is currently available in the reviewed records; all four monster visuals remain NOT READY.
+- No substitute art or placeholder monster was created. The canonical reference image remains unchanged.
+- Storm render workflow run `44940626160` has completed Blender installation and selected-hero source-scene validation; its eight-direction/state render step was still running at the latest check. No artifact has been published yet, so no Storm output is accepted.
+- The selected-hero workflow still needs a completed render, validation, atlas packing, and artifact review before its result can be called successful.
+- Hero readiness remains unchanged: Shadow is a limited 2.5D pilot with incomplete action artwork; Ranger remains pending visual acceptance; Flame's existing atlas is rejected for identity mismatch; Storm's checked-in atlas is rejected as a flat placeholder.
