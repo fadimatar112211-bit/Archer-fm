@@ -202,7 +202,13 @@ def glow(name, base, strength, alpha=1.0):
     mat.diffuse_color = (*color, 1.0)
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = (0.0, 0.0, 0.0, 1.0)
-    bsdf.inputs["Emission Color"].default_value = (*color, 1.0)
+    # Blender 3.6 calls this socket "Emission"; Blender 4.x renamed it
+    # to "Emission Color". Keep the same material output across both versions.
+    emission_color = bsdf.inputs.get("Emission Color") or bsdf.inputs.get("Emission")
+    if emission_color is None:
+        raise RuntimeError(
+            f"{bpy.app.version_string}: Principled BSDF has no emission color socket")
+    emission_color.default_value = (*color, 1.0)
     bsdf.inputs["Emission Strength"].default_value = strength
     bsdf.inputs["Alpha"].default_value = alpha
     if alpha < 1.0:
