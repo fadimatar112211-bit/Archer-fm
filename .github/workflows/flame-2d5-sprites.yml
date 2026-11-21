@@ -26,7 +26,7 @@ jobs:
           curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
           sudo tar -xJf /tmp/blender.tar.xz -C /opt
           echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
-          "$(/bin/echo /opt/blender-3.6.13-linux-x64/blender)" --version
+          /opt/blender-3.6.13-linux-x64/blender --version
 
       - name: Validate selected hero and build source scene
         run: |
