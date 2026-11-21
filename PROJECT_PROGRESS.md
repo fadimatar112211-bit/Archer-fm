@@ -1041,3 +1041,11 @@ Verification:
 - Fix commit: `0e9223961a8688998c4decfd8787661d353fd5a6`.
 - Corrected workflow run `44942727221` is queued/in progress; no preview or final GLB validation result is available yet.
 - Storm render run `44940626160` is still running its eight-direction/state render stage; do not treat the render as accepted until the remaining validation, packing and artifact review steps finish.
+
+
+### 2026-11-21 — Monster GLB export and manifest clip-name correction
+
+- The corrected headless rendering environment succeeded: Blender exported the prototype models and rendered the preview PNGs without the earlier EGL abort.
+- Structural validation then exposed a real manifest bug: GLB animation names are namespaced (for example, `runner_Walk`, `tank_Idle`), but the manifest incorrectly mapped generic names (for example, `Walk`, `Idle`). The validator correctly rejected all 23 mismatched clip mappings.
+- Fixed `tools/monsters/generate_monsters_blender.py` so each manifest clip maps to its actual namespaced animation name (`<monster>_<Clip>`).
+- Fix commit: `9280dabea67f1a10e85e1a77b1a1d7ab25bf9f37`. A fresh prototype build/validation run is triggered by this change; visual/runtime acceptance remains pending.
