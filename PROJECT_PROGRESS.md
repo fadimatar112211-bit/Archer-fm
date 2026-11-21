@@ -9,9 +9,9 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Current approved production direction (2026-11-21): heroes and monsters use user-reference-approved 2D/2.5D sprites in a planned lightweight real 3D arena. This supersedes older full-3D hero-rendering notes below; GLB hero files remain archived/diagnostic until sprite migration is accepted.
+- Current approved production direction (2026-11-21): **all four heroes and all four monster types must ship as reference-faithful 2D/2.5D sprite actors** in a lightweight 3D arena. This supersedes older full-3D hero-rendering notes below; GLB and Blender sources are retained as source/animation inputs for generating and validating the 2.5D sprite packs, not as the final in-match character renderer.
 - Production character visuals may use only the user's approved reference/source images. Never invent, generate, or substitute character artwork.
-- Current 2.5D pilot: Shadow only. Ranger, Flame and Storm retain their existing GLB presentation until their sprite assets are reference-approved.
+- Migration status (not the target): Shadow is the only currently approved 2.5D production sprite route. Ranger, Flame and Storm still need reference-approved 2.5D packs; rejected placeholder atlases must remain disabled. Do not confuse this temporary migration state with the final all-four-hero 2.5D requirement.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
 - Prefer large coherent implementation batches, then run the full relevant test/build workflow.
 - Keep game UI Arabic-first.
@@ -106,6 +106,19 @@ The game should approach Archero's visual readability and feel, not merely conta
 4. Check whether the new 112px hero scale is better; add/update capture tests for the current commit.
 5. Trace all 16 Ultimate implementations end-to-end and add tests for missing effects/edge cases.
 6. Make the next focused fixes on `ranger-reference-work`, run CI, and update this checkpoint with the new HEAD and evidence.
+
+## 2026-11-21 — All-four-hero 2.5D direction reaffirmed; arena environment pass started
+
+- User explicitly reconfirmed that **all four heroes must be 2.5D**, alongside the four monster types; no hero is to be forgotten or left as a final live GLB character.
+- Updated the project direction above: GLB/Blender sources are retained as source inputs and diagnostics; the final in-match actors are reference-faithful 2.5D sprite actors.
+- Began a parallel map/environment visual pass in `lib/game/arena_painter.dart`:
+  - Added stable, deterministic, camera-culled grass clusters with subtle biome tinting.
+  - Grass details skip water, obstacle collision areas, mine clearings and castle clearings; no movement, collision, economy or map generation values were changed.
+  - Added bridge timber variation, nail heads and cross-beams; added secondary stone facets/highlights without changing rock collision.
+- Commits: `11fea5a` (terrain detail), `28d06f1` (bridge/rock detail), `0bf6e97` (integer grid index correction).
+- These are code changes, not yet visually approved. Run Flutter analyze/tests and capture the 16:9 arena before claiming the map pass complete.
+- Hero and monster sprite migration remains open. Do not enable rejected atlases; next asset batch must produce/review the 2.5D packs for Ranger, Flame, Shadow and Storm, then wire all four through the same sprite runtime.
+- Keep map/environment work moving in parallel: terrain, river/bridges, castle/crystal structures, mines, walls, trees, rocks and minimap composition should be reviewed against the user's gameplay reference without changing game rules.
 
 ## Session log
 
