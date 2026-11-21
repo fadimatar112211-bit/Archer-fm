@@ -173,43 +173,43 @@
     },
     {
       "animation": "idle_e",
-      "image": "atlases/idle_e.png",
-      "meta": "atlases/idle_e.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_e_user.json"
     },
     {
       "animation": "idle_n",
-      "image": "atlases/idle_n.png",
-      "meta": "atlases/idle_n.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_n_user.json"
     },
     {
       "animation": "idle_ne",
-      "image": "atlases/idle_ne.png",
-      "meta": "atlases/idle_ne.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_ne_user.json"
     },
     {
       "animation": "idle_nw",
-      "image": "atlases/idle_nw.png",
-      "meta": "atlases/idle_nw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_nw_user.json"
     },
     {
       "animation": "idle_s",
-      "image": "atlases/idle_s.png",
-      "meta": "atlases/idle_s.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_s_user.json"
     },
     {
       "animation": "idle_se",
-      "image": "atlases/idle_se.png",
-      "meta": "atlases/idle_se.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_se_user.json"
     },
     {
       "animation": "idle_sw",
-      "image": "atlases/idle_sw.png",
-      "meta": "atlases/idle_sw.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_sw_user.json"
     },
     {
       "animation": "idle_w",
-      "image": "atlases/idle_w.png",
-      "meta": "atlases/idle_w.json"
+      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
+      "meta": "atlases/walk_w_user.json"
     },
     {
       "animation": "run_e",
@@ -335,13 +335,9 @@
   "animations": {
     "idle_s": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_s_000",
-        "shadow_idle_s_001",
-        "shadow_idle_s_002",
-        "shadow_idle_s_003",
-        "shadow_idle_s_004"
+        "shadow_walk_s_user_000"
       ],
       "events": []
     },
@@ -485,13 +481,9 @@
     },
     "idle_sw": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_sw_000",
-        "shadow_idle_sw_001",
-        "shadow_idle_sw_002",
-        "shadow_idle_sw_003",
-        "shadow_idle_sw_004"
+        "shadow_walk_sw_user_000"
       ],
       "events": []
     },
@@ -635,13 +627,9 @@
     },
     "idle_w": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_w_000",
-        "shadow_idle_w_001",
-        "shadow_idle_w_002",
-        "shadow_idle_w_003",
-        "shadow_idle_w_004"
+        "shadow_walk_w_user_000"
       ],
       "events": []
     },
@@ -785,13 +773,9 @@
     },
     "idle_nw": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_nw_000",
-        "shadow_idle_nw_001",
-        "shadow_idle_nw_002",
-        "shadow_idle_nw_003",
-        "shadow_idle_nw_004"
+        "shadow_walk_nw_user_000"
       ],
       "events": []
     },
@@ -935,13 +919,9 @@
     },
     "idle_n": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_n_000",
-        "shadow_idle_n_001",
-        "shadow_idle_n_002",
-        "shadow_idle_n_003",
-        "shadow_idle_n_004"
+        "shadow_walk_n_user_000"
       ],
       "events": []
     },
@@ -1085,13 +1065,9 @@
     },
     "idle_ne": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_ne_000",
-        "shadow_idle_ne_001",
-        "shadow_idle_ne_002",
-        "shadow_idle_ne_003",
-        "shadow_idle_ne_004"
+        "shadow_walk_ne_user_000"
       ],
       "events": []
     },
@@ -1235,13 +1211,9 @@
     },
     "idle_e": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_e_000",
-        "shadow_idle_e_001",
-        "shadow_idle_e_002",
-        "shadow_idle_e_003",
-        "shadow_idle_e_004"
+        "shadow_walk_e_user_000"
       ],
       "events": []
     },
@@ -1385,13 +1357,9 @@
     },
     "idle_se": {
       "loop": true,
-      "frame_duration_ms": 140,
+      "frame_duration_ms": 1000,
       "frames": [
-        "shadow_idle_se_000",
-        "shadow_idle_se_001",
-        "shadow_idle_se_002",
-        "shadow_idle_se_003",
-        "shadow_idle_se_004"
+        "shadow_walk_se_user_000"
       ],
       "events": []
     },
