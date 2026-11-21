@@ -485,25 +485,89 @@ class ArenaPainter extends CustomPainter {
         if (map.mines.any((mine) => (mine.position - point).distance < mine.radius + 22)) continue;
         if (map.castleAnchors.any((castle) => (castle - point).distance < castleWallRadius + 42)) continue;
 
-        final biome = map.biomeAt(point)?.kind;
-        final tint = switch (biome) {
-          TerrainKind.desert => const Color(0xFFBBA16A),
-          TerrainKind.snow => const Color(0xFFAFC6B2),
-          TerrainKind.volcanic => const Color(0xFF9A7560),
-          _ => const Color(0xFF8DA66A),
-        };
-        final height = 4.0 + ((hash >> 9) & 7).toDouble();
-        final width = 2.0 + ((hash >> 13) & 2).toDouble();
-        final base = Paint()
-          ..color = tint.withValues(alpha: 0.30 + unit * 0.18)
-          ..strokeWidth = width
-          ..strokeCap = StrokeCap.round;
-        canvas.drawLine(point, point + Offset(-width, -height), base);
-        canvas.drawLine(point + const Offset(1, 0),
-            point + Offset(width, -height * 0.78), base);
-        if ((hash & 3) == 0) {
-          canvas.drawCircle(point + const Offset(5, 2), 1.5,
-              Paint()..color = tint.withValues(alpha: 0.24));
+        final biome = map.biomeAt(point)?.kind ?? TerrainKind.forest;
+        final variation = ((hash >> 9) & 7).toDouble();
+        final detail = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
+
+        switch (biome) {
+          case TerrainKind.desert:
+            // Short wind-carved sand ripples, staggered so they read as dunes
+            // rather than a repeated grid.
+            detail
+              ..color = const Color(0x66F4D49A)
+              ..strokeWidth = 1.7 + unit;
+            final ripple = Rect.fromCenter(
+              center: point,
+              width: 18 + variation * 1.8,
+              height: 8 + variation * 0.45,
+            );
+            canvas.drawArc(ripple, math.pi * 1.08, math.pi * 0.84, false, detail);
+            if ((hash & 3) == 0) {
+              canvas.drawArc(ripple.shift(const Offset(3, 5)),
+                  math.pi * 1.08, math.pi * 0.72, false,
+                  Paint()
+                    ..color = const Color(0x44A77B42)
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 1.2);
+            }
+
+          case TerrainKind.snow:
+            // Small angular ice crystals with a cool highlight.
+            final arm = 3.5 + variation * 0.55;
+            detail
+              ..color = const Color(0x99F1FBFF)
+              ..strokeWidth = 1.5;
+            canvas.drawLine(point + Offset(-arm, 0), point + Offset(arm, 0), detail);
+            canvas.drawLine(point + Offset(0, -arm), point + Offset(0, arm), detail);
+            canvas.drawLine(point + Offset(-arm * 0.68, -arm * 0.68),
+                point + Offset(arm * 0.68, arm * 0.68), detail);
+            if ((hash & 3) == 0) {
+              canvas.drawCircle(point + Offset(arm + 3, -arm), 1.8,
+                  Paint()..color = const Color(0x99B8E7F4));
+            }
+
+          case TerrainKind.volcanic:
+            // Dark fissures with a narrow ember core; all marks are decals
+            // and do not affect walkability or damage.
+            final crack = Path()
+              ..moveTo(point.dx - 8, point.dy - 3)
+              ..lineTo(point.dx - 2, point.dy + 1)
+              ..lineTo(point.dx + 2, point.dy - 2)
+              ..lineTo(point.dx + 8, point.dy + 4);
+            canvas.drawPath(
+              crack,
+              Paint()
+                ..color = const Color(0x88502C28)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 3.2
+                ..strokeCap = StrokeCap.round,
+            );
+            canvas.drawPath(
+              crack,
+              Paint()
+                ..color = const Color(0x99FF7A32)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 1.1
+                ..strokeCap = StrokeCap.round,
+            );
+
+          case TerrainKind.forest:
+            // Dense, varied grass blades and occasional tiny wildflowers.
+            final height = 4.0 + variation;
+            final width = 2.0 + ((hash >> 13) & 2).toDouble();
+            detail
+              ..color = const Color(0x778EAF65)
+              ..strokeWidth = width;
+            canvas.drawLine(point, point + Offset(-width, -height), detail);
+            canvas.drawLine(point + const Offset(1, 0),
+                point + Offset(width, -height * 0.78), detail);
+            if ((hash & 7) == 0) {
+              canvas.drawCircle(point + const Offset(5, 2), 1.5,
+                  Paint()..color = const Color(0x88D9C77A));
+            }
         }
       }
     }
