@@ -33,6 +33,16 @@ The existing Flame atlas set has eight directional names, but its appearance is 
 
 The current Flame GLB visual captures also need correction: the arena captures show the model too small/poorly presented, and the yaw-0 close-up shows an underside/incorrect presentation rather than a clean readable hero view. This is a visual/presentation failure, not evidence that the reference has been met.
 
+### Verified replacement source and build path
+
+The repository already contains a procedural Flame identity profile in `tools/blender/hero_profiles.py`. It defines the Flame-specific red palette, spiky hair, short split cape, red/gold armour and scarf details, a large flaming greatsword, flame effects, and Flame attack/skill actions. This is the correct production path to evaluate before inventing or importing any new art.
+
+The existing Flame atlas is still not approved. The profile has now been selected through `tools/blender/active_hero.txt` and the Blender render pipeline has been started to generate a fresh 8-direction set from that profile. The build must pass the renderer's transparent-frame, framing, animation-motion, rig and atlas validation gates, and its rendered previews must be visually compared with the approved roster before replacing the currently checked-in atlas.
+
+- Active hero selection commit: `ce873de026f681add86416fabd0608152a77eea2`
+- Existing Blender pipeline run: https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/44888328616
+- Flame sprite-pack workflow run: https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/44888328674
+
 ## Next acceptance steps
 
 1. Finish and inspect workflow run `44887612199` (Android smoke test and release APK).
