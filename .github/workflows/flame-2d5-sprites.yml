@@ -40,24 +40,30 @@ jobs:
       - name: Render eight directions and all authored states
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
+          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
+          test -s "$BLEND"
+          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
 
       - name: Validate transparent frames, alignment and motion
         run: |
-          # render_hero.py writes selected heroes into the fixed Ranger render root.
-          # The validator reads active_hero.txt to verify which hero owns the frames.
-          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
+          RENDER_ROOT="assets/heroes/$HERO/renders"
+          test -s "$RENDER_ROOT/${HERO}_manifest.json"
+          python3 tools/blender/validate_rendered_frames.py --root "$RENDER_ROOT" --resolution 192
 
       - name: Pack atlases and publish selected hero bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          MANIFEST="assets/heroes/ranger/renders/ranger_manifest.json"
-          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
+          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
+          MANIFEST="assets/heroes/$HERO/renders/${HERO}_manifest.json"
+          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
+          python3 tools/validate_hero_assets.py "$MANIFEST"
 
       - name: Upload selected hero source and render bundle
         uses: actions/upload-artifact@v4
         with:
           name: archer-fm-hero-2d5-sprite-pack
-          path: assets/heroes/ranger/renders/_bundle/
+          path: |
+            assets/heroes/ranger/renders/_bundle/${{ env.HERO }}/
+            assets/heroes/${{ env.HERO }}/source/${{ env.HERO }}_source.blend
           if-no-files-found: error
           retention-days: 30
