@@ -2212,21 +2212,36 @@ class ArenaPainter extends CustomPainter {
     final hand = Offset(size * 0.28, size * 0.12);
     switch (monster.type) {
       case MonsterType.tank:
-        canvas.drawCircle(hand, size * 0.17, Paint()..color = accent);
-        canvas.drawCircle(
-          hand + Offset(0, -size * 0.02),
-          size * 0.1,
-          Paint()..color = Colors.black.withValues(alpha: 0.18),
+        final grip = hand + Offset(size * 0.16, size * 0.02);
+        final head = hand + Offset(size * 0.43, -size * 0.48);
+        canvas.drawLine(grip, head, Paint()..color = const Color(0xFF4B3829)
+          ..strokeWidth = size * 0.10..strokeCap = StrokeCap.round);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: head, width: size * 0.36, height: size * 0.30),
+            Radius.circular(size * 0.07),
+          ),
+          Paint()..color = accent,
         );
+        for (final side in const [-1.0, 1.0]) {
+          final spike = Path()
+            ..moveTo(head.dx + side * size * 0.12, head.dy - size * 0.06)
+            ..lineTo(head.dx + side * size * 0.28, head.dy - size * 0.25)
+            ..lineTo(head.dx + side * size * 0.22, head.dy + size * 0.04)
+            ..close();
+          canvas.drawPath(spike, Paint()..color = const Color(0xFFEEF0F4));
+        }
       case MonsterType.runner:
-        canvas.drawLine(
-          hand,
-          hand + Offset(size * 0.42, -size * 0.28),
-          Paint()
-            ..color = accent
-            ..strokeWidth = size * 0.08
-            ..strokeCap = StrokeCap.round,
-        );
+        final tip = hand + Offset(size * 0.48, -size * 0.36);
+        final hilt = hand + Offset(size * 0.06, size * 0.02);
+        canvas.drawLine(hilt, tip, Paint()..color = const Color(0xFF6A4A2D)
+          ..strokeWidth = size * 0.09..strokeCap = StrokeCap.round);
+        final blade = Path()
+          ..moveTo(tip.dx, tip.dy)
+          ..lineTo(hilt.dx + size * 0.06, hilt.dy - size * 0.04)
+          ..lineTo(hilt.dx + size * 0.18, hilt.dy + size * 0.08)
+          ..close();
+        canvas.drawPath(blade, Paint()..color = const Color(0xFFE6F0E0));
       case MonsterType.stalker:
         canvas.drawLine(
           hand,
@@ -2245,26 +2260,13 @@ class ArenaPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round,
         );
       case MonsterType.ranged:
-        // Staff with a fire orb that flares while attacking.
-        canvas.drawLine(
-          Offset(size * 0.2, -size * 0.2),
-          Offset(size * 0.52, -size * 1.0),
-          Paint()
-            ..color = accent
-            ..strokeWidth = size * 0.06
-            ..strokeCap = StrokeCap.round,
-        );
-        final flare = 0.5 + attackT * 0.8;
-        canvas.drawCircle(
-          Offset(size * 0.52, -size * 1.0),
-          size * 0.12 * flare,
-          Paint()..color = const Color(0xFFFF8A3C).withValues(alpha: 0.8),
-        );
-        canvas.drawCircle(
-          Offset(size * 0.52, -size * 1.0),
-          size * 0.06 * flare,
-          Paint()..color = const Color(0xFFFFE0A8),
-        );
+        // Keep the reference's violet energy-blade weapon language. The
+        // combat projectile is still spawned by GameWorld, not this painter.
+        final blade = hand + Offset(size * 0.22, -size * 0.62);
+        canvas.drawLine(hand, blade, Paint()..color = accent
+          ..strokeWidth = size * 0.095..strokeCap = StrokeCap.round);
+        canvas.drawLine(hand, blade, Paint()..color = const Color(0xFFF1D9FF)
+          ..strokeWidth = size * 0.025..strokeCap = StrokeCap.round);
     }
   }
 
