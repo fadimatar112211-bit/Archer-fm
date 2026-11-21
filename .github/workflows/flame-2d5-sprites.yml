@@ -22,7 +22,11 @@ jobs:
       - name: Install Blender and image validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends blender python3-pil xvfb
+          sudo apt-get install -y --no-install-recommends python3-pil xvfb libegl1 libgl1
+          curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          sudo tar -xJf /tmp/blender.tar.xz -C /opt
+          echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
+          "$(/bin/echo /opt/blender-3.6.13-linux-x64/blender)" --version
 
       - name: Validate selected hero and build source scene
         run: |
@@ -30,12 +34,12 @@ jobs:
           case "$HERO" in ranger|flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
           echo "Rendering approved profile: $HERO"
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a blender --background --factory-startup --python tools/blender/build_ranger_source.py
+          xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
 
       - name: Render eight directions and all authored states
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a blender --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
+          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
 
       - name: Validate transparent frames, alignment and motion
         run: |
@@ -44,7 +48,7 @@ jobs:
       - name: Pack atlases and publish selected hero bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a blender --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
+          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
 
       - name: Upload selected hero source and render bundle
         uses: actions/upload-artifact@v4
