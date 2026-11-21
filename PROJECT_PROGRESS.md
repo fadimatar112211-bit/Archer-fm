@@ -881,3 +881,8 @@ Verification:
 3. Convert Flame only from an approved reference-faithful source; stop rather than inventing missing views/frames.
 4. Convert Ranger and Storm the same way, then the four monster roles from their approved reference.
 5. Only after sprite actors are stable, prototype the lightweight 3D world/billboard integration and compare the final scene to the approved gameplay image.
+
+
+### Follow-up alignment — production pipeline
+- Disabled the obsolete `generate-monster-glbs` job in `.github/workflows/flutter-android.yml` (commit `cd19aee969cfa6feb3dcc5e9eb13d6f033ff6273`). The generated GLBs from the already-running earlier workflow remain isolated artifacts and are not production monster assets.
+- Future production monster work must use reference-approved 2D/2.5D sprite sheets. No GLB monster generation should be re-enabled as a substitute.
