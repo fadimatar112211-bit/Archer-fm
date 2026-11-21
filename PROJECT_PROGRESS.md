@@ -1057,3 +1057,11 @@ Verification:
 - Added visible vertebrae and collarbones to strengthen the exposed-bone silhouette; retained the ivory skull, dark sockets, rib cage, pelvis and paired blades.
 - Commit: `404761618cbf5cfc6d02142a1781007c48f29867`.
 - This is still a technical prototype refinement; visual acceptance depends on reviewing the newly generated previews against the approved monster reference.
+
+
+### 2026-11-21 — Fix selected-hero render validation paths
+
+- Storm's Blender source-scene validation and eight-direction/eight-state render stages both completed successfully in run `44940626160`.
+- The next gate failed because the workflow did not persist `HERO` between steps and passed `assets/heroes/storm/renders` to the validator, while `render_hero.py` deliberately writes into the fixed `assets/heroes/ranger/renders` working directory. The pack step also constructed a hero-specific manifest path even though the renderer always writes `ranger_manifest.json` there.
+- Fixed `.github/workflows/flame-2d5-sprites.yml`: persist `HERO` through `GITHUB_ENV`, validate the actual fixed render root (the validator itself checks `active_hero.txt` and manifest hero_id), and pass the actual working manifest to the packer. The packer then publishes the non-Ranger hero bundle to the selected hero path.
+- Fix commit: `2a1bc6f7020c60a3f77bb7f009ba384f25e9de8e`. A fresh selected-hero run is triggered; Storm is not accepted until frame validation, atlas packing, and artifact review succeed.
