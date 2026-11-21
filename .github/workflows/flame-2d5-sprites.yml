@@ -43,12 +43,14 @@ jobs:
 
       - name: Validate transparent frames, alignment and motion
         run: |
-          python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
+          python3 tools/blender/validate_rendered_frames.py --root "assets/heroes/$HERO/renders" --resolution 192
 
       - name: Pack atlases and publish selected hero bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
+          MANIFEST="assets/heroes/$HERO/renders/${HERO}_manifest.json"
+          if [ "$HERO" = "ranger" ]; then MANIFEST="assets/heroes/ranger/renders/ranger_manifest.json"; fi
+          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
 
       - name: Upload selected hero source and render bundle
         uses: actions/upload-artifact@v4
