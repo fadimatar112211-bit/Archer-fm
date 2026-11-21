@@ -477,9 +477,27 @@ def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
         f"assets/heroes/{hero_id}/source/{hero_id}_source.blend")
     shipped.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
                        encoding="utf-8")
-    source = bundle.parent / "source" / f"{hero_id}_source.blend"
-    if not source.is_file():
-        print(f"BUNDLE_WARNING: {source} is missing; rebuild the source first")
+    # Include the best available original hero source alongside the rendered
+    # sprites. Some heroes have a Blender source scene; Storm currently keeps
+    # its original GLB at the hero root instead of a source .blend.
+    source_candidates = [
+        root / "assets" / "heroes" / hero_id / "source" / f"{hero_id}_source.blend",
+        root / "assets" / "heroes" / hero_id / f"{hero_id}.glb",
+        root / "assets" / "heroes" / hero_id / "model" / f"{hero_id}_animated.glb",
+    ]
+    source_asset = next((path for path in source_candidates if path.is_file()), None)
+    source_dir = bundle.parent / "source"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    if source_asset is not None:
+        shutil.copy2(source_asset, source_dir / source_asset.name)
+        data = json.loads(shipped.read_text(encoding="utf-8"))
+        data["source"]["source_asset"] = f"source/{source_asset.name}"
+        data["source"]["source_asset_type"] = source_asset.suffix.lstrip(".")
+        shipped.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\\n",
+                           encoding="utf-8")
+        print(f"BUNDLE_SOURCE hero={hero_id} file={source_asset}")
+    else:
+        print(f"BUNDLE_WARNING: no source .blend/.glb found for {hero_id}")
     print(f"BUNDLE_PUBLISHED hero={hero_id} path={bundle}")
     return bundle
 
