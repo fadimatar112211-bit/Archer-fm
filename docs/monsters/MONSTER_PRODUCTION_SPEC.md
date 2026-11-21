@@ -1,4 +1,4 @@
-> **2026-11-19 VISUAL AUTHORITY OVERRIDE:** The four visual concepts described in this older document (orange Runner, brown Tank, violet Stalker, teal Ranged) are superseded and must not be used as art references. The user supplied the exact four monster designs in a reference sheet. The only approved visual source is `docs/references/USER_APPROVED_VISUAL_REFERENCES.md`, especially `assets/references/approved/monsters/monster_types.png`. Rebuild the four monster models to match the supplied green sword goblin, skeleton dual-blade enemy, horned heavy armored mace enemy, and purple hooded violet-blade enemy exactly. Do not generate substitutions or alter their appearance to fit the older visual briefs. Gameplay stats/logic in this file are not automatically changed by this visual override; inspect and map gameplay roles separately without changing the source art.
+> **2026-11-21 VISUAL AUTHORITY:** Use only the approved four-monster reference sheet at `assets/references/approved_all/archer_fm_monsters_reference.png` and the pointer document `docs/references/USER_APPROVED_VISUAL_REFERENCES.md`. The exact visual-to-gameplay mapping is: green sword goblin = Runner; ivory skeleton with paired swords = Stalker; horned heavy armored mace brute = Tank; purple masked infiltrator with violet energy blades = Ranged. This is a visual mapping only: preserve each existing gameplay role, stats, targeting, attack range, economy and progression. In particular, Ranged must continue to use its existing projectile attack even though its reference silhouette carries violet blades; do not silently convert it to melee.
 
 ---
 
@@ -34,37 +34,27 @@
 
 ## Approved four-role visual brief (steps 2–4)
 
-### 1. Runner — العدّاء
-- Gameplay identity: fastest unit; short-range pressure and dash/burst approach.
-- Existing level-1 baseline: 64 HP, speed 138, damage 9, radius 11, attack range 30, cooldown 900 ms, purchase price 30.
-- Existing palette: warm orange body with light amber accents.
-- Silhouette: lean, compact, forward-leaning body; long swept-back ears/scarf details; visibly light feet/legs.
-- Face: alert, energetic eyes; readable head shape at normal phone zoom.
-- Weapon/read: retain a light, fast close-range strike; avoid a heavy shield or bulky armor silhouette.
+### 1. Runner — العدّاء (green sword goblin)
+- Gameplay identity and level-1 baseline remain unchanged: fastest unit; 64 HP, speed 138, damage 9, radius 11, attack range 30, cooldown 900 ms, purchase price 30.
+- Visual authority: green goblin body, pointed ears, clearly readable face and one short sword.
+- Keep the silhouette compact and agile; avoid the old orange palette and scarf-led design.
+- The short sword is a close-range visual weapon and must animate with the existing fast melee strike.
 
-### 2. Tank — المدرّع
-- Gameplay identity: slowest, highest durability and strong close-range hit.
-- Existing level-1 baseline: 190 HP, speed 72, damage 18, radius 16, attack range 36, cooldown 1300 ms, purchase price 55.
-- Existing palette: earthy brown armor with pale bronze accents.
-- Silhouette: broad torso, oversized shoulder plates, thick limbs, heavy stance and clear armor plates.
-- Face: sturdy, intimidating expression; horned/helmeted outline may remain if it reads clearly.
-- Weapon/read: heavy fist/gauntlet or blunt impact; make weight and impact readable.
+### 2. Tank — المدرّع (horned armored mace brute)
+- Gameplay identity and level-1 baseline remain unchanged: slowest and toughest unit; 190 HP, speed 72, damage 18, radius 16, attack range 36, cooldown 1300 ms, purchase price 55.
+- Visual authority: large horned head/helmet, broad layered armor, oversized shoulders and a heavy spiked mace.
+- Keep the weight and impact readable at normal phone zoom; do not use the former plain brown humanoid brief as the art target.
 
-### 3. Stalker — المتربّص
-- Gameplay identity: flanking/harassing melee fighter; medium mobility and damage.
-- Existing level-1 baseline: 88 HP, speed 108, damage 12, radius 11, attack range 30, cooldown 1000 ms, purchase price 40.
-- Existing palette: deep violet body with lavender accents.
-- Silhouette: narrow hooded cloak, asymmetric stance and paired short blades.
-- Face: partially shadowed but eyes must remain visible; distinguish from Ranged by a close-combat posture and dual-blade read.
-- Weapon/read: two short blades, one on each side; preserve a clear dual-wield outline.
+### 3. Stalker — المتربّص (ivory skeleton dual-blade fighter)
+- Gameplay identity and level-1 baseline remain unchanged: flanking melee fighter; 88 HP, speed 108, damage 12, radius 11, attack range 30, cooldown 1000 ms, purchase price 40.
+- Visual authority: exposed ivory skull and bone structure, dark eye sockets and two short blades.
+- Preserve a fast, lean close-combat silhouette; do not restore the superseded purple-hood palette.
 
-### 4. Ranged — الرامي
-- Gameplay identity: ranged attacker; maintains preferred distance and fires projectiles.
-- Existing level-1 baseline: 78 HP, speed 92, damage 10, radius 11, attack range 210, cooldown 2400 ms, preferred range 135, purchase price 45.
-- Existing palette: teal/blue-green body with pale cyan accents and warm fire-orb effect.
-- Silhouette: upright hooded caster/archer with a staff held visibly away from the body.
-- Face: readable eyes beneath hood; distinguish clearly from Stalker.
-- Weapon/read: staff with a glowing fire orb; projectile launch and impact must be visible and not confused with melee attacks.
+### 4. Ranged — الرامي (purple masked infiltrator)
+- Gameplay identity and level-1 baseline remain unchanged: ranged attacker; 78 HP, speed 92, damage 10, radius 11, attack range 210, cooldown 2400 ms, preferred range 135, purchase price 45.
+- Visual authority: purple hood/mask, readable glowing violet eyes and violet energy blades from the approved reference.
+- Preserve the existing ranged projectile behavior, projectile timing and attack distance. The blades define the character's approved appearance; they do not authorize changing the unit into a melee attacker.
+- Projectile launch and impact must remain visually distinct from melee strikes and be visible in gameplay captures.
 
 ## Shared model and animation requirements (step 5 source gate)
 
@@ -79,6 +69,7 @@ Each final monster asset must provide:
 
 ### Asset source decision and prototype status
 - The free Blender pipeline now generates four rigged prototype GLBs in the CI artifact folder `build/monster-glb/` and emits a manifest plus preview PNGs. The generated files are CI artifacts; they are not committed as runtime assets under `assets/monsters/3d/`.
+- The current generator maps the approved designs to Runner/green goblin, Tank/horned mace brute, Stalker/skeleton, and Ranged/purple masked infiltrator. A dedicated GitHub Actions workflow builds and validates these prototypes. The first run exposed a missing NumPy dependency in the Ubuntu Blender exporter; the workflow now installs `python3-numpy`, and the corrected run is pending. No visual or runtime acceptance is implied.
 - The first preview set (run `44487374412`) was rejected for toy-like spherical bodies, disconnected-looking limbs and weak role detail.
 - The face pass (commit `e82dad4`, run `44487884841`) improved eye/pupil/brow/mouth readability, but visual inspection still rejects the set as final art: limbs remain visibly segmented and the Stalker/Ranged hood and weapon silhouettes are not strong enough.
 - Follow-up geometry work (commit `324c574`) adds bridging geometry, shins, Runner scarf details, a fuller Stalker hood/cloak, and a tapered Ranged robe/staff assembly. Its artifact must be visually reviewed before acceptance.
@@ -109,12 +100,12 @@ Each final monster asset must provide:
 - No new monster model has been produced or integrated in batch 1.
 - Therefore batch 1 is an audit/specification completion, not a claim that the monsters are visually finished.
 
-## Next batch: steps 6–10
+## Next batch: prototype validation and acceptance
 
-1. Establish a reproducible, free model-production pipeline and a canonical monster asset folder/manifest format.
-2. Produce the Runner model and validate its rig, face, silhouette and required clips.
-3. Produce the Tank model and validate its rig, face, silhouette and required clips.
-4. Produce the Stalker model and validate its rig, face, silhouette and required clips.
-5. Produce the Ranged model and validate its rig, face, staff, projectile pose and required clips.
+1. Complete the Blender-to-GLB build and validate all four exported files, skeletons, embedded materials and required animation clips.
+2. Review the four preview renders side-by-side against the approved reference sheet; reject any face, silhouette, color or weapon mismatch.
+3. Inspect gameplay-distance captures at the actual arena camera scale, including friendly/enemy colors, health bars and projectile effects.
+4. Fix any deformations, detached weapons, floating feet, animation clipping or unreadable faces; rebuild and revalidate.
+5. Only after explicit visual acceptance, prepare runtime asset integration while retaining the procedural Canvas renderer as a fallback.
 
-Do not proceed to runtime replacement until all four model files pass asset validation. Keep the Canvas renderer available as fallback.
+Do not proceed to runtime replacement based on structural validation alone. Keep the Canvas renderer available as fallback.
