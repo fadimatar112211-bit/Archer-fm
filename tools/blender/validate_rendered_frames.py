@@ -24,7 +24,7 @@ def active_hero(root: Path) -> tuple[str, dict | None]:
     marker = Path(__file__).resolve().parent / "active_hero.txt"
     hero = (marker.read_text(encoding="utf-8").strip().lower()
             if marker.is_file() else "ranger") or "ranger"
-    path = root / "ranger_manifest.json"
+    path = root / f"{hero}_manifest.json"
     if not path.is_file():
         return hero, None
     return hero, json.loads(path.read_text(encoding="utf-8"))
@@ -196,7 +196,7 @@ def main() -> int:
     expected_by = {}
     animations_by = {}
     if manifest is None:
-        errors.append(f"no ranger_manifest.json in {args.root}; the render pass "
+        errors.append(f"no {hero}_manifest.json in {args.root}; the render pass "
                       f"did not complete")
     else:
         if manifest.get("hero_id") != hero:
