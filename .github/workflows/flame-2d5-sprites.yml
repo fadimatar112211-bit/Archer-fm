@@ -1,4 +1,4 @@
-name: Build Flame 2.5D Sprite Pack
+name: Build Selected Hero 2.5D Sprite Pack
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  render-flame:
+  render-hero:
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
@@ -24,9 +24,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends blender python3-pil xvfb
 
-      - name: Build Flame from the checked-in hero identity profile
+      - name: Validate selected hero and build source scene
         run: |
-          echo flame > tools/blender/active_hero.txt
+          HERO="$(tr -d '[:space:]' < tools/blender/active_hero.txt | tr '[:upper:]' '[:lower:]')"
+          case "$HERO" in ranger|flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
+          echo "Rendering approved profile: $HERO"
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a blender --background --factory-startup --python tools/blender/build_ranger_source.py
 
@@ -39,15 +41,15 @@ jobs:
         run: |
           python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
 
-      - name: Pack atlases and publish the Flame bundle
+      - name: Pack atlases and publish selected hero bundle
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a blender --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
 
-      - name: Upload Flame 2.5D source and render bundle
+      - name: Upload selected hero source and render bundle
         uses: actions/upload-artifact@v4
         with:
-          name: archer-fm-flame-2d5-sprite-pack
-          path: assets/heroes/ranger/renders/_bundle/flame/
+          name: archer-fm-hero-2d5-sprite-pack
+          path: assets/heroes/ranger/renders/_bundle/
           if-no-files-found: error
           retention-days: 30
