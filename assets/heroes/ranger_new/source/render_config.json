@@ -4,7 +4,7 @@
     "resolution": 192,
     "fps": 12,
     "render_engine": "BLENDER_EEVEE",
-    "orthographic_scale": 1.0,
+    "orthographic_scale": 1,
     "states": [
       "idle",
       "walk",
@@ -80,13 +80,13 @@
     },
     "pivot_margin": 0.02,
     "ground_anchor": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "camera_target": [
-      0.0,
-      0.0,
+      0,
+      0,
       0.5
     ],
     "samples": 12
@@ -127,7 +127,7 @@
           }
         ]
       },
-      "output_directory": "assets/heroes/ranger/renders"
+      "output_directory": "assets/heroes/ranger_new/renders"
     }
   }
 }
