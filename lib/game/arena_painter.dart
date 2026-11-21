@@ -249,6 +249,11 @@ class ArenaPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(map.size.width, y), grid);
     }
 
+    // Small deterministic grass clusters add readable ground texture without
+    // shipping generic external art. They are visual-only: collision, paths,
+    // water speed and resource placement remain owned by ArenaMap.
+    _paintGroundDetails(canvas);
+
     // Biomes.
     for (final patch in map.biomes) {
       final color = _biomeColor(patch.kind);
@@ -348,6 +353,63 @@ class ArenaPainter extends CustomPainter {
 
 
 
+  }
+
+  void _paintGroundDetails(Canvas canvas) {
+    final map = world.map;
+    const spacing = 74.0;
+    final view = cameraProjection.visibleWorldBounds(
+      const Rect.fromLTRB(-arenaWidth / 2, -arenaHeight / 2,
+          arenaWidth / 2, arenaHeight / 2),
+    ).shift(world.cameraOrigin + const Offset(arenaWidth / 2, arenaHeight / 2));
+    final maxX = (map.size.width / spacing).ceil();
+    final maxY = (map.size.height / spacing).ceil();
+    final left = (view.left / spacing).floor().clamp(0, maxX);
+    final right = (view.right / spacing).ceil().clamp(0, maxX);
+    final top = (view.top / spacing).floor().clamp(0, maxY);
+    final bottom = (view.bottom / spacing).ceil().clamp(0, maxY);
+
+    for (var gy = top; gy <= bottom; gy++) {
+      for (var gx = left; gx <= right; gx++) {
+        // Stable integer hash: the same map cell always gets the same detail.
+        var hash = (gx * 73856093) ^ (gy * 19349663) ^ 0x45D9F3B;
+        hash = (hash ^ (hash >> 16)) * 0x45D9F3B;
+        hash = hash ^ (hash >> 16);
+        final unit = (hash & 0x7fffffff) / 0x7fffffff;
+        if (unit < 0.34) continue;
+
+        final point = Offset(
+          gx * spacing + 18 + unit * 30,
+          gy * spacing + 14 + ((hash >> 5) & 31),
+        );
+        if (point.dx >= map.size.width || point.dy >= map.size.height) continue;
+        if (map.isWater(point)) continue;
+        if (map.obstacleBlocking(point, 34) != null) continue;
+        if (map.mines.any((mine) => (mine.position - point).distance < mine.radius + 22)) continue;
+        if (map.castleAnchors.any((castle) => (castle - point).distance < castleWallRadius + 42)) continue;
+
+        final biome = map.biomeAt(point)?.kind;
+        final tint = switch (biome) {
+          TerrainKind.desert => const Color(0xFFBBA16A),
+          TerrainKind.snow => const Color(0xFFAFC6B2),
+          TerrainKind.volcanic => const Color(0xFF9A7560),
+          _ => const Color(0xFF8DA66A),
+        };
+        final height = 4.0 + ((hash >> 9) & 7).toDouble();
+        final width = 2.0 + ((hash >> 13) & 2).toDouble();
+        final base = Paint()
+          ..color = tint.withValues(alpha: 0.30 + unit * 0.18)
+          ..strokeWidth = width
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(point, point + Offset(-width, -height), base);
+        canvas.drawLine(point + const Offset(1, 0),
+            point + Offset(width, -height * 0.78), base);
+        if ((hash & 3) == 0) {
+          canvas.drawCircle(point + const Offset(5, 2), 1.5,
+              Paint()..color = tint.withValues(alpha: 0.24));
+        }
+      }
+    }
   }
 
   void _paintResourcePickup(Canvas canvas, ResourcePickup pickup) {
