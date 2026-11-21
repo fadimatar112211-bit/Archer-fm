@@ -67,6 +67,18 @@ void main() {
       }
     });
 
+    test('reference palette keeps the four monster silhouettes distinct', () {
+      expect(MonsterCatalog.def(MonsterType.runner).color, 0xFF4D9848);
+      expect(MonsterCatalog.def(MonsterType.tank).color, 0xFF596474);
+      expect(MonsterCatalog.def(MonsterType.stalker).color, 0xFFE5D9BD);
+      expect(MonsterCatalog.def(MonsterType.ranged).color, 0xFF57358F);
+      expect(MonsterCatalog.def(MonsterType.runner).accent, 0xFFC5E99B);
+      expect(MonsterCatalog.def(MonsterType.ranged).accent, 0xFFBE83FF);
+      // The purple blade silhouette must not change the existing ranged role.
+      expect(MonsterStats.of(MonsterType.ranged, 1).attackRange, 210);
+      expect(MonsterCatalog.def(MonsterType.ranged).isRanged, isTrue);
+    });
+
     test('the roles stay distinct: runner fastest, tank toughest', () {
       final runner = MonsterStats.of(MonsterType.runner, 1);
       final tank = MonsterStats.of(MonsterType.tank, 1);
