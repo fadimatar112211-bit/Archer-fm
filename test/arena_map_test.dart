@@ -92,7 +92,10 @@ void main() {
     test('adds a river with dry bridges across it', () {
       for (var seed = 0; seed < 10; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
-        expect(map.rivers, isNotEmpty);
+        expect(map.rivers, hasLength(greaterThanOrEqualTo(2)));
+        // The side stream joins the main channel and has its own dry bridge.
+        expect(map.rivers.every((river) => river.points.length > 2), isTrue);
+        expect(map.rivers.every((river) => river.bridges.isNotEmpty), isTrue);
         final river = map.rivers.first;
         expect(river.points.length, greaterThan(2));
         expect(river.bridges.length, greaterThanOrEqualTo(2));
