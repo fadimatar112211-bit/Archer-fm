@@ -1,81 +1,62 @@
-name: Ranger Blender Asset Pipeline
+name: Ranger Blender Asset Pipeline (Manual Legacy)
 
+# The four-hero matrix workflow is the sole automatic sprite pipeline.
+# Keep this Ranger-only entry point manual for isolated diagnostics.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "tools/blender/**"
-      - "assets/heroes/ranger/source/render_config.json"
-      - ".github/workflows/ranger-assets.yml"
 
 permissions:
   contents: read
 
 jobs:
   build-and-render:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Blender
+      - name: Install Blender and image validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgl1 python3-pil
+          sudo apt-get install -y --no-install-recommends python3-pil xvfb libegl1 libgl1
           curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
           sudo tar -xJf /tmp/blender.tar.xz -C /opt
           echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
           /opt/blender-3.6.13-linux-x64/blender --version
 
-      - name: Python syntax check
-        run: |
-          python3 -m py_compile \
-            tools/blender/build_ranger_source.py \
-            tools/blender/render_hero.py \
-            tools/blender/pack_hero_atlases.py \
-            tools/blender/validate_ranger_source.py \
-            tools/blender/validate_rendered_frames.py
-
-      - name: Build editable Ranger source
-        run: "$BLENDER" -b --python tools/blender/build_ranger_source.py
-
-      - name: Validate Blender scene and rig
-        run: |
-          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
-            --python tools/blender/validate_ranger_source.py
-
-      - name: Select Ranger for this Ranger-only workflow
+      - name: Select Ranger explicitly
         run: echo "ranger" > tools/blender/active_hero.txt
 
-      - name: Render all states and directions
+      - name: Build dedicated Ranger source scene
         run: |
-          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
-            --python tools/blender/render_hero.py -- \
-            --config assets/heroes/ranger/source/render_config.json
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
+          test -s assets/heroes/ranger/source/ranger_source.blend
 
-      - name: Reject flattened or invalid rendered frames
+      - name: Validate source rig and authored animations
+        run: "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/validate_ranger_source.py
+
+      - name: Render eight directions and all authored states
         run: |
-          python3 tools/blender/validate_rendered_frames.py \
-            --root assets/heroes/ranger/renders --resolution 192
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
 
-      - name: Pack sprite atlases
+      - name: Validate frames and motion
+        run: python3 tools/blender/validate_rendered_frames.py --root assets/heroes/ranger/renders --resolution 192
+
+      - name: Pack and validate atlases
         run: |
-          "$BLENDER" -b assets/heroes/ranger/source/ranger_source.blend \
-            --python tools/blender/pack_hero_atlases.py -- \
-            --manifest assets/heroes/ranger/renders/ranger_manifest.json
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          xvfb-run -a "$BLENDER" --background assets/heroes/ranger/source/ranger_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/ranger/renders/ranger_manifest.json
+          python3 tools/validate_hero_assets.py assets/heroes/ranger/renders/ranger_manifest.json
 
-      - name: Validate final sprite manifest
-        run: |
-          python3 tools/validate_hero_assets.py \
-            assets/heroes/ranger/renders/ranger_manifest.json
-
-      - name: Upload generated source and sprites
+      - name: Upload generated Ranger source and sprite bundle
         uses: actions/upload-artifact@v4
         with:
           name: ranger-blender-source-and-sprites
           path: |
+            assets/heroes/ranger/renders/_bundle/ranger/
             assets/heroes/ranger/source/ranger_source.blend
-            assets/heroes/ranger/renders/
           if-no-files-found: error
           retention-days: 14
