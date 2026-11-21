@@ -1150,3 +1150,15 @@ Verification:
 - Rendering all eight directions and eight states is still running; no atlas pack is considered complete or visually accepted until the remaining frame validation, packing, manifest validation and artifact upload steps pass.
 - The old Ranger-only workflow was firing automatically on the same Blender tool changes, creating redundant failing runs against the new shared multi-hero setup. It is now manual-only; the four-hero matrix is the only automatic sprite pipeline.
 - Commit: `870cc16` — Retire duplicate automatic Ranger-only sprite workflow.
+
+
+## 2026-11-21 — Monster reference palette and silhouette pass
+
+- Updated the four procedural fallback monster palettes to match the approved roster: green sword goblin (Runner), steel/brass horned mace brute (Tank), ivory skeleton (Stalker), purple masked infiltrator with violet energy (Ranged).
+- Reworked the Stalker fallback body from a generic hooded robe into visible rib-cage/skull anatomy with dark eye sockets and paired blade silhouettes.
+- Reworked Ranged fallback into a purple hood/mask and violet energy blades. The existing long-range projectile attack and its combat stats remain unchanged; the blades are visual identity only.
+- Reworked Runner's sword and Tank's spiked mace silhouette.
+- Added a regression test for the four distinct palette identities and the Ranged 210-unit attack range.
+- These are improvements to the procedural fallback only. They are not the final approved sprite actors; the reference-faithful 2.5D monster sprite pipeline remains required.
+- Fixed the Flutter analyzer warning from an unused bridge paint local and removed an unnecessary test import.
+- Commits: `276c6e8` palette, `bd1f74c` body silhouettes, `d200486` weapons, `5f063cc` regression test.
