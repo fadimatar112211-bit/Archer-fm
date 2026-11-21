@@ -842,3 +842,42 @@ Verification:
 ### Current status
 - Hero batch: **IN PROGRESS — source assets exist; visual acceptance is not yet met.**
 - No claim of analyzer, full test-suite, Android smoke, release APK or signature success is made for the current HEAD.
+
+
+## 2026-11-21 — Official 2.5D migration resumed (supersedes legacy full-3D hero work)
+
+**Binding direction:** playable heroes and monsters are 2D sprites with a polished 2.5D appearance; the arena/world is planned as a lightweight real 3D environment. The previous full-3D hero production path is historical only. Do not use GLB hero rendering as the production visual path once each approved sprite is integrated. Keep source GLBs archived until the migration is accepted; do not delete them.
+
+### User reference constraints
+- Production hero/monster/final gameplay visuals must use only the user's approved references. No assistant-generated, web-sourced, stock, generic or invented character art.
+- Canonical roster: `assets/references/approved_all/hero_roster_concept.jpg`.
+- Canonical monsters: `assets/references/approved_all/archer_fm_monsters_reference.png`.
+- Canonical gameplay composition: `assets/references/approved_all/file_000000005c8c81f9ab4ccbb80ea59d5e.png`.
+- Shadow walk source: the user's uploaded `1000241306.png`, preserved in the repo as `assets/heroes/shadow/renders/atlases/shadow_walk_8dir_4frames_FINAL.png`. Original reference files remain immutable.
+
+### Shadow Phase 1 — implementation evidence
+- The checked-in Shadow walk atlas is a 768×1536 PNG with RGBA color type (PNG IHDR type 6), arranged as 8 rows × 4 columns, each cell 192×192.
+- All eight direction clips (`walk_s`, `walk_se`, `walk_e`, `walk_ne`, `walk_n`, `walk_nw`, `walk_w`, `walk_sw`) reference exactly four user-source frames each, at 100 ms/frame.
+- The shared pivot is x=0.50, y=0.86; per-direction frame metadata maps the four columns and eight rows explicitly.
+- `lib/game/game_screen.dart` has a Shadow pilot guard that prevents the legacy GLB from overriding the atlas sprite path for the normal production screen. Test injection remains available.
+- `test/shadow_2d5_in_game_capture_test.dart` loads the real manifest/atlas and renders Shadow through `ArenaPainter` for all eight world facings.
+- `test/shadow_user_walk_atlas_test.dart` now also decodes the PNG and checks the actual alpha channel/corner transparency, not just the file extension/header. Added in commit `a5993b9cf2ebf3686c703ee3f5c0680a6ee1695e`.
+- **Acceptance is not yet granted:** the new alpha-validation test is queued in run `44888593832`; inspect its result and the resulting eight-direction captures before marking Shadow Phase 1 complete. Visual foot grounding, direction convention and motion quality still require review at gameplay scale.
+
+### Other hero/monster work — do not mislabel as 2.5D completion
+- Flame's current generated sprite workflow failed on the old CI Blender 3.0.1 runtime: the checked-in .blend was authored by Blender 3.6.13 and crashed on load; the procedural material builder also used the newer Principled BSDF socket name `Emission Color`. More importantly, the workflow's code-generated appearance is not an approved substitute for the user's Flame reference. Do not accept or integrate its output. Flame needs a reference-faithful, user-approved sprite source.
+- The monster GLB generation job succeeded in run `44888328566`, but those GLBs are not approved production assets under the current 2D/2.5D monster direction. Keep them isolated; do not integrate them as production monsters.
+- The earlier full-3D hero APK/capture pipeline is not evidence of 2.5D sprite acceptance.
+
+### Current CI evidence (as of this update)
+- Commit under test: `a5993b9cf2ebf3686c703ee3f5c0680a6ee1695e`.
+- Fresh workflow run `44888593832` was queued at the time this note was written; no pass is claimed for that commit yet.
+- Previous run `44888328566` at commit `ce873de026f681add86416fabd0608152a77eea2`: Flutter analyze and full Flutter test suite completed successfully; Android emulator smoke and release APK build were still running at the last inspection. Monster GLB generation succeeded but is not accepted for production.
+- Flame render run `44888328674` failed due Blender version incompatibility and the material socket mismatch described above. It is not an approved art output.
+
+### Next steps (strict order)
+1. Wait for `44888593832`; fix any alpha/test failures and inspect the eight Shadow capture images.
+2. If the Shadow captures pass visual review, mark Phase 1 complete and extract the reusable sprite direction/frame renderer without changing gameplay.
+3. Convert Flame only from an approved reference-faithful source; stop rather than inventing missing views/frames.
+4. Convert Ranger and Storm the same way, then the four monster roles from their approved reference.
+5. Only after sprite actors are stable, prototype the lightweight 3D world/billboard integration and compare the final scene to the approved gameplay image.
