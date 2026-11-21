@@ -202,7 +202,10 @@ jobs:
       - name: Run Android integration smoke test
         run: timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
 
+  # Historical 3D source-model validation only. Production monsters are 2D/2.5D sprites.
+  # Keep this job disabled until a user-approved sprite workflow replaces it.
   generate-monster-glbs:
+    if: ${{ false }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
