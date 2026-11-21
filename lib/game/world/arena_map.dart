@@ -430,9 +430,34 @@ class ArenaMap {
       }
     }
 
+    tributary ??= (() {
+      // Deterministic safety route through the open lane between the two
+      // left-side castle clearings. This keeps a side channel present even
+      // when randomized candidate curves are rejected.
+      final safeY = (castles[0].dy + castles[2].dy) / 2;
+      final points = <Offset>[
+        Offset(size.width * 0.015, safeY),
+        Offset(size.width * 0.22, safeY - 18),
+        Offset(size.width * 0.40, safeY + 14),
+        Offset(join.dx, join.dy),
+      ];
+      const tributaryWidth = 58.0;
+      return River(
+        points: points,
+        width: tributaryWidth,
+        bridges: [
+          Bridge(
+            center: _pointAlong(points, 0.63),
+            width: 104,
+            depth: tributaryWidth + 48,
+          ),
+        ],
+      );
+    })();
+
     return [
       mainRiver,
-      if (tributary != null) tributary,
+      tributary,
     ];
   }
 
