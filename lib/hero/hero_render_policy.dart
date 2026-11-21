@@ -17,4 +17,9 @@ class HeroRenderPolicy {
       _approvedSpritePilotIds.contains(heroId)
           ? HeroVisualRoute.approvedSpritePilot
           : HeroVisualRoute.glbPrimary;
+
+  /// True only when the hero's sprite art has passed the visual acceptance
+  /// gate. A populated manifest or a failed GLB load is not sufficient.
+  static bool allowsSpriteAtlas(String heroId) =>
+      routeFor(heroId) == HeroVisualRoute.approvedSpritePilot;
 }
