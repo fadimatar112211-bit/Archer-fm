@@ -99,13 +99,20 @@ void main() {
         final river = map.rivers.first;
         expect(river.points.length, greaterThan(2));
         expect(river.bridges.length, greaterThanOrEqualTo(2));
-        for (final bridge in river.bridges) {
-          // The bridge crosses the water and is dry to walk on.
-          expect(river.contains(bridge.center), isTrue);
-          expect(map.isBridge(bridge.center), isTrue);
-          expect(map.isWater(bridge.center), isFalse);
-          expect(map.movementFactorAt(bridge.center), 1.0);
+        for (final channel in map.rivers) {
+          for (final bridge in channel.bridges) {
+            // Every crossing belongs to its channel and is dry to walk on.
+            expect(channel.contains(bridge.center), isTrue);
+            expect(map.isBridge(bridge.center), isTrue);
+            expect(map.isWater(bridge.center), isFalse);
+            expect(map.movementFactorAt(bridge.center), 1.0);
+          }
         }
+        // The tributary itself is water away from its bridge deck.
+        final tributary = map.rivers[1];
+        final tributaryWater = tributary.points[1];
+        expect(map.isWater(tributaryWater), isTrue);
+        expect(map.movementFactorAt(tributaryWater), waterSpeedFactor);
       }
     });
 
