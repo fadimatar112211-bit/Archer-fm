@@ -9,6 +9,7 @@ import '../audio_service.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_catalog.dart';
 import '../hero/hero_manifest.dart';
+import '../hero/hero_render_policy.dart';
 import '../hero/sprite_player.dart';
 import 'arena_painter.dart';
 import 'combat/hero_kit.dart';
@@ -346,7 +347,8 @@ class _GameScreenState extends State<GameScreen>
     // Shadow is the first 2.5D migration pilot. Keep its sprite renderer active
     // while the remaining heroes stay on their verified legacy visuals until
     // their reference-matched sprite sheets pass review.
-    if (widget.hero.id == 'shadow' &&
+    if (HeroRenderPolicy.routeFor(widget.hero.id) ==
+            HeroVisualRoute.approvedSpritePilot &&
         widget.hero3dController == null &&
         widget.hero3dBytes == null) {
       debugPrint('Shadow 2.5D pilot: using sprite atlas renderer');

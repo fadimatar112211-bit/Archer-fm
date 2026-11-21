@@ -9,7 +9,9 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Target visual direction: polished Archero-like top-down action game, with true 3D chibi heroes, readable faces, visible weapons, clear attack poses, strong skill effects, and responsive combat.
+- Current approved production direction (2026-11-21): heroes and monsters use user-reference-approved 2D/2.5D sprites in a planned lightweight real 3D arena. This supersedes older full-3D hero-rendering notes below; GLB hero files remain archived/diagnostic until sprite migration is accepted.
+- Production character visuals may use only the user's approved reference/source images. Never invent, generate, or substitute character artwork.
+- Current 2.5D pilot: Shadow only. Ranger, Flame and Storm retain their existing GLB presentation until their sprite assets are reference-approved.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
 - Prefer large coherent implementation batches, then run the full relevant test/build workflow.
 - Keep game UI Arabic-first.
@@ -934,3 +936,29 @@ Verification:
 - Hero face review: close-up/gameplay captures are available, but they do not yet establish reference-faithful facial detail and clean geometry for all four heroes. Face/material/mesh visual sign-off remains **OPEN**; do not claim all heroes complete.
 - Production visual direction is the approved 2D/2.5D sprite actor pipeline in the lightweight 3D arena. The older full-3D GLB hero path is historical/test/reference-only and must not be used as proof of current 2.5D art acceptance.
 - Next steps: (1) correct the release workflow's tag collision/uniqueness policy before the next release; (2) inspect and accept reference-matched sprite art for each hero, especially Flame/Ranger/Storm and Shadow's missing action states; (3) continue arena/actor visual acceptance only after fresh captures; (4) retain the successful current-HEAD Analyze/tests/emulator/APK evidence above.
+
+
+## 2026-11-21 — Hero sprite readiness audit and render-route guard
+
+### Visual evidence reviewed
+- Compared the checked-in hero assets against `assets/references/approved_all/hero_roster_concept.jpg`.
+- Shadow: the user-supplied `shadow_walk_8dir_4frames_FINAL.png` is the only currently approved sprite animation source. It contains eight direction rows × four frames and is integrated as the 2.5D pilot. Idle holds the first approved frame per direction. Dedicated approved run/attack/skill/hit/death source frames are still missing.
+- Flame: the current `renders/atlases/idle_s.png` is a simplified small character and does not demonstrate the reference's detailed red-haired knight, gold armor and greatsword. It is not approved for production sprite use.
+- Storm: the current `renders/atlases/idle_s.png` is a flat blue tile with no visible character. It is a placeholder, not a production sprite.
+- Ranger: no source/model/art changes were made in this batch. Preserve the existing Ranger work; do not alter it as part of this audit.
+
+### Code safeguard
+- Added `lib/hero/hero_render_policy.dart` and a regression test so the production route is explicit: Shadow uses the approved sprite pilot; Ranger, Flame and Storm remain GLB-primary until their sprite replacements pass reference and animation review.
+- `GameScreen._loadHero3D()` now consults this policy instead of a hard-coded Shadow ID check. No gameplay, camera, collision, or art asset was changed.
+
+### Current blockers and next actions
+1. Complete the Shadow Phase 1 acceptance review; its walk source is approved, but missing action-state art prevents full Shadow completion.
+2. Flame needs approved source frames that preserve the canonical red-haired knight, armor and greatsword. Do not use the current simplified atlas.
+3. Storm needs actual reference-faithful character frames; do not use the flat blue placeholder atlas.
+4. Keep Ranger unchanged until the user explicitly reopens its sprite work.
+5. Once approved Flame/Storm source material is available, convert one hero at a time, validate all eight directions/states and inspect gameplay captures before switching its production route.
+
+### Verification
+- The prior current-head workflow run `44935787919` passed Analyze, all Flutter tests, Android smoke, APK build and signature verification for commit `c8bad8df47f8d44a10195946d2ea531d66856e97`.
+- Workflow run `44936501289` is testing the release-tag uniqueness fix at commit `660daeee90e1da38e15a307d81e64365c4ee8f32`; Analyze, all tests and visual-capture upload passed, while Android smoke and APK build were still running at the time of this note.
+- This new policy/test change must receive its own CI run before it is considered verified.
