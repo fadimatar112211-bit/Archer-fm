@@ -1120,3 +1120,14 @@ Verification:
 - Each bridge must lie on its own river, be recognized by the map as a bridge, remain dry, and preserve full movement speed.
 - Added a direct check that the tributary's water slows movement using the same water-speed rule as the main channel.
 - Latest verification remains pending: the Android workflow was cancelled by a later push before it produced a completed result. The Ranger asset workflow returned a failed run with zero jobs exposed by GitHub's jobs endpoint; no failing step or log is available, so its cause remains undiagnosed.
+
+
+### 2026-11-21 — Hero render output isolation fix
+
+- Fixed `tools/blender/render_hero.py` so each selected hero writes frames to that hero's configured `output_directory`, instead of routing every render into Ranger's folder. The manifest is now named `<hero_id>_manifest.json`.
+- Added a repository-root guard to reject configured output paths that escape the checkout.
+- Updated `tools/blender/validate_rendered_frames.py` to load the active hero's manifest name rather than always expecting `ranger_manifest.json`.
+- Updated the Ranger-only workflow to explicitly select Ranger before rendering its Ranger source scene. This prevents the checked-in Storm selection marker from asking a Ranger .blend file to supply a Storm rig.
+- Commits: `e993a31` (per-hero render output), `66f8c54` (hero-specific validator manifest), `da35ebb` (Ranger workflow selection).
+- Verification: repository file updates were accepted by GitHub. Blender render, Python syntax, atlas packing, Flutter tests, and visual review have **not** yet been run for these commits. Do not mark any non-Ranger atlas as generated or visually accepted. The current workflow remains Ranger-only; Flame, Shadow and Storm still need dedicated source-scene/workflow wiring and a four-hero batch validation.
+- Next: run the Ranger workflow once without superseding pushes; inspect its logs and artifact. Then generalize workflow inputs/source scenes per hero and add tests for manifest path isolation.
