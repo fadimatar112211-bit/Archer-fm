@@ -357,21 +357,26 @@ class ArenaMap {
       return River(points: points, width: width, bridges: bridges);
     }
 
-    // Re-draw the course until it stays clear of every castle clearing.
+    // Re-draw the main course until it stays clear of every castle clearing.
+    River? mainRiver;
     for (var attempt = 0; attempt < 40; attempt++) {
-      final river = buildRiver();
+      final candidate = buildRiver();
       final clear = castles.every(
-        (castle) => river._distanceTo(castle) > river.halfWidth + 130,
+        (castle) => candidate._distanceTo(castle) > candidate.halfWidth + 130,
       );
-      if (clear) return [river];
+      if (clear) {
+        mainRiver = candidate;
+        break;
+      }
     }
     // Guaranteed fallback: a straight river along the far edge.
-    final fallbackX = size.width * 0.9;
-    final points = [
-      for (final fraction in fractions) Offset(fallbackX, size.height * fraction),
-    ];
-    return [
-      River(
+    mainRiver ??= (() {
+      final fallbackX = size.width * 0.9;
+      final points = [
+        for (final fraction in fractions)
+          Offset(fallbackX, size.height * fraction),
+      ];
+      return River(
         points: points,
         width: width,
         bridges: [
@@ -386,7 +391,48 @@ class ArenaMap {
             depth: width + 56,
           ),
         ],
-      ),
+      );
+    })();
+
+    // Add a side stream that joins the main river near its middle. It is
+    // deliberately narrower than the main channel and gets its own bridge.
+    // Candidate paths are rejected if they cut through a castle clearing.
+    River? tributary;
+    final join = _pointAlong(mainRiver.points, 0.52);
+    for (var attempt = 0; attempt < 48; attempt++) {
+      final y = size.height * (0.42 + rng.nextDouble() * 0.16);
+      final bend = (rng.nextDouble() - 0.5) * size.height * 0.10;
+      final points = <Offset>[
+        Offset(size.width * 0.015, y - bend * 0.25),
+        Offset(size.width * 0.24, y + bend * 0.25),
+        Offset(size.width * 0.43, y - bend * 0.35),
+        Offset(join.dx, join.dy),
+      ];
+      const tributaryWidth = 58.0;
+      final candidate = River(
+        points: points,
+        width: tributaryWidth,
+        bridges: [
+          Bridge(
+            center: _pointAlong(points, 0.63),
+            width: 104,
+            depth: tributaryWidth + 48,
+          ),
+        ],
+      );
+      final clearOfCastles = castles.every(
+        (castle) => candidate._distanceTo(castle) >
+            candidate.halfWidth + 112,
+      );
+      if (clearOfCastles) {
+        tributary = candidate;
+        break;
+      }
+    }
+
+    return [
+      mainRiver,
+      if (tributary != null) tributary,
     ];
   }
 
