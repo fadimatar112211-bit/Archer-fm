@@ -1009,3 +1009,26 @@ Verification:
 - Storm render workflow run `44940626160` has completed Blender installation and selected-hero source-scene validation; its eight-direction/state render step was still running at the latest check. No artifact has been published yet, so no Storm output is accepted.
 - The selected-hero workflow still needs a completed render, validation, atlas packing, and artifact review before its result can be called successful.
 - Hero readiness remains unchanged: Shadow is a limited 2.5D pilot with incomplete action artwork; Ranger remains pending visual acceptance; Flame's existing atlas is rejected for identity mismatch; Storm's checked-in atlas is rejected as a flat placeholder.
+
+
+
+## 2026-11-21 — Reference-directed monster prototypes and hero render continuation
+
+- Updated `tools/monsters/generate_monsters_blender.py` so the prototype geometry/palettes follow the approved monster sheet:
+  - Runner: green goblin with pointed ears and one short sword.
+  - Tank: horned heavy armored brute with a spiked mace.
+  - Stalker: ivory skeleton with dark eye sockets and paired blades.
+  - Ranged: purple masked infiltrator with violet energy blades.
+- Added `.github/workflows/monster-reference-prototypes.yml` to build four review-only GLBs, validate skeleton/clip/material structure, and upload previews/artifacts. Generated prototypes are not runtime assets and are not visually accepted.
+- First prototype build run `44942396591` exposed an environment failure: Blender's glTF exporter could not import NumPy. Fixed the workflow to install `python3-numpy` with Blender.
+- Corrected build run `44942594455` is currently in progress. No GLB validation result or review artifact is available yet.
+- Updated `docs/monsters/MONSTER_PRODUCTION_SPEC.md` to remove contradictory legacy color/design briefs and lock the four approved visual-to-gameplay mappings. Existing game stats, roles, projectile behavior, economy and progression must remain unchanged. The Ranged character's violet blades are visual identity only; its projectile behavior remains ranged.
+- Hero render workflow `44940626160` (selected hero: Storm) remains in progress. Source-scene validation passed; the eight-direction/state render step was still running at the latest check. No Storm atlas is accepted until render validation, packing and visual review complete.
+- Android release workflow `44942377013`: Flutter analyze, all tests, and visual-capture upload completed successfully; APK build and Android emulator smoke test were still running. This is not yet a successful APK verification.
+- Commits from this batch:
+  - `2ea2682546fb1f2a17896fb552bc0cbea75951fb` — reference-directed monster geometry/palettes.
+  - `bc2cdf790df652a8e159c443f8e4b9f78beea14c` — monster prototype build workflow.
+  - `96e786bf38ad62957f121e5ffad8d72ec6208fc8` — install NumPy for Blender GLB export.
+  - `4c3f29e5e271a76cd5ba7b0868bbc3d0e7dbd57d` — align monster production spec with approved designs.
+- Current acceptance status: all four monster models remain PROTOTYPE / NOT VISUALLY ACCEPTED; Storm sprite render remains pending; hero visual readiness is unchanged (Shadow limited pilot, Ranger pending review, Flame atlas rejected, Storm atlas rejected).
+- Next: finish and inspect the monster build artifact, fix any exporter/validator errors, then visually review the four previews against the approved sheet. In parallel, wait for Storm render/validation and the Android build/smoke-test result. Do not integrate any unapproved monster atlas or hero atlas.
