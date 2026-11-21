@@ -1131,3 +1131,13 @@ Verification:
 - Commits: `e993a31` (per-hero render output), `66f8c54` (hero-specific validator manifest), `da35ebb` (Ranger workflow selection).
 - Verification: repository file updates were accepted by GitHub. Blender render, Python syntax, atlas packing, Flutter tests, and visual review have **not** yet been run for these commits. Do not mark any non-Ranger atlas as generated or visually accepted. The current workflow remains Ranger-only; Flame, Shadow and Storm still need dedicated source-scene/workflow wiring and a four-hero batch validation.
 - Next: run the Ranger workflow once without superseding pushes; inspect its logs and artifact. Then generalize workflow inputs/source scenes per hero and add tests for manifest path isolation.
+
+
+### 2026-11-21 — Four-hero 2.5D matrix pipeline
+
+- Reworked `.github/workflows/flame-2d5-sprites.yml` into a four-job matrix for Ranger, Flame, Shadow and Storm. Each job selects its hero independently, builds that hero's source scene, validates its rig/actions, renders eight directions across all eight states, validates frames, packs atlases, validates the final manifest, and uploads a hero-specific artifact.
+- Updated each matrix job to use `assets/heroes/<hero>/source/<hero>_source.blend`, `assets/heroes/<hero>/renders/<hero>_manifest.json`, and the matching hero render directory. This now matches the per-hero renderer and manifest paths introduced in commits `e993a31` and `66f8c54`.
+- The shared profile/config remains at `assets/heroes/ranger/source/render_config.json`; its `heroes` map contains the four profiles and per-hero output directories.
+- Each matrix runner has an isolated checkout, so writing its own `active_hero.txt` cannot race with another hero's build.
+- Commit: `a3a1d4f` — four-hero isolated matrix workflow.
+- Verification status: workflow YAML and actual Blender execution have not yet been confirmed by a completed Actions run. The workflow is now configured to trigger on relevant pushes; wait for the run and inspect each hero job before accepting any atlas. A successful technical validation still does not replace visual review against the approved roster reference.
