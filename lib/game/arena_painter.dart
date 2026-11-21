@@ -66,6 +66,7 @@ class ArenaPresentation {
     required this.timeMs,
     required this.comboText,
     this.hero3d,
+    this.heroSpriteApproved = true,
   });
 
   final HeroKit kit;
@@ -85,6 +86,12 @@ class ArenaPresentation {
   /// The in-game 3D hero; when non-null the hero is drawn as the real skinned
   /// model instead of the atlas frame (enemies keep their sprites).
   final Hero3DController? hero3d;
+
+  /// Whether the current hero's atlas has passed reference-art acceptance.
+  /// Defaults true for isolated painter previews/tests; production always
+  /// supplies the explicit roster policy so a failed GLB cannot expose a
+  /// rejected placeholder atlas.
+  final bool heroSpriteApproved;
 
   Color get accent => Color(kit.accentColor);
 }
@@ -2136,7 +2143,9 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    final image = presentation.sheet?.image;
+    final image = presentation.heroSpriteApproved
+        ? presentation.sheet?.image
+        : null;
     final frameId = presentation.frameId;
     final rect =
         image == null || frameId == null ? null : presentation.sheet!.rectFor(frameId);
