@@ -98,8 +98,8 @@ class MonsterCatalog {
       xpValue: 8,
       price: 30,
       preferredRange: 26,
-      color: 0xFFE2703A,
-      accent: 0xFFFFC48A,
+      color: 0xFF4D9848,
+      accent: 0xFFC5E99B,
     ),
     MonsterType.tank: MonsterTypeDef(
       type: MonsterType.tank,
@@ -114,8 +114,8 @@ class MonsterCatalog {
       xpValue: 20,
       price: 55,
       preferredRange: 30,
-      color: 0xFF8A6A4A,
-      accent: 0xFFE8C49A,
+      color: 0xFF596474,
+      accent: 0xFFD9B66F,
     ),
     MonsterType.stalker: MonsterTypeDef(
       type: MonsterType.stalker,
@@ -130,8 +130,8 @@ class MonsterCatalog {
       xpValue: 12,
       price: 40,
       preferredRange: 26,
-      color: 0xFF7A5AB8,
-      accent: 0xFFC9A8FF,
+      color: 0xFFE5D9BD,
+      accent: 0xFFFFF1D5,
     ),
     MonsterType.ranged: MonsterTypeDef(
       type: MonsterType.ranged,
@@ -146,8 +146,8 @@ class MonsterCatalog {
       xpValue: 14,
       price: 45,
       preferredRange: 135,
-      color: 0xFF3F7E8C,
-      accent: 0xFF9BE8F0,
+      color: 0xFF57358F,
+      accent: 0xFFBE83FF,
     ),
   };
 
