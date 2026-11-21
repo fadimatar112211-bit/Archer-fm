@@ -37,6 +37,14 @@ Important implications:
 4. The 3D-world requirement is a separate renderer migration. The existing Canvas projection is 2D; do not label it "3D". Prototype the lightest real 3D-world integration while preserving world coordinates, camera/touch mapping, depth order, and game rules.
 5. The final gameplay reference and hero/monster appearance references are separate authorities; never use one to invent or override another.
 
+## 0.3 User clarification — no hero may remain a final live GLB character
+
+The final deliverable is **all four heroes (Ranger, Flame, Shadow and Storm) as 2D/2.5D sprite actors**, not a mixed roster of sprite and live-GLB characters. The same reference-only rule applies to all four monster roles. Existing GLB and Blender files may be used as retained source/rig/animation inputs for sprite rendering and diagnostics; they are not the final in-match hero presentation.
+
+During migration, keep the last safe runtime route for each hero until its replacement 2.5D pack passes acceptance. This temporary fallback must never be mistaken for the final art direction. In particular, do not enable the rejected Flame simplification or Storm blue placeholder atlas.
+
+Map/environment production proceeds **in parallel** with the hero and monster sprite work. The arena pass covers terrain/biomes, river and bridges, paths, trees/rocks, mines, castles/walls/crystals, resource pickups, depth/occlusion, and the 16:9 camera composition. Preserve map generation, collision, economy, combat and touch transforms unless a separate test-backed change is approved.
+
 ## 1. Final approved direction
 
 - **Heroes:** 2D sprite characters with a polished 2.5D appearance: dimensional painted forms, readable faces, layered clothing, controlled highlights, contact shadows and signature VFX.
