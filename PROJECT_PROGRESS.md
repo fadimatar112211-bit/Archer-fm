@@ -986,3 +986,14 @@ Verification:
 - Shadow remains the only approved 2.5D pilot. Dedicated action art is still missing; temporary held poses preserve approved identity and combat event timing.
 - Added `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` with evidence, production route decisions, per-hero acceptance checklist and next tasks.
 - No canonical reference, source GLB or user-provided sprite artwork was changed.
+
+
+## 2026-11-21 — Hero sprite fallback safety gate
+
+- Compared the checked-in front-facing idle atlases directly against `assets/references/approved_all/hero_roster_concept.jpg`.
+- Confirmed the current evidence: Shadow is the only approved sprite pilot; Ranger remains pending full visual acceptance; Flame's atlas is visibly inconsistent with the red-haired gold-armored greatsword reference; Storm's atlas is a flat blue placeholder.
+- Fixed a production fallback leak: when a GLB failed to load, the arena painter could previously fall through to an unapproved atlas. `HeroRenderPolicy.allowsSpriteAtlas()` now provides the explicit approval decision, `GameScreen` passes it into `ArenaPresentation`, and `ArenaPainter` suppresses unapproved hero atlases. A neutral placeholder is shown instead of wrong character art when an unapproved GLB is unavailable.
+- Added regression assertions that Shadow is the only hero whose atlas is approved for production.
+- Updated `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` with the failure mode and fix.
+- No hero artwork, canonical references, GLB source files, gameplay, camera, hitboxes or combat timing were changed.
+- Verification: CI has not yet produced a usable job result for these latest commits; final verification is pending. Do not mark the change verified until a clean run completes.
