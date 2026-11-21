@@ -120,6 +120,15 @@ The game should approach Archero's visual readability and feel, not merely conta
 - Hero and monster sprite migration remains open. Do not enable rejected atlases; next asset batch must produce/review the 2.5D packs for Ranger, Flame, Shadow and Storm, then wire all four through the same sprite runtime.
 - Keep map/environment work moving in parallel: terrain, river/bridges, castle/crystal structures, mines, walls, trees, rocks and minimap composition should be reviewed against the user's gameplay reference without changing game rules.
 
+### 2026-11-21 — Continued four-hero 2.5D and arena environment batch
+
+- Reaffirmed the final requirement in code comments and project documentation: Ranger, Flame, Shadow and Storm all end on reference-approved 2.5D sprite actors. Shadow is only the current approved migration pilot; GLB rendering for the others is transitional, not the final target.
+- Expanded the arena painter with deterministic camera-culled ground grass, biome-tinted foliage detail, decorative stone approaches from castle clearings toward river bridges, richer bridge timber/nail/cross-beam details, and additional rock facets.
+- All environment additions are presentation-only. No collision radii, map generation, river movement, mine production, castle/crystal HP, economy or touch transforms were changed.
+- Commits: `11fea5a` grass detail; `28d06f1` bridge and rock detailing; `0bf6e97` integer index safety; `3ffb801` castle-to-bridge stone approaches; `394d9cd` progress/direction update; `99b8999` 2.5D plan clarification; `9c64c6a` render-policy comments; `cd5bc78` GameScreen migration comments.
+- Validation is not yet green. The Android workflow runs are being cancelled when newer commits supersede them; the latest queued run must be allowed to finish. The legacy Ranger asset workflow continues to report failure with no job records exposed by the current Actions response, so its exact failure step is not yet verified.
+- No hero atlas was promoted and no monster prototype was wired into production. Next: finish the four-hero source-to-2.5D atlas pipeline, visually inspect every hero's face/weapon/directions and monster role sheets, then switch all four heroes together only after acceptance. Continue the arena pass against the approved gameplay screenshot and capture a full 16:9 view.
+
 ## Session log
 
 ### 2026-11-18
