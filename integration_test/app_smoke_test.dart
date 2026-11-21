@@ -19,8 +19,8 @@ void main() {
     await tester.pumpWidget(const ArcherFmApp());
     debugPrint('SMOKE: app mounted');
 
-    // Allow real asset bundle reads, GLB parsing and first-frame rendering.
-    for (var i = 0; i < 30; i++) {
+    // Allow slower Android emulator asset reads, GLB parsing and first-frame rendering (up to 30 seconds).
+    for (var i = 0; i < 120; i++) {
       await tester.pump(const Duration(milliseconds: 250));
       if (find.byKey(const ValueKey('home_3d_loaded')).evaluate().isNotEmpty) {
         break;
