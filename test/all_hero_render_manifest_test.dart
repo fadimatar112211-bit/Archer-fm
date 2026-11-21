@@ -27,8 +27,14 @@ void main() {
           final name = '${state}_${direction}';
           expect(animations.containsKey(name), isTrue, reason: '$hero/$name');
           final clip = animations[name] as Map<String, dynamic>;
-          expect((clip['frames'] as List).length, greaterThanOrEqualTo(2),
-              reason: '$hero/$name');
+          final frameCount = (clip['frames'] as List).length;
+          // A one-frame looping idle is a deliberate static pose; all other
+          // clips need multiple frames to animate.
+          expect(
+            frameCount,
+            state == 'idle' ? greaterThanOrEqualTo(1) : greaterThanOrEqualTo(2),
+            reason: '$hero/$name',
+          );
           expect(clip['frame_duration_ms'], greaterThan(0),
               reason: '$hero/$name');
           final atlas = atlases.cast<Map<String, dynamic>>().firstWhere(
