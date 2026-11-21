@@ -19,10 +19,12 @@ void main() {
     await tester.pumpWidget(const ArcherFmApp());
     debugPrint('SMOKE: app mounted');
 
-    // Allow slower Android emulator asset reads, GLB parsing and first-frame rendering (up to 30 seconds).
-    for (var i = 0; i < 120; i++) {
+    // The menu must become interactive even if an optional 3D preview model
+    // is unavailable or still loading. The 2.5D arena uses its own sprite
+    // assets; this smoke test is for startup, orientation and match navigation.
+    for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 250));
-      if (find.byKey(const ValueKey('home_3d_loaded')).evaluate().isNotEmpty) {
+      if (find.byKey(const ValueKey('home_play')).evaluate().isNotEmpty) {
         break;
       }
     }
@@ -58,8 +60,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('army_total')), findsOneWidget);
     expect(find.text('الموزَّع: 20/20'), findsOneWidget);
-    expect(find.byKey(const ValueKey('home_3d_loaded')), findsOneWidget);
-
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('start_with_army')),
       240,
