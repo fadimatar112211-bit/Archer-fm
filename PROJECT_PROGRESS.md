@@ -894,3 +894,12 @@ Verification:
 - Latest verified prior run `44889367500` at `319fe4a55f297365bf0e6090a3b51aad24511604`: Flutter Analyze passed, full Flutter test suite passed, release APK built and verified; Android smoke failed only at the too-early `joystick_zone` lookup. This is not yet proof that the patched smoke test passes.
 - New run `44891945537` is testing commit `0a1123926718a838abb8b58510f0c946dd9a91fd`; wait for its result before calling the new smoke fix verified.
 - The legacy 3D hero assets remain archived in the repository for source/provenance and test injection, but are not loaded by production gameplay.
+
+
+### Reference audit — block unapproved/placeholder sprite atlases
+- Inspected the actual committed idle atlases against the canonical roster reference `assets/references/approved_all/hero_roster_concept.jpg`.
+- Shadow's old generated `idle_*.png` showed a visibly different bald/moustached character and did not match the approved hooded purple Shadow. Updated all eight Shadow idle clips to hold frame 0 from the user's approved `shadow_walk_8dir_4frames_FINAL.png` directional row instead. The user-supplied walk cycle remains the only accepted Shadow character artwork in this pilot; dedicated idle/attack/skill/hit/death art still needs reference-approved source frames.
+- Flame's current idle atlas is a simplified render that does not yet demonstrate faithful match to the canonical red-haired armored Flame reference. Storm's inspected idle atlas is a flat blue placeholder with no visible character. Do not treat either as production-approved sprite art.
+- Therefore the all-roster GLB shutdown was rolled back for the transition: Shadow remains on its 2.5D sprite pilot; Flame, Storm and Ranger keep their current verified visuals until their reference-matched sprite atlases are validated. This is a temporary migration stage, not a change to the final 2D/2.5D decision.
+- Added assertions in `test/shadow_user_walk_atlas_test.dart` ensuring all eight idle directions use the approved user atlas rather than the mismatched legacy idle art.
+- Final acceptance still requires review of Shadow attack/skill/hit/death source frames and visual gameplay capture, followed by Flame/Ranger/Storm sprite conversion from their own approved references.
