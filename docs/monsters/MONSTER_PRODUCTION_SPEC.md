@@ -74,6 +74,28 @@ Each final monster asset must provide:
 - The face pass (commit `e82dad4`, run `44487884841`) improved eye/pupil/brow/mouth readability, but visual inspection still rejects the set as final art: limbs remain visibly segmented and the Stalker/Ranged hood and weapon silhouettes are not strong enough.
 - Follow-up geometry work (commit `324c574`) adds bridging geometry, shins, Runner scarf details, a fuller Stalker hood/cloak, and a tapered Ranged robe/staff assembly. Its artifact must be visually reviewed before acceptance.
 - Passing GLB structure validation is only a technical gate. Do not call these models final, integrate them into runtime, or remove the procedural fallback until faces, silhouettes, weapons, animation deformation and gameplay-distance captures are approved.
+## First visual preview review — rejected for production
+
+Reviewed the four PNG previews from Monster Reference Prototype Build run 5
+(artifact `monster-reference-prototypes`, commit `4047616`). The GLBs pass
+container/skin/clip validation, but the actual images are not close enough to
+the approved character quality target and must remain prototypes only.
+
+Observed defects:
+- Runner: tunic and weapon read as detached rectangular primitives; the goblin
+  face and silhouette need more organic shape and a clearly held short sword.
+- Tank: chest plate and shoulders are oversized box-like slabs; the mace spikes
+  look detached rather than integrated into a heavy weapon.
+- Stalker: the skull/rib idea reads, but the face is too blank and the limbs
+  still look like stacked toy pieces rather than a cohesive skeleton.
+- Ranged: the face wrap is a flat rectangular block that obscures the lower
+  face; hood and violet eye details need a cleaner readable silhouette.
+
+Follow-up commit `217dbc2` replaces several box-like torso/armor/mask parts
+with rounded forms, improves the Runner sword placement, and adds skull/hood
+facial details. This is a targeted prototype refinement, not visual approval.
+The new CI preview must be reviewed before any runtime integration.
+
 ## Existing mechanics that must not regress
 
 - Exactly four `MonsterType` values.
