@@ -1049,3 +1049,11 @@ Verification:
 - Structural validation then exposed a real manifest bug: GLB animation names are namespaced (for example, `runner_Walk`, `tank_Idle`), but the manifest incorrectly mapped generic names (for example, `Walk`, `Idle`). The validator correctly rejected all 23 mismatched clip mappings.
 - Fixed `tools/monsters/generate_monsters_blender.py` so each manifest clip maps to its actual namespaced animation name (`<monster>_<Clip>`).
 - Fix commit: `9280dabea67f1a10e85e1a77b1a1d7ab25bf9f37`. A fresh prototype build/validation run is triggered by this change; visual/runtime acceptance remains pending.
+
+
+### 2026-11-21 — Skeleton silhouette refinement
+
+- Refined the procedural Stalker skeleton so it no longer inherits the shared solid humanoid torso, neck, generic head, muzzle or generic eyes beneath its skull/ribs.
+- Added visible vertebrae and collarbones to strengthen the exposed-bone silhouette; retained the ivory skull, dark sockets, rib cage, pelvis and paired blades.
+- Commit: `404761618cbf5cfc6d02142a1781007c48f29867`.
+- This is still a technical prototype refinement; visual acceptance depends on reviewing the newly generated previews against the approved monster reference.
