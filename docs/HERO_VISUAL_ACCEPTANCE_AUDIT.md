@@ -47,3 +47,17 @@ Keep these source assets intact while producing and reviewing replacement sprite
 3. Storm: regenerate the sprite set from the preserved animated source model; replace all flat blue placeholders with real transparent character frames.
 4. Ranger: leave the existing benchmark unchanged until its full sprite set has passed the same visual acceptance checklist.
 5. After each hero passes visual review, update `HeroRenderPolicy` and add a regression test for the approved route. Do not switch multiple heroes at once.
+
+
+## 2026-11-21 — Prevent rejected sprite atlases from appearing after GLB failure
+
+A runtime fallback gap was found during the latest roster review: the painter previously used the loaded sprite atlas whenever the GLB controller was null. If Flame or Storm's GLB failed to load, their rejected placeholder atlases could therefore appear despite the GLB-primary policy.
+
+Fix:
+- Added `HeroRenderPolicy.allowsSpriteAtlas(heroId)` as the single explicit sprite-approval check.
+- Production `GameScreen` now passes that approval into `ArenaPresentation`.
+- `ArenaPainter` suppresses the hero atlas when approval is false. If a non-approved hero's GLB is unavailable, the existing neutral loading placeholder is shown instead of an unapproved character image.
+- The painter's isolated preview default remains enabled so dedicated visual-capture tests can deliberately render supplied sheets; the production game path always supplies the policy result.
+- Extended `hero_render_policy_test.dart` to assert that Shadow is currently the only production-approved sprite atlas.
+
+This is a safety/consistency fix only. It does not alter hero art, combat, hitboxes, camera, animation timing or GLB source files. CI verification is pending for the new commits.
