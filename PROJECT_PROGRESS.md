@@ -1104,3 +1104,12 @@ Verification:
 - Replaced the one-size-fits-all ground flecks with biome-specific details: wind-carved sand ripples in desert, ice-crystal glints in snow, dark fissures with ember cores in volcanic terrain, and denser grass/wildflower details in forest.
 - Kept the existing river and bridge network, map size, castle placement, mine economy, obstacles, movement slowdown, collision and combat rules unchanged. Riverbank foam and stone approaches remain presentation-only.
 - Verification status: source edits and regression test are committed, but no green Android/test workflow result has been observed for this batch yet. Visual captures still need review at the target 16:9 gameplay camera before calling the biome art accepted.
+
+### 2026-11-21 — Expand the river network across all four biomes
+
+- Extended generated water from one main meandering river to a two-channel system: a broad main river plus a narrower side stream that joins it. Both have dry bridges; the side stream is kept in the open lane between the left-side castle clearings.
+- Added a deterministic safety route for the tributary if randomized paths are rejected, so the second channel is not silently omitted.
+- Updated map regression coverage to require at least two rivers, a multi-segment course, and at least one bridge per river across ten deterministic seeds.
+- The existing painter already iterates all river objects for bank shading, water fill, moving glints, foam and bridge decks, and the existing water-speed/collision queries already operate across all rivers. Mines, pickups and obstacles are also generated against the full river list, so the new branch participates in the existing world rules.
+- Hero pipeline investigation: the current renderer intentionally writes all active heroes to the fixed Ranger render folder because the CI workflow is pinned there; the packer then bundles non-Ranger outputs. The workflow is still failing, and GitHub returned no job records for the failed run, so the exact failing step is not proven. The repository tree currently contains Flame and Shadow source BLEND files; Storm has an animated GLB but no `assets/heroes/storm/source/storm_source.blend` at the active branch head. Do not claim all four sprite atlases exist.
+- Verification status: code and regression test committed; no green Android build or test run observed yet. Need a full run without pushing superseding commits, then inspect the actual 16:9 game capture.
