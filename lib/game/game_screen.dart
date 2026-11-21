@@ -856,8 +856,7 @@ class _GameScreenState extends State<GameScreen>
                             timeMs: world.nowMs,
                             comboText: comboText,
                             hero3d: _hero3d,
-                            heroSpriteApproved: HeroRenderPolicy.routeFor(kit.heroId) ==
-                                HeroVisualRoute.approvedSpritePilot,
+                            heroSpriteApproved: HeroRenderPolicy.allowsSpriteAtlas(kit.heroId),
                           ),
                         ),
                       ),
