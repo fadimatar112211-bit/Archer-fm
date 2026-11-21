@@ -1,8 +1,8 @@
 /// Production visual routing during the reference-approved 2.5D migration.
 ///
-/// Only Shadow has an approved user-supplied sprite source integrated today.
-/// The other roster members stay on their existing GLB visuals until their
-/// replacement sprite sheets pass reference and animation acceptance.
+/// Final production target: all four heroes use reference-approved 2.5D
+/// sprite actors. This route table is only a migration safety gate: it prevents
+/// rejected atlases from being exposed while replacement packs are built.
 enum HeroVisualRoute {
   approvedSpritePilot,
   glbPrimary,
