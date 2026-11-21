@@ -1096,3 +1096,11 @@ Verification:
 - Verified that `ArenaMap.isBridge(Offset)` exists and that the stone approach pass uses the real map bridge query.
 - Current verification limitation: the Android workflow for commit `770678e` was queued/pending at the latest check, not yet green. The legacy `ranger-assets.yml` run reports failure but the Actions API returned zero jobs for that run, so its failing step cannot yet be identified from the available run metadata. Do not treat the current hero or monster atlases as accepted.
 - Next batch: isolate the legacy Ranger workflow failure, make the selected-hero render/pack/validation path reproducible for each of Ranger, Flame, Shadow and Storm, then review the generated 2.5D previews against the approved sheets. Continue map dressing in parallel without changing gameplay rules.
+
+### 2026-11-21 — Four-region biome map pass
+
+- Changed biome placement from four arbitrary random circles to four broad player-quadrant regions. Every match still shuffles which biome occupies each quadrant, but all four required environments are now guaranteed to be present and each castle starts inside a distinct biome.
+- Added a regression assertion that the four castle anchors resolve to all four distinct biome kinds.
+- Replaced the one-size-fits-all ground flecks with biome-specific details: wind-carved sand ripples in desert, ice-crystal glints in snow, dark fissures with ember cores in volcanic terrain, and denser grass/wildflower details in forest.
+- Kept the existing river and bridge network, map size, castle placement, mine economy, obstacles, movement slowdown, collision and combat rules unchanged. Riverbank foam and stone approaches remain presentation-only.
+- Verification status: source edits and regression test are committed, but no green Android/test workflow result has been observed for this batch yet. Visual captures still need review at the target 16:9 gameplay camera before calling the biome art accepted.
