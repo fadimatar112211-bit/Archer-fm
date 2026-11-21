@@ -58,6 +58,23 @@ void main() {
     expect(transparentPixels, greaterThan(10000));
     expect(opaquePixels, greaterThan(10000));
 
+    // Idle must preserve the exact same user-approved Shadow identity.
+    // Until dedicated idle artwork is supplied, hold frame zero of each
+    // directional user walk row instead of showing the legacy mismatched model.
+    for (final direction in _directions) {
+      final idle = animations['idle_$direction'] as Map<String, dynamic>;
+      expect(idle['frames'], ['shadow_walk_${direction}_user_000']);
+      expect(idle['loop'], isTrue);
+      final idleEntry = atlases.singleWhere(
+        (item) => item['animation'] == 'idle_$direction',
+      );
+      expect(idleEntry['image'], _atlasPath);
+      expect(
+        idleEntry['meta'],
+        'atlases/walk_${direction}_user.json',
+      );
+    }
+
     for (var row = 0; row < _directions.length; row++) {
       final direction = _directions[row];
       final animation = 'walk_$direction';
