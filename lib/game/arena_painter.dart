@@ -1502,13 +1502,32 @@ class ArenaPainter extends CustomPainter {
     final planks = Paint()
       ..color = _bridgePlankColor
       ..strokeWidth = 2;
+    var plankIndex = 0;
     for (var x = rect.left + 8; x < rect.right; x += 12) {
+      final shade = plankIndex.isEven
+          ? _bridgePlankColor
+          : Color.lerp(_bridgePlankColor, const Color(0xFFB18A5D), 0.18)!;
       canvas.drawLine(
         Offset(x, rect.top + 7),
         Offset(x, rect.bottom - 7),
-        planks,
+        Paint()..color = shade..strokeWidth = 3,
       );
+      // Small iron nail heads at both ends make each timber read as a plank.
+      canvas.drawCircle(Offset(x, rect.top + 7), 1.5,
+          Paint()..color = const Color(0xFFB5A58A));
+      canvas.drawCircle(Offset(x, rect.bottom - 7), 1.5,
+          Paint()..color = const Color(0xFFB5A58A));
+      plankIndex++;
     }
+    // A raised cross-beam at either river bank gives the deck a clear edge.
+    final beam = Paint()
+      ..color = const Color(0xFF9A7045)
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(rect.left + 4, rect.top + 2),
+        Offset(rect.left + 4, rect.bottom - 2), beam);
+    canvas.drawLine(Offset(rect.right - 4, rect.top + 2),
+        Offset(rect.right - 4, rect.bottom - 2), beam);
   }
 
   void _paintTreeTrunk(Canvas canvas, MapObstacle obstacle) {
@@ -1620,6 +1639,24 @@ class ArenaPainter extends CustomPainter {
           const [0.0, 0.55, 1.0],
         ),
     );
+    // Two smaller facets and a narrow highlight create a chipped stone face
+    // while keeping the original obstacle footprint and collision radius.
+    final lowerFacet = Path()
+      ..moveTo(rect.left + obstacle.radius * 0.18, rect.center.dy + obstacle.radius * 0.12)
+      ..lineTo(rect.center.dx - obstacle.radius * 0.12, rect.center.dy)
+      ..lineTo(rect.right - obstacle.radius * 0.22, rect.bottom - obstacle.radius * 0.16)
+      ..lineTo(rect.left + obstacle.radius * 0.34, rect.bottom - obstacle.radius * 0.12)
+      ..close();
+    canvas.drawPath(lowerFacet,
+        Paint()..color = Color.lerp(_rockColor, Colors.black, 0.12)!);
+    final glint = Path()
+      ..moveTo(rect.left + obstacle.radius * 0.32, rect.top + obstacle.radius * 0.25)
+      ..lineTo(rect.center.dx + obstacle.radius * 0.02, rect.top + obstacle.radius * 0.20)
+      ..lineTo(rect.center.dx - obstacle.radius * 0.10, rect.center.dy - obstacle.radius * 0.05);
+    canvas.drawPath(glint,
+        Paint()..color = const Color(0x668F999A)..style = PaintingStyle.stroke
+          ..strokeWidth = (obstacle.radius * 0.055).clamp(1.2, 2.5).toDouble()
+          ..strokeCap = StrokeCap.round);
     canvas.drawLine(
       Offset(rect.center.dx + obstacle.radius * 0.05, rect.top + obstacle.radius * 0.12),
       Offset(rect.right - obstacle.radius * 0.16, rect.center.dy + obstacle.radius * 0.2),
