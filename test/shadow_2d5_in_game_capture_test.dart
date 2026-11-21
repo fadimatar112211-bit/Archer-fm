@@ -36,6 +36,7 @@ void main() {
         Offset(1, -1),
       ];
 
+      ui.Image? sharedWalkAtlasImage;
       final world = GameWorld(
         kit: kitForHero('shadow'),
         random: math.Random(7),
@@ -56,6 +57,15 @@ void main() {
         expect(clip!.frames, hasLength(4), reason: clipName);
 
         final sheet = await loader.loadSheet(manifest, clipName);
+        if (sharedWalkAtlasImage == null) {
+          sharedWalkAtlasImage = sheet.image;
+        } else {
+          expect(
+            identical(sheet.image, sharedWalkAtlasImage),
+            isTrue,
+            reason: 'all eight walk directions should share one decoded atlas image',
+          );
+        }
         final atlasRgba = await sheet.image.toByteData(
           format: ui.ImageByteFormat.rawRgba,
         );
