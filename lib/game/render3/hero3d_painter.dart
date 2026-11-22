@@ -418,7 +418,10 @@ class Hero3DModel {
           _bucketUvs[o + vi * 2 + 1] = tc[v * 2 + 1] * texH;
           final nx = skN[v * 3], ny = skN[v * 3 + 1], nz = skN[v * 3 + 2];
           var shade = (nx * lx + ny * ly + nz * lz) * ln;
-          shade = 0.68 + 0.32 * shade.clamp(0.0, 1.0);
+          // Slightly stronger ambient fill keeps reference faces, eyes and
+          // armor readable under the elevated arena camera without flattening
+          // the remaining directional light.
+          shade = 0.73 + 0.27 * shade.clamp(0.0, 1.0);
           final co = slot * 3 + vi;
           // Per-vertex material base colour (white for texture-driven
           // models — the texture carries the colouring instead).
