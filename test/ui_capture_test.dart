@@ -54,7 +54,7 @@ class _CaptureFakeLoader extends HeroAssetLoader {
 
 void _copyCapture(String golden, String name) {
   final baseline = File('test/goldens/$golden').readAsBytesSync();
-  final dir = Directory('/tmp/opencode/merge/captures');
+  final dir = Directory('build/arena-captures');
   if (!dir.existsSync()) dir.createSync(recursive: true);
   File('${dir.path}/$name').writeAsBytesSync(baseline);
 }
