@@ -1503,3 +1503,9 @@ Verification:
 - Added a conservative GLB-duration fallback release event for the four hero weapon styles (projectile/melee attack and each hero's skill burst). Approved manifest-backed packs still use their exact authored frame events and timing.
 - Added an end-to-end screen regression that intentionally fails sprite-manifest loading, injects the real Ranger GLB, taps attack, and requires a projectile and combo hit.
 - This closes a gameplay dead-end in the transitional GLB route; CI must pass before the fallback is considered verified.
+
+## 2026-11-23 — Stronger per-role monster attack telegraphs
+
+- Reworked the four monster wind-up indicators so each combat role reads differently at phone scale: tank ground-slam cracks, runner forward dash chevrons, stalker paired blade crescents, and ranged rune-lock reticle.
+- Kept the same attack animation window, hit timing, weapon trail, colors and combat values. Existing per-archetype attack-detail captures now exercise the revised telegraphs for all four roles.
+- This is a renderer-only readability pass; visual acceptance still depends on reviewing fresh capture images.

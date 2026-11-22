@@ -2146,32 +2146,74 @@ class ArenaPainter extends CustomPainter {
       MonsterType.ranged => 1.08 + windup * 0.18,
     };
     final opacity = (0.12 + windup * 0.24).clamp(0.0, 0.36);
+    final ink = Color.lerp(accent, Colors.white, 0.28)!
+        .withValues(alpha: opacity);
     final rect = Rect.fromCenter(
       center: Offset(0, size * 0.035),
       width: size * expansion,
       height: size * (0.22 + windup * 0.035),
     );
-    final paint = Paint()
-      ..color = Color.lerp(accent, Colors.white, 0.28)!
-          .withValues(alpha: opacity)
+    final stroke = Paint()
+      ..color = ink
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size * (type == MonsterType.tank ? 0.045 : 0.028)
+      ..strokeWidth = size * 0.03
       ..strokeCap = StrokeCap.round;
-    if (type == MonsterType.tank) {
-      canvas.drawOval(rect, paint);
-    } else {
-      final sweep = type == MonsterType.stalker ? math.pi * 1.35 : math.pi * 0.92;
-      final start = type == MonsterType.runner ? -0.35 : -math.pi * 0.72;
-      canvas.drawArc(rect, start, sweep, false, paint);
-      if (type == MonsterType.ranged) {
-        canvas.drawArc(
-          rect.deflate(size * 0.09),
-          math.pi * 0.12,
-          math.pi * 0.76,
-          false,
-          paint..strokeWidth = size * 0.018,
+
+    switch (type) {
+      case MonsterType.tank:
+        // A heavy slam reads as a widening impact ring with four ground cracks.
+        canvas.drawOval(rect, stroke..strokeWidth = size * 0.045);
+        for (var side = -1; side <= 1; side += 2) {
+          for (var branch = 0; branch < 2; branch++) {
+            final origin = Offset(side * size * 0.20, size * 0.05);
+            final crack = Path()
+              ..moveTo(origin.dx, origin.dy)
+              ..lineTo(origin.dx + side * size * (0.16 + branch * 0.05),
+                  origin.dy + size * (0.07 + branch * 0.035))
+              ..lineTo(origin.dx + side * size * (0.23 + branch * 0.05),
+                  origin.dy + size * (0.04 + branch * 0.035));
+            canvas.drawPath(crack, stroke..strokeWidth = size * 0.018);
+          }
+        }
+      case MonsterType.runner:
+        // A dash telegraph uses forward-pointing chevrons, not a melee arc.
+        for (var mark = 0; mark < 3; mark++) {
+          final x = size * (0.12 + mark * 0.19);
+          final y = size * (0.015 + mark * 0.012);
+          final chevron = Path()
+            ..moveTo(x, y - size * 0.10)
+            ..lineTo(x + size * 0.12, y)
+            ..lineTo(x, y + size * 0.10);
+          canvas.drawPath(chevron, stroke..strokeWidth = size * 0.035);
+        }
+      case MonsterType.stalker:
+        // Twin separated crescents communicate the paired-blade cross slash.
+        for (var blade = 0; blade < 2; blade++) {
+          final offset = Offset((blade == 0 ? -1 : 1) * size * 0.10,
+              blade == 0 ? -size * 0.025 : size * 0.025);
+          canvas.drawArc(
+            rect.shift(offset),
+            blade == 0 ? -math.pi * 0.82 : -math.pi * 0.18,
+            math.pi * 0.72,
+            false,
+            stroke..strokeWidth = size * 0.032,
+          );
+        }
+      case MonsterType.ranged:
+        // A rune-lock reticle narrows around the intended projectile lane.
+        canvas.drawOval(rect, stroke);
+        canvas.drawOval(rect.deflate(size * 0.10),
+            stroke..strokeWidth = size * 0.018);
+        canvas.drawLine(
+          Offset(-size * 0.10, size * 0.035),
+          Offset(size * 0.10, size * 0.035),
+          stroke..strokeWidth = size * 0.022,
         );
-      }
+        canvas.drawLine(
+          Offset(0, -size * 0.07),
+          Offset(0, size * 0.14),
+          stroke..strokeWidth = size * 0.022,
+        );
     }
   }
 
