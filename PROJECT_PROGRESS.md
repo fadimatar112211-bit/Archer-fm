@@ -1183,3 +1183,12 @@ Verification:
 - This documentation correction is committed as `ad2100f60567c7cb507d39e791ac54b8b1ef14de`.
 - **Verification status:** this documentation-only commit has no Flutter/Android test result attached. No claim is made that the four-hero sprite workflow or monster visual acceptance has completed.
 - Next: validate the current hero matrix and Ranger-new jobs end-to-end; inspect their generated artifacts rather than trusting manifest counts; then replace the placeholder monster paint shapes with approved reference-faithful 2.5D sprite assets only after a visual review gate exists.
+
+
+## 2026-11-23 — Fix non-Ranger sprite bundle manifest corruption
+
+- Found a concrete serialization defect in `tools/pack_hero_atlases.py::publish_bundle`: after copying a non-Ranger hero source asset, the bundle manifest was written with the two literal characters `\\n` rather than a newline. That makes the JSON invalid when a source asset is found (Flame/Shadow/Storm paths), even though the original render-directory manifest remains valid.
+- Fixed the write to append a real newline.
+- Added `test_publish_bundle_writes_valid_json_when_source_asset_exists` in `tools/tests/test_pack_hero_atlases.py`. It creates a temporary Flame bundle, copies a source asset, parses the final bundled manifest with `json.loads`, and verifies the source-asset metadata.
+- Commits: `05b6f15b0744ec470ccb9d865ada91cdd0f03d45` (fix), `e815c1e40a0eab3eabda576cdf10099cbd7435a3` (regression test).
+- **Verification pending:** the test has been added but has not yet been run in CI. Do not claim the fix is verified until the atlas packer unit-test job completes.
