@@ -435,6 +435,7 @@ class ArenaPainter extends CustomPainter {
               Offset(-width / 2, -height / 2),
               Offset(width / 2, height / 2),
               const [Color(0xFF92958B), Color(0xFF626A61), Color(0xFF444E47)],
+              const [0.0, 0.52, 1.0],
             ),
         );
         canvas.drawArc(
