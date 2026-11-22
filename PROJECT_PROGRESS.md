@@ -1573,3 +1573,9 @@ Verification:
 - Added price-boundary checks for all four monster types: one resource below price rejects, exact price succeeds, and the correct unit is recruited.
 - Added a lifecycle regression proving a type upgrade preserves existing units' current stats while newly recruited units use the upgraded level and scaled HP, damage and speed.
 - Added a max-level upgrade guard proving no essence or monster material is consumed at level 40.
+
+## 2026-11-23 — Heroes, monsters and arena generation regression pass
+
+- Added hero ability identity checks: each hero must have four distinct special-attack IDs and Arabic names, assigned to the four intended unlock levels.
+- Added level-by-level monster stat validation for all four archetypes through level 40, covering finite positive HP, damage, speed, radius, range and attack cooldown.
+- Added 40-seed arena generation checks for pickup spacing, pickup-to-scenery clearance, and tree/rock separation.

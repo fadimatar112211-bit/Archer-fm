@@ -410,6 +410,42 @@ void main() {
       }
     });
 
+    test('pickups and scenery keep their generated clearance across seeds', () {
+      for (var seed = 50; seed < 90; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (var i = 0; i < map.pickups.length; i++) {
+          final pickup = map.pickups[i];
+          expect(pickup.position.dx, inInclusiveRange(0, map.size.width));
+          expect(pickup.position.dy, inInclusiveRange(0, map.size.height));
+          for (var j = i + 1; j < map.pickups.length; j++) {
+            expect(
+              (pickup.position - map.pickups[j].position).distance,
+              greaterThanOrEqualTo(120),
+              reason: 'pickup spacing seed=$seed',
+            );
+          }
+          for (final obstacle in map.obstacles) {
+            expect(
+              (pickup.position - obstacle.position).distance,
+              greaterThanOrEqualTo(obstacle.radius + 24),
+              reason: 'pickup/scenery clearance seed=$seed',
+            );
+          }
+        }
+        for (var i = 0; i < map.obstacles.length; i++) {
+          final obstacle = map.obstacles[i];
+          for (var j = i + 1; j < map.obstacles.length; j++) {
+            final other = map.obstacles[j];
+            expect(
+              (obstacle.position - other.position).distance,
+              greaterThanOrEqualTo(obstacle.radius + other.radius + 18),
+              reason: 'scenery overlap seed=$seed',
+            );
+          }
+        }
+      }
+    });
+
     test('keeps castle clearings free of obstacles and river water', () {
       for (var seed = 0; seed < 10; seed++) {
         final map = ArenaMap.generate(math.Random(seed));

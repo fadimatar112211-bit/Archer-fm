@@ -29,6 +29,17 @@ void main() {
       }
     });
 
+    test('special ability names and IDs are unique within each hero', () {
+      for (final kit in kits) {
+        expect(kit.abilities.map((a) => a.id).toSet(), hasLength(4),
+            reason: kit.heroId);
+        expect(kit.abilities.map((a) => a.nameAr).toSet(), hasLength(4),
+            reason: kit.heroId);
+        expect(kit.abilities.map((a) => a.unlockLevel).toSet(),
+            {1, 10, 20, 30}, reason: kit.heroId);
+      }
+    });
+
     test('five manual combo hits remain five independent normal attacks', () {
       for (final kit in kits) {
         expect(kit.comboHits, hasLength(5), reason: kit.heroId);

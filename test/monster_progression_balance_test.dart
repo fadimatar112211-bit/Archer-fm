@@ -20,6 +20,26 @@ void main() {
       }
     });
 
+    test('all archetype combat stats stay finite and positive through level 40', () {
+      for (final type in MonsterType.values) {
+        for (var level = 1; level <= monsterMaxLevel; level++) {
+          final stats = MonsterStats.of(type, level);
+          expect(stats.maxHp.isFinite && stats.maxHp > 0, isTrue,
+              reason: '${type.name} hp level=$level');
+          expect(stats.damage.isFinite && stats.damage > 0, isTrue,
+              reason: '${type.name} damage level=$level');
+          expect(stats.speed.isFinite && stats.speed > 0, isTrue,
+              reason: '${type.name} speed level=$level');
+          expect(stats.radius.isFinite && stats.radius > 0, isTrue,
+              reason: '${type.name} radius level=$level');
+          expect(stats.attackRange.isFinite && stats.attackRange > 0, isTrue,
+              reason: '${type.name} range level=$level');
+          expect(stats.attackCooldownMs, greaterThan(0),
+              reason: '${type.name} cooldown level=$level');
+        }
+      }
+    });
+
     test('starting army is exactly twenty with every role represented', () {
       final army = MonsterCatalog.defaultStartingArmy;
       expect(army.values.fold<int>(0, (sum, count) => sum + count), 20);
