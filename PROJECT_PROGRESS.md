@@ -1579,3 +1579,7 @@ Verification:
 - Added hero ability identity checks: each hero must have four distinct special-attack IDs and Arabic names, assigned to the four intended unlock levels.
 - Added level-by-level monster stat validation for all four archetypes through level 40, covering finite positive HP, damage, speed, radius, range and attack cooldown.
 - Added 40-seed arena generation checks for pickup spacing, pickup-to-scenery clearance, and tree/rock separation.
+
+## 2026-11-23 — Crystal defence combat regression coverage
+
+- Added integration tests proving hostile monsters damage a nearby home crystal when the hero is absent, respect their attack cooldown, and are distracted from crystals while the hero is nearby.

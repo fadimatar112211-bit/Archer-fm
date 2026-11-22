@@ -798,6 +798,67 @@ void main() {
       expect(world.fog.isRevealed(world.player.position), isTrue);
     });
 
+    test('hostile monsters damage a nearby home crystal when hero is absent', () {
+      final world = makeWorld(seed: 61);
+      world.player.dead = true;
+      world.army.clear();
+      world.enemies.clear();
+      final crystal = world.castleSystem.playerCastle.alive.first;
+      final stats = MonsterStats.of(MonsterType.tank, 1);
+      final attacker = EnemyState(
+        id: 'crystal_attacker',
+        kind: MonsterType.tank.name,
+        type: MonsterType.tank,
+        team: MonsterTeam.enemy,
+        level: 1,
+        position: crystal.position + const Offset(40, 0),
+        maxHp: stats.maxHp,
+        speed: stats.speed,
+        contactDamage: stats.damage,
+        xpValue: stats.xpValue,
+        radius: stats.radius,
+      );
+      world.enemies.add(attacker);
+      final hpBefore = crystal.hp;
+
+      world.update(16);
+      expect(crystal.hp, hpBefore - stats.damage);
+      expect(attacker.attackCooldownUntilMs, greaterThan(world.nowMs));
+
+      world.update(16);
+      expect(crystal.hp, hpBefore - stats.damage,
+          reason: 'crystal damage must respect the monster attack cooldown');
+    });
+
+    test('hostile monsters do not hit home crystals while hero distracts them', () {
+      final world = makeWorld(seed: 62);
+      world.army.clear();
+      world.enemies.clear();
+      final crystal = world.castleSystem.playerCastle.alive.first;
+      final stats = MonsterStats.of(MonsterType.tank, 1);
+      final attacker = EnemyState(
+        id: 'distracted_crystal_attacker',
+        kind: MonsterType.tank.name,
+        type: MonsterType.tank,
+        team: MonsterTeam.enemy,
+        level: 1,
+        position: crystal.position + const Offset(40, 0),
+        maxHp: stats.maxHp,
+        speed: stats.speed,
+        contactDamage: stats.damage,
+        xpValue: stats.xpValue,
+        radius: stats.radius,
+      );
+      world.player.position = attacker.position + const Offset(40, 0);
+      world.enemies.add(attacker);
+      final hpBefore = crystal.hp;
+
+      world.update(16);
+
+      expect(crystal.hp, hpBefore,
+          reason: 'the nearby hero must distract the hostile monster');
+    });
+
     test('enemy monsters are only visible when nearby', () {
       final world = makeWorld();
       final near = EnemyState(
