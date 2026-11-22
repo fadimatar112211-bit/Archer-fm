@@ -152,19 +152,32 @@ void main() {
       }
     });
 
-    test('spawns extra resources and chests on clear dry ground', () {
-      final map = ArenaMap.generate(math.Random(7));
-      expect(
-        map.pickups.where((p) => p.kind == PickupKind.resource).length,
-        mapResourcePickupCount,
-      );
-      expect(
-        map.pickups.where((p) => p.kind == PickupKind.chest).length,
-        mapChestPickupCount,
-      );
-      for (final pickup in map.pickups) {
-        expect(map.isWater(pickup.position), isFalse);
-        expect(map.isBlocked(pickup.position, 12), isFalse);
+    test('spawns all resources and chests on clear dry ground across seeds', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(
+          map.pickups.where((p) => p.kind == PickupKind.resource).length,
+          mapResourcePickupCount,
+          reason: 'resource count for seed $seed',
+        );
+        expect(
+          map.pickups.where((p) => p.kind == PickupKind.chest).length,
+          mapChestPickupCount,
+          reason: 'chest count for seed $seed',
+        );
+        for (final pickup in map.pickups) {
+          expect(map.isWater(pickup.position), isFalse,
+              reason: 'pickup in water for seed $seed');
+          expect(map.isBlocked(pickup.position, 12), isFalse,
+              reason: 'pickup blocked by scenery for seed $seed');
+          expect(
+            map.obstacles.every((obstacle) =>
+                (obstacle.position - pickup.position).distance >=
+                    obstacle.radius + 24),
+            isTrue,
+            reason: 'pickup overlaps tree/rock for seed $seed',
+          );
+        }
       }
     });
 
