@@ -1192,3 +1192,12 @@ Verification:
 - Added `test_publish_bundle_writes_valid_json_when_source_asset_exists` in `tools/tests/test_pack_hero_atlases.py`. It creates a temporary Flame bundle, copies a source asset, parses the final bundled manifest with `json.loads`, and verifies the source-asset metadata.
 - Commits: `05b6f15b0744ec470ccb9d865ada91cdd0f03d45` (fix), `e815c1e40a0eab3eabda576cdf10099cbd7435a3` (regression test).
 - **Verification pending:** the test has been added but has not yet been run in CI. Do not claim the fix is verified until the atlas packer unit-test job completes.
+
+
+## 2026-11-23 — Make sprite regression tests part of the four-hero CI
+
+- Updated `.github/workflows/flame-2d5-sprites.yml` to run `python3 -m unittest discover -s tools/tests -p 'test_*.py' -v` before Blender scene generation.
+- Added `tools/tests/**` to the workflow path filters, so changes to the atlas packer or frame validators trigger the production sprite pipeline.
+- This makes the new bundle-manifest regression test an actual CI gate instead of an unexecuted local test file.
+- Workflow update commit: `ce81af9cbc7e63a3f0cee1ff35c8f2499a4590fa`.
+- **Verification pending:** the updated workflow has been pushed, but no completed Actions run is visible yet. Do not claim Python tests, renders, atlas packing or Android build have passed until run results are available.
