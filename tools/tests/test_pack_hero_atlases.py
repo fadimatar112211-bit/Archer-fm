@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from array import array
 from pack_hero_atlases import (
     pack_atlas, make_png, read_png, read_png_bytes, read_png_dimensions,
-    extrude_edges, verify_packed, DEFAULT_PADDING
+    extrude_edges, verify_packed, publish_bundle, DEFAULT_PADDING
 )
 
 
@@ -121,6 +121,28 @@ class AtlasPackerTests(unittest.TestCase):
         meta = json.loads((self.root / entry["meta"]).read_text(encoding="utf-8"))
         atlas_bytes = (self.root / entry["image"]).read_bytes()
         return manifest, entry, atlas_bytes, meta
+
+    def test_publish_bundle_writes_valid_json_when_source_asset_exists(self):
+        """The uploaded non-Ranger bundle manifest must remain parseable JSON."""
+        render_dir = self.root / "assets" / "heroes" / "flame" / "renders"
+        render_dir.mkdir(parents=True)
+        source_dir = self.root / "assets" / "heroes" / "flame" / "source"
+        source_dir.mkdir(parents=True)
+        (source_dir / "flame_source.blend").write_bytes(b"test blend")
+        manifest_path = render_dir / "flame_manifest.json"
+        manifest_path.write_text(json.dumps({
+            "hero_id": "flame",
+            "source": {"blend_file": "temporary.blend"}
+        }), encoding="utf-8")
+
+        bundle = publish_bundle(manifest_path, {"hero_id": "flame"})
+        bundled_manifest = bundle / "flame_manifest.json"
+        parsed = json.loads(bundled_manifest.read_text(encoding="utf-8"))
+
+        self.assertEqual(parsed["hero_id"], "flame")
+        self.assertEqual(parsed["source"]["source_asset"], "source/flame_source.blend")
+        self.assertEqual(parsed["source"]["source_asset_type"], "blend")
+        self.assertTrue((bundle.parent / "source" / "flame_source.blend").is_file())
 
     def test_basic_packing_2x2(self):
         """Test packing 4 frames in 2x2 grid with default padding."""
