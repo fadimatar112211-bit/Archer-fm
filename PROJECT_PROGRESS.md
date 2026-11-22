@@ -1347,3 +1347,13 @@ Verification:
 - **Heroes —** Raised the ambient component of the GLB per-vertex lighting from 0.68 to 0.73 (with directional contribution reduced correspondingly from 0.32 to 0.27). This is a small fill-light adjustment intended to keep reference faces, eyes and armor readable under the elevated arena camera while preserving directional shading. All-four-hero 3D close-up and eight-direction capture coverage already exists in `test/hero3d_game_capture_test.dart` and will provide the visual review set.
 - Commits: `7ddcb78` (monster faces + biome ground layering), `bcfdcd4` (hero ambient fill).
 - Validation status: **not yet run on this batch**. Do not treat the lighting or monster-face adjustments as visually approved until the current-HEAD capture artifact is downloaded and inspected. Next: let the new Android and four-hero sprite jobs run; inspect logs and captures, then correct any actual defects found.
+
+
+## 2026-11-23 — Second expanded visual/gameplay polish batch
+
+- **Monster faces:** added readable brow shapes and a restrained nose highlight to the existing four distinct monster faces; retained the established eye/pupil/catchlight palette and skeletal ember sockets.
+- **Map ownership:** overlapping biome circles now resolve ground-detail ownership to the nearest biome centre instead of whichever patch happened to appear first in the list. The soft painter gradients remain intact, while sand/grass/snow/volcanic decals now follow the geographically nearest region.
+- **Map readability:** ground-detail decals are suppressed on bridge decks and around resource/chest pickups so decoration cannot visually muddy crossings or interactable markers.
+- **Hero readability:** increased the GLB hero ambient fill slightly from 0.73 to 0.75 while correspondingly reducing directional contribution; this is a conservative follow-up to the prior face/armor visibility adjustment.
+- Added a 20-seed overlap-ownership regression test in `test/arena_map_test.dart`.
+- **Verification pending:** these changes are committed but not yet confirmed by Android/Flutter CI or reviewed from fresh 16:9 captures. Existing in-progress CI runs were launched before this batch.
