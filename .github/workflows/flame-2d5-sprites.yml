@@ -11,6 +11,7 @@ on:
       - 'tools/validate_hero_assets.py'
       - 'tools/tests/**'
       - 'assets/heroes/ranger/source/render_config.json'
+      - 'assets/heroes/ranger_new/source/render_config.json'
       - '.github/workflows/flame-2d5-sprites.yml'
 
 permissions:
@@ -101,6 +102,9 @@ jobs:
           sudo tar -xJf /tmp/blender.tar.xz -C /opt
           echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
           /opt/blender-3.6.13-linux-x64/blender --version
+
+      - name: Run hero render config regression tests
+        run: python3 -m unittest tools.tests.test_hero_render_config -v
 
       - name: Select the actual playable Ranger
         run: |
