@@ -493,7 +493,7 @@ def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
         data = json.loads(shipped.read_text(encoding="utf-8"))
         data["source"]["source_asset"] = f"source/{source_asset.name}"
         data["source"]["source_asset_type"] = source_asset.suffix.lstrip(".")
-        shipped.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\\n",
+        shipped.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
                            encoding="utf-8")
         print(f"BUNDLE_SOURCE hero={hero_id} file={source_asset}")
     else:
