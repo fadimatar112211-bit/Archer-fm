@@ -2,7 +2,9 @@ name: Flutter Android Release APK
 
 concurrency:
   group: archer-fm-android-${{ github.ref }}
-  cancel-in-progress: true
+  # Do not cancel long analysis/test/emulator jobs when another small commit lands.
+  # Keep the active verification run alive; newer pushes may wait in the queue.
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
