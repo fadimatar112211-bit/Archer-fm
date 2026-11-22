@@ -1544,3 +1544,8 @@ Verification:
 - Extracted the monster attack-warning orientation into a pure geometry helper and connected the painter to it. The helper explicitly converts world facing into the already-mirrored body-local coordinate space and safely handles zero/non-finite vectors.
 - Added unit coverage for all eight compass directions, westward diagonals and invalid facing vectors.
 - Added a 40-seed, every-bridge traversal regression: samples the complete cross-river path and asserts both dry ground and movement factor 1.0 across the entire deck.
+
+## 2026-11-23 — Finer water-crossing movement sampling
+
+- Tightened movement-path sampling from 16 px to 8 px. Fast player and monster movement now samples narrow river edges more densely, reducing the chance of skipping a short water section between dry endpoints.
+- Existing 40-seed bridge traversal and river movement regressions remain the verification coverage; Android CI is queued to re-run on this gameplay change.

@@ -241,7 +241,10 @@ class ArenaMap {
   /// samples remain dry through [movementFactorAt].
   double movementFactorAlong(Offset from, Offset displacement) {
     final distance = displacement.distance;
-    final samples = math.max(1, (distance / 16).ceil());
+    // Keep spatial sampling finer than narrow river edges so a fast movement
+    // step cannot jump across a short water strip between two dry samples.
+    const sampleSpacing = 8.0;
+    final samples = math.max(1, (distance / sampleSpacing).ceil());
     var total = 0.0;
     for (var i = 0; i <= samples; i++) {
       final point = from + displacement * (i / samples);
