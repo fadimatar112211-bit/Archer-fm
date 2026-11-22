@@ -2048,7 +2048,6 @@ class ArenaPainter extends CustomPainter {
   ) {
     // Ivory skeleton: exposed rib cage and narrow pelvis, not a recoloured hood.
     final bone = Paint()..color = body;
-    final socket = Paint()..color = dark;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
