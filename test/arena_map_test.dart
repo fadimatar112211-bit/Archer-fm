@@ -859,6 +859,76 @@ void main() {
           reason: 'the nearby hero must distract the hostile monster');
     });
 
+    test('player army damages a rival crystal when no hostile monster is closer', () {
+      final world = makeWorld(seed: 63);
+      world.army.clear();
+      world.enemies.clear();
+      final crystal = world.castleSystem.hostileCrystals.first;
+      final stats = MonsterStats.of(MonsterType.tank, 1);
+      final attacker = EnemyState(
+        id: 'ally_crystal_attacker',
+        kind: MonsterType.tank.name,
+        type: MonsterType.tank,
+        team: MonsterTeam.player,
+        level: 1,
+        position: crystal.position + const Offset(40, 0),
+        maxHp: stats.maxHp,
+        speed: stats.speed,
+        contactDamage: stats.damage,
+        xpValue: stats.xpValue,
+        radius: stats.radius,
+      );
+      world.army.add(attacker);
+      final hpBefore = crystal.hp;
+
+      world.update(16);
+
+      expect(crystal.hp, hpBefore - stats.damage);
+      expect(attacker.attackCooldownUntilMs, greaterThan(world.nowMs));
+    });
+
+    test('player army prioritises a closer hostile monster over a rival crystal', () {
+      final world = makeWorld(seed: 64);
+      world.army.clear();
+      world.enemies.clear();
+      final crystal = world.castleSystem.hostileCrystals.first;
+      final stats = MonsterStats.of(MonsterType.tank, 1);
+      final attacker = EnemyState(
+        id: 'ally_defender',
+        kind: MonsterType.tank.name,
+        type: MonsterType.tank,
+        team: MonsterTeam.player,
+        level: 1,
+        position: crystal.position + const Offset(40, 0),
+        maxHp: stats.maxHp,
+        speed: stats.speed,
+        contactDamage: stats.damage,
+        xpValue: stats.xpValue,
+        radius: stats.radius,
+      );
+      final foe = EnemyState(
+        id: 'nearby_foe',
+        kind: MonsterType.runner.name,
+        type: MonsterType.runner,
+        team: MonsterTeam.enemy,
+        level: 1,
+        position: attacker.position + const Offset(12, 0),
+        maxHp: 60,
+        speed: 100,
+        contactDamage: 5,
+        xpValue: 4,
+        radius: 12,
+      );
+      world.army.add(attacker);
+      world.enemies.add(foe);
+      final hpBefore = crystal.hp;
+
+      world.update(16);
+
+      expect(crystal.hp, hpBefore,
+          reason: 'army must engage the closer hostile before a crystal');
+    });
+
     test('enemy monsters are only visible when nearby', () {
       final world = makeWorld();
       final near = EnemyState(

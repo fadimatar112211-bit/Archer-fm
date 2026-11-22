@@ -1583,3 +1583,8 @@ Verification:
 ## 2026-11-23 — Crystal defence combat regression coverage
 
 - Added integration tests proving hostile monsters damage a nearby home crystal when the hero is absent, respect their attack cooldown, and are distracted from crystals while the hero is nearby.
+
+## 2026-11-23 — Friendly army crystal assault regression coverage
+
+- Added an integration check that player-owned monsters damage rival crystals when no hostile monster is closer.
+- Added a priority check that the army engages a nearby hostile monster instead of striking a rival crystal.
