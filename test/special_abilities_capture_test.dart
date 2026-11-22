@@ -39,7 +39,7 @@ void main() {
         ),
       };
 
-      final dir = Directory('/tmp/opencode/merge/captures');
+      final dir = Directory('build/arena-captures');
       if (!dir.existsSync()) dir.createSync(recursive: true);
 
       for (final hero in heroes.entries) {
