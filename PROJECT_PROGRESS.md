@@ -1561,3 +1561,9 @@ Verification:
 - Added world-level tests for buying reinforcements: exact resource deduction, insufficient funds, ownership/team assignment and the maximum army cap.
 - Added paired-cost upgrade tests: monster essence and monster materials are both required; failed attempts preserve every balance and the level, while a successful upgrade deducts both costs.
 - These tests exercise the live `GameWorld` economy methods rather than only testing the standalone upgrade calculator.
+
+## 2026-11-23 — Hero unlock boundary and combat-data checks
+
+- Added exact boundary tests for weapon unlocks at levels 1, 10 and 20, including the locked levels immediately before each unlock and the level-40 cap.
+- Added validation for every special ability's Arabic name/description, positive energy cost, positive cooldown and valid unlock range.
+- Added finite-positive multiplier checks for all 12 hero weapon variants to catch zero, negative, NaN or infinite damage/rate/range tuning.
