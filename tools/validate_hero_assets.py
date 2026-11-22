@@ -74,9 +74,17 @@ def validate(manifest_path: Path) -> list[str]:
         require(isinstance(atlases, list) and len(atlases) > 0, "atlases must be a non-empty array")
         frame_map: dict[str, dict[str, Any]] = {}
         frame_rects: list[tuple[str, int, int, int, int, Path, int | None]] = []
+        seen_atlas_sources: set[tuple[str, str]] = set()
         for atlas in atlases:
             require(isinstance(atlas, dict), "each atlas entry must be an object")
             image_rel, meta_rel = atlas.get("image"), atlas.get("meta")
+            # Multiple animation states may intentionally reference the same
+            # atlas + metadata pair. Validate that physical atlas once; counting
+            # the same frame IDs again would create false duplicate-frame errors.
+            source_key = (image_rel, meta_rel)
+            if source_key in seen_atlas_sources:
+                continue
+            seen_atlas_sources.add(source_key)
             require(isinstance(image_rel, str) and isinstance(meta_rel, str),
                     "each atlas needs image and meta paths")
             image_path, meta_path = base / image_rel, base / meta_rel
