@@ -145,6 +145,24 @@ void main() {
       world.enemies.first.attackAnimUntilMs = world.nowMs + 120;
       await _save('21_monster_gait', capture('ranger_new_idle_e_000'));
 
+      // Dedicated combat-state capture: every hostile archetype attacks,
+      // while hit/burn feedback and both team corpse silhouettes are visible.
+      for (final monster in world.enemies) {
+        monster.attackAnimUntilMs = world.nowMs + 320;
+      }
+      world.enemies[1].hitFlashUntilMs = world.nowMs + 220;
+      world.enemies[2].burnTicksLeft = 2;
+      world.corpses.add(
+        MonsterCorpse(
+          type: MonsterType.stalker,
+          team: MonsterTeam.player,
+          position: const Offset(700, 300),
+          facing: const Offset(-1, 0),
+          bornAtMs: world.nowMs - 250,
+        ),
+      );
+      await _save('22_monster_combat_feedback', capture('ranger_new_idle_e_000'));
+
       for (final sheet in sheets.values) {
         sheet.dispose();
       }
