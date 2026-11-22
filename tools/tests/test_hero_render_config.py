@@ -16,6 +16,24 @@ class HeroRenderConfigTests(unittest.TestCase):
         cls.config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
         cls.defaults = cls.config["defaults"]
         cls.heroes = cls.config["heroes"]
+        ranger_new_path = ROOT / "assets/heroes/ranger_new/source/render_config.json"
+        cls.ranger_new_config = json.loads(
+            ranger_new_path.read_text(encoding="utf-8"))
+        cls.ranger_new_defaults = cls.ranger_new_config["defaults"]
+        cls.ranger_new = cls.ranger_new_config["heroes"]["ranger_new"]
+
+    def test_playable_ranger_new_profile_remains_supported(self):
+        hero = self.ranger_new
+        self.assertEqual(hero["hero_id"], "ranger_new")
+        self.assertEqual(hero["output_directory"], "assets/heroes/ranger_new/renders")
+        self.assertEqual(set(hero["actions"]), set(STATES))
+        self.assertEqual(hero["actions"], {state: state for state in STATES})
+        self.assertEqual(len(set(hero["actions"].values())), len(STATES))
+        for state, events in hero.get("events", {}).items():
+            start, end = self.ranger_new_defaults["action_ranges"][state]
+            for event in events:
+                self.assertGreaterEqual(event["frame"], start)
+                self.assertLessEqual(event["frame"], end)
 
     def test_all_four_heroes_have_independent_complete_rigs(self):
         self.assertEqual(set(self.heroes), set(HEROES))
