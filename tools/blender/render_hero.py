@@ -257,7 +257,7 @@ def main():
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
-    supported_heroes = {"ranger", "flame", "shadow", "storm"}
+    supported_heroes = {"ranger", "ranger_new", "flame", "shadow", "storm"}
     require(hero_id in supported_heroes,
             f"Unsupported hero_id {hero_id!r}; expected one of {sorted(supported_heroes)}")
     expected_output = f"assets/heroes/{hero_id}/renders"
@@ -302,9 +302,13 @@ def main():
             f"{hero_id}: two animation states must not share the same Blender Action")
     expected_prefix = hero_id.capitalize() + "_"
     for state in states:
-        require(actions[state].startswith(expected_prefix),
-                f"{hero_id}/{state}: action {actions[state]!r} must start with "
-                f"{expected_prefix!r}; cross-hero action reuse is not allowed")
+        if hero_id == "ranger_new":
+            require(actions[state] == state,
+                    f"{hero_id}/{state}: expected the source action named {state!r}")
+        else:
+            require(actions[state].startswith(expected_prefix),
+                    f"{hero_id}/{state}: action {actions[state]!r} must start with "
+                    f"{expected_prefix!r}; cross-hero action reuse is not allowed")
         require(actions[state] in bpy.data.actions,
                 f"Missing Blender Action: {actions[state]}")
 
