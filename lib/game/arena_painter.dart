@@ -482,8 +482,12 @@ class ArenaPainter extends CustomPainter {
           gy * spacing + 14 + ((hash >> 5) & 31),
         );
         if (point.dx >= map.size.width || point.dy >= map.size.height) continue;
-        if (map.isWater(point)) continue;
+        if (map.isWater(point) || map.isBridge(point)) continue;
         if (map.obstacleBlocking(point, 34) != null) continue;
+        // Keep decorative grass/ice/embers off readable interactable markers.
+        if (map.pickups.any(
+          (pickup) => (pickup.position - point).distance < 38,
+        )) continue;
         if (map.mines.any((mine) => (mine.position - point).distance < mine.radius + 22)) continue;
         if (map.castleAnchors.any((castle) => (castle - point).distance < castleWallRadius + 42)) continue;
 
@@ -2204,6 +2208,23 @@ class ArenaPainter extends CustomPainter {
       final eyeColor = hooded ? const Color(0xFFD9A6FF) : const Color(0xFFFFF4D8);
       for (final side in const [-1.0, 1.0]) {
         final eye = center + Offset(side * radius * 0.34, -radius * 0.06);
+        // Brows give each small face a readable expression at arena zoom.
+        final brow = Path()
+          ..moveTo(eye.dx - radius * 0.19, eye.dy - radius * 0.20)
+          ..quadraticBezierTo(
+            eye.dx,
+            eye.dy - radius * (horned ? 0.34 : 0.27),
+            eye.dx + radius * 0.19,
+            eye.dy - radius * 0.20,
+          );
+        canvas.drawPath(
+          brow,
+          Paint()
+            ..color = dark.withValues(alpha: 0.92)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = radius * 0.095
+            ..strokeCap = StrokeCap.round,
+        );
         // Bright sclera + dark pupil + pinpoint catchlight keeps each
         // archetype's expression readable at the normal arena camera scale.
         canvas.drawCircle(eye, radius * 0.19, Paint()..color = eyeColor);
@@ -2215,18 +2236,28 @@ class ArenaPainter extends CustomPainter {
         canvas.drawCircle(
           eye + Offset(-radius * 0.025, -radius * 0.035),
           radius * 0.035,
-          Paint()..color = Colors.white.withValues(alpha: 0.92),
+          Paint()..color = Colors.white.withValues(alpha: 0.96),
         );
-        canvas.drawCircle(eye, radius * 0.34,
-            Paint()..color = eyeColor.withValues(alpha: 0.20)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+        canvas.drawCircle(
+          eye,
+          radius * 0.34,
+          Paint()
+            ..color = eyeColor.withValues(alpha: 0.20)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+        );
       }
-      // A small mouth line separates the face from the hood/helmet silhouette.
+      // A tiny nose bridge and mouth separate the expression from the
+      // hood/helmet silhouette without adding noisy face details.
+      canvas.drawCircle(
+        center + Offset(0, radius * 0.20),
+        radius * 0.055,
+        Paint()..color = Colors.white.withValues(alpha: 0.42),
+      );
       canvas.drawLine(
         center + Offset(-radius * 0.20, radius * 0.43),
         center + Offset(radius * 0.20, radius * 0.43),
         Paint()
-          ..color = dark.withValues(alpha: 0.85)
+          ..color = dark.withValues(alpha: 0.90)
           ..strokeWidth = radius * 0.10
           ..strokeCap = StrokeCap.round,
       );
