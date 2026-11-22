@@ -1219,3 +1219,11 @@ Verification:
 - The existing 20-seed map regression test checks final obstacles against every pickup, so it now covers the final scenery pass.
 - Commit: `dd82d50100fc8b9544ea30939fbaa18eee8ce72b`.
 - CI verification remains pending; no passing Flutter/Android test result is claimed.
+
+
+## 2026-11-23 — Expand randomized biome coverage
+
+- Strengthened the map regression test: the four distinct castle/biome assignments are now checked across 20 deterministic seeds instead of only seed 7.
+- The test also verifies that all four biome types remain present and that the assignment changes across generated matches, while each castle remains inside its own biome.
+- Test change commit: `0229f6d3ababf8b85791ac8a96c4232964205ef8`.
+- Verification is still pending a completed CI run; this records test coverage, not a passing result.
