@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Visual evidence for the permanent progression step: the hero page (power,
 /// currency, four materials, hero/capacity upgrades) with a loaded profile.
 /// The baseline golden is kept under `test/goldens/progression.png` and is also
-/// copied to `/tmp/opencode/merge/captures/35_progression.png` for inspection.
+/// copied to `build/arena-captures/35_progression.png` for inspection.
 void main() {
   testWidgets('captures the progression hub', (tester) async {
     final store = MemoryProgressStore();
@@ -95,7 +95,7 @@ void main() {
 
       // Keep the same image in the shared capture folder used by earlier steps.
       final baseline = File('test/goldens/progression.png').readAsBytesSync();
-      final dir = Directory('/tmp/opencode/merge/captures');
+      final dir = Directory('build/arena-captures');
       if (!dir.existsSync()) dir.createSync(recursive: true);
       File('${dir.path}/35_progression.png').writeAsBytesSync(baseline);
     }
