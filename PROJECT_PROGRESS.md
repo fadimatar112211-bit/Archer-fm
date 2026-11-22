@@ -1555,3 +1555,9 @@ Verification:
 - Added generated-river movement tests across 40 deterministic map seeds, including water-crossing averages and zero-distance movement.
 - Added monster progression coverage for all four archetypes: monotonic HP/damage/speed scaling, level-40 cap, exact 20-unit starting army, upgrade affordability/cost growth, save/load clamping and non-stacked formation positions.
 - This batch adds regression coverage without changing approved monster stats or match balance values.
+
+## 2026-11-23 — Monster economy integration checks
+
+- Added world-level tests for buying reinforcements: exact resource deduction, insufficient funds, ownership/team assignment and the maximum army cap.
+- Added paired-cost upgrade tests: monster essence and monster materials are both required; failed attempts preserve every balance and the level, while a successful upgrade deducts both costs.
+- These tests exercise the live `GameWorld` economy methods rather than only testing the standalone upgrade calculator.

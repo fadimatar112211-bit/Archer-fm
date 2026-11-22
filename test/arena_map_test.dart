@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/minimap.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
+import 'package:archer_fm/game/progress/progression.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/castle_system.dart';
 import 'package:archer_fm/game/world/fog_of_war.dart';
@@ -613,6 +614,62 @@ void main() {
     test('zero-length movement remains at normal speed', () {
       final map = ArenaMap.generate(math.Random(19));
       expect(map.movementFactorAlong(map.center, Offset.zero), 1.0);
+    });
+  });
+
+  group('monster economy integration', () {
+    test('purchases spend only the matching resource and respect army cap', () {
+      final world = makeWorld(seed: 31);
+      final startingCount = world.army.length;
+      world.resources = MonsterCatalog.def(MonsterType.runner).price - 1;
+      final poorBalance = world.resources;
+      expect(world.canBuyMonster(MonsterType.runner), isFalse);
+      expect(world.buyMonster(MonsterType.runner), isFalse);
+      expect(world.resources, poorBalance);
+      expect(world.army, hasLength(startingCount));
+
+      world.resources++;
+      expect(world.canBuyMonster(MonsterType.runner), isTrue);
+      expect(world.buyMonster(MonsterType.runner), isTrue);
+      expect(world.resources, 0);
+      expect(world.army, hasLength(startingCount + 1));
+      expect(world.army.last.type, MonsterType.runner);
+      expect(world.army.last.team, MonsterTeam.player);
+    });
+
+    test('monster upgrade requires both essence and monster materials', () {
+      final world = makeWorld(seed: 32);
+      world.essence = 20;
+      world.materials[ProgressionMaterial.monster] = 0;
+      expect(world.upgradeMonster(MonsterType.tank), isFalse);
+      expect(world.essence, 20);
+      expect(world.upgrades.levelOf(MonsterType.tank), 1);
+
+      world.materials[ProgressionMaterial.monster] = 1;
+      world.essence = 19;
+      expect(world.upgradeMonster(MonsterType.tank), isFalse);
+      expect(world.essence, 19);
+      expect(world.materials[ProgressionMaterial.monster], 1);
+
+      world.essence = 20;
+      expect(world.upgradeMonster(MonsterType.tank), isTrue);
+      expect(world.essence, 0);
+      expect(world.materials[ProgressionMaterial.monster], 0);
+      expect(world.upgrades.levelOf(MonsterType.tank), 2);
+    });
+
+    test('army purchase cap rejects without charging resources', () {
+      final world = makeWorld(seed: 33);
+      world.resources = 100000;
+      for (var i = world.army.length; i < maxArmySize; i++) {
+        expect(world.buyMonster(MonsterType.runner), isTrue);
+      }
+      final balance = world.resources;
+      final count = world.army.length;
+      expect(world.canBuyMonster(MonsterType.tank), isFalse);
+      expect(world.buyMonster(MonsterType.tank), isFalse);
+      expect(world.resources, balance);
+      expect(world.army, hasLength(count));
     });
   });
 
