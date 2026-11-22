@@ -144,6 +144,28 @@ void main() {
       expect(biomeOrders.length, greaterThan(1));
     });
 
+    test('overlapping biome patches resolve to the nearest centre', () {
+      var checkedOverlaps = 0;
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (var y = 160.0; y < map.size.height; y += 48) {
+          for (var x = 160.0; x < map.size.width; x += 48) {
+            final point = Offset(x, y);
+            final covering = map.biomes
+                .where((patch) => patch.contains(point))
+                .toList();
+            if (covering.length < 2) continue;
+            covering.sort((left, right) =>
+                (left.center - point).distanceSquared.compareTo(
+                    (right.center - point).distanceSquared));
+            expect(map.biomeAt(point)?.kind, covering.first.kind);
+            checkedOverlaps++;
+          }
+        }
+      }
+      expect(checkedOverlaps, greaterThan(0));
+    });
+
     test('places indestructible trees and rocks out of the water', () {
       final map = ArenaMap.generate(math.Random(7));
       expect(
