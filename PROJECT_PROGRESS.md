@@ -1256,3 +1256,12 @@ Verification:
 - Commits: `88cb8678585af69709a5f95668b337f1d4fc7b13` (renderer guards), `4b3d7ee52d8f730337b694b12205f49ff054efae` (config regression tests), `a791791c4cfa5a43508aaa8a6349cb1bbae6aa00` (visual audit).
 - **Verification pending:** no completed green workflow has yet confirmed this new test or a fresh four-hero render. The hero atlases remain unapproved until visual comparison against the canonical roster reference and 16:9 in-game captures.
 - Next: inspect the Android CI run, then run/inspect the four-hero sprite matrix; address specific face, silhouette, weapon and animation defects from actual captures before changing any runtime route.
+
+
+### Follow-up — Preserve the distinct playable Ranger source profile
+
+- The four-hero render preflight initially exposed a fifth pipeline profile: the actual playable Ranger is `ranger_new`, with lowercase Blender Action names and its own `assets/heroes/ranger_new/renders` output directory. It is separate from the legacy `ranger` profile.
+- Updated the renderer guard to explicitly support `ranger_new` without weakening the cross-hero checks for Flame, Shadow, Storm and legacy Ranger.
+- Extended the config regression test to validate Ranger-new's eight state mappings and event frame ranges too.
+- Commits: `945d3296e772310e46dcbea3e4e7bb72fa403cbe` and `49337955eead15176249f750bf6a3278a209d82f`.
+- The earlier matrix run started before this correction; use the new run on the latest commit for verification.
