@@ -249,12 +249,9 @@ class ArenaPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(map.size.width, y), grid);
     }
 
-    // Small deterministic grass clusters add readable ground texture without
-    // shipping generic external art. They are visual-only: collision, paths,
-    // water speed and resource placement remain owned by ArenaMap.
-    _paintGroundDetails(canvas);
-
-    // Biomes.
+    // Biome colour fields sit below ground texture so grass, sand ripples
+    // and snow/volcanic details remain crisp instead of being washed out by
+    // the translucent regional tint.
     for (final patch in map.biomes) {
       final color = _biomeColor(patch.kind);
       canvas.drawCircle(
@@ -273,6 +270,10 @@ class ArenaPainter extends CustomPainter {
           ),
       );
     }
+
+    // Deterministic biome-specific ground details are painted after the tint
+    // so sand ripples and grass blades retain their contrast at gameplay zoom.
+    _paintGroundDetails(canvas);
 
     // Worn stone approaches visually connect castle clearings to the
     // nearest river crossing. These pavers are decoration only; navigation,
@@ -2185,6 +2186,15 @@ class ArenaPainter extends CustomPainter {
         Rect.fromCenter(center: center + Offset(radius * 0.34, 0), width: radius * 0.48, height: radius * 0.58),
         Paint()..color = dark,
       );
+      // A dim ember in each socket gives the skeleton a distinct face without
+      // turning it into the bright-eyed living monster style.
+      for (final side in const [-1.0, 1.0]) {
+        canvas.drawCircle(
+          center + Offset(side * radius * 0.34, 0),
+          radius * 0.095,
+          Paint()..color = accent.withValues(alpha: 0.92),
+        );
+      }
       canvas.drawArc(
         Rect.fromCenter(center: center + Offset(0, radius * 0.48), width: radius * 0.78, height: radius * 0.40),
         0, math.pi, false,
@@ -2194,11 +2204,32 @@ class ArenaPainter extends CustomPainter {
       final eyeColor = hooded ? const Color(0xFFD9A6FF) : const Color(0xFFFFF4D8);
       for (final side in const [-1.0, 1.0]) {
         final eye = center + Offset(side * radius * 0.34, -radius * 0.06);
-        canvas.drawCircle(eye, radius * 0.18, Paint()..color = eyeColor);
+        // Bright sclera + dark pupil + pinpoint catchlight keeps each
+        // archetype's expression readable at the normal arena camera scale.
+        canvas.drawCircle(eye, radius * 0.19, Paint()..color = eyeColor);
+        canvas.drawCircle(
+          eye + Offset(radius * 0.045, radius * 0.025),
+          radius * 0.095,
+          Paint()..color = const Color(0xFF24202A),
+        );
+        canvas.drawCircle(
+          eye + Offset(-radius * 0.025, -radius * 0.035),
+          radius * 0.035,
+          Paint()..color = Colors.white.withValues(alpha: 0.92),
+        );
         canvas.drawCircle(eye, radius * 0.34,
             Paint()..color = eyeColor.withValues(alpha: 0.20)
               ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
       }
+      // A small mouth line separates the face from the hood/helmet silhouette.
+      canvas.drawLine(
+        center + Offset(-radius * 0.20, radius * 0.43),
+        center + Offset(radius * 0.20, radius * 0.43),
+        Paint()
+          ..color = dark.withValues(alpha: 0.85)
+          ..strokeWidth = radius * 0.10
+          ..strokeCap = StrokeCap.round,
+      );
     }
   }
 
