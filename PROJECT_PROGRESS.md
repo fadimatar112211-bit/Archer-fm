@@ -1321,3 +1321,12 @@ Verification:
 - Previously map screenshots were written to the OpenCode-specific `/tmp/opencode/merge/captures` path, so CI could run the map capture tests but would not include their images in the downloadable review artifact. The shared build path now includes the map world, fog, minimap, mine, castle and occlusion captures alongside monster captures.
 - Commit: `21938f5cf4168e24a62f3841801b2638dba9d957`.
 - Pending: wait for Android workflow to complete, then inspect the uploaded PNGs. This path fix does not itself establish that the map visuals pass review.
+
+
+## 2026-11-23 — Unify visual review capture artifacts
+
+- Routed the remaining visual-capture tests (gameplay, hero closeups, lobby, progression, special abilities and UI) from the OpenCode-only temporary folder into `build/arena-captures/`. Map and monster captures already use that path; all capture suites now converge on the Android workflow's artifact directory.
+- Updated the Android workflow to upload whatever captures exist with `if: always()`, even when analysis/tests fail, and changed missing captures from a hard artifact-step failure to a warning. This preserves diagnostic PNGs when a test fails before the complete capture set is produced.
+- Updated the hero gameplay capture comment to document the shared path.
+- Changes include workflow commit `d2321d444294faa15fa96eb6ac360dd8b114ba88` and the capture-test path commits immediately preceding it.
+- Pending verification: the Android workflow has not yet completed on this branch; artifact availability and test success remain unconfirmed.
