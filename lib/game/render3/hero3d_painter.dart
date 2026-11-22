@@ -425,7 +425,7 @@ class Hero3DModel {
           // A restrained side-light lift keeps the silhouette readable from
           // eight arena facings while preserving the source texture's colors.
           final rim = (1.0 - nz.abs()).clamp(0.0, 1.0);
-          shade = (0.78 + 0.18 * diffuse + 0.04 * rim).clamp(0.78, 1.0);
+          shade = (0.82 + 0.14 * diffuse + 0.04 * rim).clamp(0.82, 1.0);
           final co = slot * 3 + vi;
           // Per-vertex material base colour (white for texture-driven
           // models — the texture carries the colouring instead).

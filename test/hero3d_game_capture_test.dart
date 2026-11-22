@@ -186,7 +186,7 @@ void main() {
         hero3d.model.calibrate();
         expect(model.jointNames.length, greaterThan(0), reason: entry[1]);
         expect(model.clips.keys, containsAll([
-          'idle', 'walk', 'run', 'attack', 'skill', 'hit', 'death',
+          'idle', 'walk', 'run', 'attack', 'skill', 'dodge', 'hit', 'death',
         ]), reason: entry[1]);
 
         final kit = kitForHero(entry[2]);

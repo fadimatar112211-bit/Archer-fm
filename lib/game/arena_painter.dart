@@ -2644,6 +2644,31 @@ class ArenaPainter extends CustomPainter {
         canvas.drawLine(hand, blade, Paint()..color = const Color(0xFFF1D9FF)
           ..strokeWidth = size * 0.025..strokeCap = StrokeCap.round);
     }
+    // A leather hand-wrap and metal cuff visually connect every weapon to
+    // its wielder; these are purely painter details, not extra hitboxes.
+    canvas.drawCircle(
+      hand,
+      size * 0.105,
+      Paint()..color = const Color(0xFF382B28),
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: hand, radius: size * 0.12),
+      -math.pi * 0.82,
+      math.pi * 0.64,
+      false,
+      Paint()
+        ..color = Color.lerp(accent, Colors.white, 0.30)!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size * 0.035,
+    );
+    canvas.drawLine(
+      hand + Offset(-size * 0.055, -size * 0.025),
+      hand + Offset(size * 0.055, size * 0.025),
+      Paint()
+        ..color = const Color(0xFFB99A70)
+        ..strokeWidth = size * 0.018
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   void _paintMonsterBar(
@@ -2688,6 +2713,21 @@ class ArenaPainter extends CustomPainter {
           ..strokeWidth = 0.65
           ..strokeCap = StrokeCap.round,
       );
+      if (monster.type == MonsterType.tank) {
+        // Three rivet marks make the heavy unit's long health bar read as
+        // plated armour rather than a generic enemy bar.
+        for (var plate = 1; plate <= 3; plate++) {
+          final x = left + width * plate / 4;
+          if (x > left + width * ratio) continue;
+          canvas.drawLine(
+            Offset(x, topY + 0.6),
+            Offset(x, topY + 3.9),
+            Paint()
+              ..color = const Color(0xAA252D38)
+              ..strokeWidth = 1.1,
+          );
+        }
+      }
     }
   }
 

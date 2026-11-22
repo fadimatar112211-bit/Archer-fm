@@ -1421,3 +1421,12 @@ Verification:
 - Added deterministic, biome-aware riverbank dressing: forest reeds, desert stones, snow crystals, and volcanic basalt/ember marks. Placement skips water, bridge decks, obstacles, mines, and castle clearings; this is painter-only and does not affect pathing or pickups.
 - Added map regression coverage for biome-centre and uncontested edge ownership over 24 seeds, plus monster-catalog assertions preserving the four distinct names, palettes, and combat roles.
 - Verification is pending until the updated Android/Flutter workflow completes; visual approval still requires reviewing its fresh 16:9 capture artifact.
+
+
+## 2026-11-23 — Combat readability and hero capture coverage pass
+
+- Added small hand-wrap/cuff details to all four monster weapon silhouettes and armour rivets to the tank health bar; no collision, attack timing, or damage logic changed.
+- Lifted the hero renderer's ambient floor slightly (0.78 → 0.82) to preserve face and armour readability under the arena camera while retaining directional shading.
+- Tightened the four-hero gameplay capture regression: every GLB must expose all eight expected clips, including dodge, before directional captures can pass.
+- Added biome-centre and uncontested-edge ownership checks over 32 deterministic map seeds.
+- CI and visual capture results are still required before this pass can be called verified.

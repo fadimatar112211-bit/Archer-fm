@@ -199,6 +199,28 @@ void main() {
       expect(map.isBlocked(moved, radius), isFalse);
     });
 
+    test('biome centres and uncontested edges keep their assigned terrain', () {
+      for (var seed = 0; seed < 32; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (final patch in map.biomes) {
+          expect(
+            map.biomeAt(patch.center)?.kind,
+            patch.kind,
+            reason: 'biome centre for seed $seed',
+          );
+          final edge = patch.center + Offset(patch.radius * 0.82, 0);
+          final owners = map.biomes.where((other) => other.contains(edge)).toList();
+          if (owners.length == 1) {
+            expect(
+              map.biomeAt(edge)?.kind,
+              patch.kind,
+              reason: 'uncontested biome edge for seed $seed',
+            );
+          }
+        }
+      }
+    });
+
     test('covers all four castle biomes across randomized maps', () {
       final biomeOrders = <String>{};
       for (var seed = 0; seed < 20; seed++) {
