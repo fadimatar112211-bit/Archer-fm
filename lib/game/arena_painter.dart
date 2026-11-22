@@ -1438,14 +1438,18 @@ class ArenaPainter extends CustomPainter {
     // ground-contact treatment as actors instead of floating over the floor.
     for (final river in world.map.rivers) {
       for (final bridge in river.bridges) {
+        canvas.save();
+        canvas.translate(bridge.center.dx, bridge.center.dy);
+        canvas.rotate(bridge.angle);
         _paintContactShadow(
           canvas,
-          bridge.center,
-          width: bridge.rect.width * 0.9,
+          Offset.zero,
+          width: bridge.width * 0.9,
           height: 15,
           offsetY: 5,
           alpha: 88,
         );
+        canvas.restore();
       }
     }
     for (final mine in world.mineSystem.mines) {
@@ -1800,9 +1804,9 @@ class ArenaPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(Offset(rect.left + 4, rect.top + 2),
         Offset(rect.left + 4, rect.bottom - 2), beam);
-    canvas.restore();
     canvas.drawLine(Offset(rect.right - 4, rect.top + 2),
         Offset(rect.right - 4, rect.bottom - 2), beam);
+    canvas.restore();
   }
 
   void _paintTreeTrunk(Canvas canvas, MapObstacle obstacle) {

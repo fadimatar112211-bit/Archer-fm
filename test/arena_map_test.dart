@@ -115,6 +115,17 @@ void main() {
             expect(bridge.contains(crossDeckPoint), isTrue);
             expect(map.isBridge(crossDeckPoint), isTrue);
             expect(map.isWater(crossDeckPoint), isFalse);
+            final alongDeck = Offset(
+              -math.sin(bridge.angle),
+              math.cos(bridge.angle),
+            );
+            expect(
+              bridge.contains(
+                bridge.center + alongDeck * (bridge.depth / 2 + 2),
+              ),
+              isFalse,
+              reason: 'rotated deck must not claim dry ground past its end',
+            );
           }
         }
         // The tributary itself is water away from its bridge deck.

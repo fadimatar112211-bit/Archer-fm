@@ -1488,3 +1488,10 @@ Verification:
 - The bridge painter now rotates the deck, rails, cross-beams and planks together around the world anchor. Its axis-aligned bounds remain available only for broad-phase bounds/shadows.
 - Added seeded map assertions that points near the cross-river edge of each rotated deck remain dry and are recognized as bridge surface.
 - Hero, monster combat values, river geometry, bridge counts and movement speeds are unchanged. CI and fresh map-capture review are still required.
+
+## 2026-11-23 — Rotated bridge shadow and canvas-state correction
+
+- Aligned bridge contact shadows with the same rotated local deck axes so the shadow no longer stays horizontal beneath a turning bridge.
+- Kept both end cross-beams inside the bridge's saved/rotated canvas transform; corrected the restore ordering so the entire bridge is drawn in one consistent local coordinate space.
+- Extended the bridge geometry regression to verify that the oriented deck rejects points beyond its river-parallel end, not just that its cross-river edge remains walkable.
+- This is a follow-up correctness pass for the river-aligned bridge implementation; CI still needs to run against the latest branch head.
