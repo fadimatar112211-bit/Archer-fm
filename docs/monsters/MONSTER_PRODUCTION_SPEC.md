@@ -75,8 +75,8 @@ Each final monster asset must provide:
 - A manifest mapping gameplay states to clip names and timing/events, plus a validated fallback.
 
 ### Asset source decision and prototype status
-- The free Blender pipeline now generates four rigged prototype GLBs in the CI artifact folder `build/monster-glb/` and emits a manifest plus preview PNGs. The generated files are CI artifacts; they are not committed as runtime assets under `assets/monsters/3d/`.
-- The current generator maps the approved designs to Runner/green goblin, Tank/horned mace brute, Stalker/skeleton, and Ranged/purple masked infiltrator. A dedicated GitHub Actions workflow builds and validates these prototypes. The first run exposed a missing NumPy dependency in the Ubuntu Blender exporter; the workflow now installs `python3-numpy`, and the corrected run is pending. No visual or runtime acceptance is implied.
+- The free Blender generator has been revised to direct the four prototype silhouettes and palettes toward the approved reference: Runner/green sword goblin, Tank/horned mace brute, Stalker/ivory skeleton with paired blades, and Ranged/purple masked infiltrator. These are procedural prototype changes, not a guarantee of reference fidelity.
+- The workflow definition `.github/workflows/monster-reference-prototypes.yml` is committed on `ranger-reference-work`; it installs Blender plus NumPy, runs Python syntax checks, exports GLBs/previews to `build/monster-glb/`, validates required clips, and uploads a review-only artifact. As of this audit, no successful run/artifact has been confirmed for this new workflow. Do not describe the prototypes as visually or technically accepted, and do not integrate them into runtime.
 - The first preview set (run `44487374412`) was rejected for toy-like spherical bodies, disconnected-looking limbs and weak role detail.
 - The face pass (commit `e82dad4`, run `44487884841`) improved eye/pupil/brow/mouth readability, but visual inspection still rejects the set as final art: limbs remain visibly segmented and the Stalker/Ranged hood and weapon silhouettes are not strong enough.
 - Follow-up geometry work (commit `324c574`) adds bridging geometry, shins, Runner scarf details, a fuller Stalker hood/cloak, and a tapered Ranged robe/staff assembly. Its artifact must be visually reviewed before acceptance.
@@ -138,3 +138,11 @@ The new CI preview must be reviewed before any runtime integration.
 5. Only after explicit visual acceptance, prepare runtime asset integration while retaining the procedural Canvas renderer as a fallback.
 
 Do not proceed to runtime replacement based on structural validation alone. Keep the Canvas renderer available as fallback.
+
+
+## 2026-11-22 implementation checkpoint
+
+- Generator reference-direction update: commit `2ea2682546fb1f2a17896fb552bc0cbea75951fb`.
+- Review-only prototype workflow definition: commit `bc2cdf790df652a8e159c443f8e4b9f78beea14c`.
+- Flutter analyzer blocker discovered during the latest release workflow: an unused local `socket` paint variable in `lib/game/arena_painter.dart`. Removed in commit `bd362f2cfa09f30a6ff3a7cc7e2bf0b0acc86919`. A fresh CI result is still required to confirm the analyzer passes.
+- The prior Storm sprite render completed rendering but failed the frame validation step; atlas packing/publication was skipped. Do not treat Storm's new sprite pack as complete. The precise failing frame diagnostics still need a smaller targeted extraction from the job output.
