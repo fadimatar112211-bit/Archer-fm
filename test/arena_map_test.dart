@@ -576,6 +576,46 @@ void main() {
     });
   });
 
+  group('movement sampling', () {
+    test('movement segments crossing river water cannot remain fully dry', () {
+      for (var seed = 1; seed <= 40; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        var checked = false;
+        for (final river in map.rivers) {
+          for (var i = 0; i < river.points.length - 1; i++) {
+            final a = river.points[i];
+            final b = river.points[i + 1];
+            final segment = b - a;
+            if (segment.distance < 1) continue;
+            final tangent = segment / segment.distance;
+            final normal = Offset(-tangent.dy, tangent.dx);
+            final midpoint = Offset.lerp(a, b, 0.5)!;
+            if (!map.isWater(midpoint)) continue;
+            final halfSpan = river.width * 0.85;
+            final from = midpoint - normal * halfSpan;
+            final displacement = normal * (halfSpan * 2);
+            final factor = map.movementFactorAlong(from, displacement);
+            expect(
+              factor,
+              lessThan(1.0),
+              reason: 'seed=$seed river=$i should account for water on path',
+            );
+            expect(factor, greaterThanOrEqualTo(waterSpeedFactor));
+            checked = true;
+            break;
+          }
+          if (checked) break;
+        }
+        expect(checked, isTrue, reason: 'seed=$seed must test a river segment');
+      }
+    });
+
+    test('zero-length movement remains at normal speed', () {
+      final map = ArenaMap.generate(math.Random(19));
+      expect(map.movementFactorAlong(map.center, Offset.zero), 1.0);
+    });
+  });
+
   group('world integration', () {
     test('hero starts beside their castle on clear dry ground', () {
       final world = makeWorld();

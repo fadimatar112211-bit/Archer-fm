@@ -1549,3 +1549,9 @@ Verification:
 
 - Tightened movement-path sampling from 16 px to 8 px. Fast player and monster movement now samples narrow river edges more densely, reducing the chance of skipping a short water section between dry endpoints.
 - Existing 40-seed bridge traversal and river movement regressions remain the verification coverage; Android CI is queued to re-run on this gameplay change.
+
+## 2026-11-23 — Double-sized map and monster regression batch
+
+- Added generated-river movement tests across 40 deterministic map seeds, including water-crossing averages and zero-distance movement.
+- Added monster progression coverage for all four archetypes: monotonic HP/damage/speed scaling, level-40 cap, exact 20-unit starting army, upgrade affordability/cost growth, save/load clamping and non-stacked formation positions.
+- This batch adds regression coverage without changing approved monster stats or match balance values.
