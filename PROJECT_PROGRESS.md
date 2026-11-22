@@ -1282,3 +1282,10 @@ Verification:
 - Four-hero sprite matrix run `45071818451`: Ranger job `137360235044` remains successful. Flame/Shadow/Storm passed regression tests, scene setup and rig/action validation, but their rendering steps remain in progress. The last available log timestamps were around 2026-11-22 21:32 UTC; no later completion or final atlas validation/upload was visible at this check. Do not call those three complete.
 - Current branch head at this check: `37013bb3240dc4601624c396fc80c8528dcae902`. A later matrix run `45071916513` was queued at its older source SHA and does not replace the in-progress earlier run.
 - Visual acceptance still requires opening the actual four hero packs and monster capture, comparing faces/silhouettes to the approved reference assets, and checking a representative 16:9 gameplay capture. Keep unapproved hero atlases out of the production route.
+
+
+## 2026-11-23 — Make monster painter captures available for visual review
+
+- Found that `test/monster_capture_test.dart` wrote its PNGs to the OpenCode-specific temporary path `/tmp/opencode/merge/captures`, while the Android workflow uploads `build/arena-captures/`. As a result, the monster capture test output was not included in the existing visual-capture artifact.
+- Changed the test output directory to `build/arena-captures/`, matching the workflow's existing artifact upload step. This makes the four-type monster lineup and gait captures retrievable from CI without adding another workflow or duplicating uploads.
+- Verification is pending on the newly triggered Flutter test run; no visual acceptance is claimed until the uploaded PNGs are inspected.
