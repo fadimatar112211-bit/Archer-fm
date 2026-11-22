@@ -447,14 +447,13 @@ def verify_packed(manifest: dict, base: Path) -> None:
 
 
 def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
-    """Copy a non-Ranger hero into the directory the fixed CI upload collects.
+    """Stage a non-Ranger hero's validated render pack for its CI artifact.
 
-    The workflow can only be edited with a token that has `workflow` scope,
-    which this project does not have, so it still uploads the Ranger render
-    directory. Non-Ranger heroes are rendered into that directory for the fixed
-    validation/packing steps and then copied here as
-    `_bundle/<hero>/renders/`; the committing machine moves them to
-    `assets/heroes/<hero>/renders/`. `_bundle` is gitignored and never shipped.
+    Each matrix job has an isolated checkout and uploads this bundle together
+    with the hero-specific source scene. The bundle is staged beneath Ranger's
+    render directory only to keep generated artifacts out of tracked hero
+    folders; it is not a runtime asset path. `_bundle` is gitignored and must
+    never be referenced by the game.
     """
     hero_id = manifest["hero_id"]
     if hero_id == "ranger":
