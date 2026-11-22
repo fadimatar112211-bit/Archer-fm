@@ -1524,3 +1524,10 @@ Verification:
 - The facing transform accounts for the existing left/right body mirror, so westward and diagonal warnings do not reverse their lane.
 - Expanded the focused attack capture suite from one east-facing frame per archetype to all eight directions for each of Runner, Tank, Stalker and Ranged (32 directional captures).
 - These are visual regression frames for the role-specific dash, slam, paired-slash and rune-lock telegraphs; combat timing, attack range, hitboxes and damage remain unchanged.
+
+## 2026-11-23 — Hero scale quality gate and progression regression
+
+- Raised the non-death sprite silhouette minimum from 28% to 40% of the 192px frame (with a 64px floor). This rejects undersized hero renders before they reach gameplay while preserving intentionally horizontal death poses.
+- Added normalized width, height and occupied-pixel ratios to per-frame validation metrics, plus an idle-height range/mean report for comparing hero packs consistently.
+- Added a cross-hero regression for all four kits: exactly four special abilities unlock at levels 1/10/20/30; the five-hit manual combo remains a separate five-step chain; same-level base HP remains equal; movement speeds remain distinct; and every hero retains three distinct weapon choices.
+- The size gate is a validation threshold, not a claim that the hero models now match the approved reference. Fresh artifacts and visual inspection are still required.

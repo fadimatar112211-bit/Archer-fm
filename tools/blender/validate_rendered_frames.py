@@ -61,7 +61,10 @@ def frame_errors(path, image, state, resolution):
         "bbox": bbox,
         "width": width,
         "height": height,
+        "width_ratio": width / float(resolution),
+        "height_ratio": height / float(resolution),
         "occupied": occupied,
+        "occupancy_ratio": occupied / float(resolution * resolution),
         "transparent_ratio": transparent_ratio,
     }
     if occupied < 350:
@@ -103,9 +106,14 @@ def frame_errors(path, image, state, resolution):
     # which detects a truly flattened render. A death frame is deliberately
     # horizontal once the Ranger is on the ground, so it is exempt.
     if state != "death":
-        min_height = max(48, round(resolution * 0.28))
+        # Keep the hero readable at normal phone gameplay zoom. Earlier
+        # 28% allowed undersized renders (e.g. ~50px in a 192px cell) to pass.
+        # Death is intentionally horizontal and remains exempt.
+        min_height = max(64, round(resolution * 0.40))
         if height < min_height:
-            errors.append(f"{path}: insufficient upright silhouette height {height}px")
+            errors.append(
+                f"{path}: hero silhouette too small for gameplay "
+                f"({height}px / {resolution}px; minimum {min_height}px)")
         if height:
             band_hits = 0
             for band in range(4):
@@ -190,7 +198,8 @@ def main() -> int:
     args = parser.parse_args()
     errors = []
     checked = 0
-    frames_by = {}
+    idle_height_ratios = []
+    frames_by = {};
     first_failing = None
     hero, manifest = active_hero(args.root)
     expected_by = {}
@@ -266,6 +275,8 @@ def main() -> int:
                     with Image.open(path) as source:
                         image = source.convert("RGBA")
                     found, metrics = frame_errors(path, image, state, args.resolution)
+                    if state == "idle" and metrics is not None:
+                        idle_height_ratios.append(metrics["height_ratio"])
                     if found and first_failing is None:
                         first_failing = (path, image)
                     errors.extend(found)
@@ -319,6 +330,12 @@ def main() -> int:
         print(f"HERO_VISUAL_CHECK_FAILED hero={hero} checked={checked} "
               f"errors={len(errors)}")
         return 1
+    if idle_height_ratios:
+        print(
+            f"HERO_SCALE hero={hero} idle_height_ratio="
+            f"{min(idle_height_ratios):.1%}..{max(idle_height_ratios):.1%} "
+            f"mean={sum(idle_height_ratios) / len(idle_height_ratios):.1%}"
+        )
     print(f"HERO_VISUAL_CHECK_OK hero={hero} checked={checked} frames across "
           f"{len(STATES)} states and {len(DIRECTIONS)} directions")
     return 0
