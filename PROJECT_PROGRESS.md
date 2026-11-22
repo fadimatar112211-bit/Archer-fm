@@ -1305,3 +1305,11 @@ Verification:
 - Added a dedicated `tools.tests.test_hero_render_config` regression-test step to the Ranger-new job before rig validation/rendering. The Flame/Shadow/Storm matrix already runs the full Python test discovery; Ranger-new now receives explicit config coverage too.
 - Commit: `63cc898295822306998fabe457ea32b79aa3c642`.
 - Verification is pending on the newly triggered workflow. Existing in-progress matrix jobs were launched from older commits and do not verify this workflow correction.
+
+
+## 2026-11-23 — Expand monster visual capture coverage
+
+- Extended `test/monster_capture_test.dart` with a dedicated combat-feedback capture after the existing lineup and gait captures.
+- The new capture puts all four hostile monster archetypes into attack animation and includes hit flash, burn feedback, and a second corpse from the player team (the first corpse is enemy team). This gives CI a more useful image for reviewing combat readability and both-team death silhouettes, not only idle/walk presentation.
+- Commit: `54be9fd7c8fb8fd2c6617622090ebabced8514a2`.
+- Visual review remains pending until the Flutter workflow uploads the PNG and the actual image is inspected; this is test coverage, not art approval.
