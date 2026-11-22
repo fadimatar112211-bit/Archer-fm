@@ -401,10 +401,75 @@ class ArenaPainter extends CustomPainter {
         }
       }
     }
+    _paintRiverBankDetails(canvas);
+  }
 
-
-
-
+  void _paintRiverBankDetails(Canvas canvas) {
+    final map = world.map;
+    for (final river in map.rivers) {
+      for (var i = 0; i < river.points.length - 1; i += 2) {
+        final a = river.points[i];
+        final b = river.points[i + 1];
+        final segment = b - a;
+        final length = segment.distance;
+        if (length < 28) continue;
+        final direction = segment / length;
+        final normal = Offset(-direction.dy, direction.dx);
+        final midpoint = a + segment * 0.5;
+        for (final side in const [-1.0, 1.0]) {
+          final bank = midpoint + normal * side * (river.width * 0.5 + 17);
+          if (bank.dx < 18 || bank.dy < 18 ||
+              bank.dx > map.size.width - 18 || bank.dy > map.size.height - 18) continue;
+          if (map.isWater(bank) || map.isBridge(bank) ||
+              map.obstacleBlocking(bank, 18) != null ||
+              map.mines.any((mine) => (mine.position - bank).distance < mine.radius + 18) ||
+              map.castleAnchors.any((castle) => (castle - bank).distance < castleWallRadius + 24)) continue;
+          final biome = map.biomeAt(bank)?.kind ?? TerrainKind.forest;
+          canvas.save();
+          canvas.translate(bank.dx, bank.dy);
+          canvas.rotate(math.atan2(direction.dy, direction.dx));
+          switch (biome) {
+            case TerrainKind.forest:
+              for (var blade = 0; blade < 3; blade++) {
+                final x = (blade - 1) * 4.0;
+                final height = 7.0 + blade * 1.5;
+                final reed = Path()
+                  ..moveTo(x, 2)
+                  ..quadraticBezierTo(x + (blade - 1) * 2, -height * 0.55,
+                      x + (blade - 1) * 3, -height);
+                canvas.drawPath(reed, Paint()
+                  ..color = blade.isEven ? const Color(0xFF71934C) : const Color(0xFF9BB66A)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 2.0
+                  ..strokeCap = StrokeCap.round);
+              }
+              break;
+            case TerrainKind.desert:
+              canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 13, height: 7),
+                  Paint()..color = const Color(0xFF98754A));
+              canvas.drawArc(Rect.fromCenter(center: const Offset(-1, -1), width: 10, height: 4),
+                  math.pi, math.pi, false, Paint()
+                    ..color = const Color(0x88F1D19A)
+                    ..style = PaintingStyle.stroke..strokeWidth = 1.2);
+              break;
+            case TerrainKind.snow:
+              final crystal = Path()
+                ..moveTo(0, -6)..lineTo(3, 0)..lineTo(0, 6)..lineTo(-3, 0)..close();
+              canvas.drawPath(crystal, Paint()..color = const Color(0xFFB9D9E8));
+              canvas.drawLine(const Offset(0, -4), const Offset(0, 4),
+                  Paint()..color = const Color(0xCCF5FCFF)..strokeWidth = 1.1);
+              break;
+            case TerrainKind.volcanic:
+              canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 12, height: 8),
+                  Paint()..color = const Color(0xFF493B39));
+              canvas.drawLine(const Offset(-3, 0), const Offset(3, 0),
+                  Paint()..color = const Color(0x99FF8844)..strokeWidth = 1.4);
+              break;
+          }
+          canvas.restore();
+        }
+      }
+    }
   }
 
   void _paintStoneApproaches(Canvas canvas) {
@@ -2227,7 +2292,7 @@ class ArenaPainter extends CustomPainter {
       Rect.fromLTWH(-size * 0.4, -size * 0.5, size * 0.8, size * 0.08),
       Paint()..color = dark,
     );
-    _monsterHead(canvas, size, body, dark, accent, horned: true);
+    _monsterHead(canvas, size, body, dark, accent, type: MonsterType.tank, horned: true);
   }
 
   void _paintRunnerBody(
@@ -2272,7 +2337,7 @@ class ArenaPainter extends CustomPainter {
       ),
       Paint()..color = accent,
     );
-    _monsterHead(canvas, size, body, dark, accent, earred: true);
+    _monsterHead(canvas, size, body, dark, accent, type: MonsterType.runner, earred: true);
   }
 
   void _paintStalkerBody(
@@ -2312,7 +2377,7 @@ class ArenaPainter extends CustomPainter {
       Rect.fromCenter(center: Offset(0, -size * 0.28), width: size * 0.26, height: size * 0.14),
       bone,
     );
-    _monsterHead(canvas, size, body, dark, accent, skeletal: true);
+    _monsterHead(canvas, size, body, dark, accent, type: MonsterType.stalker, skeletal: true);
     // A pair of short ivory blades remains visible even at arena zoom.
     for (final side in const [-1.0, 1.0]) {
       final blade = Path()
@@ -2352,7 +2417,7 @@ class ArenaPainter extends CustomPainter {
       ),
       Paint()..color = dark,
     );
-    _monsterHead(canvas, size, body, dark, accent, hooded: true);
+    _monsterHead(canvas, size, body, dark, accent, type: MonsterType.ranged, hooded: true);
     // A faceted hood sigil makes the caster readable from the elevated camera.
     final sigil = Path()
       ..moveTo(0, -size * 1.28)
@@ -2386,6 +2451,7 @@ class ArenaPainter extends CustomPainter {
     Color body,
     Color dark,
     Color accent, {
+    MonsterType type = MonsterType.runner,
     bool horned = false,
     bool earred = false,
     bool hooded = false,
@@ -2448,7 +2514,12 @@ class ArenaPainter extends CustomPainter {
         Paint()..color = dark..style = PaintingStyle.stroke..strokeWidth = radius * 0.12,
       );
     } else {
-      final eyeColor = hooded ? const Color(0xFFD9A6FF) : const Color(0xFFFFF4D8);
+      final eyeColor = switch (type) {
+        MonsterType.runner => const Color(0xFFDDF5A8),
+        MonsterType.tank => const Color(0xFFFFD58A),
+        MonsterType.stalker => const Color(0xFFE7DCC8),
+        MonsterType.ranged => const Color(0xFFD9A6FF),
+      };
       for (final side in const [-1.0, 1.0]) {
         final eye = center + Offset(side * radius * 0.34, -radius * 0.06);
         // Brows give each small face a readable expression at arena zoom.

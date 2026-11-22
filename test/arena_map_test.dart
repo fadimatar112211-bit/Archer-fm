@@ -249,6 +249,22 @@ void main() {
       expect(checkedOverlaps, greaterThan(0));
     });
 
+    test('biome interiors stay assigned to their own terrain across seeds', () {
+      for (var seed = 0; seed < 24; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (final patch in map.biomes) {
+          expect(map.biomeAt(patch.center)?.kind, patch.kind,
+              reason: 'biome centre ownership for seed $seed');
+          final edgePoint = patch.center + Offset(patch.radius * 0.82, 0);
+          final owners = map.biomes.where((other) => other.contains(edgePoint)).toList();
+          if (owners.length == 1) {
+            expect(map.biomeAt(edgePoint)?.kind, patch.kind,
+                reason: 'uncontested biome edge for seed $seed');
+          }
+        }
+      }
+    });
+
     test('returns no biome outside every generated region', () {
       for (var seed = 0; seed < 20; seed++) {
         final map = ArenaMap.generate(math.Random(seed));

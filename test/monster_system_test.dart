@@ -53,6 +53,19 @@ EnemyState addEnemy(
 }
 
 void main() {
+  test('four monster archetypes retain distinct visual and combat identities', () {
+    final defs = MonsterCatalog.all;
+    expect(defs.map((def) => def.type).toSet(), MonsterType.values.toSet());
+    expect(defs.map((def) => def.nameAr).toSet(), hasLength(4));
+    expect(defs.map((def) => def.color).toSet(), hasLength(4));
+    expect(MonsterCatalog.def(MonsterType.tank).baseHp,
+        greaterThan(MonsterCatalog.def(MonsterType.runner).baseHp));
+    expect(MonsterCatalog.def(MonsterType.runner).baseSpeed,
+        greaterThan(MonsterCatalog.def(MonsterType.tank).baseSpeed));
+    expect(MonsterCatalog.def(MonsterType.ranged).attackRange,
+        greaterThan(MonsterCatalog.def(MonsterType.stalker).attackRange));
+  });
+
   group('monster catalog', () {
     test('ships exactly the four approved legacy types', () {
       expect(MonsterType.values.length, 4);

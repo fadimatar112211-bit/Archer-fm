@@ -1413,3 +1413,11 @@ Verification:
 - Added regression coverage that a minimal structurally valid manifest is not accepted as a production pack.
 - Shadow's checked-in static pose-hold placeholders will be rejected until replaced by genuine authored motion. This is intentional; no visual approval is claimed.
 - CI is triggered by this commit; results are pending.
+
+
+## 2026-11-23 — Expanded monster identity and biome riverbank detail pass
+
+- Monster faces now use archetype-specific iris palettes (runner leaf-green, tank amber, ranged violet; stalker retains its dark ember sockets) and preserve a distinct expression per role. No stats, hitboxes, AI, or attack timing changed.
+- Added deterministic, biome-aware riverbank dressing: forest reeds, desert stones, snow crystals, and volcanic basalt/ember marks. Placement skips water, bridge decks, obstacles, mines, and castle clearings; this is painter-only and does not affect pathing or pickups.
+- Added map regression coverage for biome-centre and uncontested edge ownership over 24 seeds, plus monster-catalog assertions preserving the four distinct names, palettes, and combat roles.
+- Verification is pending until the updated Android/Flutter workflow completes; visual approval still requires reviewing its fresh 16:9 capture artifact.
