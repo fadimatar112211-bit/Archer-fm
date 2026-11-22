@@ -273,10 +273,16 @@ class ArenaMap {
     final biomes = _generateBiomes(rng, size);
     // Place solid scenery first so pickups can reserve genuinely walkable,
     // unobstructed ground rather than landing under trees or rocks.
-    final obstacles =
+    final placementObstacles =
         _generateObstacles(rng, size, castles, mines, rivers, const []);
-    final pickups =
-        _generatePickups(rng, size, castles, mines, rivers, obstacles);
+    final pickups = _generatePickups(
+      rng, size, castles, mines, rivers, placementObstacles,
+    );
+    // Rebuild the final scenery against the chosen pickups as well. This
+    // preserves pickup clearance without allowing the final obstacle pass
+    // to place a tree or rock over a resource/chest.
+    final obstacles =
+        _generateObstacles(rng, size, castles, mines, rivers, pickups);
 
     return ArenaMap._(
       size: size,
