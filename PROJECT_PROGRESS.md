@@ -1289,3 +1289,10 @@ Verification:
 - Found that `test/monster_capture_test.dart` wrote its PNGs to the OpenCode-specific temporary path `/tmp/opencode/merge/captures`, while the Android workflow uploads `build/arena-captures/`. As a result, the monster capture test output was not included in the existing visual-capture artifact.
 - Changed the test output directory to `build/arena-captures/`, matching the workflow's existing artifact upload step. This makes the four-type monster lineup and gait captures retrievable from CI without adding another workflow or duplicating uploads.
 - Verification is pending on the newly triggered Flutter test run; no visual acceptance is claimed until the uploaded PNGs are inspected.
+
+
+## 2026-11-23 — Stop Android CI from cancelling its own verification
+
+- The Android workflow used `cancel-in-progress: true` for the branch concurrency group. The recent sequence of small, necessary commits repeatedly cancelled the full analysis/test/APK run before it could finish.
+- Changed the group to `cancel-in-progress: false` so a running verification can complete; a newer push can wait rather than terminating the active test/emulator job.
+- This is a CI reliability change, not a passing test result. Confirm the next complete Android workflow run before claiming verification.
