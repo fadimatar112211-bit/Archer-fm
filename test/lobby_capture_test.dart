@@ -45,7 +45,7 @@ void main() {
       );
 
       final baseline = File('test/goldens/online_lobby.png').readAsBytesSync();
-      final dir = Directory('/tmp/opencode/merge/captures');
+      final dir = Directory('build/arena-captures');
       if (!dir.existsSync()) dir.createSync(recursive: true);
       File('${dir.path}/36_online_lobby.png').writeAsBytesSync(baseline);
     }
