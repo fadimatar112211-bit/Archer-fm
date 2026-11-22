@@ -110,25 +110,41 @@ class Bridge {
     required this.center,
     required this.width,
     required this.depth,
+    this.angle = 0,
   });
 
   final Offset center;
 
-  /// Size along X.
+  /// Deck width across the river (local X axis).
   final double width;
 
-  /// Size along Y (river width plus banks).
+  /// Deck length along the river (local Y axis).
   final double depth;
 
-  Rect get rect =>
-      Rect.fromCenter(center: center, width: width, height: depth);
+  /// Rotation of the deck's local X axis in world radians.
+  final double angle;
 
+  /// Axis-aligned bounds, retained for shadows and broad-phase layout only.
+  Rect get rect {
+    final c = math.cos(angle).abs();
+    final s = math.sin(angle).abs();
+    final boundsWidth = width * c + depth * s;
+    final boundsHeight = width * s + depth * c;
+    return Rect.fromCenter(
+      center: center,
+      width: boundsWidth,
+      height: boundsHeight,
+    );
+  }
+
+  /// Exact oriented deck containment; never use [rect] as the walkable area.
   bool contains(Offset point) {
-    final rect = this.rect;
-    return point.dx >= rect.left &&
-        point.dx <= rect.right &&
-        point.dy >= rect.top &&
-        point.dy <= rect.bottom;
+    final delta = point - center;
+    final c = math.cos(angle);
+    final s = math.sin(angle);
+    final localX = delta.dx * c + delta.dy * s;
+    final localY = -delta.dx * s + delta.dy * c;
+    return localX.abs() <= width / 2 && localY.abs() <= depth / 2;
   }
 }
 
@@ -405,6 +421,7 @@ class ArenaMap {
         for (final fraction in const [0.34, 0.68])
           Bridge(
             center: _pointAlong(points, fraction),
+            angle: _bridgeAngleAt(points, fraction),
             width: 120,
             depth: width + 56,
           ),
@@ -437,11 +454,13 @@ class ArenaMap {
         bridges: [
           Bridge(
             center: _pointAlong(points, 0.34),
+            angle: _bridgeAngleAt(points, 0.34),
             width: 120,
             depth: width + 56,
           ),
           Bridge(
             center: _pointAlong(points, 0.68),
+            angle: _bridgeAngleAt(points, 0.68),
             width: 120,
             depth: width + 56,
           ),
@@ -470,6 +489,7 @@ class ArenaMap {
         bridges: [
           Bridge(
             center: _pointAlong(points, 0.63),
+            angle: _bridgeAngleAt(points, 0.63),
             width: 104,
             depth: tributaryWidth + 48,
           ),
@@ -503,6 +523,7 @@ class ArenaMap {
         bridges: [
           Bridge(
             center: _pointAlong(points, 0.63),
+            angle: _bridgeAngleAt(points, 0.63),
             width: 104,
             depth: tributaryWidth + 48,
           ),
@@ -514,6 +535,26 @@ class ArenaMap {
       mainRiver,
       tributary,
     ];
+  }
+
+  static double _bridgeAngleAt(List<Offset> points, double t) {
+    final lengths = <double>[];
+    var total = 0.0;
+    for (var i = 0; i < points.length - 1; i++) {
+      final length = (points[i + 1] - points[i]).distance;
+      lengths.add(length);
+      total += length;
+    }
+    var target = total * t.clamp(0.0, 1.0);
+    for (var i = 0; i < lengths.length; i++) {
+      if (target <= lengths[i] || i == lengths.length - 1) {
+        final tangent = points[i + 1] - points[i];
+        // The deck's long axis follows the river; local X crosses it.
+        return math.atan2(tangent.dy, tangent.dx) - math.pi / 2;
+      }
+      target -= lengths[i];
+    }
+    return 0;
   }
 
   static Offset _pointAlong(List<Offset> points, double t) {

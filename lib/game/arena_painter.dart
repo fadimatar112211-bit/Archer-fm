@@ -1745,7 +1745,14 @@ class ArenaPainter extends CustomPainter {
   }
 
   void _paintBridge(Canvas canvas, Bridge bridge) {
-    final rect = bridge.rect;
+    final rect = Rect.fromCenter(
+      center: Offset.zero,
+      width: bridge.width,
+      height: bridge.depth,
+    );
+    canvas.save();
+    canvas.translate(bridge.center.dx, bridge.center.dy);
+    canvas.rotate(bridge.angle);
     final deck = RRect.fromRectAndRadius(
       rect,
       Radius.circular((rect.height * 0.12).clamp(4.0, 10.0).toDouble()),
@@ -1793,6 +1800,7 @@ class ArenaPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(Offset(rect.left + 4, rect.top + 2),
         Offset(rect.left + 4, rect.bottom - 2), beam);
+    canvas.restore();
     canvas.drawLine(Offset(rect.right - 4, rect.top + 2),
         Offset(rect.right - 4, rect.bottom - 2), beam);
   }

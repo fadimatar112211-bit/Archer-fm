@@ -106,6 +106,15 @@ void main() {
             expect(map.isBridge(bridge.center), isTrue);
             expect(map.isWater(bridge.center), isFalse);
             expect(map.movementFactorAt(bridge.center), 1.0);
+            expect(bridge.angle.isFinite, isTrue);
+            // A point near each end of the cross-river deck must remain
+            // walkable after the deck is rotated with its local river tangent.
+            final crossDeckPoint = bridge.center +
+                Offset(math.cos(bridge.angle), math.sin(bridge.angle)) *
+                    (bridge.width / 2 - 3);
+            expect(bridge.contains(crossDeckPoint), isTrue);
+            expect(map.isBridge(crossDeckPoint), isTrue);
+            expect(map.isWater(crossDeckPoint), isFalse);
           }
         }
         // The tributary itself is water away from its bridge deck.

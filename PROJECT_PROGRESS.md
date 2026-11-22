@@ -1480,3 +1480,11 @@ Verification:
 - Added small role-specific forehead crests to the four procedural monster faces: runner leaf, tank plate rivet, stalker twin slashes and ranged arcane rune. Existing eye palettes, face silhouettes, hitboxes and combat values remain unchanged.
 - Strengthened the segment-aware river slowdown test with an explicit assertion that at least one deterministic seed actually exercises a non-bridge crossing.
 - These are stronger render/test coverage and readability changes, not a claim that the four hero models visually match the approved reference sheet. CI and image inspection remain required.
+
+## 2026-11-23 — River-aligned bridge decks and oriented walkability
+
+- Bridge decks now derive their rotation from the local river tangent at each generated crossing, including the deterministic fallback routes and tributary bridge.
+- Walkability uses exact oriented-rectangle containment instead of the old axis-aligned rectangle, so the dry deck follows the bend instead of granting a large false dry patch beside the bridge.
+- The bridge painter now rotates the deck, rails, cross-beams and planks together around the world anchor. Its axis-aligned bounds remain available only for broad-phase bounds/shadows.
+- Added seeded map assertions that points near the cross-river edge of each rotated deck remain dry and are recognized as bridge surface.
+- Hero, monster combat values, river geometry, bridge counts and movement speeds are unchanged. CI and fresh map-capture review are still required.
