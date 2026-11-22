@@ -425,7 +425,10 @@ class Hero3DModel {
           // A restrained side-light lift keeps the silhouette readable from
           // eight arena facings while preserving the source texture's colors.
           final rim = (1.0 - nz.abs()).clamp(0.0, 1.0);
-          shade = (0.82 + 0.14 * diffuse + 0.04 * rim).clamp(0.82, 1.0);
+          // Keep a soft ambient floor for face/eye readability, but give
+          // the model's cheek, hood and armour planes a little more directional
+          // separation so the chibi form does not flatten at gameplay scale.
+          shade = (0.80 + 0.16 * diffuse + 0.04 * rim).clamp(0.80, 1.0);
           final co = slot * 3 + vi;
           // Per-vertex material base colour (white for texture-driven
           // models — the texture carries the colouring instead).

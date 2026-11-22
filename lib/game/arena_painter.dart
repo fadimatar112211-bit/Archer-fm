@@ -2692,6 +2692,21 @@ class ArenaPainter extends CustomPainter {
   }) {
     final ratio = monster.hpRatio.clamp(0.0, 1.0).toDouble();
     final left = monster.position.dx - width / 2;
+    // Critical health gets a restrained pulse outside the bar frame. Keep it
+    // behind the dark border so it reads as a warning, not as extra HP fill.
+    if (ratio > 0 && ratio <= 0.2) {
+      final pulse = 0.14 + (math.sin(world.nowMs / 115).abs() * 0.12);
+      final warning = RRect.fromRectAndRadius(
+        Rect.fromLTWH(left - 3, topY - 3, width + 6, 10.5),
+        const Radius.circular(5),
+      );
+      canvas.drawRRect(
+        warning,
+        Paint()
+          ..color = const Color(0xFFFF493F).withValues(alpha: pulse)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+    }
     final outer = RRect.fromRectAndRadius(
       Rect.fromLTWH(left - 1, topY - 1, width + 2, 6.5),
       const Radius.circular(3),

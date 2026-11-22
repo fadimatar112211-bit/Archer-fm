@@ -1445,3 +1445,10 @@ Verification:
 - Castle-to-bridge stone approaches now skip resource/chest markers, tree/rock collision footprints, and castle wall clearances so decorative pavers cannot obscure interaction targets or visually overlap solid geometry.
 - These are painter-only placement guards; map generation, pickup positions, collision, bridge walkability, movement speed, and combat values are unchanged.
 - Android verification is queued on the prior branch head; validate this change in the next completed Flutter run and review fresh map captures before visual approval.
+
+## 2026-11-23 — Critical-health feedback and hero form-light refinement
+
+- Monster HP bars now show a soft pulsing red warning halo only below 20% health; the glow sits behind the existing frame and does not change health, damage, or combat timing.
+- Added a dedicated 800×450 critical-health monster capture to the CI visual-review set so the warning can be judged at gameplay scale.
+- Refined GLB hero lighting to retain an 80% ambient floor while restoring a little more directional contrast across faces, hoods and armour planes; texture colours and geometry are unchanged.
+- Combined with the preceding map-decoration clearance fix in this batch. Android/Flutter verification and fresh visual inspection are still required before approval.

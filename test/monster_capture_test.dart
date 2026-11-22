@@ -163,6 +163,12 @@ void main() {
       );
       await _save('22_monster_combat_feedback', capture('ranger_new_idle_e_000'));
 
+      // Critical-health frame verifies the low-HP warning at actual gameplay
+      // scale without changing the monster's stats or combat calculations.
+      final criticalTarget = world.enemies.last;
+      criticalTarget.hp = criticalTarget.maxHp * 0.12;
+      await _save('22b_monster_critical_health', capture('ranger_new_idle_e_000'));
+
       // One focused action frame per archetype makes weapon/telegraph
       // readability reviewable without the other monsters overlapping it.
       for (final type in armyTypes) {
