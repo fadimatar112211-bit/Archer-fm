@@ -1265,3 +1265,11 @@ Verification:
 - Extended the config regression test to validate Ranger-new's eight state mappings and event frame ranges too.
 - Commits: `945d3296e772310e46dcbea3e4e7bb72fa403cbe` and `49337955eead15176249f750bf6a3278a209d82f`.
 - The earlier matrix run started before this correction; use the new run on the latest commit for verification.
+
+
+## 2026-11-23 — First successful playable Ranger sprite artifact and visual review
+
+- Retrieved actual GitHub Actions artifact `archer-fm-ranger-new-2d5-sprite-pack` from matrix run `45071818451` (Ranger job `137360235044`, source commit `4b3d7ee52d8f730337b694b12205f49ff054efae`). Artifact size: 40,671,262 bytes.
+- Ranger job completed: source rig/action validation, rendering all eight directions and eight states, frame/motion validation, atlas packing/manifest validation, and upload.
+- Inspected actual extracted PNG frames in a direction contact sheet and a multi-state motion contact sheet. The artifact is populated and not a blank/placeholder atlas. However, the sampled front-facing face is angled down/partly obscured and several directions are mainly profile/back; reference likeness and in-game readability are not yet approved. Keep the current GLB route until direct reference comparison and 16:9 in-game review pass.
+- On that same matrix run, Flame, Shadow and Storm passed their source rig/action validation and entered frame rendering; their final frame validation, atlas packing and uploads were still pending at last check. The latest matrix run on branch head `072c3d23cf113dc6c25c2850f6a30469a214bfeb` is `45071916513` and was still queued at last check. Do not treat the earlier Ranger result as completion of all four heroes or as a green current-head workflow.
