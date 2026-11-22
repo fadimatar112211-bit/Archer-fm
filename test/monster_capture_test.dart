@@ -100,7 +100,7 @@ void main() {
         world.enemies.add(enemy);
         slot++;
       }
-      world.enemies.first.attackAnimUntilMs = world.nowMs + 280;
+      world.enemies.first.attackAnimUntilMs = world.nowMs + 160;
 
       // One corpse of each team mid-collapse.
       world.corpses.add(
@@ -148,7 +148,7 @@ void main() {
       // Dedicated combat-state capture: every hostile archetype attacks,
       // while hit/burn feedback and both team corpse silhouettes are visible.
       for (final monster in world.enemies) {
-        monster.attackAnimUntilMs = world.nowMs + 320;
+        monster.attackAnimUntilMs = world.nowMs + 160;
       }
       world.enemies[1].hitFlashUntilMs = world.nowMs + 220;
       world.enemies[2].burnTicksLeft = 2;
