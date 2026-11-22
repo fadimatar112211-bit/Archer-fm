@@ -168,6 +168,32 @@ void main() {
       }
     });
 
+    test('slideMove preserves lateral movement along an obstacle', () {
+      final map = ArenaMap.generate(math.Random(73));
+      final obstacle = map.obstacles.first;
+      final radius = 5.0;
+      final from = obstacle.position +
+          Offset(-obstacle.radius - radius - 2, 0);
+      expect(map.isBlocked(from, radius), isFalse);
+      final step = Offset(12, 9);
+      final moved = map.slideMove(from, step, radius);
+      expect(moved, isNot(from));
+      expect(map.isBlocked(moved, radius), isFalse);
+      expect(moved.dy, greaterThan(from.dy));
+      expect((moved - from).distance, lessThanOrEqualTo(step.distance));
+    });
+
+    test('slideMove never crosses the map boundary', () {
+      final map = ArenaMap.generate(math.Random(91));
+      const radius = 8.0;
+      final from = Offset(radius + 1, map.size.height / 2);
+      final moved = map.slideMove(from, const Offset(-40, 12), radius);
+      expect(moved.dx, greaterThanOrEqualTo(radius));
+      expect(moved.dy, greaterThanOrEqualTo(radius));
+      expect(moved.dy, lessThanOrEqualTo(map.size.height - radius));
+      expect(map.isBlocked(moved, radius), isFalse);
+    });
+
     test('covers all four castle biomes across randomized maps', () {
       final biomeOrders = <String>{};
       for (var seed = 0; seed < 20; seed++) {

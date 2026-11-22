@@ -1376,3 +1376,12 @@ Verification:
 - Added a 20-seed regression test sampling every river segment to verify unbridged water slows movement and bridge-covered samples remain excluded.
 - This batch is committed as a single change to avoid repeatedly superseding the queued Android verification.
 - CI and visual captures are pending; no visual acceptance is claimed for hero likeness, monster art, or map polish.
+
+
+## 2026-11-23 — Monster attack readability and movement regression pass
+
+- Added a ground-plane attack telegraph for each monster role. The tank shows a full heavy warning ring, runner a short directional arc, stalker a wider spectral arc, and ranged a layered arcane warning. The indicator is driven by the existing attack animation window only; it does not alter AI, attack reach, damage, or timing.
+- Increased hero model ambient fill from 0.78 to 0.80 while retaining 20% directional shading, as a small readability adjustment for faces and armor under the arena camera. Visual acceptance remains pending capture review.
+- Added map movement regression tests for sliding alongside an obstacle and clamping movement at map boundaries.
+- This batch is grouped into one commit to avoid repeatedly restarting queued Android CI.
+- Verification is pending; no claim is made that the hero likeness or final art has passed visual review.

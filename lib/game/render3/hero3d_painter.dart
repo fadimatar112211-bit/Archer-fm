@@ -421,7 +421,7 @@ class Hero3DModel {
           // Slightly stronger ambient fill keeps reference faces, eyes and
           // armor readable under the elevated arena camera without flattening
           // the remaining directional light.
-          shade = 0.78 + 0.22 * shade.clamp(0.0, 1.0);
+          shade = 0.80 + 0.20 * shade.clamp(0.0, 1.0);
           final co = slot * 3 + vi;
           // Per-vertex material base colour (white for texture-driven
           // models — the texture carries the colouring instead).

@@ -1882,6 +1882,12 @@ class ArenaPainter extends CustomPainter {
     );
     canvas.scale(face, 1);
 
+    // Attack telegraph stays on the ground plane so nearby players can read
+    // the threat without confusing it with the weapon trail.
+    if (attackT > 0.04 && attackT < 0.96) {
+      _paintMonsterAttackTelegraph(canvas, monster.type, size, accent, attackT);
+    }
+
     // Team ring under the feet.
     canvas.drawOval(
       Rect.fromCenter(
@@ -1996,6 +2002,50 @@ class ArenaPainter extends CustomPainter {
       topY: monster.position.dy - size * 1.42,
       width: size * 1.25,
     );
+  }
+
+  void _paintMonsterAttackTelegraph(
+    Canvas canvas,
+    MonsterType type,
+    double size,
+    Color accent,
+    double attackT,
+  ) {
+    final windup = math.sin(attackT * math.pi).clamp(0.0, 1.0);
+    final expansion = switch (type) {
+      MonsterType.tank => 1.0 + windup * 0.42,
+      MonsterType.runner => 0.82 + windup * 0.22,
+      MonsterType.stalker => 0.92 + windup * 0.34,
+      MonsterType.ranged => 1.08 + windup * 0.18,
+    };
+    final opacity = (0.12 + windup * 0.24).clamp(0.0, 0.36);
+    final rect = Rect.fromCenter(
+      center: Offset(0, size * 0.035),
+      width: size * expansion,
+      height: size * (0.22 + windup * 0.035),
+    );
+    final paint = Paint()
+      ..color = Color.lerp(accent, Colors.white, 0.28)!
+          .withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size * (type == MonsterType.tank ? 0.045 : 0.028)
+      ..strokeCap = StrokeCap.round;
+    if (type == MonsterType.tank) {
+      canvas.drawOval(rect, paint);
+    } else {
+      final sweep = type == MonsterType.stalker ? math.pi * 1.35 : math.pi * 0.92;
+      final start = type == MonsterType.runner ? -0.35 : -math.pi * 0.72;
+      canvas.drawArc(rect, start, sweep, false, paint);
+      if (type == MonsterType.ranged) {
+        canvas.drawArc(
+          rect.deflate(size * 0.09),
+          math.pi * 0.12,
+          math.pi * 0.76,
+          false,
+          paint..strokeWidth = size * 0.018,
+        );
+      }
+    }
   }
 
   void _paintMonsterAttackTrail(
