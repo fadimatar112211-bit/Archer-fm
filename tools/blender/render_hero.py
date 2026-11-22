@@ -257,7 +257,13 @@ def main():
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
-    require(bool(hero_id), "The config must identify the hero")
+    supported_heroes = {"ranger", "flame", "shadow", "storm"}
+    require(hero_id in supported_heroes,
+            f"Unsupported hero_id {hero_id!r}; expected one of {sorted(supported_heroes)}")
+    expected_output = f"assets/heroes/{hero_id}/renders"
+    require(config.get("output_directory") == expected_output,
+            f"{hero_id}: output_directory must be {expected_output!r}; "
+            "refusing to mix one hero's frames into another hero's folder")
     require(resolution >= 128 and fps > 0, "Invalid resolution or FPS")
 
     scene = bpy.context.scene
@@ -286,10 +292,19 @@ def main():
             f"Missing rigged armature object: {armature_name}")
     actions = config["actions"]
     states = tuple(config["states"])
-    require(states and all(state in actions for state in states),
-            "The config must declare at least one state and an action for each")
+    required_states = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
+    require(states == required_states,
+            f"{hero_id}: states must be exactly {required_states}, got {states}")
+    require(all(state in actions for state in states),
+            "The config must declare an action for every required state")
+    action_names = [actions[state] for state in states]
+    require(len(set(action_names)) == len(action_names),
+            f"{hero_id}: two animation states must not share the same Blender Action")
+    expected_prefix = hero_id.capitalize() + "_"
     for state in states:
-        require(state in actions, f"Missing configured action: {state}")
+        require(actions[state].startswith(expected_prefix),
+                f"{hero_id}/{state}: action {actions[state]!r} must start with "
+                f"{expected_prefix!r}; cross-hero action reuse is not allowed")
         require(actions[state] in bpy.data.actions,
                 f"Missing Blender Action: {actions[state]}")
 
