@@ -1330,3 +1330,11 @@ Verification:
 - Updated the hero gameplay capture comment to document the shared path.
 - Changes include workflow commit `d2321d444294faa15fa96eb6ac360dd8b114ba88` and the capture-test path commits immediately preceding it.
 - Pending verification: the Android workflow has not yet completed on this branch; artifact availability and test success remain unconfirmed.
+
+
+## 2026-11-23 — Improve monster attack-pose visual evidence
+
+- Adjusted the monster capture test's attack timestamps to the midpoint of the 320 ms attack animation. Previously the capture was taken at the very start of the timer, when the procedural lunge factor is zero; the image showed the attack arm pose but missed the strongest forward lunge.
+- The lineup and combat-feedback captures now sample the attack at its peak-lunge phase, making the PNG review more useful for judging attack readability.
+- Commit: `7e17fcbe16da62a0f82e97184e0812fa5af24260`.
+- This is a capture-timing improvement only; it does not claim the monster art has passed visual review.
