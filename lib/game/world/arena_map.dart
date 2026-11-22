@@ -271,9 +271,12 @@ class ArenaMap {
     final rivers = _generateRivers(rng, size, castles);
     final mines = _generateMines(rng, size, castles, rivers);
     final biomes = _generateBiomes(rng, size);
-    final pickups = _generatePickups(rng, size, castles, mines, rivers);
+    // Place solid scenery first so pickups can reserve genuinely walkable,
+    // unobstructed ground rather than landing under trees or rocks.
     final obstacles =
-        _generateObstacles(rng, size, castles, mines, rivers, pickups);
+        _generateObstacles(rng, size, castles, mines, rivers, const []);
+    final pickups =
+        _generatePickups(rng, size, castles, mines, rivers, obstacles);
 
     return ArenaMap._(
       size: size,
@@ -559,6 +562,7 @@ class ArenaMap {
     List<Offset> castles,
     List<MineSite> mines,
     List<River> rivers,
+    List<MapObstacle> obstacles,
   ) {
     final pickups = <MapPickup>[];
     void tryPlace(PickupKind kind) {
@@ -570,6 +574,12 @@ class ArenaMap {
         if (_inWater(rivers, point)) continue;
         if (castles.any((castle) => (castle - point).distance < 200)) continue;
         if (mines.any((mine) => (mine.position - point).distance < mine.radius + 60)) {
+          continue;
+        }
+        if (obstacles.any(
+          (obstacle) =>
+              (obstacle.position - point).distance < obstacle.radius + 24,
+        )) {
           continue;
         }
         if (pickups.any((other) => (other.position - point).distance < 120)) {
