@@ -20,6 +20,16 @@ void main() {
     }
   });
 
+  test('all four hero routes are explicitly defined', () {
+    for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
+      expect(
+        HeroRenderPolicy.routeFor(heroId),
+        isNotNull,
+        reason: '$heroId must never fall through to an implicit visual route',
+      );
+    }
+  });
+
   test('Ranger, Flame and Storm retain GLB visuals until sprite approval', () {
     for (final heroId in ['ranger_new', 'flame', 'storm']) {
       expect(

@@ -1430,3 +1430,11 @@ Verification:
 - Tightened the four-hero gameplay capture regression: every GLB must expose all eight expected clips, including dodge, before directional captures can pass.
 - Added biome-centre and uncontested-edge ownership checks over 32 deterministic map seeds.
 - CI and visual capture results are still required before this pass can be called verified.
+
+
+## 2026-11-23 — Per-archetype combat captures and anti-pose-hold manifest checks
+
+- Monster capture now emits a focused attack-detail PNG for each of the four archetypes, isolating its weapon and attack telegraph for visual review.
+- The all-hero manifest regression now rejects repeated frame IDs in every non-idle state, not merely clips with a frame count of two or more.
+- Hero visual routing regression now requires an explicit render route for all four playable heroes, preventing an unreviewed hero from silently falling through to a default renderer.
+- These are capture/validation improvements; they do not claim that any hero art has passed reference review.

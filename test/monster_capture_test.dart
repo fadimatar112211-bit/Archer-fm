@@ -163,6 +163,22 @@ void main() {
       );
       await _save('22_monster_combat_feedback', capture('ranger_new_idle_e_000'));
 
+      // One focused action frame per archetype makes weapon/telegraph
+      // readability reviewable without the other monsters overlapping it.
+      for (final type in armyTypes) {
+        for (final other in world.enemies) {
+          other.attackAnimUntilMs = 0;
+          other.hitFlashUntilMs = 0;
+        }
+        final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
+        actor.attackAnimUntilMs = world.nowMs + 230;
+        actor.facing = const Offset(1, 0);
+        await _save(
+          '23_monster_${type.name}_attack_detail',
+          capture('ranger_new_idle_e_000'),
+        );
+      }
+
       for (final sheet in sheets.values) {
         sheet.dispose();
       }

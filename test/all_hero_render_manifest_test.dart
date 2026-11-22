@@ -27,7 +27,15 @@ void main() {
           final name = '${state}_${direction}';
           expect(animations.containsKey(name), isTrue, reason: '$hero/$name');
           final clip = animations[name] as Map<String, dynamic>;
-          final frameCount = (clip['frames'] as List).length;
+          final frameIds = (clip['frames'] as List).cast<String>();
+          final frameCount = frameIds.length;
+          if (state != 'idle') {
+            expect(
+              frameIds.toSet().length,
+              frameCount,
+              reason: '$hero/$name must not repeat held-pose frames',
+            );
+          }
           // A one-frame looping idle is a deliberate static pose; all other
           // clips need multiple frames to animate.
           expect(
