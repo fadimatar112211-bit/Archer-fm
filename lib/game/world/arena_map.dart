@@ -264,14 +264,29 @@ class ArenaMap {
         point.dy.clamp(radius, size.height - radius).toDouble(),
       );
 
+  /// Checks the complete movement segment, not only its endpoint. This
+  /// prevents fast movement frames from tunnelling through thin obstacles.
+  bool _pathBlocked(Offset from, Offset to, double radius) {
+    final distance = (to - from).distance;
+    final sampleStep = math.max(2.0, radius * 0.5);
+    final samples = (distance / sampleStep).ceil();
+    for (var i = 1; i <= samples; i++) {
+      final point = Offset.lerp(from, to, i / samples)!;
+      if (isBlocked(point, radius)) return true;
+    }
+    return false;
+  }
+
   /// Steps [from] by [step], sliding along obstacles/walls instead of sticking.
+  /// Every candidate axis is swept so a large frame delta cannot pass through
+  /// a tree, rock, or map boundary unnoticed.
   Offset slideMove(Offset from, Offset step, double radius) {
     final target = clampToBounds(from + step, radius);
-    if (!isBlocked(target, radius)) return target;
+    if (!_pathBlocked(from, target, radius)) return target;
     final xOnly = clampToBounds(Offset(from.dx + step.dx, from.dy), radius);
-    if (!isBlocked(xOnly, radius)) return xOnly;
+    if (!_pathBlocked(from, xOnly, radius)) return xOnly;
     final yOnly = clampToBounds(Offset(from.dx, from.dy + step.dy), radius);
-    if (!isBlocked(yOnly, radius)) return yOnly;
+    if (!_pathBlocked(from, yOnly, radius)) return yOnly;
     return from;
   }
 

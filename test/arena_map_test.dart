@@ -371,6 +371,34 @@ void main() {
       expect(checked, greaterThan(0));
     });
 
+    test('large movement steps cannot tunnel through obstacles', () {
+      final map = ArenaMap.generate(math.Random(73));
+      final radius = 8.0;
+      var checked = false;
+      for (final obstacle in map.obstacles) {
+        final offset = obstacle.radius + radius + 24;
+        final from = obstacle.position - Offset(offset, 0);
+        final to = obstacle.position + Offset(offset, 0);
+        if (map.isBlocked(from, radius) ||
+            map.isBlocked(to, radius) ||
+            map.isWater(from) ||
+            map.isWater(to)) {
+          continue;
+        }
+        final moved = map.slideMove(from, to - from, radius);
+        expect(map.isBlocked(moved, radius), isFalse);
+        expect(
+          (moved - obstacle.position).distance,
+          greaterThanOrEqualTo(obstacle.radius + radius),
+          reason: 'fast movement must not cross the obstacle',
+        );
+        checked = true;
+        break;
+      }
+      expect(checked, isTrue,
+          reason: 'seed 73 should provide a clear obstacle crossing');
+    });
+
     test('movement is clamped inside the generated map', () {
       final map = ArenaMap.generate(math.Random(7));
       final clamped =

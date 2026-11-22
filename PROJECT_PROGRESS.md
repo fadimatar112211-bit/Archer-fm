@@ -1394,3 +1394,12 @@ Verification:
 - Strengthened the obstacle-slide regression test so it first proves the diagonal target is blocked and the lateral axis is clear, then verifies that movement resolves along that clear axis.
 - Confirmed the four-hero render setup intentionally uses one shared config containing separate Ranger, Flame, Shadow, and Storm profiles and separate output directories. The active-hero marker selects each profile per isolated CI job; the shared path is not a cross-hero output collision.
 - CI verification is still pending; no visual acceptance is claimed until the generated hero frames are inspected.
+
+
+## 2026-11-23 — Swept movement safety and hero form lighting
+
+- Changed arena movement collision from endpoint-only checks to swept segment sampling for the requested displacement and each axis-slide candidate. Large frame deltas can no longer tunnel through trees, rocks, or map boundaries simply because the destination point is clear.
+- Added a deterministic regression test that attempts a high-speed crossing through a generated obstacle and verifies the final position remains outside its collision radius.
+- Refined 3D hero shading with a restrained view-space side-light lift while retaining directional diffuse shading and clamping brightness. This is a renderer readability adjustment, not a claim of reference likeness.
+- Monster silhouettes and HP readability remain part of the preceding committed pass; visual acceptance of all hero captures remains pending.
+- Android CI is currently queued on the previous commit. This change set is prepared separately and will only be attached to the branch after checking the active run state.
