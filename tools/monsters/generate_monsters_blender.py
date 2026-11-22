@@ -224,6 +224,27 @@ def build(kind):
             primitive("cube",kind+"_blade_guard_"+str(side),(side*0.70,-0.12,0.77),(0.30,0.10,0.10),mats["metal"],rig,"forearm.L" if side<0 else "forearm.R",0.04)
         primitive("cone",kind+"_hood_cloak",(0,0.25,0.94),(0.52,0.48,0.84),mats["body"],rig,"spine")
         primitive("sphere",kind+"_cloak_trim",(0,-0.34,1.35),(0.56,0.09,0.12),mats["accent"],rig,"spine")
+    # Fail before export if a prototype silently loses its visual signature or skinning.
+    signature_parts = {
+        "runner": ("pointed_ear", "single_sword_blade", "goblin_nose"),
+        "tank": ("horn_", "mace_head", "heavy_chestplate"),
+        "stalker": ("skull", "rib_", "dual_blade_", "eye_socket"),
+        "ranged": ("hood_shell", "face_wrap", "violet_energy_blade_", "violet_eye_"),
+    }[kind]
+    mesh_objects = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
+    object_names = [obj.name for obj in mesh_objects]
+    for token in signature_parts:
+        if not any(token in name for name in object_names):
+            raise RuntimeError(f"{kind}: required reference feature missing: {token}")
+    if len(mesh_objects) < 20:
+        raise RuntimeError(f"{kind}: expected detailed chibi geometry, found only {len(mesh_objects)} mesh parts")
+    for obj in mesh_objects:
+        armature_modifiers = [mod for mod in obj.modifiers if mod.type == "ARMATURE" and mod.object == rig]
+        if obj.parent != rig or not armature_modifiers or not obj.vertex_groups:
+            raise RuntimeError(f"{kind}: mesh {obj.name} is not bound to the exported rig")
+    if len(rig.data.bones) < 11:
+        raise RuntimeError(f"{kind}: rig is incomplete ({len(rig.data.bones)} bones)")
+    
     # Ensure GLB exporter sees the rig and meshes, with no camera/light clutter.
     bpy.ops.object.select_all(action="DESELECT")
     rig.select_set(True)
