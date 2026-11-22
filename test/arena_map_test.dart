@@ -116,6 +116,31 @@ void main() {
       }
     });
 
+    test('bridge decks stay dry across their full walkable footprint', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (final river in map.rivers) {
+          for (final bridge in river.bridges) {
+            final samples = <Offset>[
+              bridge.center,
+              Offset(bridge.rect.left + 1, bridge.center.dy),
+              Offset(bridge.rect.right - 1, bridge.center.dy),
+              Offset(bridge.center.dx, bridge.rect.top + 1),
+              Offset(bridge.center.dx, bridge.rect.bottom - 1),
+            ];
+            for (final point in samples) {
+              expect(map.isBridge(point), isTrue,
+                  reason: 'bridge edge must remain walkable for seed $seed');
+              expect(map.isWater(point), isFalse,
+                  reason: 'bridge edge must be dry for seed $seed');
+              expect(map.movementFactorAt(point), 1.0,
+                  reason: 'bridge edge must not slow movement for seed $seed');
+            }
+          }
+        }
+      }
+    });
+
     test('covers all four castle biomes across randomized maps', () {
       final biomeOrders = <String>{};
       for (var seed = 0; seed < 20; seed++) {
@@ -164,6 +189,15 @@ void main() {
         }
       }
       expect(checkedOverlaps, greaterThan(0));
+    });
+
+    test('returns no biome outside every generated region', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(map.biomeAt(const Offset(-1000, -1000)), isNull);
+        expect(map.biomeAt(Offset(map.size.width + 1000,
+            map.size.height + 1000)), isNull);
+      }
     });
 
     test('places indestructible trees and rocks out of the water', () {

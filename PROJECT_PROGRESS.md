@@ -1357,3 +1357,12 @@ Verification:
 - **Hero readability:** increased the GLB hero ambient fill slightly from 0.73 to 0.75 while correspondingly reducing directional contribution; this is a conservative follow-up to the prior face/armor visibility adjustment.
 - Added a 20-seed overlap-ownership regression test in `test/arena_map_test.dart`.
 - **Verification pending:** these changes are committed but not yet confirmed by Android/Flutter CI or reviewed from fresh 16:9 captures. Existing in-progress CI runs were launched before this batch.
+
+
+## 2026-11-23 — Third expanded visual/readability batch
+
+- **Monster combat readability:** added a short attack-trail pass for all four monster archetypes. Tank uses a heavier sweep, runner a quick narrow cut, stalker dual trails, and ranged a restrained energy sweep. The effect is driven only by the existing attack animation clock; damage, hit timing, AI, and projectile simulation are unchanged.
+- **Bridge/map validation:** added 20-seed checks at the centre and all four inner edges of every generated bridge deck to confirm the full deck remains dry and keeps normal movement speed.
+- **Biome/map validation:** added boundary checks confirming points well outside the generated biome patches return no biome rather than inheriting a fallback region.
+- **Monster balance regression:** added explicit role-separation assertions for runner speed, tank durability, stalker reach and ranged attack range.
+- **Verification pending:** this batch is committed as one coherent commit. It has not yet passed Flutter/Android CI and has not been visually reviewed from fresh capture artifacts.

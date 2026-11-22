@@ -1932,6 +1932,12 @@ class ArenaPainter extends CustomPainter {
     );
     _paintMonsterWeapon(canvas, monster, size, accent, attackT);
 
+    // A short, type-coloured attack trail makes the active hit readable at
+    // phone scale without changing damage timing or projectile simulation.
+    if (attackT > 0.12 && attackT < 0.9) {
+      _paintMonsterAttackTrail(canvas, monster.type, size, accent, attackT);
+    }
+
     // Hit spark.
     if (flashing) {
       canvas.drawCircle(
@@ -1964,6 +1970,58 @@ class ArenaPainter extends CustomPainter {
       topY: monster.position.dy - size * 1.42,
       width: size * 1.25,
     );
+  }
+
+  void _paintMonsterAttackTrail(
+    Canvas canvas,
+    MonsterType type,
+    double size,
+    Color accent,
+    double attackT,
+  ) {
+    final pulse = math.sin(attackT * math.pi).clamp(0.0, 1.0);
+    final alpha = (pulse * 0.72).clamp(0.0, 0.72);
+    final center = Offset(size * 0.12, -size * 0.62);
+    final bounds = Rect.fromCenter(
+      center: center,
+      width: size * 1.02,
+      height: size * 0.88,
+    );
+    final (sweep, stroke, copies) = switch (type) {
+      MonsterType.tank => (1.55, size * 0.105, 1),
+      MonsterType.runner => (1.25, size * 0.055, 1),
+      MonsterType.stalker => (1.35, size * 0.06, 2),
+      MonsterType.ranged => (1.1, size * 0.07, 1),
+    };
+    for (var index = 0; index < copies; index++) {
+      final offset = index == 0 ? Offset.zero : Offset(-size * 0.12, size * 0.1);
+      final rect = bounds.shift(offset);
+      final start = -1.28 + index * 0.34;
+      canvas.drawArc(
+        rect,
+        start,
+        sweep,
+        false,
+        Paint()
+          ..color = accent.withValues(alpha: alpha * (index == 0 ? 0.48 : 0.34))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke * 1.9
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
+      canvas.drawArc(
+        rect,
+        start,
+        sweep,
+        false,
+        Paint()
+          ..color = Color.lerp(accent, Colors.white, 0.48)!
+              .withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke
+          ..strokeCap = StrokeCap.round,
+      );
+    }
   }
 
   void _monsterLimb(

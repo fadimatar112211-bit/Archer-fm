@@ -96,6 +96,22 @@ void main() {
       expect(MonsterCatalog.def(MonsterType.ranged).isRanged, isTrue);
     });
 
+    test('all four monster archetypes retain separate combat roles', () {
+      final runner = MonsterStats.of(MonsterType.runner, 1);
+      final tank = MonsterStats.of(MonsterType.tank, 1);
+      final stalker = MonsterStats.of(MonsterType.stalker, 1);
+      final ranged = MonsterStats.of(MonsterType.ranged, 1);
+
+      expect(runner.speed, greaterThan(stalker.speed));
+      expect(runner.speed, greaterThan(ranged.speed));
+      expect(tank.maxHp, greaterThan(runner.maxHp));
+      expect(tank.maxHp, greaterThan(stalker.maxHp));
+      expect(ranged.attackRange, greaterThan(stalker.attackRange));
+      expect(stalker.attackRange, greaterThan(runner.attackRange));
+      expect(MonsterCatalog.def(MonsterType.ranged).isRanged, isTrue);
+      expect(MonsterCatalog.def(MonsterType.tank).isRanged, isFalse);
+    });
+
     test('levels scale HP, damage and speed up to level 40', () {
       for (final type in MonsterType.values) {
         final first = MonsterStats.of(type, 1);
