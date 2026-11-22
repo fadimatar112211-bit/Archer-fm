@@ -118,3 +118,12 @@ The Blender renderer now performs strict preflight checks before touching output
 Added `tools/tests/test_hero_render_config.py` to check all four shared render profiles for independent action mappings, unique output directories, valid frame counts/ranges and gameplay events that fall inside their source action ranges.
 
 These are pipeline integrity checks, not proof that the resulting faces, armor, weapons or animation quality match the approved reference. The current visual acceptance status above remains unchanged until the generated frames and in-game captures are inspected.
+
+
+## 2026-11-23 — Inspect the first playable Ranger sprite artifact
+
+- Downloaded and inspected the actual artifact from four-hero matrix run `45071818451`, Ranger job `137360235044` (source commit `4b3d7ee52d8f730337b694b12205f49ff054efae`). The job completed source validation, all eight-direction/eight-state rendering, frame/motion validation, atlas packing/manifest validation, and artifact upload successfully.
+- Artifact: `archer-fm-ranger-new-2d5-sprite-pack` (about 40.7 MB; 14-day Actions artifact). It contains the Ranger-new source bundle and per-direction atlases.
+- Inspected a contact sheet of all eight idle directions and sampled first/middle/last frames for idle, walk, run, attack, skill, dodge, hit and death. The frames are populated and the eight direction folders are present; the sampled walk/run/attack/skill/dodge/death frames show pose changes rather than empty blue placeholders.
+- Visual review is **not accepted yet**: the face is angled downward/partly obscured in the sampled front-facing view, and several views are mostly profile/back. The contact sheet alone does not establish face likeness, fine detail match to the canonical roster sheet, or readable gameplay-scale presentation. Some sampled action poses also need a closer event/weapon review. Keep Ranger on its existing temporary GLB runtime route until a direct reference comparison and in-game 16:9 capture pass.
+- This is a successful pipeline/artifact result on the stated source commit, not proof that the current branch-head matrix run has completed and not a final art approval.
