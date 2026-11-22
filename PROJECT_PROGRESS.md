@@ -1245,3 +1245,14 @@ Verification:
 - The stone-paver gradient supplied three colors but omitted the three matching stop positions. Added explicit stops `[0.0, 0.52, 1.0]`, consistent with the other three-color gradients in this painter.
 - Fix commit: `b22ad2c25094e23103b5836021b164a976985cfc`.
 - The failing test run was `45071237812`; this fix is committed, but a fresh run must complete before claiming the full suite is green.
+
+
+## 2026-11-23 — Hero pipeline isolation and configuration regression tests
+
+- Continued work on all four heroes without promoting any rejected sprite atlas or inventing replacement character art.
+- Hardened `tools/blender/render_hero.py`: only the four roster IDs are accepted; each render must target its own hero-specific output folder; all eight gameplay states are required; states cannot share Blender Actions; and Action names must belong to the selected hero. This prevents cross-hero rig/action mixups and accidental overwriting of another hero's frames.
+- Added `tools/tests/test_hero_render_config.py`, checking all four profiles for complete independent actions, unique output paths, valid frame counts/action ranges, and event frames within the configured source action ranges.
+- Updated `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` to record these safeguards and explicitly distinguish pipeline integrity from visual approval.
+- Commits: `88cb8678585af69709a5f95668b337f1d4fc7b13` (renderer guards), `4b3d7ee52d8f730337b694b12205f49ff054efae` (config regression tests), `a791791c4cfa5a43508aaa8a6349cb1bbae6aa00` (visual audit).
+- **Verification pending:** no completed green workflow has yet confirmed this new test or a fresh four-hero render. The hero atlases remain unapproved until visual comparison against the canonical roster reference and 16:9 in-game captures.
+- Next: inspect the Android CI run, then run/inspect the four-hero sprite matrix; address specific face, silhouette, weapon and animation defects from actual captures before changing any runtime route.
