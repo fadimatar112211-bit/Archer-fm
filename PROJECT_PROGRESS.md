@@ -1567,3 +1567,9 @@ Verification:
 - Added exact boundary tests for weapon unlocks at levels 1, 10 and 20, including the locked levels immediately before each unlock and the level-40 cap.
 - Added validation for every special ability's Arabic name/description, positive energy cost, positive cooldown and valid unlock range.
 - Added finite-positive multiplier checks for all 12 hero weapon variants to catch zero, negative, NaN or infinite damage/rate/range tuning.
+
+## 2026-11-23 — Monster recruitment and upgrade lifecycle
+
+- Added price-boundary checks for all four monster types: one resource below price rejects, exact price succeeds, and the correct unit is recruited.
+- Added a lifecycle regression proving a type upgrade preserves existing units' current stats while newly recruited units use the upgraded level and scaled HP, damage and speed.
+- Added a max-level upgrade guard proving no essence or monster material is consumed at level 40.

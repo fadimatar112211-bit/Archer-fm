@@ -658,6 +658,60 @@ void main() {
       expect(world.upgrades.levelOf(MonsterType.tank), 2);
     });
 
+    test('purchase availability matches each monster price boundary', () {
+      for (final type in MonsterType.values) {
+        final world = makeWorld(seed: 40 + type.index);
+        final price = MonsterCatalog.def(type).price;
+        world.resources = price - 1;
+        expect(world.canBuyMonster(type), isFalse, reason: type.name);
+        world.resources = price;
+        expect(world.canBuyMonster(type), isTrue, reason: type.name);
+        expect(world.buyMonster(type), isTrue, reason: type.name);
+        expect(world.resources, 0, reason: type.name);
+        expect(world.army.last.type, type, reason: type.name);
+      }
+    });
+
+    test('monster upgrades affect future recruits without rewriting survivors', () {
+      final world = makeWorld(seed: 44);
+      final original = world.army.firstWhere(
+        (monster) => monster.type == MonsterType.tank,
+      );
+      final oldHp = original.maxHp;
+      final oldDamage = original.contactDamage;
+      world.resources = 100000;
+      world.essence = world.upgrades.upgradeCost(MonsterType.tank);
+      world.materials[ProgressionMaterial.monster] = 1;
+
+      expect(world.upgradeMonster(MonsterType.tank), isTrue);
+      expect(world.upgrades.levelOf(MonsterType.tank), 2);
+      expect(original.level, 1);
+      expect(original.maxHp, oldHp);
+      expect(original.contactDamage, oldDamage);
+
+      expect(world.buyMonster(MonsterType.tank), isTrue);
+      final recruit = world.army.last;
+      final levelTwo = MonsterStats.of(MonsterType.tank, 2);
+      expect(recruit.level, 2);
+      expect(recruit.maxHp, levelTwo.maxHp);
+      expect(recruit.contactDamage, levelTwo.damage);
+      expect(recruit.speed, levelTwo.speed);
+    });
+
+    test('max-level monster upgrade is rejected without spending resources', () {
+      final world = makeWorld(seed: 45);
+      world.upgrades.loadFromMap({'tank': monsterMaxLevel});
+      world.essence = 100000;
+      world.materials[ProgressionMaterial.monster] = 100;
+      final essenceBefore = world.essence;
+      final materialsBefore = world.materials[ProgressionMaterial.monster];
+
+      expect(world.upgradeMonster(MonsterType.tank), isFalse);
+      expect(world.upgrades.levelOf(MonsterType.tank), monsterMaxLevel);
+      expect(world.essence, essenceBefore);
+      expect(world.materials[ProgressionMaterial.monster], materialsBefore);
+    });
+
     test('army purchase cap rejects without charging resources', () {
       final world = makeWorld(seed: 33);
       world.resources = 100000;
