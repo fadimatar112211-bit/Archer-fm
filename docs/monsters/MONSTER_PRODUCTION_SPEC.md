@@ -161,7 +161,7 @@ Do not proceed to runtime replacement based on structural validation alone. Keep
 
 ## 2026-11-22 hero asset validation repair
 
-- The previous all-hero CI gate was failing for two unrelated metadata defects: Shadow's manifest references the same physical atlas/metadata pair from multiple animation entries, and Storm's manifest omitted the required `schema_version: 1` field.
-- `tools/validate_hero_assets.py` now validates each unique physical atlas/metadata pair once, avoiding false duplicate-frame errors when an animation intentionally reuses the same atlas.
+- The previous all-hero CI gate failed because it scanned unrelated checked-in manifests: Shadow's manifest reuses the same physical atlas/metadata pair across animation entries, and Storm's manifest had omitted the required `schema_version: 1` field.
+- `tools/validate_hero_assets.py` now validates only the manifest produced by the current hero build by default; repository-wide audits can explicitly pass `--all-manifests`. It also validates each unique physical atlas/metadata pair once, so intentional reuse does not create false duplicate-frame errors.
 - Storm's manifest now declares schema version 1.
-- Rebuild/revalidation run [45059816186](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45059816186) is running; do not mark the four-hero pack green until all four jobs finish successfully.
+- Rebuild/revalidation runs [45059816186](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45059816186) and [45059922294](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45059922294) are running; do not mark the four-hero pack green until all four jobs finish successfully.
