@@ -1313,3 +1313,11 @@ Verification:
 - The new capture puts all four hostile monster archetypes into attack animation and includes hit flash, burn feedback, and a second corpse from the player team (the first corpse is enemy team). This gives CI a more useful image for reviewing combat readability and both-team death silhouettes, not only idle/walk presentation.
 - Commit: `54be9fd7c8fb8fd2c6617622090ebabced8514a2`.
 - Visual review remains pending until the Flutter workflow uploads the PNG and the actual image is inspected; this is test coverage, not art approval.
+
+
+## 2026-11-23 — Make map visual captures available to CI review
+
+- Fixed `test/map_capture_test.dart` to write its generated PNGs into `build/arena-captures/`, the same directory uploaded by the Android workflow's visual-capture artifact step.
+- Previously map screenshots were written to the OpenCode-specific `/tmp/opencode/merge/captures` path, so CI could run the map capture tests but would not include their images in the downloadable review artifact. The shared build path now includes the map world, fog, minimap, mine, castle and occlusion captures alongside monster captures.
+- Commit: `21938f5cf4168e24a62f3841801b2638dba9d957`.
+- Pending: wait for Android workflow to complete, then inspect the uploaded PNGs. This path fix does not itself establish that the map visuals pass review.
