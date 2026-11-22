@@ -176,9 +176,14 @@ void main() {
           Offset(-obstacle.radius - radius - 2, 0);
       expect(map.isBlocked(from, radius), isFalse);
       final step = Offset(12, 9);
+      expect(map.isBlocked(from + step, radius), isTrue,
+          reason: 'diagonal target must intersect the obstacle');
+      expect(map.isBlocked(Offset(from.dx, from.dy + step.dy), radius), isFalse,
+          reason: 'lateral slide path must remain clear');
       final moved = map.slideMove(from, step, radius);
-      expect(moved, isNot(from));
       expect(map.isBlocked(moved, radius), isFalse);
+      expect(moved.dx, closeTo(from.dx, 1e-9),
+          reason: 'blocked diagonal should resolve to the clear axis');
       expect(moved.dy, greaterThan(from.dy));
       expect((moved - from).distance, lessThanOrEqualTo(step.distance));
     });

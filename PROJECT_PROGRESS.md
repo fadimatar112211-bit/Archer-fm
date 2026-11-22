@@ -1385,3 +1385,12 @@ Verification:
 - Added map movement regression tests for sliding alongside an obstacle and clamping movement at map boundaries.
 - This batch is grouped into one commit to avoid repeatedly restarting queued Android CI.
 - Verification is pending; no claim is made that the hero likeness or final art has passed visual review.
+
+
+## 2026-11-23 — Monster silhouette and battlefield readability pass
+
+- Added layered highlights and rivets to the tank shoulder plates, a contrasting scarf seam and waist clasp to the runner, and a faceted hood sigil to the ranged caster. These details are limited to the existing custom-painted monster silhouettes and do not change their combat roles.
+- Rebuilt monster health bars with a dark outer frame, recessed track, low-health warning tint, and a subtle top highlight. Health values and damage calculations are unchanged.
+- Strengthened the obstacle-slide regression test so it first proves the diagonal target is blocked and the lateral axis is clear, then verifies that movement resolves along that clear axis.
+- Confirmed the four-hero render setup intentionally uses one shared config containing separate Ranger, Flame, Shadow, and Storm profiles and separate output directories. The active-hero marker selects each profile per isolated CI job; the shared path is not a cross-hero output collision.
+- CI verification is still pending; no visual acceptance is claimed until the generated hero frames are inspected.

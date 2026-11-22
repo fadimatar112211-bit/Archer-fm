@@ -2196,17 +2196,32 @@ class ArenaPainter extends CustomPainter {
       RRect.fromRectAndRadius(rect, Radius.circular(size * 0.16)),
       Paint()..color = body,
     );
-    // Shoulder plates.
-    canvas.drawCircle(
-      Offset(-size * 0.36, -size * 0.76),
-      size * 0.17,
-      Paint()..color = accent,
-    );
-    canvas.drawCircle(
-      Offset(size * 0.36, -size * 0.76),
-      size * 0.17,
-      Paint()..color = accent,
-    );
+    // Layered shoulder plates with a raised light-catching rim and rivets.
+    for (final side in const [-1.0, 1.0]) {
+      final plate = Offset(side * size * 0.36, -size * 0.76);
+      canvas.drawCircle(plate, size * 0.17, Paint()..color = dark);
+      canvas.drawCircle(
+        plate.translate(0, -size * 0.012),
+        size * 0.145,
+        Paint()..color = accent,
+      );
+      canvas.drawArc(
+        Rect.fromCircle(center: plate, radius: size * 0.125),
+        math.pi * 1.12,
+        math.pi * 0.82,
+        false,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.38)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = size * 0.025
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.drawCircle(
+        plate + Offset(side * size * 0.075, size * 0.055),
+        size * 0.022,
+        Paint()..color = dark,
+      );
+    }
     // Belt.
     canvas.drawRect(
       Rect.fromLTWH(-size * 0.4, -size * 0.5, size * 0.8, size * 0.08),
@@ -2233,7 +2248,30 @@ class ArenaPainter extends CustomPainter {
       ..lineTo(-size * 0.62, -size * 0.58)
       ..lineTo(-size * 0.2, -size * 0.58)
       ..close();
-    canvas.drawPath(scarf, Paint()..color = accent);
+    canvas.drawPath(scarf, Paint()..color = dark);
+    final scarfTop = Path()
+      ..moveTo(-size * 0.20, -size * 0.72)
+      ..lineTo(-size * 0.54, -size * 0.59);
+    canvas.drawPath(
+      scarfTop,
+      Paint()
+        ..color = accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size * 0.075
+        ..strokeCap = StrokeCap.round,
+    );
+    // A small waist clasp breaks up the runner's long torso silhouette.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(0, -size * 0.43),
+          width: size * 0.13,
+          height: size * 0.10,
+        ),
+        Radius.circular(size * 0.025),
+      ),
+      Paint()..color = accent,
+    );
     _monsterHead(canvas, size, body, dark, accent, earred: true);
   }
 
@@ -2315,6 +2353,19 @@ class ArenaPainter extends CustomPainter {
       Paint()..color = dark,
     );
     _monsterHead(canvas, size, body, dark, accent, hooded: true);
+    // A faceted hood sigil makes the caster readable from the elevated camera.
+    final sigil = Path()
+      ..moveTo(0, -size * 1.28)
+      ..lineTo(size * 0.095, -size * 1.16)
+      ..lineTo(0, -size * 1.04)
+      ..lineTo(-size * 0.095, -size * 1.16)
+      ..close();
+    canvas.drawPath(sigil, Paint()..color = accent);
+    canvas.drawCircle(
+      Offset(0, -size * 1.16),
+      size * 0.026,
+      Paint()..color = Colors.white.withValues(alpha: 0.92),
+    );
     // Violet energy blades are the signature silhouette. Ranged combat still
     // launches the existing projectile; these blades are visual identity only.
     for (final side in const [-1.0, 1.0]) {
@@ -2531,26 +2582,42 @@ class ArenaPainter extends CustomPainter {
     required double topY,
     required double width,
   }) {
-    final ratio = monster.hpRatio;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(monster.position.dx - width / 2, topY, width, 4.5),
-        const Radius.circular(2),
-      ),
-      Paint()..color = const Color(0xAA000000),
+    final ratio = monster.hpRatio.clamp(0.0, 1.0);
+    final left = monster.position.dx - width / 2;
+    final outer = RRect.fromRectAndRadius(
+      Rect.fromLTWH(left - 1, topY - 1, width + 2, 6.5),
+      const Radius.circular(3),
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          monster.position.dx - width / 2,
-          topY,
-          width * ratio,
-          4.5,
-        ),
-        const Radius.circular(2),
-      ),
-      Paint()..color = color,
+      outer,
+      Paint()..color = const Color(0xE6000000),
     );
+    final track = RRect.fromRectAndRadius(
+      Rect.fromLTWH(left, topY, width, 4.5),
+      const Radius.circular(2),
+    );
+    canvas.drawRRect(track, Paint()..color = const Color(0xFF342C2B));
+    if (ratio > 0) {
+      final fillColor = Color.lerp(
+        const Color(0xFFFF654F),
+        color,
+        (ratio / 0.35).clamp(0.0, 1.0),
+      )!;
+      final fill = RRect.fromRectAndRadius(
+        Rect.fromLTWH(left, topY, width * ratio, 4.5),
+        const Radius.circular(2),
+      );
+      canvas.drawRRect(fill, Paint()..color = fillColor);
+      // A thin top glint gives the bar a beveled, game-UI finish.
+      canvas.drawLine(
+        Offset(left + 1, topY + 0.7),
+        Offset(left + width * ratio - 1, topY + 0.7),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.30)
+          ..strokeWidth = 0.65
+          ..strokeCap = StrokeCap.round,
+      );
+    }
   }
 
   void _paintCorpse(Canvas canvas, MonsterCorpse corpse) {
