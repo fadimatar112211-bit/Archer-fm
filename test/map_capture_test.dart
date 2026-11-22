@@ -222,7 +222,7 @@ EnemyState _monster({
 
 Future<void> _save(String name, ui.Image image) async {
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
-  final dir = Directory('/tmp/opencode/merge/captures');
+  final dir = Directory('build/arena-captures');
   if (!dir.existsSync()) dir.createSync(recursive: true);
   File('${dir.path}/$name').writeAsBytesSync(data!.buffer.asUint8List());
   image.dispose();
