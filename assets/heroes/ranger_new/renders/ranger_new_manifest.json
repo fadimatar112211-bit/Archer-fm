@@ -9,7 +9,7 @@
     "x": 0.5,
     "y": 0.86
   },
-  "output_directory": "assets/heroes/ranger/renders",
+  "output_directory": "assets/heroes/ranger_new/renders",
   "atlases": [
     {
       "animation": "attack_e",

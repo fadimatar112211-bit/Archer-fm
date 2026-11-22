@@ -1403,3 +1403,13 @@ Verification:
 - Refined 3D hero shading with a restrained view-space side-light lift while retaining directional diffuse shading and clamping brightness. This is a renderer readability adjustment, not a claim of reference likeness.
 - Monster silhouettes and HP readability remain part of the preceding committed pass; visual acceptance of all hero captures remains pending.
 - Android CI is currently queued on the previous commit. This change set is prepared separately and will only be attached to the branch after checking the active run state.
+
+
+## 2026-11-23 — Hero sprite quality gate
+
+- Corrected Ranger New manifest output_directory to its actual renders folder.
+- Added an opt-in strict production validator requiring exactly 8 animation states across 8 directions and at least two distinct frames per animation; CI now uses this gate for all four heroes.
+- Extended projectile-release validation to playable Ranger New.
+- Added regression coverage that a minimal structurally valid manifest is not accepted as a production pack.
+- Shadow's checked-in static pose-hold placeholders will be rejected until replaced by genuine authored motion. This is intentional; no visual approval is claimed.
+- CI is triggered by this commit; results are pending.

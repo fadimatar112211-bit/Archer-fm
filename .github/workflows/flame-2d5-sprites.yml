@@ -74,7 +74,7 @@ jobs:
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
-          python3 tools/validate_hero_assets.py "$MANIFEST"
+          python3 tools/validate_hero_assets.py "$MANIFEST" --require-motion
 
       - name: Upload generated hero source and sprite bundle
         uses: actions/upload-artifact@v4

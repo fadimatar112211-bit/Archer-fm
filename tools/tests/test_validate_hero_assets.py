@@ -60,6 +60,7 @@ class HeroAssetValidatorTests(unittest.TestCase):
                 }
             }), encoding="utf-8")
             self.assertEqual(validate(root / "manifest.json"), [])
+            self.assertTrue(validate(root / "manifest.json", require_motion=True))
 
     def test_rejects_missing_frame_reference(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -47,7 +47,7 @@ def require(condition: bool, message: str) -> None:
         raise ValidationError(message)
 
 
-def validate(manifest_path: Path) -> list[str]:
+def validate(manifest_path: Path, require_motion: bool = False) -> list[str]:
     manifest = read_json(manifest_path)
     base = manifest_path.parent
     errors: list[str] = []
@@ -153,7 +153,7 @@ def validate(manifest_path: Path) -> list[str]:
                         f"{name}: event name is required")
             for state in ("attack",):
                 if name.startswith(state + "_"):
-                    if hero_id == "ranger":
+                    if hero_id in ("ranger", "ranger_new"):
                         release_events = [e for e in events
                                           if isinstance(e, dict) and e.get("name") == "projectile_release"]
                         require(len(release_events) == 1,
@@ -161,6 +161,16 @@ def validate(manifest_path: Path) -> list[str]:
                     else:
                         require(len(events) >= 1,
                                 f"{name}: melee attack must declare at least one gameplay event")
+        if require_motion:
+            expected_states = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
+            expected_directions = ("n", "ne", "e", "se", "s", "sw", "w", "nw")
+            expected = {f"{state}_{direction}" for state in expected_states for direction in expected_directions}
+            actual = set(animations)
+            missing = sorted(expected - actual)
+            extra = sorted(actual - expected)
+            require(not missing and not extra, f"production pack must contain exactly 8 states x 8 directions; missing={missing}, extra={extra}")
+            for name, animation in animations.items():
+                require(len(set(animation.get("frames", []))) >= 2, f"{name}: production animation must contain at least two distinct frames")
         # Cross-atlas checks
         for i in range(len(frame_rects)):
             for j in range(i + 1, len(frame_rects)):
@@ -206,6 +216,7 @@ def discover_manifests(primary: Path, include_siblings: bool = False) -> list[Pa
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path, help="path to the hero manifest JSON")
+    parser.add_argument("--require-motion", action="store_true", help="require 8 states x 8 directions and distinct frames")
     parser.add_argument(
         "--all-manifests", action="store_true",
         help="also validate every sibling hero manifest (repository-wide audit)",
@@ -213,7 +224,7 @@ def main() -> int:
     args = parser.parse_args()
     failed = False
     for manifest in discover_manifests(args.manifest, args.all_manifests):
-        errors = validate(manifest)
+        errors = validate(manifest, require_motion=args.require_motion)
         if errors:
             failed = True
             for error in errors:
