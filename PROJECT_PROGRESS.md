@@ -1227,3 +1227,12 @@ Verification:
 - The test also verifies that all four biome types remain present and that the assignment changes across generated matches, while each castle remains inside its own biome.
 - Test change commit: `0229f6d3ababf8b85791ac8a96c4232964205ef8`.
 - Verification is still pending a completed CI run; this records test coverage, not a passing result.
+
+
+## 2026-11-23 — Diagnose historical sprite-pipeline CI failure
+
+- Retrieved the failed GitHub Actions job logs rather than treating the failure as an unexplained render issue.
+- Root cause in the historical run: the validator traversed sibling hero manifests even when CI passed one specific hero manifest. An older checked-in manifest then failed the schema-version check, although the current Ranger/Flame/Shadow manifests shown in the same log passed.
+- The current validator has already been corrected: sibling manifests are excluded by default, and repository-wide checks require the explicit `--all-manifests` option. Confirmed this corrected implementation is present in the commit used by the latest sprite workflow run.
+- In the latest observed matrix run, Python packer regression tests and each hero's source rig/animation validation completed successfully; all four jobs had entered rendering. Atlas packing, frame-motion validation, visual approval and final artifact upload are not yet confirmed.
+- Historical failure log: run `45059816186`. Latest observed matrix run: `45071046416`.
