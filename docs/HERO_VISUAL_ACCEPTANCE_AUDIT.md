@@ -6,7 +6,9 @@ Canonical visual reference: `assets/references/approved_all/hero_roster_concept.
 
 ## Production rule
 
-Current runtime routing is GLB-primary for Ranger, Flame and Storm; Shadow is the single approved 2.5D sprite pilot. The target remains reference-faithful chibi heroes in the arena. A GLB file or a non-empty sprite manifest is not, by itself, proof that a hero is visually accepted. Do not silently switch routes; review the actual runtime captures first.
+**Final production target:** all four heroes are reference-faithful 2D/2.5D sprite actors inside the lightweight 3D arena. GLB/Blender files are retained as source and animation inputs, not as the final in-match character renderer.
+
+**Temporary migration state:** the checked-in runtime still uses the GLB route for Ranger, Flame and Storm; Shadow is the only currently approved 2.5D sprite pilot. This temporary state is not a change to the final target. Keep rejected atlases disabled and do not switch a hero to an unapproved atlas merely because a manifest exists. A GLB file or a non-empty sprite manifest is not, by itself, proof of visual acceptance.
 
 Do not generate substitute character art or silently promote an atlas because it has a manifest. A hero may switch to the sprite route only after its front/side/back views, all eight directions, action states, foot contact, transparency, and in-game captures are reviewed against the canonical reference.
 
@@ -14,9 +16,9 @@ Do not generate substitute character art or silently promote an atlas because it
 
 | Hero | Current checked-in sprite evidence | Reference comparison | Production route |
 |---|---|---|---|
-| Ranger | `assets/heroes/ranger_new/renders/ranger_new_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Rendered atlas depicts a detailed green ranger, but this audit does not approve all views/actions against the reference | GLB primary; preserve existing Ranger work |
-| Flame | `assets/heroes/flame/renders/flame_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Front atlas is a simplified brown-haired fighter with a small flame/torch; canonical reference is a red-spiky-haired knight with gold armor and a large sword. Back/side views exist but do not resolve the identity/detail mismatch | GLB primary; sprite atlas not approved |
-| Shadow | `assets/heroes/shadow/renders/shadow_manifest.json`: 64 clips, 8 states, 8 directions; uses the user-supplied `shadow_walk_8dir_4frames_FINAL.png` | Approved hooded purple character source. Walk has four genuine frames per direction. Idle holds the first approved frame. Run currently reuses the walk cycle at a faster cadence. Attack/skill/dodge/hit/death temporarily hold the approved pose while preserving event timing; these are safe placeholders, not final action animation | Approved 2.5D pilot, action-art completion still open |
+| Ranger | `assets/heroes/ranger_new/renders/ranger_new_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Rendered atlas depicts a detailed green ranger, but this audit does not approve all views/actions against the reference | Temporary GLB route; final 2.5D sprite acceptance open |
+| Flame | `assets/heroes/flame/renders/flame_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Front atlas is a simplified brown-haired fighter with a small flame/torch; canonical reference is a red-spiky-haired knight with gold armor and a large sword. Back/side views exist but do not resolve the identity/detail mismatch | Temporary GLB route; sprite atlas rejected |
+| Shadow | `assets/heroes/shadow/renders/shadow_manifest.json`: 64 clips, 8 states, 8 directions; uses the user-supplied `shadow_walk_8dir_4frames_FINAL.png` | Approved hooded purple character source. Walk has four genuine frames per direction. Idle holds the first approved frame. Run currently reuses the walk cycle at a faster cadence. Attack/skill/dodge/hit/death temporarily hold the approved pose while preserving event timing; these are safe placeholders, not final action animation | Only currently approved 2.5D pilot; action-art completion still open |
 | Storm | `assets/heroes/storm/renders/storm_manifest.json`: 64 declared clips, 8 states, 8 directions | Inspected idle/walk atlases in S/N/W directions: they are solid blue tiles with no character pixels. A populated manifest is not valid art evidence | GLB primary; sprite atlas rejected as placeholder |
 
 ## Source assets retained
