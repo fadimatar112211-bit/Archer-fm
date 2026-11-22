@@ -16,7 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// following `game_capture_test.dart`'s plain-test pattern (fast under the
 /// qemu software rasterizer). Scripted GameWorld states drive
 /// `ArenaPainter.paint` with the real ranger GLB controller in the
-/// presentation; PNGs land in /tmp/opencode/merge/captures as gameplay proof.
+/// presentation; PNGs land in build/arena-captures as gameplay proof.
 void main() {
   test(
     'in-game 3D hero battle scenes render through ArenaPainter',
