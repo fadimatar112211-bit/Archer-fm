@@ -2582,7 +2582,7 @@ class ArenaPainter extends CustomPainter {
     required double topY,
     required double width,
   }) {
-    final ratio = monster.hpRatio.clamp(0.0, 1.0);
+    final ratio = monster.hpRatio.clamp(0.0, 1.0).toDouble();
     final left = monster.position.dx - width / 2;
     final outer = RRect.fromRectAndRadius(
       Rect.fromLTWH(left - 1, topY - 1, width + 2, 6.5),
@@ -2601,7 +2601,7 @@ class ArenaPainter extends CustomPainter {
       final fillColor = Color.lerp(
         const Color(0xFFFF654F),
         color,
-        (ratio / 0.35).clamp(0.0, 1.0),
+        (ratio / 0.35).clamp(0.0, 1.0).toDouble(),
       )!;
       final fill = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, topY, width * ratio, 4.5),
