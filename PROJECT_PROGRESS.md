@@ -1296,3 +1296,12 @@ Verification:
 - The Android workflow used `cancel-in-progress: true` for the branch concurrency group. The recent sequence of small, necessary commits repeatedly cancelled the full analysis/test/APK run before it could finish.
 - Changed the group to `cancel-in-progress: false` so a running verification can complete; a newer push can wait rather than terminating the active test/emulator job.
 - This is a CI reliability change, not a passing test result. Confirm the next complete Android workflow run before claiming verification.
+
+
+## 2026-11-23 — Close Ranger-new workflow coverage gap
+
+- Audited the four-hero sprite workflow against the separate playable Ranger-new profile.
+- Added `assets/heroes/ranger_new/source/render_config.json` to the workflow push-path filter, so edits to the actual playable Ranger profile now trigger sprite generation instead of being silently ignored.
+- Added a dedicated `tools.tests.test_hero_render_config` regression-test step to the Ranger-new job before rig validation/rendering. The Flame/Shadow/Storm matrix already runs the full Python test discovery; Ranger-new now receives explicit config coverage too.
+- Commit: `63cc898295822306998fabe457ea32b79aa3c642`.
+- Verification is pending on the newly triggered workflow. Existing in-progress matrix jobs were launched from older commits and do not verify this workflow correction.
