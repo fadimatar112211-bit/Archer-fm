@@ -69,12 +69,13 @@ jobs:
       - name: Run all tests
         run: timeout 20m flutter test --reporter expanded
 
-      - name: Upload 3D hero visual captures
+      - name: Upload visual captures even when tests fail
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: archer-fm-3d-hero-visual-captures
+          name: archer-fm-visual-review-captures
           path: build/arena-captures/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Build Release APK
