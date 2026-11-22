@@ -116,24 +116,32 @@ void main() {
       }
     });
 
-    test('covers all four required biomes', () {
-      final map = ArenaMap.generate(math.Random(7));
-      expect(map.biomes, hasLength(mapBiomeKinds));
-      expect(
-        map.biomes.map((patch) => patch.kind).toSet(),
-        TerrainKind.values.toSet(),
-      );
-      for (final patch in map.biomes) {
-        expect(patch.radius, greaterThan(150));
+    test('covers all four castle biomes across randomized maps', () {
+      final biomeOrders = <String>{};
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(map.biomes, hasLength(mapBiomeKinds),
+            reason: 'biome count for seed $seed');
+        expect(
+          map.biomes.map((patch) => patch.kind).toSet(),
+          TerrainKind.values.toSet(),
+          reason: 'all biome types for seed $seed',
+        );
+        for (final patch in map.biomes) {
+          expect(patch.radius, greaterThan(150));
+        }
+        // Each castle quadrant must remain assigned to a different biome.
+        final castleBiomes = map.castleAnchors
+            .map((castle) => map.biomeAt(castle)?.kind)
+            .toList();
+        expect(castleBiomes, everyElement(isNotNull),
+            reason: 'castle biome coverage for seed $seed');
+        expect(castleBiomes.toSet(), TerrainKind.values.toSet(),
+            reason: 'distinct castle biomes for seed $seed');
+        biomeOrders.add(castleBiomes.map((kind) => kind!.name).join(','));
       }
-      // Each of the four player/castle quadrants belongs to one of the
-      // four distinct biome regions, rather than all biomes clustering
-      // randomly in one corner of the map.
-      final castleBiomes = map.castleAnchors
-          .map((castle) => map.biomeAt(castle)?.kind)
-          .toList();
-      expect(castleBiomes, everyElement(isNotNull));
-      expect(castleBiomes.toSet(), TerrainKind.values.toSet());
+      // The biome-to-castle assignment is shuffled between matches, not fixed.
+      expect(biomeOrders.length, greaterThan(1));
     });
 
     test('places indestructible trees and rocks out of the water', () {
