@@ -423,8 +423,14 @@ class ArenaPainter extends CustomPainter {
           if (map.isWater(bank) || map.isBridge(bank) ||
               map.obstacleBlocking(bank, 18) != null ||
               map.mines.any((mine) => (mine.position - bank).distance < mine.radius + 18) ||
+              map.pickups.any((pickup) => (pickup.position - bank).distance < 30) ||
               map.castleAnchors.any((castle) => (castle - bank).distance < castleWallRadius + 24)) continue;
-          final biome = map.biomeAt(bank)?.kind ?? TerrainKind.forest;
+          // Riverbank dressing must respect the generated biome ownership.
+          // Outside all biome patches, leave the ground undecorated rather
+          // than silently painting forest reeds across an unassigned seam.
+          final biomeKind = map.biomeAt(bank)?.kind;
+          if (biomeKind == null) continue;
+          final biome = biomeKind;
           canvas.save();
           canvas.translate(bank.dx, bank.dy);
           canvas.rotate(math.atan2(direction.dy, direction.dx));
@@ -503,6 +509,12 @@ class ArenaPainter extends CustomPainter {
             perpendicular * math.sin(i * 1.73 + castleIndex) * 13;
         if (map.isWater(center) && !map.isBridge(center)) continue;
         if (map.mines.any((mine) => (mine.position - center).distance < mine.radius + 24)) continue;
+        // Keep decorative paving from hiding resource/chest interaction
+        // markers or clipping through tree and rock silhouettes.
+        if (map.pickups.any((pickup) => (pickup.position - center).distance < 28)) continue;
+        if (map.obstacleBlocking(center, 10) != null) continue;
+        if (map.castleAnchors.any((anchor) =>
+            (anchor - center).distance < castleWallRadius + 18)) continue;
         final width = 15.0 + (i % 3) * 2;
         final height = 9.0 + (i % 2) * 2;
         canvas.save();

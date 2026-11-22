@@ -1438,3 +1438,10 @@ Verification:
 - The all-hero manifest regression now rejects repeated frame IDs in every non-idle state, not merely clips with a frame count of two or more.
 - Hero visual routing regression now requires an explicit render route for all four playable heroes, preventing an unreviewed hero from silently falling through to a default renderer.
 - These are capture/validation improvements; they do not claim that any hero art has passed reference review.
+
+## 2026-11-23 — Protect map interactables and biome boundaries from decoration
+
+- Riverbank dressing now skips generated resource/chest pickup clearances and leaves points outside all assigned biome patches undecorated instead of defaulting them to forest reeds.
+- Castle-to-bridge stone approaches now skip resource/chest markers, tree/rock collision footprints, and castle wall clearances so decorative pavers cannot obscure interaction targets or visually overlap solid geometry.
+- These are painter-only placement guards; map generation, pickup positions, collision, bridge walkability, movement speed, and combat values are unchanged.
+- Android verification is queued on the prior branch head; validate this change in the next completed Flutter run and review fresh map captures before visual approval.
