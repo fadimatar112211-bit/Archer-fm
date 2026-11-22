@@ -1236,3 +1236,12 @@ Verification:
 - The current validator has already been corrected: sibling manifests are excluded by default, and repository-wide checks require the explicit `--all-manifests` option. Confirmed this corrected implementation is present in the commit used by the latest sprite workflow run.
 - In the latest observed matrix run, Python packer regression tests and each hero's source rig/animation validation completed successfully; all four jobs had entered rendering. Atlas packing, frame-motion validation, visual approval and final artifact upload are not yet confirmed.
 - Historical failure log: run `45059816186`. Latest observed matrix run: `45071046416`.
+
+
+## 2026-11-23 — Fix verified CI rendering failure
+
+- Inspected the failed `build-release-apk` test logs rather than treating the failure as an unexplained pipeline issue.
+- The suite reported `Invalid argument(s): "colors" must have length 2 if "colorStops" is omitted` in `ArenaPainter._paintStoneApproaches` at `lib/game/arena_painter.dart:434`.
+- The stone-paver gradient supplied three colors but omitted the three matching stop positions. Added explicit stops `[0.0, 0.52, 1.0]`, consistent with the other three-color gradients in this painter.
+- Fix commit: `b22ad2c25094e23103b5836021b164a976985cfc`.
+- The failing test run was `45071237812`; this fix is committed, but a fresh run must complete before claiming the full suite is green.
