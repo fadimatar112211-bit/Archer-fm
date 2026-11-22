@@ -163,11 +163,22 @@ void main() {
       );
       await _save('22_monster_combat_feedback', capture('ranger_new_idle_e_000'));
 
-      // Critical-health frame verifies the low-HP warning at actual gameplay
-      // scale without changing the monster's stats or combat calculations.
-      final criticalTarget = world.enemies.last;
-      criticalTarget.hp = criticalTarget.maxHp * 0.12;
-      await _save('22b_monster_critical_health', capture('ranger_new_idle_e_000'));
+      // Review impact-ring and critical-health feedback separately for all
+      // four archetypes at the same gameplay zoom. Reset the other bars so
+      // each capture isolates the selected monster's readability.
+      for (final type in armyTypes) {
+        for (final monster in world.enemies) {
+          monster.hp = monster.maxHp;
+          monster.hitFlashUntilMs = 0;
+        }
+        final target = world.enemies.firstWhere((enemy) => enemy.type == type);
+        target.hp = target.maxHp * 0.12;
+        target.hitFlashUntilMs = world.nowMs + 220;
+        await _save(
+          '22b_monster_${type.name}_hit_critical',
+          capture('ranger_new_idle_e_000'),
+        );
+      }
 
       // One focused action frame per archetype makes weapon/telegraph
       // readability reviewable without the other monsters overlapping it.

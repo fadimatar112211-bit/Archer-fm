@@ -1459,3 +1459,9 @@ Verification:
 - Monster hit feedback now adds a short ground-plane impact ring and three directional sparks driven by the existing hit-flash timer. It does not alter hit windows, damage, knockback, HP, or animation state.
 - Existing monster capture coverage already includes hit-flash frames; the capture suite can now review this effect alongside all four attack silhouettes and the low-health warning.
 - No hero source/rig/animation files were altered in this batch because the all-hero render matrix remains in progress on its older source revision; do not claim new hero sprites are accepted until that run produces artifacts and visual review is complete.
+
+## 2026-11-23 — Per-archetype hit/critical-health visual captures
+
+- Expanded the monster capture suite to isolate each of Runner, Tank, Stalker and Ranged with both the new hit-impact feedback and critical-health warning active at the normal 800×450 gameplay scale.
+- Each focused frame resets the other enemies' HP and hit-flash timers so visual review can attribute the feedback to the intended monster instead of a crowded mixed-state scene.
+- Captures are review evidence only; they do not change combat values or authorize replacing the procedural fallback with prototype GLBs.
