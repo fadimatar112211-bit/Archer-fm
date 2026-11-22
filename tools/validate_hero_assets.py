@@ -185,29 +185,34 @@ def validate(manifest_path: Path) -> list[str]:
     return errors
 
 
-def discover_manifests(primary: Path) -> list[Path]:
-    """Every hero manifest in the repo, starting with the requested one.
+def discover_manifests(primary: Path, include_siblings: bool = False) -> list[Path]:
+    """Return the requested manifest, optionally including every sibling hero.
 
-    The CI step passes the ranger manifest because the workflow is fixed, but
-    the pipeline renders one hero per run. Validating all siblings means a hero
-    can never reach an artifact unvalidated just because it is not the Ranger.
+    CI renders heroes independently and passes the manifest produced by that
+    render. Unrelated checked-in manifests may be legacy/manual review data
+    (including older schema versions), so they must not make the current
+    hero's build fail. Whole-repository audits can opt in with --all-manifests.
     """
     paths = [primary]
-    if len(primary.parents) >= 5:
+    if include_siblings and len(primary.parents) >= 5:
         heroes = primary.parents[4] / "assets" / "heroes"
-        for candidate in sorted(heroes.glob("*/renders/*_manifest.json")):
-            if candidate.resolve() == primary.resolve():
-                continue
-            paths.append(candidate)
+        paths.extend(
+            candidate for candidate in sorted(heroes.glob("*/renders/*_manifest.json"))
+            if candidate.resolve() != primary.resolve()
+        )
     return paths
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("manifest", type=Path, help="path to hero manifest JSON")
+    parser.add_argument("manifest", type=Path, help="path to the hero manifest JSON")
+    parser.add_argument(
+        "--all-manifests", action="store_true",
+        help="also validate every sibling hero manifest (repository-wide audit)",
+    )
     args = parser.parse_args()
     failed = False
-    for manifest in discover_manifests(args.manifest):
+    for manifest in discover_manifests(args.manifest, args.all_manifests):
         errors = validate(manifest)
         if errors:
             failed = True
