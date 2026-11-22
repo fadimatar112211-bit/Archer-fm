@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "hero_id": "storm",
   "frame_size": {
     "width": 192,
