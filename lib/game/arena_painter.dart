@@ -2625,6 +2625,78 @@ class ArenaPainter extends CustomPainter {
           ..strokeWidth = radius * 0.10
           ..strokeCap = StrokeCap.round,
       );
+
+      // A compact forehead crest gives each archetype a second identity cue
+      // that survives the small arena scale: leaf, plated rivet, twin slash,
+      // or arcane rune. The accent follows the monster's existing palette.
+      final crestCenter = center + Offset(0, -radius * 0.48);
+      switch (type) {
+        case MonsterType.runner:
+          final leaf = Path()
+            ..moveTo(crestCenter.dx, crestCenter.dy - radius * 0.15)
+            ..quadraticBezierTo(
+              crestCenter.dx + radius * 0.30,
+              crestCenter.dy - radius * 0.05,
+              crestCenter.dx,
+              crestCenter.dy + radius * 0.18,
+            )
+            ..quadraticBezierTo(
+              crestCenter.dx - radius * 0.30,
+              crestCenter.dy - radius * 0.05,
+              crestCenter.dx,
+              crestCenter.dy - radius * 0.15,
+            )
+            ..close();
+          canvas.drawPath(leaf, Paint()..color = accent);
+          canvas.drawLine(
+            crestCenter + Offset(0, -radius * 0.10),
+            crestCenter + Offset(0, radius * 0.12),
+            Paint()..color = dark..strokeWidth = radius * 0.035,
+          );
+        case MonsterType.tank:
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(
+                center: crestCenter,
+                width: radius * 0.34,
+                height: radius * 0.24,
+              ),
+              Radius.circular(radius * 0.045),
+            ),
+            Paint()..color = accent,
+          );
+          canvas.drawCircle(
+            crestCenter,
+            radius * 0.045,
+            Paint()..color = dark,
+          );
+        case MonsterType.stalker:
+          for (var slash = 0; slash < 2; slash++) {
+            final x = crestCenter.dx + (slash - 0.5) * radius * 0.16;
+            canvas.drawLine(
+              Offset(x - radius * 0.035, crestCenter.dy + radius * 0.12),
+              Offset(x + radius * 0.035, crestCenter.dy - radius * 0.12),
+              Paint()
+                ..color = accent
+                ..strokeWidth = radius * 0.065
+                ..strokeCap = StrokeCap.round,
+            );
+          }
+        case MonsterType.ranged:
+          final rune = Path()
+            ..moveTo(crestCenter.dx, crestCenter.dy - radius * 0.18)
+            ..lineTo(crestCenter.dx + radius * 0.13, crestCenter.dy)
+            ..lineTo(crestCenter.dx, crestCenter.dy + radius * 0.18)
+            ..lineTo(crestCenter.dx - radius * 0.13, crestCenter.dy)
+            ..close();
+          canvas.drawPath(
+            rune,
+            Paint()
+              ..color = accent
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = radius * 0.055,
+          );
+      }
     }
   }
 

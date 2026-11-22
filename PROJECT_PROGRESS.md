@@ -1473,3 +1473,10 @@ Verification:
 - Added deterministic coverage across 24 generated maps for a movement segment spanning dry bank → unbridged water → dry bank.
 - This changes only the existing shallow-water movement slowdown; it does not change collision, bridge geometry, unit base speeds, or combat stats.
 - CI must complete on this commit before the change is treated as verified. Hero art remains subject to the existing all-four sprite render and visual review gate.
+
+## 2026-11-23 — Four-hero animation-state review and monster face identity
+
+- Extended the real GLB-in-arena capture regression to render all eight required clips (idle, walk, run, attack, skill, dodge, hit, death) for Ranger, Flame, Shadow and Storm, saving a per-hero/per-state 16:9 review image and requiring visible skinned triangles for every state.
+- Added small role-specific forehead crests to the four procedural monster faces: runner leaf, tank plate rivet, stalker twin slashes and ranged arcane rune. Existing eye palettes, face silhouettes, hitboxes and combat values remain unchanged.
+- Strengthened the segment-aware river slowdown test with an explicit assertion that at least one deterministic seed actually exercises a non-bridge crossing.
+- These are stronger render/test coverage and readability changes, not a claim that the four hero models visually match the approved reference sheet. CI and image inspection remain required.

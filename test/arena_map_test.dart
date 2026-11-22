@@ -272,6 +272,7 @@ void main() {
     });
 
     test('biome interiors stay assigned to their own terrain across seeds', () {
+      var checkedCrossings = 0;
       for (var seed = 0; seed < 24; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
         for (final patch in map.biomes) {
@@ -402,7 +403,10 @@ void main() {
         expect(factor, lessThan(1.0),
             reason: 'crossing water must slow the whole movement step, seed $seed');
         expect(factor, greaterThanOrEqualTo(waterSpeedFactor));
+        checkedCrossings++;
       }
+      expect(checkedCrossings, greaterThan(0),
+          reason: 'the seeded river samples must include a non-bridge crossing');
     });
 
     test('river water slows movement away from bridges', () {

@@ -254,6 +254,58 @@ void main() {
             .writeAsBytesSync(faceData!.buffer.asUint8List());
         faceImage.dispose();
 
+        // Every authored state is now exercised through the runtime GLB
+        // controller and arena painter for each of the four heroes. This
+        // catches clips that exist in metadata but fail to produce visible
+        // skinned geometry, and leaves a full review strip in CI artifacts.
+        const heroStates = [
+          'idle', 'walk', 'run', 'attack', 'skill', 'dodge', 'hit', 'death',
+        ];
+        for (final state in heroStates) {
+          hero3d.playClip(
+            state,
+            loop: state == 'idle' || state == 'walk' || state == 'run',
+            pace: 1.0,
+            nowMs: world.nowMs,
+            events: const [],
+          );
+          hero3d.advance(world.nowMs + 480, onEvent: (_) {});
+          final statePainter = ArenaPainter(
+            world: world,
+            presentation: ArenaPresentation(
+              kit: kit,
+              theme: ThemeData(brightness: Brightness.dark),
+              sheet: null,
+              frameId: null,
+              pivotX: 0.5,
+              pivotY: 0.85,
+              frameWidth: 192,
+              frameHeight: 192,
+              labels: const [],
+              timeMs: world.nowMs,
+              comboText: null,
+              hero3d: hero3d,
+            ),
+          );
+          final stateRecorder = ui.PictureRecorder();
+          statePainter.paint(Canvas(stateRecorder), const Size(800, 450));
+          expect(
+            hero3d.model.drawnTriangles,
+            greaterThan(0),
+            reason: '${entry[1]} state $state must produce visible geometry',
+          );
+          final stateImage =
+              stateRecorder.endRecording().toImageSync(800, 450);
+          final stateData = await stateImage.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          final stateDir = Directory('build/arena-captures');
+          if (!stateDir.existsSync()) stateDir.createSync(recursive: true);
+          File('${stateDir.path}/hero_${entry[1]}_state_$state.png')
+              .writeAsBytesSync(stateData!.buffer.asUint8List());
+          stateImage.dispose();
+        }
+
         // Isolated close-ups use the exact runtime Hero3DController painter,
         // but remove the arena camera/map scale from the review. Eight yaw
         // samples let reviewers identify the actual face-forward convention
