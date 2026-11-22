@@ -1201,3 +1201,12 @@ Verification:
 - This makes the new bundle-manifest regression test an actual CI gate instead of an unexecuted local test file.
 - Workflow update commit: `ce81af9cbc7e63a3f0cee1ff35c8f2499a4590fa`.
 - **Verification pending:** the updated workflow has been pushed, but no completed Actions run is visible yet. Do not claim Python tests, renders, atlas packing or Android build have passed until run results are available.
+
+
+## 2026-11-23 — Map pickup clearance and sprite pipeline cleanup
+
+- Fixed map generation order so trees/rocks are placed before resources and chests. Pickup placement now rejects positions within the obstacle collision clearance, in addition to the existing river, mine, castle and pickup-spacing checks. This prevents collectible markers from appearing underneath solid scenery.
+- Expanded the pickup map test from one fixed seed to 20 deterministic seeds. It now asserts all expected resources/chests spawn and every pickup remains dry and outside tree/rock collision radii.
+- Updated the atlas packer's `publish_bundle` docstring to describe the current isolated matrix-job artifact staging; removed obsolete wording about a workflow token limitation and manual artifact relocation.
+- Commits: `df970d155a2aee650ecfca4932fe10d85772afb0` (map generation), `cdb57fcc52435b235c9693b60c687c08cb5d1d93` (20-seed regression test), `a19d4ed02cdd977b194bbbd3c0151d714aad2cbe` (pipeline documentation).
+- **Verification pending:** these commits are pushed to `ranger-reference-work`; no completed Flutter or sprite Actions run has been confirmed in this session. The 20-seed map test and the sprite packer regression suite still need a green CI result.
