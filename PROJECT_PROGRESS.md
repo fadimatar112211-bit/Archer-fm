@@ -1338,3 +1338,12 @@ Verification:
 - The lineup and combat-feedback captures now sample the attack at its peak-lunge phase, making the PNG review more useful for judging attack readability.
 - Commit: `7e17fcbe16da62a0f82e97184e0812fa5af24260`.
 - This is a capture-timing improvement only; it does not claim the monster art has passed visual review.
+
+
+## 2026-11-23 — Parallel visual polish: monsters, heroes and biome ground
+
+- **Monsters —** Improved procedural monster face readability in `lib/game/arena_painter.dart`: living archetypes now have distinct pupils and catchlights, a readable mouth line, and the skeletal stalker gets dim ember eyes inside its dark sockets. Existing silhouettes, team rings, HP bars, attack timing, hit flash and burn behavior are unchanged.
+- **Map —** Reordered terrain composition so biome colour fields are laid down before the deterministic ground-detail pass. Grass blades, desert ripples and biome-specific marks therefore retain their contrast instead of being muted by the translucent biome tint. No map generation, collision, river, bridge, mine or movement values changed.
+- **Heroes —** Raised the ambient component of the GLB per-vertex lighting from 0.68 to 0.73 (with directional contribution reduced correspondingly from 0.32 to 0.27). This is a small fill-light adjustment intended to keep reference faces, eyes and armor readable under the elevated arena camera while preserving directional shading. All-four-hero 3D close-up and eight-direction capture coverage already exists in `test/hero3d_game_capture_test.dart` and will provide the visual review set.
+- Commits: `7ddcb78` (monster faces + biome ground layering), `bcfdcd4` (hero ambient fill).
+- Validation status: **not yet run on this batch**. Do not treat the lighting or monster-face adjustments as visually approved until the current-HEAD capture artifact is downloaded and inspected. Next: let the new Android and four-hero sprite jobs run; inspect logs and captures, then correct any actual defects found.
