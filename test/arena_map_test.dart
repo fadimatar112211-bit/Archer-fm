@@ -164,7 +164,7 @@ void main() {
     });
 
     test('bridge decks stay dry across their full walkable footprint', () {
-      for (var seed = 0; seed < 20; seed++) {
+      for (var seed = 0; seed < 40; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
         for (final river in map.rivers) {
           for (final bridge in river.bridges) {

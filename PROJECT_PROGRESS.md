@@ -1531,3 +1531,10 @@ Verification:
 - Added normalized width, height and occupied-pixel ratios to per-frame validation metrics, plus an idle-height range/mean report for comparing hero packs consistently.
 - Added a cross-hero regression for all four kits: exactly four special abilities unlock at levels 1/10/20/30; the five-hit manual combo remains a separate five-step chain; same-level base HP remains equal; movement speeds remain distinct; and every hero retains three distinct weapon choices.
 - The size gate is a validation threshold, not a claim that the hero models now match the approved reference. Fresh artifacts and visual inspection are still required.
+
+## 2026-11-23 — Automated hero-frame readability checks
+
+- Added focused Python unit tests for the 40% upright-silhouette gate: a 76px/192px hero is rejected, a 77px/192px hero passes the size check, and intentionally horizontal death poses remain exempt.
+- The test also verifies normalized occupancy metrics are populated for review.
+- Wired the new quality tests into the Ranger CI job as well as the existing all-hero unittest discovery used by Flame, Shadow and Storm.
+- Expanded the seeded oriented-bridge dry-surface regression from 20 to 40 map seeds.
