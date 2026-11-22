@@ -116,6 +116,33 @@ void main() {
       }
     });
 
+    test('river channels slow movement everywhere outside bridge decks', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (final river in map.rivers) {
+          var checkedWater = 0;
+          for (var i = 0; i < river.points.length - 1; i++) {
+            final a = river.points[i];
+            final b = river.points[i + 1];
+            for (final t in const [0.2, 0.5, 0.8]) {
+              final point = Offset(
+                a.dx + (b.dx - a.dx) * t,
+                a.dy + (b.dy - a.dy) * t,
+              );
+              if (!river.contains(point) || map.isBridge(point)) continue;
+              expect(map.isWater(point), isTrue,
+                  reason: 'unbridged river sample should be water, seed $seed');
+              expect(map.movementFactorAt(point), waterSpeedFactor,
+                  reason: 'unbridged river should slow movement, seed $seed');
+              checkedWater++;
+            }
+          }
+          expect(checkedWater, greaterThan(0),
+              reason: 'each river must expose testable water, seed $seed');
+        }
+      }
+    });
+
     test('bridge decks stay dry across their full walkable footprint', () {
       for (var seed = 0; seed < 20; seed++) {
         final map = ArenaMap.generate(math.Random(seed));

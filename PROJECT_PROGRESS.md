@@ -1366,3 +1366,13 @@ Verification:
 - **Biome/map validation:** added boundary checks confirming points well outside the generated biome patches return no biome rather than inheriting a fallback region.
 - **Monster balance regression:** added explicit role-separation assertions for runner speed, tank durability, stalker reach and ranged attack range.
 - **Verification pending:** this batch is committed as one coherent commit. It has not yet passed Flutter/Android CI and has not been visually reviewed from fresh capture artifacts.
+
+
+## 2026-11-23 — Hero, monster and river readability pass
+
+- Monster rendering: added distinct ground-level movement accents for the four existing roles (tank footfall dust, runner speed streaks, stalker spectral wisps, ranged arcane glint). Effects are presentation-only and are driven by the existing walk phase; movement speed, collision, attack timing and damage are unchanged.
+- River presentation: added restrained central-channel shading and inner-water edge glints beneath the existing animated shimmer. Bridge geometry and walkability are unchanged.
+- Hero rendering: slightly increased ambient fill from 0.75 to 0.78 while retaining directional shading, to improve face/eye/armor readability at the elevated arena camera. This is a rendering adjustment only and still requires visual capture review.
+- Added a 20-seed regression test sampling every river segment to verify unbridged water slows movement and bridge-covered samples remain excluded.
+- This batch is committed as a single change to avoid repeatedly superseding the queued Android verification.
+- CI and visual captures are pending; no visual acceptance is claimed for hero likeness, monster art, or map polish.

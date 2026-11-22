@@ -330,6 +330,24 @@ class ArenaPainter extends CustomPainter {
             const [0.0, 0.5, 1.0],
           ),
       );
+      // A darker central channel and two restrained edge glints give the
+      // river depth at the isometric gameplay zoom without obscuring bridges.
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width * 0.42
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0x22203F5D),
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = river.width * 0.76
+          ..strokeCap = StrokeCap.round
+          ..color = const Color(0x1C9AD8E8),
+      );
       // Moving highlights make the water read as water.
       final shimmer = Paint()
         ..style = PaintingStyle.stroke
@@ -1949,6 +1967,14 @@ class ArenaPainter extends CustomPainter {
 
     canvas.restore();
 
+    // Ground-level motion accents make each monster role readable at the
+    // same phone-scale silhouette without changing movement or hit logic.
+    if (walking) {
+      _paintMonsterMovementAccent(
+        canvas, monster.type, monster.position, size, face, phase, accent,
+      );
+    }
+
     // Burning indicator (hostile monsters only; Flame's DoT).
     if (monster.burnTicksLeft > 0) {
       final flicker = math.sin(now / 90 + monster.id.hashCode) * 2;
@@ -2021,6 +2047,64 @@ class ArenaPainter extends CustomPainter {
           ..strokeWidth = stroke
           ..strokeCap = StrokeCap.round,
       );
+    }
+  }
+
+  void _paintMonsterMovementAccent(
+    Canvas canvas,
+    MonsterType type,
+    Offset position,
+    double size,
+    double face,
+    double phase,
+    Color accent,
+  ) {
+    final pulse = (math.sin(phase * 2.0) + 1.0) * 0.5;
+    final alpha = 0.10 + pulse * 0.10;
+    switch (type) {
+      case MonsterType.tank:
+        // Heavy footfalls: a broad, low dust puff under the armored body.
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: position + Offset(0, size * 0.12),
+            width: size * (0.72 + pulse * 0.12),
+            height: size * 0.18,
+          ),
+          Paint()..color = const Color(0xFFB9A58B).withValues(alpha: alpha),
+        );
+      case MonsterType.runner:
+        // Fast runner leaves two short streaks behind its travel direction.
+        for (var i = 0; i < 2; i++) {
+          final trail = position +
+              Offset(-face * size * (0.28 + i * 0.18), size * (0.04 + i * 0.07));
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: trail,
+              width: size * (0.22 - i * 0.045),
+              height: size * 0.055,
+            ),
+            Paint()..color = accent.withValues(alpha: alpha * (1 - i * 0.28)),
+          );
+        }
+      case MonsterType.stalker:
+        // A faint cold wisp trails the skeletal blades.
+        for (var i = 0; i < 3; i++) {
+          final drift = math.sin(phase + i * 1.7) * size * 0.08;
+          canvas.drawCircle(
+            position + Offset(-face * size * (0.22 + i * 0.10) + drift,
+                -size * (0.16 + i * 0.10)),
+            size * (0.025 + i * 0.006),
+            Paint()..color = accent.withValues(alpha: alpha * 0.8),
+          );
+        }
+      case MonsterType.ranged:
+        // Arcane hood glint marks the slower ranged unit's movement cadence.
+        canvas.drawCircle(
+          position + Offset(0, -size * 1.12),
+          size * (0.035 + pulse * 0.018),
+          Paint()..color = Color.lerp(accent, Colors.white, 0.45)!
+              .withValues(alpha: alpha * 0.9),
+        );
     }
   }
 
