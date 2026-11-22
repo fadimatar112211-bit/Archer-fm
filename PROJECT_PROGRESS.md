@@ -1495,3 +1495,11 @@ Verification:
 - Kept both end cross-beams inside the bridge's saved/rotated canvas transform; corrected the restore ordering so the entire bridge is drawn in one consistent local coordinate space.
 - Extended the bridge geometry regression to verify that the oriented deck rejects points beyond its river-parallel end, not just that its cross-river edge remains walkable.
 - This is a follow-up correctness pass for the river-aligned bridge implementation; CI still needs to run against the latest branch head.
+
+## 2026-11-23 — Keep GLB heroes playable without sprite manifests
+
+- Removed the accidental manifest dependency from attack and ability input; combat acceptance is controlled by the world/ability systems, not by whether an optional atlas manifest loaded.
+- The live 3D branch now updates before the sprite-manifest early return. A GLB-only hero can continue idle/walk/run and play attack/skill clips without atlas metadata.
+- Added a conservative GLB-duration fallback release event for the four hero weapon styles (projectile/melee attack and each hero's skill burst). Approved manifest-backed packs still use their exact authored frame events and timing.
+- Added an end-to-end screen regression that intentionally fails sprite-manifest loading, injects the real Ranger GLB, taps attack, and requires a projectile and combo hit.
+- This closes a gameplay dead-end in the transitional GLB route; CI must pass before the fallback is considered verified.

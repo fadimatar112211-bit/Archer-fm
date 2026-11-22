@@ -563,7 +563,7 @@ class _GameScreenState extends State<GameScreen>
   // ---- Input ------------------------------------------------------------------
 
   void _tryAttack() {
-    if (_busyClip != null || manifest == null) return;
+    if (_busyClip != null) return;
     if (!world.requestAttack()) return;
     widget.onNetworkAttack?.call();
     _audio.play(SoundCue.attack);
@@ -571,7 +571,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _onAbilityTap(String abilityId) {
-    if (_busyClip != null || manifest == null) return;
+    if (_busyClip != null) return;
     final def = kit.abilityById(abilityId);
     if (def == null) return;
     final accepted = world.useAbility(abilityId);
@@ -594,11 +594,10 @@ class _GameScreenState extends State<GameScreen>
 
   void _updateSprite(int deltaMs) {
     final m = manifest;
-    if (m == null) return;
     final player = world.player;
 
-    // In-game 3D hero path: drive the real model's pose from the same state
-    // machine, with identical gameplay-event timing.
+    // In-game 3D hero path: drive the real model even when the optional sprite
+    // manifest is unavailable. The GLB owns its own clip timing in that case.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final busy = _busyClip != null && !hero3d.completed;
@@ -619,6 +618,8 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
 
+    // Sprite playback still requires a manifest; gameplay simulation does not.
+    if (m == null) return;
     final desired = _desiredState();
     final desiredDir = GameWorld.octantNames[
         GameWorld.octantIndexOf(player.facing)];
@@ -646,6 +647,31 @@ class _GameScreenState extends State<GameScreen>
     _player?.advance(deltaMs);
   }
 
+  List<MapEntry<double, String>> _fallbackHero3DEvents(
+    String state,
+    Hero3DController hero3d,
+  ) {
+    final eventName = switch (state) {
+      'attack' => kit.attackStyle == AttackStyle.melee
+          ? 'melee_impact'
+          : 'projectile_release',
+      'skill' => switch (kit.heroId) {
+          'ranger_new' => 'volley_release',
+          'flame' => 'inferno_burst',
+          'shadow' => 'shadow_burst',
+          'storm' => 'storm_burst',
+          _ => 'projectile_release',
+        },
+      _ => null,
+    };
+    if (eventName == null) return const [];
+    final duration = hero3d.model.model.clips[state]?.durationMs ?? 0;
+    if (duration <= 0) return const [];
+    // Keep the fallback release in the active part of the authored motion,
+    // not at clip end. Manifest-driven packs continue to use exact frame events.
+    return [MapEntry(duration * 0.46, eventName)];
+  }
+
   /// Picks the sprite state the simulation implies right now.
   String _desiredState() {
     final player = world.player;
@@ -664,28 +690,33 @@ class _GameScreenState extends State<GameScreen>
     String? directionLocked,
   }) {
     final m = manifest;
-    if (m == null) return;
     final dir = directionLocked ??
         GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
     final name = '${state}_$dir';
 
-    // In-game 3D hero: pose the real model instead of the sprite atlas.
+    // In-game 3D hero: pose the real model instead of the sprite atlas. When
+    // no sprite manifest exists, synthesize one weapon-release event from the
+    // GLB clip duration so attacks and abilities remain fully playable.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final loop = _stateIsLooping(state);
+      final events = m != null
+          ? Hero3DController.scheduleFor(m, state)
+          : _fallbackHero3DEvents(state, hero3d);
       hero3d.playClip(
         state,
         loop: loop,
         pace: pace,
         nowMs: world.nowMs,
-        events: Hero3DController.scheduleFor(m, state),
-        durationMs: Hero3DController.durationFor(m, state),
+        events: events,
+        durationMs: m == null ? 0 : Hero3DController.durationFor(m, state),
       );
       _clipName = name;
       if (!loop) _busyClip = name;
       return;
     }
 
+    if (m == null) return;
     final clip = m.clipFor(state, dir);
     if (clip == null) return;
     final player = _player;

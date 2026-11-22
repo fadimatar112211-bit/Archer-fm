@@ -113,6 +113,30 @@ void main() {
     expect(hero3d.clipState, 'idle');
   });
 
+  testWidgets(
+    '3D hero remains playable when the optional sprite manifest is missing',
+    (tester) async {
+      final harness = _Harness3D(missingManifest: true);
+      await harness.pump(tester);
+      final world = harness.world!;
+      final hero3d = _arenaPainter(tester)!.presentation.hero3d!;
+      expect(hero3d.clipState, 'idle');
+
+      await tester.tap(find.byKey(const ValueKey('btn_attack')));
+      final fired = await pumpUntil(
+        tester,
+        () => world.projectiles.any((p) => !p.fromEnemy),
+        timeoutMs: 3000,
+      );
+      expect(
+        fired,
+        isTrue,
+        reason: 'GLB fallback must synthesize a release event without atlas data',
+      );
+      expect(world.combo.chainLength, 1);
+    },
+  );
+
   testWidgets('3D attack releases the arrow at the manifest event and lands '
       'real damage on the dummy', (tester) async {
     final harness = _Harness3D();
@@ -209,9 +233,11 @@ Future<bool> pumpUntil(
 }
 
 class _Harness3D {
-  _Harness3D() : store = MemoryProgressStore();
+  _Harness3D({this.missingManifest = false})
+      : store = MemoryProgressStore();
 
   static const double dummyDistance = 150;
+  final bool missingManifest;
   final MemoryProgressStore store;
   GameWorld? world;
 
@@ -227,7 +253,10 @@ class _Harness3D {
         home: GameScreen(
           hero: heroById('ranger_new'),
           kit: rangerNewKit,
-          loaderFactory: (hero) => _CombatFakeLoader(hero),
+          loaderFactory: (hero) => _CombatFakeLoader(
+            hero,
+            failManifest: missingManifest,
+          ),
           store: store,
           hero3dController: hero3d,
           worldFactory: (kit) {
@@ -263,15 +292,19 @@ class _Harness3D {
 /// Reuse of the screen test's fake loader pattern: manifest from memory, one
 /// fresh 192×192 sheet per atlas (never used — the hero draws 3D).
 class _CombatFakeLoader extends HeroAssetLoader {
-  _CombatFakeLoader(this.hero);
+  _CombatFakeLoader(this.hero, {this.failManifest = false});
 
   final HeroDefinition hero;
+  final bool failManifest;
 
   @override
   String get heroId => hero.id;
 
   @override
-  Future<HeroManifest> loadManifest() async => _combatManifest();
+  Future<HeroManifest> loadManifest() async {
+    if (failManifest) throw StateError('sprite manifest intentionally absent');
+    return _combatManifest();
+  }
 
   @override
   Future<AtlasSheet> loadSheet(
