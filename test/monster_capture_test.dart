@@ -180,20 +180,25 @@ void main() {
         );
       }
 
-      // One focused action frame per archetype makes weapon/telegraph
-      // readability reviewable without the other monsters overlapping it.
+      // Review each archetype's attack warning across all eight arena
+      // directions. The body stays upright while its ground telegraph rotates
+      // into the actual attack lane; these captures catch mirrored/diagonal
+      // regressions that a single east-facing image would miss.
       for (final type in armyTypes) {
         for (final other in world.enemies) {
           other.attackAnimUntilMs = 0;
           other.hitFlashUntilMs = 0;
         }
         final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
-        actor.attackAnimUntilMs = world.nowMs + 230;
-        actor.facing = const Offset(1, 0);
-        await _save(
-          '23_monster_${type.name}_attack_detail',
-          capture('ranger_new_idle_e_000'),
-        );
+        for (var direction = 0; direction < 8; direction++) {
+          final angle = direction * math.pi / 4;
+          actor.attackAnimUntilMs = world.nowMs + 230;
+          actor.facing = Offset(math.cos(angle), math.sin(angle));
+          await _save(
+            '23b_monster_${type.name}_attack_dir_$direction',
+            capture('ranger_new_idle_e_000'),
+          );
+        }
       }
 
       for (final sheet in sheets.values) {

@@ -1978,7 +1978,14 @@ class ArenaPainter extends CustomPainter {
     // Attack telegraph stays on the ground plane so nearby players can read
     // the threat without confusing it with the weapon trail.
     if (attackT > 0.04 && attackT < 0.96) {
+      // The body remains upright, but the ground-plane warning follows the
+      // full 2D facing vector so diagonal attacks telegraph the correct lane.
+      final facingX = monster.facing.dx * face;
+      final facingY = monster.facing.dy;
+      canvas.save();
+      canvas.rotate(math.atan2(facingY, facingX));
       _paintMonsterAttackTelegraph(canvas, monster.type, size, accent, attackT);
+      canvas.restore();
     }
 
     // Team ring under the feet.

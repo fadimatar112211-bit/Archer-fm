@@ -1517,3 +1517,10 @@ Verification:
 - Added an explicit beyond-the-deck-end probe that must fall back to exposed river water, guarding against an oversized false-safe bridge area.
 - Added a separate end-to-end GLB-only special-ability test: with the optional sprite manifest intentionally unavailable, Ranger must release the multi-shot payload and enter the skill clip.
 - This complements the existing GLB-only primary-attack test; both normal attack and special payload paths now have dedicated regression coverage. CI still needs to execute these tests on the latest branch head.
+
+## 2026-11-23 — Eight-direction monster attack telegraphs
+
+- Rotated each monster's ground-plane attack warning toward its actual 2D facing vector while keeping the character body upright for the elevated/isometric camera.
+- The facing transform accounts for the existing left/right body mirror, so westward and diagonal warnings do not reverse their lane.
+- Expanded the focused attack capture suite from one east-facing frame per archetype to all eight directions for each of Runner, Tank, Stalker and Ranged (32 directional captures).
+- These are visual regression frames for the role-specific dash, slam, paired-slash and rune-lock telegraphs; combat timing, attack range, hitboxes and damage remain unchanged.
