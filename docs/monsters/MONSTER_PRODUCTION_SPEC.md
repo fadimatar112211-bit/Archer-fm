@@ -146,3 +146,22 @@ Do not proceed to runtime replacement based on structural validation alone. Keep
 - Review-only prototype workflow definition: commit `bc2cdf790df652a8e159c443f8e4b9f78beea14c`.
 - Flutter analyzer blocker discovered during the latest release workflow: an unused local `socket` paint variable in `lib/game/arena_painter.dart`. Removed in commit `bd362f2cfa09f30a6ff3a7cc7e2bf0b0acc86919`. A fresh CI result is still required to confirm the analyzer passes.
 - The prior Storm sprite render completed rendering but failed the frame validation step; atlas packing/publication was skipped. Do not treat Storm's new sprite pack as complete. The precise failing frame diagnostics still need a smaller targeted extraction from the job output.
+
+
+## 2026-11-22 prototype build result
+
+- Workflow run [44943441131](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/44943441131) completed successfully on commit `217dbc2`.
+- Blender exported four GLBs and the validator passed the required structure/clip checks:
+  - Runner: 461,356 bytes, 33 meshes, 1 skin, 6 animations.
+  - Tank: 519,700 bytes, 43 meshes, 1 skin, 5 animations.
+  - Stalker: 549,632 bytes, 39 meshes, 1 skin, 5 animations.
+  - Ranged: 547,612 bytes, 39 meshes, 1 skin, 7 animations.
+- Review artifact: [monster-reference-prototypes](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/44943441131/artifacts/14722861316) (GLBs, previews and manifest; 14-day retention).
+- This is a successful technical export, not visual acceptance. The validator explicitly does not prove visual quality, animation playback or Android performance. The four previews still require comparison with the approved reference sheet before runtime integration.
+
+## 2026-11-22 hero asset validation repair
+
+- The previous all-hero CI gate was failing for two unrelated metadata defects: Shadow's manifest references the same physical atlas/metadata pair from multiple animation entries, and Storm's manifest omitted the required `schema_version: 1` field.
+- `tools/validate_hero_assets.py` now validates each unique physical atlas/metadata pair once, avoiding false duplicate-frame errors when an animation intentionally reuses the same atlas.
+- Storm's manifest now declares schema version 1.
+- Rebuild/revalidation run [45059816186](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45059816186) is running; do not mark the four-hero pack green until all four jobs finish successfully.
