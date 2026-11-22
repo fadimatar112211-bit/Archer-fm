@@ -1313,8 +1313,9 @@ class GameWorld {
     if (player.disabledAt(nowMs)) return;
     final speed = currentMoveSpeed();
     // Shallow water slows the hero; bridges are dry.
-    final step = moveInput *
-        (speed * map.movementFactorAt(player.position) * deltaMs / 1000);
+    final dryStep = moveInput * (speed * deltaMs / 1000);
+    final waterFactor = map.movementFactorAlong(player.position, dryStep);
+    final step = dryStep * waterFactor;
     player.position = map.slideMove(player.position, step, 24);
     if (moveInput.distance > 0.01) {
       player.facing = _normalize(moveInput);
@@ -1643,12 +1644,10 @@ class GameWorld {
     }
 
     final before = monster.position;
-    final step = dir *
-        (monster.speed *
-            speedMult *
-            map.movementFactorAt(monster.position) *
-            deltaMs /
-            1000);
+    final dryStep = dir *
+        (monster.speed * speedMult * deltaMs / 1000);
+    final waterFactor = map.movementFactorAlong(monster.position, dryStep);
+    final step = dryStep * waterFactor;
     monster.position =
         map.slideMove(monster.position, step, monster.radius * 0.9);
     final moved = (monster.position - before).distance;

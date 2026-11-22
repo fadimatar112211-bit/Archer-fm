@@ -383,6 +383,28 @@ void main() {
       expect(map.movementFactorAt(map.castleAnchors.first), 1.0);
     });
 
+    test('movement factor samples the full path across water and bridges', () {
+      for (var seed = 0; seed < 24; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        final river = map.rivers.first;
+        final a = river.points[1];
+        final b = river.points[2];
+        final midpoint = Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
+        // Probe perpendicular to the channel so the segment includes both
+        // dry banks and unbridged water, rather than checking only its start.
+        final tangent = b - a;
+        final length = tangent.distance;
+        final normal = Offset(-tangent.dy / length, tangent.dx / length);
+        final from = midpoint - normal * (river.halfWidth + 36);
+        final displacement = normal * (river.halfWidth * 2 + 72);
+        if (map.isBridge(midpoint)) continue;
+        final factor = map.movementFactorAlong(from, displacement);
+        expect(factor, lessThan(1.0),
+            reason: 'crossing water must slow the whole movement step, seed $seed');
+        expect(factor, greaterThanOrEqualTo(waterSpeedFactor));
+      }
+    });
+
     test('river water slows movement away from bridges', () {
       final map = ArenaMap.generate(math.Random(7));
       final river = map.rivers.first;

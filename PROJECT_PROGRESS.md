@@ -1465,3 +1465,11 @@ Verification:
 - Expanded the monster capture suite to isolate each of Runner, Tank, Stalker and Ranged with both the new hit-impact feedback and critical-health warning active at the normal 800×450 gameplay scale.
 - Each focused frame resets the other enemies' HP and hit-flash timers so visual review can attribute the feedback to the intended monster instead of a crowded mixed-state scene.
 - Captures are review evidence only; they do not change combat values or authorize replacing the procedural fallback with prototype GLBs.
+
+## 2026-11-23 — Segment-aware river movement for heroes and monsters
+
+- Added average movement-factor sampling along the proposed displacement, not just at the unit's starting point. Large frame steps now account for narrow water crossings instead of briefly traversing the river at full land speed.
+- Applied the same segment-aware factor to the player and moving army/enemy units; bridge samples still resolve as dry land at normal speed.
+- Added deterministic coverage across 24 generated maps for a movement segment spanning dry bank → unbridged water → dry bank.
+- This changes only the existing shallow-water movement slowdown; it does not change collision, bridge geometry, unit base speeds, or combat stats.
+- CI must complete on this commit before the change is treated as verified. Hero art remains subject to the existing all-four sprite render and visual review gate.

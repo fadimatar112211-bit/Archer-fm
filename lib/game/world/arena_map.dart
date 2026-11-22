@@ -218,6 +218,22 @@ class ArenaMap {
   double movementFactorAt(Offset point) =>
       isWater(point) ? waterSpeedFactor : 1.0;
 
+  /// Average movement factor over a proposed movement segment.
+  ///
+  /// Sampling the whole segment prevents a large frame delta from skipping a
+  /// narrow river because the hero/enemy happened to start on dry land. Bridge
+  /// samples remain dry through [movementFactorAt].
+  double movementFactorAlong(Offset from, Offset displacement) {
+    final distance = displacement.distance;
+    final samples = math.max(1, (distance / 16).ceil());
+    var total = 0.0;
+    for (var i = 0; i <= samples; i++) {
+      final point = from + displacement * (i / samples);
+      total += movementFactorAt(point);
+    }
+    return total / (samples + 1);
+  }
+
   /// Returns the nearest biome among patches covering [point].
   ///
   /// Biome circles intentionally overlap to avoid bare seams between the
