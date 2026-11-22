@@ -563,7 +563,7 @@ class _GameScreenState extends State<GameScreen>
   // ---- Input ------------------------------------------------------------------
 
   void _tryAttack() {
-    if (_busyClip != null) return;
+    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
     if (!world.requestAttack()) return;
     widget.onNetworkAttack?.call();
     _audio.play(SoundCue.attack);
@@ -571,7 +571,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _onAbilityTap(String abilityId) {
-    if (_busyClip != null) return;
+    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
     final def = kit.abilityById(abilityId);
     if (def == null) return;
     final accepted = world.useAbility(abilityId);
