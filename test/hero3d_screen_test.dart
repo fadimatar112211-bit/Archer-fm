@@ -137,6 +137,29 @@ void main() {
     },
   );
 
+  testWidgets(
+    '3D hero can release a special ability without sprite manifest data',
+    (tester) async {
+      final harness = _Harness3D(missingManifest: true);
+      await harness.pump(tester);
+      final world = harness.world!;
+      final hero3d = _arenaPainter(tester)!.presentation.hero3d!;
+
+      await tester.tap(find.byKey(const ValueKey('ability_multi_shot')));
+      final volley = await pumpUntil(
+        tester,
+        () => world.projectiles.where((projectile) => !projectile.fromEnemy).length >= 2,
+        timeoutMs: 3000,
+      );
+      expect(
+        volley,
+        isTrue,
+        reason: 'GLB-only skill must release its multi-shot payload',
+      );
+      expect(hero3d.clipState, 'skill');
+    },
+  );
+
   testWidgets('3D attack releases the arrow at the manifest event and lands '
       'real damage on the dummy', (tester) async {
     final harness = _Harness3D();

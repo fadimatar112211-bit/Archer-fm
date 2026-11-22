@@ -168,21 +168,38 @@ void main() {
         final map = ArenaMap.generate(math.Random(seed));
         for (final river in map.rivers) {
           for (final bridge in river.bridges) {
+            // Probe the actual oriented deck, not the corners of its
+            // axis-aligned bounding box (which can lie outside a rotated deck).
+            final across = Offset(
+              math.cos(bridge.angle),
+              math.sin(bridge.angle),
+            );
+            final along = Offset(-math.sin(bridge.angle), math.cos(bridge.angle));
             final samples = <Offset>[
               bridge.center,
-              Offset(bridge.rect.left + 1, bridge.center.dy),
-              Offset(bridge.rect.right - 1, bridge.center.dy),
-              Offset(bridge.center.dx, bridge.rect.top + 1),
-              Offset(bridge.center.dx, bridge.rect.bottom - 1),
+              bridge.center + across * (bridge.width / 2 - 1),
+              bridge.center - across * (bridge.width / 2 - 1),
+              bridge.center + along * (bridge.depth / 2 - 1),
+              bridge.center - along * (bridge.depth / 2 - 1),
+              bridge.center + across * (bridge.width * 0.30) +
+                  along * (bridge.depth * 0.30),
             ];
             for (final point in samples) {
+              expect(bridge.contains(point), isTrue,
+                  reason: 'sample must lie on oriented deck for seed $seed');
               expect(map.isBridge(point), isTrue,
-                  reason: 'bridge edge must remain walkable for seed $seed');
+                  reason: 'bridge surface must remain walkable for seed $seed');
               expect(map.isWater(point), isFalse,
-                  reason: 'bridge edge must be dry for seed $seed');
+                  reason: 'bridge surface must be dry for seed $seed');
               expect(map.movementFactorAt(point), 1.0,
-                  reason: 'bridge edge must not slow movement for seed $seed');
+                  reason: 'bridge surface must not slow movement for seed $seed');
             }
+            final beyondDeckEnd =
+                bridge.center + along * (bridge.depth / 2 + 2);
+            expect(bridge.contains(beyondDeckEnd), isFalse,
+                reason: 'deck must reject points beyond its oriented end');
+            expect(map.isWater(beyondDeckEnd), isTrue,
+                reason: 'river water must remain exposed beyond the deck');
           }
         }
       }

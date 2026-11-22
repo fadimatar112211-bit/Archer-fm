@@ -1509,3 +1509,11 @@ Verification:
 - Reworked the four monster wind-up indicators so each combat role reads differently at phone scale: tank ground-slam cracks, runner forward dash chevrons, stalker paired blade crescents, and ranged rune-lock reticle.
 - Kept the same attack animation window, hit timing, weapon trail, colors and combat values. Existing per-archetype attack-detail captures now exercise the revised telegraphs for all four roles.
 - This is a renderer-only readability pass; visual acceptance still depends on reviewing fresh capture images.
+
+## 2026-11-23 — Expanded GLB-only combat and oriented bridge regression
+
+- Corrected the seeded bridge-footprint test to sample the rotated deck's true local across/along axes. The previous test sampled the axis-aligned bounding rectangle, which is not the walkable surface for diagonal crossings.
+- Added a mixed interior sample plus both cross-river edges and both river-parallel ends; every on-deck sample must be dry, bridge-recognized and full-speed.
+- Added an explicit beyond-the-deck-end probe that must fall back to exposed river water, guarding against an oversized false-safe bridge area.
+- Added a separate end-to-end GLB-only special-ability test: with the optional sprite manifest intentionally unavailable, Ranger must release the multi-shot payload and enter the skill clip.
+- This complements the existing GLB-only primary-attack test; both normal attack and special payload paths now have dedicated regression coverage. CI still needs to execute these tests on the latest branch head.
