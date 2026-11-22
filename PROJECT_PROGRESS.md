@@ -1172,3 +1172,14 @@ Verification:
 - Updated `.github/workflows/flame-2d5-sprites.yml`: Flame, Shadow and Storm use the shared per-profile build matrix; the actual playable Ranger gets its own job using the checked-in original `ranger_new_source.blend` and its own render config. The matrix no longer mistakes legacy Ranger assets for the playable hero.
 - Commits: `333d053` render-root correction, `05b6dbb` dedicated Ranger validator, `f1d9979` playable Ranger job.
 - These workflow changes are queued for CI; do not claim the new four-playable-hero packs passed until each job completes validation and uploads its artifact.
+
+
+## 2026-11-23 — Reconcile hero visual target and audit
+
+- Re-read the active `ranger-reference-work` branch rather than relying on earlier session claims. The repository still has a temporary mixed runtime state: Ranger/Flame/Storm use the GLB route; Shadow is the only currently approved 2.5D sprite pilot. This does **not** change the final production requirement: all four heroes must become reference-faithful 2D/2.5D sprite actors in the lightweight 3D arena.
+- Corrected `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` so it explicitly distinguishes the final target from the temporary runtime migration state. It also keeps rejected Flame and Storm atlases rejected and records that Ranger is not visually accepted merely because its atlas manifest is populated.
+- Current map implementation remains in `lib/game/world/arena_map.dart` and `lib/game/arena_painter.dart`: four distinct biome regions, two river channels with dry bridges, biome-specific ground detailing, and depth-sorted actors/bridges/castles.
+- Current monster rendering remains custom-painted in `lib/game/arena_painter.dart`, with four distinct silhouettes and weapons. The Blender GLB generator is still a review-only prototype workflow; it is not the final in-match monster renderer and its models have not passed visual acceptance.
+- This documentation correction is committed as `ad2100f60567c7cb507d39e791ac54b8b1ef14de`.
+- **Verification status:** this documentation-only commit has no Flutter/Android test result attached. No claim is made that the four-hero sprite workflow or monster visual acceptance has completed.
+- Next: validate the current hero matrix and Ranger-new jobs end-to-end; inspect their generated artifacts rather than trusting manifest counts; then replace the placeholder monster paint shapes with approved reference-faithful 2.5D sprite assets only after a visual review gate exists.
