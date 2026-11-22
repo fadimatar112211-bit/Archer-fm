@@ -586,7 +586,11 @@ class ArenaPainter extends CustomPainter {
         if (map.mines.any((mine) => (mine.position - point).distance < mine.radius + 22)) continue;
         if (map.castleAnchors.any((castle) => (castle - point).distance < castleWallRadius + 42)) continue;
 
-        final biome = map.biomeAt(point)?.kind ?? TerrainKind.forest;
+        // Do not leak forest decals into unassigned transition gaps.
+        // The biome painter owns only points covered by a generated patch.
+        final biomeKind = map.biomeAt(point)?.kind;
+        if (biomeKind == null) continue;
+        final biome = biomeKind;
         final variation = ((hash >> 9) & 7).toDouble();
         final detail = Paint()
           ..style = PaintingStyle.stroke
@@ -2049,6 +2053,40 @@ class ArenaPainter extends CustomPainter {
     }
 
     canvas.restore();
+
+    // A brief ground-plane impact ring and three directional sparks make hit
+    // confirmation readable even when the body is partially occluded. The
+    // effect is purely visual and uses the existing hit-flash timer.
+    if (flashing) {
+      final remaining = (monster.hitFlashUntilMs - now).clamp(0, 220) / 220;
+      final impactAlpha = (0.18 + remaining * 0.30).clamp(0.0, 0.48);
+      final impactCenter = monster.position + Offset(0, -size * 0.42);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: impactCenter,
+          width: size * (0.72 + remaining * 0.12),
+          height: size * 0.42,
+        ),
+        Paint()
+          ..color = Color.lerp(accent, Colors.white, 0.62)!
+              .withValues(alpha: impactAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6 + remaining * 1.2,
+      );
+      for (var spark = 0; spark < 3; spark++) {
+        final direction = spark - 1;
+        final origin = impactCenter +
+            Offset(direction * size * 0.16, -size * (0.18 + (spark % 2) * 0.05));
+        canvas.drawLine(
+          origin,
+          origin + Offset(direction * size * 0.12, -size * 0.14),
+          Paint()
+            ..color = Colors.white.withValues(alpha: impactAlpha)
+            ..strokeWidth = 1.5
+            ..strokeCap = StrokeCap.round,
+        );
+      }
+    }
 
     // Ground-level motion accents make each monster role readable at the
     // same phone-scale silhouette without changing movement or hit logic.

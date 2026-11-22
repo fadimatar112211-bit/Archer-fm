@@ -1452,3 +1452,10 @@ Verification:
 - Added a dedicated 800×450 critical-health monster capture to the CI visual-review set so the warning can be judged at gameplay scale.
 - Refined GLB hero lighting to retain an 80% ambient floor while restoring a little more directional contrast across faces, hoods and armour planes; texture colours and geometry are unchanged.
 - Combined with the preceding map-decoration clearance fix in this batch. Android/Flutter verification and fresh visual inspection are still required before approval.
+
+## 2026-11-23 — Biome seam ownership and monster hit confirmation
+
+- Ground-detail rendering now leaves points outside all generated biome patches undecorated instead of assigning them the forest palette. This aligns terrain decals with the same nearest-patch ownership rule used by riverbank dressing.
+- Monster hit feedback now adds a short ground-plane impact ring and three directional sparks driven by the existing hit-flash timer. It does not alter hit windows, damage, knockback, HP, or animation state.
+- Existing monster capture coverage already includes hit-flash frames; the capture suite can now review this effect alongside all four attack silhouettes and the low-health warning.
+- No hero source/rig/animation files were altered in this batch because the all-hero render matrix remains in progress on its older source revision; do not claim new hero sprites are accepted until that run produces artifacts and visual review is complete.
