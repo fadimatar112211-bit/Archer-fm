@@ -1210,3 +1210,12 @@ Verification:
 - Updated the atlas packer's `publish_bundle` docstring to describe the current isolated matrix-job artifact staging; removed obsolete wording about a workflow token limitation and manual artifact relocation.
 - Commits: `df970d155a2aee650ecfca4932fe10d85772afb0` (map generation), `cdb57fcc52435b235c9693b60c687c08cb5d1d93` (20-seed regression test), `a19d4ed02cdd977b194bbbd3c0151d714aad2cbe` (pipeline documentation).
 - **Verification pending:** these commits are pushed to `ranger-reference-work`; no completed Flutter or sprite Actions run has been confirmed in this session. The 20-seed map test and the sprite packer regression suite still need a green CI result.
+
+
+## 2026-11-23 — Final obstacle pass respects pickup reservations
+
+- Follow-up review found a subtle ordering issue in the previous pickup-clearance fix: preliminary obstacles were used to choose pickup locations, but the final obstacle list was the same preliminary list and did not explicitly reserve the selected pickups against later scenery generation.
+- Map generation now uses two passes: preliminary scenery reserves clear pickup candidates; after pickups are selected, final scenery is regenerated with the pickup list as a hard exclusion. This ensures the final tree/rock set also avoids every resource and chest.
+- The existing 20-seed map regression test checks final obstacles against every pickup, so it now covers the final scenery pass.
+- Commit: `dd82d50100fc8b9544ea30939fbaa18eee8ce72b`.
+- CI verification remains pending; no passing Flutter/Android test result is claimed.
