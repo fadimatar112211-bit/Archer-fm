@@ -105,3 +105,16 @@ Fix:
 - Extended `hero_render_policy_test.dart` to assert that Shadow is currently the only production-approved sprite atlas.
 
 This is a safety/consistency fix only. It does not alter hero art, combat, hitboxes, camera, animation timing or GLB source files. CI verification is pending for the new commits.
+
+
+## 2026-11-23 — Four-hero render isolation guards
+
+The Blender renderer now performs strict preflight checks before touching output:
+- Only Ranger, Flame, Shadow and Storm are accepted as hero IDs.
+- Each hero must render only into its own `assets/heroes/<hero>/renders` directory.
+- The eight required states must all be present in the expected order.
+- Every state must reference a distinct Blender Action, and every Action name must use that hero's own prefix. This prevents a valid-looking render job from silently animating one hero with another hero's rig/action set.
+
+Added `tools/tests/test_hero_render_config.py` to check all four shared render profiles for independent action mappings, unique output directories, valid frame counts/ranges and gameplay events that fall inside their source action ranges.
+
+These are pipeline integrity checks, not proof that the resulting faces, armor, weapons or animation quality match the approved reference. The current visual acceptance status above remains unchanged until the generated frames and in-game captures are inspected.
