@@ -9,6 +9,7 @@ on:
       - 'tools/blender/**'
       - 'tools/pack_hero_atlases.py'
       - 'tools/validate_hero_assets.py'
+      - 'tools/tests/**'
       - 'assets/heroes/ranger/source/render_config.json'
       - '.github/workflows/flame-2d5-sprites.yml'
 
@@ -36,6 +37,9 @@ jobs:
           sudo tar -xJf /tmp/blender.tar.xz -C /opt
           echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
           /opt/blender-3.6.13-linux-x64/blender --version
+
+      - name: Run sprite pipeline Python regression tests
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py' -v
 
       - name: Select hero and build its dedicated source scene
         env:
