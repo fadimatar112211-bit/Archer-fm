@@ -163,6 +163,36 @@ void main() {
       }
     });
 
+    test('full cross-river movement over every bridge stays full speed', () {
+      for (var seed = 0; seed < 40; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        for (final river in map.rivers) {
+          for (final bridge in river.bridges) {
+            final across = Offset(
+              math.cos(bridge.angle),
+              math.sin(bridge.angle),
+            );
+            final from = bridge.center -
+                across * (bridge.width / 2 + 20);
+            final displacement = across * (bridge.width + 40);
+            expect(
+              map.movementFactorAlong(from, displacement),
+              1.0,
+              reason: 'bridge crossing must remain full speed for seed $seed',
+            );
+            for (var step = 0; step <= 16; step++) {
+              final point = from + displacement * (step / 16);
+              expect(
+                map.isWater(point),
+                isFalse,
+                reason: 'crossing path must be dry for seed $seed',
+              );
+            }
+          }
+        }
+      }
+    });
+
     test('bridge decks stay dry across their full walkable footprint', () {
       for (var seed = 0; seed < 40; seed++) {
         final map = ArenaMap.generate(math.Random(seed));

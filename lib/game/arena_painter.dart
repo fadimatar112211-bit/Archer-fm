@@ -13,6 +13,7 @@ import 'world/arena_projection.dart';
 import 'world/castle_system.dart';
 import 'world/game_world.dart';
 import 'world/mine_system.dart';
+import 'monsters/monster_telegraph_geometry.dart';
 
 /// Compatibility helper: the authoritative camera origin is the same
 /// smoothed origin consumed by the painter and all viewport input transforms.
@@ -1980,10 +1981,11 @@ class ArenaPainter extends CustomPainter {
     if (attackT > 0.04 && attackT < 0.96) {
       // The body remains upright, but the ground-plane warning follows the
       // full 2D facing vector so diagonal attacks telegraph the correct lane.
-      final facingX = monster.facing.dx * face;
-      final facingY = monster.facing.dy;
       canvas.save();
-      canvas.rotate(math.atan2(facingY, facingX));
+      canvas.rotate(monsterTelegraphAngle(
+        monster.facing,
+        mirrored: face < 0,
+      ));
       _paintMonsterAttackTelegraph(canvas, monster.type, size, accent, attackT);
       canvas.restore();
     }

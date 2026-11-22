@@ -1538,3 +1538,9 @@ Verification:
 - The test also verifies normalized occupancy metrics are populated for review.
 - Wired the new quality tests into the Ranger CI job as well as the existing all-hero unittest discovery used by Flame, Shadow and Storm.
 - Expanded the seeded oriented-bridge dry-surface regression from 20 to 40 map seeds.
+
+## 2026-11-23 — Directional telegraph geometry and full bridge traversal
+
+- Extracted the monster attack-warning orientation into a pure geometry helper and connected the painter to it. The helper explicitly converts world facing into the already-mirrored body-local coordinate space and safely handles zero/non-finite vectors.
+- Added unit coverage for all eight compass directions, westward diagonals and invalid facing vectors.
+- Added a 40-seed, every-bridge traversal regression: samples the complete cross-river path and asserts both dry ground and movement factor 1.0 across the entire deck.
