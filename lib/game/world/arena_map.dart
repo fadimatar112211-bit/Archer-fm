@@ -218,11 +218,26 @@ class ArenaMap {
   double movementFactorAt(Offset point) =>
       isWater(point) ? waterSpeedFactor : 1.0;
 
+  /// Returns the nearest biome among patches covering [point].
+  ///
+  /// Biome circles intentionally overlap to avoid bare seams between the
+  /// four regions. Choosing the first matching patch made those overlap
+  /// zones depend on list order, so one biome could visually dominate a
+  /// neighbouring castle's territory. Nearest-centre ownership keeps the
+  /// ground-detail palette spatially coherent while preserving soft painter
+  /// gradients at the boundaries.
   BiomePatch? biomeAt(Offset point) {
+    BiomePatch? nearest;
+    var nearestDistanceSquared = double.infinity;
     for (final patch in biomes) {
-      if (patch.contains(point)) return patch;
+      if (!patch.contains(point)) continue;
+      final distanceSquared = (patch.center - point).distanceSquared;
+      if (distanceSquared < nearestDistanceSquared) {
+        nearest = patch;
+        nearestDistanceSquared = distanceSquared;
+      }
     }
-    return null;
+    return nearest;
   }
 
   MapObstacle? obstacleBlocking(Offset point, double radius) {
