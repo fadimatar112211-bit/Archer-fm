@@ -206,15 +206,39 @@ void main() {
   });
 
   group('map movement rules', () {
-    test('river water slows movement and bridges are dry', () {
+    test('river network keeps both channels and every bridge dry', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(map.rivers, hasLength(2),
+            reason: 'main river and tributary for seed $seed');
+        expect(map.rivers.first.bridges, hasLength(2),
+            reason: 'main river crossings for seed $seed');
+        expect(map.rivers.last.bridges, hasLength(1),
+            reason: 'tributary crossing for seed $seed');
+        for (final river in map.rivers) {
+          for (final bridge in river.bridges) {
+            expect(river.contains(bridge.center), isTrue,
+                reason: 'bridge must cross its river for seed $seed');
+            expect(map.isBridge(bridge.center), isTrue);
+            expect(map.isWater(bridge.center), isFalse,
+                reason: 'bridge center must be dry for seed $seed');
+            expect(map.movementFactorAt(bridge.center), 1.0,
+                reason: 'bridge must not slow movement for seed $seed');
+          }
+        }
+      }
+      final map = ArenaMap.generate(math.Random(7));
+      expect(map.movementFactorAt(map.castleAnchors.first), 1.0);
+    });
+
+    test('river water slows movement away from bridges', () {
       final map = ArenaMap.generate(math.Random(7));
       final river = map.rivers.first;
-      final water = river.points[1];
-      if (!map.isBridge(water)) {
-        expect(map.isWater(water), isTrue);
-        expect(map.movementFactorAt(water), waterSpeedFactor);
+      final sample = river.points[1];
+      if (!map.isBridge(sample)) {
+        expect(map.isWater(sample), isTrue);
+        expect(map.movementFactorAt(sample), waterSpeedFactor);
       }
-      expect(map.movementFactorAt(map.castleAnchors.first), 1.0);
     });
 
     test('obstacles block walking and slide along the free axis', () {
