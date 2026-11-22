@@ -20,7 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// while plain tests decode the production atlases quickly (the same pattern
 /// as `hero_manifest_test.dart`). The test drives `ArenaPainter.paint` — the
 /// exact painter the game screen composites — over scripted `GameWorld`
-/// states and saves PNGs to `/tmp/opencode/merge/captures` for inspection.
+/// states and saves PNGs to `build/arena-captures` for inspection.
 ///
 /// Widget-level integration (input, HUD, event → arrow sync, persistence) is
 /// covered separately and fast in `game_screen_test.dart` with fake atlases.
@@ -375,7 +375,7 @@ void main() {
 
 Future<void> _save(String name, ui.Image image) async {
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
-  final dir = Directory('/tmp/opencode/merge/captures');
+  final dir = Directory('build/arena-captures');
   if (!dir.existsSync()) dir.createSync(recursive: true);
   File('${dir.path}/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
   image.dispose();
