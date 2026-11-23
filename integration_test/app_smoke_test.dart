@@ -19,9 +19,9 @@ void main() {
     await tester.pumpWidget(const ArcherFmApp());
     debugPrint('SMOKE: app mounted');
 
-    // The menu must become interactive even if an optional 3D preview model
-    // is unavailable or still loading. The 2.5D arena uses its own sprite
-    // assets; this smoke test is for startup, orientation and match navigation.
+    // The menu must remain interactive while the optional 3D hero preview
+    // loads. This smoke test covers startup, orientation, setup navigation,
+    // and mounting the production 3D hero renderer in the arena.
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 250));
       if (find.byKey(const ValueKey('home_play')).evaluate().isNotEmpty) {
