@@ -45,6 +45,9 @@ void main() {
     debugPrint('SMOKE: opening army selection');
     await tester.tap(find.byKey(const ValueKey('home_play')));
     await tester.pump(const Duration(milliseconds: 500));
+    // Allow the route transition to finish on slower software-rendered CI
+    // emulators before asserting the destination app bar is mounted.
+    await tester.pump(const Duration(milliseconds: 350));
 
     debugPrint('SMOKE: army selection opened');
     expect(find.text('اختيار البطل والجيش'), findsOneWidget);
