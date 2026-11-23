@@ -161,6 +161,22 @@ def validate(manifest_path: Path, require_motion: bool = False) -> list[str]:
                     else:
                         require(len(events) >= 1,
                                 f"{name}: melee attack must declare at least one gameplay event")
+
+        # Two named states in the same direction must not point at the exact
+        # same ordered frames. That mistake makes a walk cycle masquerade as
+        # idle/attack/skill/death while the manifest still looks populated.
+        sequence_owner: dict[tuple[str, ...], str] = {}
+        for name, animation in animations.items():
+            direction = name.rsplit("_", 1)[-1]
+            sequence = tuple(animation.get("frames", []))
+            signature = (direction, *sequence)
+            previous = sequence_owner.get(signature)
+            if previous is not None and previous != name:
+                require(False,
+                        f"{name}: reuses the exact frame sequence from {previous}; "
+                        "each action state needs its own authored frames")
+            sequence_owner[signature] = name
+
         if require_motion:
             expected_states = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
             expected_directions = ("n", "ne", "e", "se", "s", "sw", "w", "nw")
