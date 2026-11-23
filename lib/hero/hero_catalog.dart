@@ -61,15 +61,6 @@ class HeroDefinition {
   String get manifestPath => '$assetRoot/${id}_manifest.json';
 }
 
-const HeroTheme rangerTheme = HeroTheme(
-  accent: Color(0xFF9BE845),
-  accentSoft: Color(0x269BE845),
-  effect: Color(0xFF9BE845),
-  stageTop: Color(0xFF0B1A12),
-  stageMid: Color(0xFF123024),
-  stageBottom: Color(0xFF07110C),
-);
-
 const HeroTheme rangerNewTheme = HeroTheme(
   accent: Color(0xFF62E86C),
   accentSoft: Color(0x2662E86C),
@@ -168,22 +159,7 @@ const List<HeroDefinition> heroCatalog = [
   ),
 ];
 
-// Keep the old Ranger render bundle addressable by legacy asset tests. It is
-// intentionally not part of [heroCatalog] and can never appear in the roster.
-const HeroDefinition legacyRangerDefinition = HeroDefinition(
-  id: 'ranger',
-  nameAr: 'الرامي القديم',
-  nameEn: 'Ranger Legacy',
-  roleAr: 'أصول توافقية قديمة',
-  weaponAr: 'قوس الطاقة الخضراء',
-  skillAr: 'وابل السهام',
-  descriptionAr: 'حزمة رسوم قديمة محفوظة للتوافق والاختبارات فقط.',
-  icon: Icons.gps_fixed,
-  theme: rangerTheme,
-);
-
 HeroDefinition heroById(String id) {
-  if (id == 'ranger') return legacyRangerDefinition;
   return heroCatalog.firstWhere(
     (hero) => hero.id == id,
     orElse: () => heroCatalog.first,
