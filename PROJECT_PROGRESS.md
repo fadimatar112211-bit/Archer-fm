@@ -1700,3 +1700,11 @@ Verification:
 - The integration smoke reached the home screen, hero GLB preview and army selection, then ADB reported the emulator offline immediately after tapping Start. Its diagnostics showed the emulator process had exited; the prior AVD was running a 1080×1920 display with 2 GiB guest RAM and 2 CPU cores.
 - Reduced the virtual display to 720×1280 and raised emulator resources to 4 GiB/4 cores to reduce GPU/render pressure during arena startup. This is a CI-only test-device adjustment; it does not change the game's target resolution or production rendering.
 - Saved in commit `5c472f2`; the next Android smoke run will verify whether this resolves the device-offline failure.
+
+
+## Visual capture audit — heroes and monsters — 2026-11-23
+
+- Reviewed the actual 169-image capture artifact from Android/full Flutter tests (run `45139009990`, artifact `archer-fm-visual-review-captures`, 37.5 MB), not just manifest/test metadata.
+- Ranger's yaw-180 close-up has a clearly readable face and green bow silhouette. Flame's available close-ups are dominated by a large circular foreground weapon/shield that obscures most of the face; this needs a model/weapon presentation review. Shadow's current captures show mostly rear/side views; its yaw-180 close-up was not produced because the 297.48px height assertion stopped that test, so its face is not yet accepted. Storm close-ups were not generated because the hero capture loop stopped at Shadow. Do not mark all four hero faces visually complete.
+- Monster captures currently show the four procedural Canvas silhouettes at ordinary arena zoom; they are too small for a reliable face/weapon review. The approved GLB prototypes remain review-only and are not integrated. A dedicated monster close-up capture pass is still required before visual acceptance.
+- This audit is based on run `45139009990` and predates the Shadow atlas/scale corrections now queued for verification.
