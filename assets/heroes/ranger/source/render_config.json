@@ -80,72 +80,13 @@
     },
     "pivot_margin": 0.02,
     "ground_anchor": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "samples": 12
   },
   "heroes": {
-    "ranger": {
-      "hero_id": "ranger",
-      "armature_object": "Ranger_Rig",
-      "actions": {
-        "idle": "Ranger_Idle",
-        "walk": "Ranger_Walk",
-        "run": "Ranger_Run",
-        "attack": "Ranger_Attack",
-        "skill": "Ranger_Skill",
-        "dodge": "Ranger_Dodge",
-        "hit": "Ranger_Hit",
-        "death": "Ranger_Death"
-      },
-      "events": {
-        "attack": [
-          {
-            "frame": 9,
-            "name": "bow_draw"
-          },
-          {
-            "frame": 13,
-            "name": "projectile_release"
-          }
-        ],
-        "skill": [
-          {
-            "frame": 9,
-            "name": "volley_charge"
-          },
-          {
-            "frame": 17,
-            "name": "volley_release"
-          }
-        ],
-        "dodge": [
-          {
-            "frame": 5,
-            "name": "dodge_start"
-          },
-          {
-            "frame": 17,
-            "name": "dodge_end"
-          }
-        ],
-        "hit": [
-          {
-            "frame": 5,
-            "name": "hit_react"
-          }
-        ],
-        "death": [
-          {
-            "frame": 33,
-            "name": "death_complete"
-          }
-        ]
-      },
-      "output_directory": "assets/heroes/ranger/renders"
-    },
     "flame": {
       "hero_id": "flame",
       "armature_object": "Flame_Rig",
