@@ -128,4 +128,52 @@ void main() {
       throwsArgumentError,
     );
   });
+  test('paint applies opacity to actual atlas pixels without changing geometry', () async {
+    final sourceRecorder = PictureRecorder();
+    final sourceCanvas = Canvas(sourceRecorder);
+    sourceCanvas.drawRect(
+      const Rect.fromLTWH(0, 0, 4, 4),
+      Paint()..color = const Color(0xFFFF0000),
+    );
+    final sourcePicture = sourceRecorder.endRecording();
+    final sourceImage = await sourcePicture.toImage(4, 4);
+
+    final targetRecorder = PictureRecorder();
+    final targetCanvas = Canvas(targetRecorder);
+    SpriteActorRenderer.paint(
+      targetCanvas,
+      image: sourceImage,
+      sourceRect: const Rect.fromLTWH(0, 0, 4, 4),
+      groundAnchor: const Offset(8, 12),
+      frameSize: const Size(4, 4),
+      pivotX: 0.5,
+      pivotY: 1,
+      targetHeight: 8,
+      opacity: 0.5,
+      filterQuality: FilterQuality.none,
+    );
+    final targetPicture = targetRecorder.endRecording();
+    final targetImage = await targetPicture.toImage(16, 16);
+    addTearDown(() {
+      sourceImage.dispose();
+      sourcePicture.dispose();
+      targetImage.dispose();
+      targetPicture.dispose();
+    });
+
+    final pixels = await targetImage.toByteData(
+      format: ImageByteFormat.rawRgba,
+    );
+    expect(pixels, isNotNull);
+    final bytes = pixels!.buffer.asUint8List(
+      pixels.offsetInBytes,
+      pixels.lengthInBytes,
+    );
+    final center = (8 * 16 + 8) * 4;
+    expect(bytes[center], 255);
+    expect(bytes[center + 1], 0);
+    expect(bytes[center + 2], 0);
+    expect(bytes[center + 3], closeTo(128, 2));
+  });
+
 }
