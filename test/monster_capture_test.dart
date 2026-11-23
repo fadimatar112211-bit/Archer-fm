@@ -201,6 +201,30 @@ void main() {
         }
       }
 
+      // Isolated archetype review captures: enlarge only the test actor so
+      // its face, armor silhouette and weapon can be inspected without the
+      // normal arena zoom hiding the details. Gameplay radii are untouched.
+      for (final type in armyTypes) {
+        final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
+        world.enemies
+          ..clear()
+          ..add(actor);
+        world.army.clear();
+        world.corpses.clear();
+        actor
+          ..position = const Offset(560, 340)
+          ..radius = 28
+          ..moving = false
+          ..attackAnimUntilMs = 0
+          ..hitFlashUntilMs = 0
+          ..hp = actor.maxHp
+          ..facing = const Offset(-1, 0);
+        await _save(
+          '24_monster_${type.name}_isolated_review',
+          capture('ranger_new_idle_e_000'),
+        );
+      }
+
       for (final sheet in sheets.values) {
         sheet.dispose();
       }
