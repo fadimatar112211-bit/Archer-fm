@@ -84,14 +84,13 @@ class ArenaPresentation {
   /// e.g. "الضربة 3/5 · 120%"
   final String? comboText;
 
-  /// The in-game 3D hero; when non-null the hero is drawn as the real skinned
-  /// model instead of the atlas frame (enemies keep their sprites).
+  /// Transitional GLB fallback; when non-null it is drawn instead of the
+  /// approved sprite-pilot atlas. Remove only after the roster sprite gate passes.
   final Hero3DController? hero3d;
 
-  /// Whether the current hero's atlas has passed reference-art acceptance.
-  /// Defaults true for isolated painter previews/tests; production always
-  /// supplies the explicit roster policy so a failed GLB cannot expose a
-  /// rejected placeholder atlas.
+  /// Whether the current hero's sprite atlas is approved for the active route.
+  /// Defaults true for isolated previews/tests; production supplies the roster
+  /// policy so a failed transitional GLB cannot expose a rejected atlas.
   final bool heroSpriteApproved;
 
   Color get accent => Color(kit.accentColor);
