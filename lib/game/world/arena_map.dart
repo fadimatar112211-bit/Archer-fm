@@ -146,6 +146,20 @@ class Bridge {
     final localY = -delta.dx * s + delta.dy * c;
     return localX.abs() <= width / 2 && localY.abs() <= depth / 2;
   }
+
+  /// Dry approach corridor for a complete river crossing. The bridge deck
+  /// remains [contains]; this extra width only keeps the river banks directly
+  /// beside the deck from slowing a unit while it is traversing the crossing.
+  /// [riverHalfWidth] is supplied by the river that owns this bridge.
+  bool coversCrossing(Offset point, double riverHalfWidth) {
+    final delta = point - center;
+    final c = math.cos(angle);
+    final s = math.sin(angle);
+    final localX = delta.dx * c + delta.dy * s;
+    final localY = -delta.dx * s + delta.dy * c;
+    return localX.abs() <= width / 2 + riverHalfWidth + 2 &&
+        localY.abs() <= depth / 2;
+  }
 }
 
 /// A river is a polyline of water with bridges across it.
@@ -222,10 +236,17 @@ class ArenaMap {
 
   /// True for river water that is not covered by a bridge.
   bool isWater(Offset point) {
-    // A bridge deck is a shared dry surface. At a river/tributary junction a
-    // point can belong to two channels; checking each channel independently
-    // incorrectly lets the second channel re-classify the deck as water.
-    if (isBridge(point)) return false;
+    // The deck and its immediate bank-to-bank approach are one dry crossing.
+    // At a river/tributary junction the owning bridge must also mask water
+    // contributed by the intersecting channel, otherwise a unit slows midway
+    // across a bridge even though it is following the bridge axis.
+    if (rivers.any(
+      (river) => river.bridges.any(
+        (bridge) => bridge.coversCrossing(point, river.halfWidth),
+      ),
+    )) {
+      return false;
+    }
     return rivers.any((river) => river.contains(point));
   }
 
