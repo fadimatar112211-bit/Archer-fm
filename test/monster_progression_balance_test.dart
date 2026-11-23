@@ -40,6 +40,28 @@ void main() {
       }
     });
 
+    test('four monster combat identities remain distinct at every level', () {
+      for (var level = 1; level <= monsterMaxLevel; level++) {
+        final runner = MonsterStats.of(MonsterType.runner, level);
+        final tank = MonsterStats.of(MonsterType.tank, level);
+        final stalker = MonsterStats.of(MonsterType.stalker, level);
+        final ranged = MonsterStats.of(MonsterType.ranged, level);
+
+        expect(runner.speed, greaterThan(stalker.speed),
+            reason: 'runner speed at level $level');
+        expect(runner.speed, greaterThan(ranged.speed),
+            reason: 'runner speed at level $level');
+        expect(tank.maxHp, greaterThan(stalker.maxHp),
+            reason: 'tank durability at level $level');
+        expect(tank.maxHp, greaterThan(runner.maxHp),
+            reason: 'tank durability at level $level');
+        expect(ranged.attackRange, greaterThan(stalker.attackRange),
+            reason: 'ranged reach at level $level');
+        expect(stalker.attackRange, greaterThan(runner.attackRange),
+            reason: 'stalker reach at level $level');
+      }
+    });
+
     test('starting army is exactly twenty with every role represented', () {
       final army = MonsterCatalog.defaultStartingArmy;
       expect(army.values.fold<int>(0, (sum, count) => sum + count), 20);

@@ -1595,3 +1595,9 @@ Verification:
 - Qualified the army purchase-cap test with `GameWorld.maxArmySize`, matching the actual public static constant used by the simulation.
 - These changes address the exact three analyzer errors reported by the latest Android workflow. They do not alter hero, monster, or map runtime behaviour.
 - Re-run Flutter analysis, tests, Android smoke, and release build before treating the branch as verified.
+
+## 2026-11-23 — Extend four-hero and monster-role regression coverage
+
+- Added Ranger's production GLB (`ranger_new/ranger_animated.glb`, expected 21-joint rig) to the existing binary-loader test, which previously parsed only Flame, Shadow and Storm. The shipped roster test now exercises all four hero model files and their eight normalized animation clips.
+- Added a level-by-level monster role test from 1 through 40. Runner must remain faster than Stalker and Ranged; Tank must remain tougher than Runner and Stalker; Ranged and Stalker retain their distinct attack reach.
+- No gameplay tuning or model assets were altered. These are regression guards against accidental loss of the approved hero roster and monster role balance.

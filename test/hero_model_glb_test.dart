@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('all hero GLBs parse with skeletons and all 8 clips', () async {
     for (final entry in [
+      ['assets/heroes/ranger_new/ranger_animated.glb', 21, false],
       ['assets/heroes/flame/model/flame_animated.glb', 30, false],
       ['assets/heroes/shadow/model/shadow_animated.glb', 30, false],
       ['assets/heroes/storm/model/storm_animated.glb', 30, true],
