@@ -318,13 +318,23 @@ class ArenaMap {
   /// Every candidate axis is swept so a large frame delta cannot pass through
   /// a tree, rock, or map boundary unnoticed.
   Offset slideMove(Offset from, Offset step, double radius) {
-    final target = clampToBounds(from + step, radius);
-    if (!_pathBlocked(from, target, radius)) return target;
-    final xOnly = clampToBounds(Offset(from.dx + step.dx, from.dy), radius);
-    if (!_pathBlocked(from, xOnly, radius)) return xOnly;
-    final yOnly = clampToBounds(Offset(from.dx, from.dy + step.dy), radius);
-    if (!_pathBlocked(from, yOnly, radius)) return yOnly;
-    return from;
+    // Recover safely if a caller starts just outside the legal radius. Swept
+    // collision must begin from a valid point or it can reject every candidate
+    // and leave the actor stranded beyond the map edge.
+    final safeFrom = clampToBounds(from, radius);
+    final target = clampToBounds(safeFrom + step, radius);
+    if (!_pathBlocked(safeFrom, target, radius)) return target;
+    final xOnly = clampToBounds(
+      Offset(safeFrom.dx + step.dx, safeFrom.dy),
+      radius,
+    );
+    if (!_pathBlocked(safeFrom, xOnly, radius)) return xOnly;
+    final yOnly = clampToBounds(
+      Offset(safeFrom.dx, safeFrom.dy + step.dy),
+      radius,
+    );
+    if (!_pathBlocked(safeFrom, yOnly, radius)) return yOnly;
+    return safeFrom;
   }
 
   /// Deterministic generation from [rng].
