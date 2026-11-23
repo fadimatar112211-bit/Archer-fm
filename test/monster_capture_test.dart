@@ -193,7 +193,7 @@ void main() {
           other.hitFlashUntilMs = 0;
         }
         final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
-        final directionAngles = <int>{};
+        final directionAngles = <String>{};
         for (var direction = 0; direction < 8; direction++) {
           final angle = direction * math.pi / 4;
           actor.attackAnimUntilMs = world.nowMs + 230;
@@ -208,7 +208,7 @@ void main() {
             mirrored: actor.facing.dx < -0.08,
           );
           expect(
-            directionAngles.add((localAngle * 1000000).round()),
+            directionAngles.add('${actor.facing.dx < -0.08}:${(localAngle * 1000000).round()}'),
             isTrue,
             reason: '${type.name} attack direction $direction must map to a unique warning angle',
           );
