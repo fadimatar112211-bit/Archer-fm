@@ -1601,3 +1601,9 @@ Verification:
 - Added Ranger's production GLB (`ranger_new/ranger_animated.glb`, expected 21-joint rig) to the existing binary-loader test, which previously parsed only Flame, Shadow and Storm. The shipped roster test now exercises all four hero model files and their eight normalized animation clips.
 - Added a level-by-level monster role test from 1 through 40. Runner must remain faster than Stalker and Ranged; Tank must remain tougher than Runner and Stalker; Ranged and Stalker retain their distinct attack reach.
 - No gameplay tuning or model assets were altered. These are regression guards against accidental loss of the approved hero roster and monster role balance.
+
+## 2026-11-23 — Guard four-quadrant biome ownership
+
+- Added a 40-seed arena regression test ensuring every match contains all four distinct biome types and each of the four castle quadrants is covered by its corresponding nearest biome patch.
+- This protects the forest/desert/snow/volcanic regional layout while allowing the biome-to-quadrant assignment to shuffle between matches.
+- No map generation or runtime rendering behaviour was changed.

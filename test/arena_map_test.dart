@@ -339,6 +339,30 @@ void main() {
       expect(checkedOverlaps, greaterThan(0));
     });
 
+    test('each castle quadrant receives its own distinct biome across seeds', () {
+      for (var seed = 0; seed < 40; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(map.biomes.map((patch) => patch.kind).toSet(),
+            TerrainKind.values.toSet(),
+            reason: 'all four biome kinds must appear for seed $seed');
+        expect(map.castleAnchors, hasLength(4));
+        expect(map.biomes, hasLength(4));
+
+        for (var i = 0; i < map.castleAnchors.length; i++) {
+          final castle = map.castleAnchors[i];
+          final nearest = map.biomes.reduce((left, right) {
+            final leftDistance = (left.center - castle).distanceSquared;
+            final rightDistance = (right.center - castle).distanceSquared;
+            return leftDistance <= rightDistance ? left : right;
+          });
+          expect(nearest.contains(castle), isTrue,
+              reason: 'castle $i must sit inside its quadrant biome, seed $seed');
+          expect(map.biomeAt(castle)?.kind, nearest.kind,
+              reason: 'castle $i biome ownership, seed $seed');
+        }
+      }
+    });
+
     test('biome interiors stay assigned to their own terrain across seeds', () {
       for (var seed = 0; seed < 24; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
