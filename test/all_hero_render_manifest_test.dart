@@ -28,11 +28,6 @@ void main() {
           expect(animations.containsKey(name), isTrue, reason: '$hero/$name');
           final clip = animations[name] as Map<String, dynamic>;
           final frameIds = (clip['frames'] as List).cast<String>();
-          expect(
-            frameIds.every((id) => id.startsWith('${hero}_${name}_')),
-            isTrue,
-            reason: '$hero/$name must reference its own rendered atlas frames',
-          );
           final frameCount = frameIds.length;
           if (state != 'idle') {
             expect(
@@ -57,8 +52,18 @@ void main() {
           expect(atlas, isNotEmpty, reason: '$hero/$name atlas entry');
           expect(File('$root/${atlas['image']}').existsSync(), isTrue,
               reason: '$hero/$name image');
-          expect(File('$root/${atlas['meta']}').existsSync(), isTrue,
-              reason: '$hero/$name metadata');
+          final metaFile = File('$root/${atlas['meta']}');
+          expect(metaFile.existsSync(), isTrue, reason: '$hero/$name metadata');
+          final atlasMeta = jsonDecode(metaFile.readAsStringSync())
+              as Map<String, dynamic>;
+          final atlasFrameIds = (atlasMeta['frames'] as Map<String, dynamic>)
+              .keys
+              .toSet();
+          expect(
+            frameIds.every(atlasFrameIds.contains),
+            isTrue,
+            reason: '$hero/$name must reference frames present in its own atlas',
+          );
         }
       }
     });
