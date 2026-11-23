@@ -69,10 +69,11 @@ class Hero3DModel {
   double scaleForPixelHeight(double pixelHeight) {
     final standing = _standingHeight ?? modelHeight;
     final sBar = _fieldOfViewScale / _cameraDistance;
-    // Empirical 0.885 factor: perspective + the depth extent of the body make
-    // the drawn height overshoot the planar estimate.
+    // Keep isolated review captures inside their 800px frame. CI measured
+    // Ranger at 718.5px with a 700px target at 0.82; 0.79 provides a small
+    // safety margin for pose/yaw variation without changing world collision.
     return pixelHeight /
-        (standing * math.cos(_tiltRadians) * sBar) * 0.82;
+        (standing * math.cos(_tiltRadians) * sBar) * 0.79;
   }
 
   /// Measures the idle pose once so [scaleForPixelHeight] is accurate.
