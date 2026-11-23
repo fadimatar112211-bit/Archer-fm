@@ -8,6 +8,10 @@ on:
       - "tools/monsters/generate_monsters_blender.py"
       - "tools/validate_monster_glb.py"
       - ".github/workflows/monster-reference-prototypes.yml"
+      - "lib/game/monsters/**"
+      - "lib/game/arena_painter.dart"
+      - "lib/hero/hero_render_policy.dart"
+      - "docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md"
 
 permissions:
   contents: read
