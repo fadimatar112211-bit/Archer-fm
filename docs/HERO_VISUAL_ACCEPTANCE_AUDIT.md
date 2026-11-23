@@ -134,3 +134,17 @@ These are pipeline integrity checks, not proof that the resulting faces, armor, 
 - Removed stale table wording that implied 2.5D sprite acceptance was still a final production goal.
 - All four heroes are now consistently described as GLB-route or GLB-migration work with 3D visual acceptance still open. Shadow's sprite remains a temporary fallback, not an approved final visual.
 - No hero route, model, geometry, or animation was changed in this documentation correction.
+
+
+## 2026-11-23 — Face readability source audit (no speculative geometry edits)
+
+Inspected the shared face builder and per-hero headgear source after the in-game captures showed face occlusion/poor readability. The current builder creates layered eye outline/white/iris/pupil/glint patches, upper lashes, lower lids, brows, ears, nose and mouth on the shaped head surface. This means a face disappearing in the arena is not simply a missing-face-generation step.
+
+Source-level risks recorded for the next visual capture pass:
+- The face patches are very shallow surface overlays. Their visibility depends on the shaped-head surface, mesh winding/backface handling, skinning and camera yaw; changing eye size or head yaw without a matched render could worsen z-fighting or detach the facial features.
+- Shadow's hood opening is procedurally cut by an elevation profile and has a gold brim; its cowl sheets are parented to the head. The source comment explicitly states that the reference has no lower-face mask. Do not add a mask or narrow the opening as a guessed fix.
+- Flame's source profile uses a large signature sword and a short cape; the known capture concern is weapon/foreground overlap. Any correction must preserve the reference greatsword silhouette and be verified from the actual gameplay camera, not by shrinking the weapon arbitrarily.
+- Storm's circlet/crest and pale hair are distinct from Flame; the existing report of sideways/reclined appearance still requires rest-pose and animation-basis inspection before any per-hero yaw adjustment.
+- Ranger's hood/collar, hair and bow need a front gameplay-facing capture after the bind-pose correction; do not change the shared face geometry for one hero until that comparison is available.
+
+No GLB, rig, facial geometry, weapon, yaw, or hero render-policy changes were made in this source audit. The next safe action is to regenerate the four heroes' front/side/back and gameplay-yaw captures from the corrected rest-pose renderer, then make only evidence-backed per-hero corrections.
