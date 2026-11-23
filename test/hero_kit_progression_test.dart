@@ -94,6 +94,66 @@ void main() {
       }
     });
 
+
+    test('selected weapon applies its damage, pace and reach modifiers', () {
+      for (final kit in kits) {
+        final starting = kit.weapons.first;
+        final fast = kit.weapons[1];
+        final heavy = kit.weapons[2];
+
+        final base = kit.withWeapon(starting.id);
+        expect(base.baseDamage, kit.baseDamage, reason: kit.heroId);
+        expect(base.attackPace, kit.attackPace, reason: kit.heroId);
+        expect(base.rangeMultiplier, 1.0, reason: kit.heroId);
+
+        final fastKit = kit.withWeapon(fast.id);
+        expect(fastKit.baseDamage,
+            closeTo(kit.baseDamage * fast.damageMultiplier, 0.0001),
+            reason: fast.id);
+        expect(fastKit.attackPace,
+            closeTo(kit.attackPace * fast.rateMultiplier, 0.0001),
+            reason: fast.id);
+        expect(fastKit.rangeMultiplier, fast.rangeMultiplier,
+            reason: fast.id);
+
+        final heavyKit = kit.withWeapon(heavy.id);
+        expect(heavyKit.baseDamage,
+            closeTo(kit.baseDamage * heavy.damageMultiplier, 0.0001),
+            reason: heavy.id);
+        expect(heavyKit.attackPace,
+            closeTo(kit.attackPace * heavy.rateMultiplier, 0.0001),
+            reason: heavy.id);
+        expect(heavyKit.rangeMultiplier, heavy.rangeMultiplier,
+            reason: heavy.id);
+
+        expect(heavyKit.baseMaxHp, kit.baseMaxHp, reason: kit.heroId);
+        expect(heavyKit.moveSpeed, kit.moveSpeed, reason: kit.heroId);
+        expect(heavyKit.comboHits, same(kit.comboHits), reason: kit.heroId);
+        expect(heavyKit.abilities, same(kit.abilities), reason: kit.heroId);
+      }
+    });
+
+    test('weapon mastery adds two percent damage per level, capped at ten', () {
+      for (final kit in kits) {
+        final weapon = kit.weapons[1];
+        final levelFive = kit.withWeapon(weapon.id, upgradeLevel: 5);
+        final capped = kit.withWeapon(weapon.id, upgradeLevel: 99);
+        expect(levelFive.baseDamage,
+            closeTo(kit.baseDamage * weapon.damageMultiplier * 1.10, 0.0001),
+            reason: kit.heroId);
+        expect(capped.baseDamage,
+            closeTo(kit.baseDamage * weapon.damageMultiplier * 1.20, 0.0001),
+            reason: kit.heroId);
+      }
+    });
+
+    test('unknown weapon IDs do not silently change the hero kit', () {
+      for (final kit in kits) {
+        expect(kit.withWeapon('not-a-real-weapon'), same(kit),
+            reason: kit.heroId);
+      }
+    });
+
     test('same-level hero health is equal while movement speeds differ', () {
       expect(kits.map((kit) => kit.baseMaxHp).toSet(), {100.0});
       expect(kits.map((kit) => kit.moveSpeed).toSet(), hasLength(4));
