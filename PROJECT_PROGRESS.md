@@ -1620,3 +1620,19 @@ Verification:
 - Increased the Stalker's melee attack reach from 30 to 38 arena units.
 - This restores the intended strict role ordering (Stalker reach > Runner reach) while keeping the Ranged unit at 210 and the Tank at 36.
 - The adjustment is deliberately small and leaves HP, damage, speed, cooldowns and upgrade scaling unchanged.
+
+
+## CI diagnosis — 2026-11-23 (HEAD 36b9e068d327c3df09cacff59d3434e5d4acb706)
+
+- Latest Android workflow run **45115704320**: Analyze passed; full Flutter tests failed; Android emulator smoke test also failed; release APK steps were skipped. Visual-review artifact was uploaded (artifact ID **14793650559**).
+- Exact seven Flutter failures from the run:
+  1. Ranger GLB test expected no embedded base-colour texture, but the production Ranger GLB has one (test expectation mismatch; same texture route as Storm).
+  2. A full cross-river bridge traversal sampled 0.9368 instead of 1.0 (likely overlap with the tributary at a bridge junction; needs a geometry-level fix).
+  3. Map boundary/obstacle movement test returned y=10 where its test expected at least 24 (inspect generated obstacle / test start before changing collision rules).
+  4. Monster-upgrade integration test threw `Bad state: No element` at test line 737 (inspect its selection/setup; do not hide with a fallback).
+  5. Enemy monsters did not damage the nearby home crystal in the integration test (expected 482 HP, actual 500; inspect target acquisition and test setup).
+  6. Camera right edge exceeded viewport by ~4.1e-9 logical pixels (numerical tolerance issue).
+  7. Ranger close-up yaw_45 measured 718.52px against a <700px frame limit.
+- Shadow atlas manifest still contains placeholder attack frames: `shadow/attack_n` reuses a walk atlas and its frame list has only one unique frame. This is an asset-quality blocker, not something to fix by weakening the test; it needs approved source art / correct animation frames.
+- Immediate patch after this diagnosis: correct the Ranger GLB texture expectation and reduce isolated close-up calibration from 0.82 to 0.79. These changes are not yet CI-verified.
+- Next: inspect and fix the bridge overlap, movement/castle integration issues, and camera precision; inspect visual captures and do not claim face/reference quality from triangle-count tests alone.
