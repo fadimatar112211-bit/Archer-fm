@@ -1,3 +1,7 @@
+> **STATUS: LEGACY / NON-RUNTIME CONTRACT (2026-11-23).** This GLB import layout is retained only for historical prototypes, source inspection and offline rendering inputs. It is not the production runtime asset contract. The approved runtime uses 2D/2.5D sprite atlases for all four monsters in the lightweight 3D world, as specified in `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`. Do not integrate these GLBs as live monster actors or treat passing GLB validation as sprite acceptance. Keep the procedural Canvas monster painter as fallback until reference-matched sprite packs pass visual, animation, alpha, alignment, gameplay-scale and runtime tests.
+
+---
+
 # Monster 3D asset pipeline contract
 
 This is the required import contract for Stage 2 monster GLB assets. It does not claim that any model currently exists.
