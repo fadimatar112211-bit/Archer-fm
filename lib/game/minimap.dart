@@ -117,12 +117,15 @@ class MinimapPainter extends CustomPainter {
     final baseCell = Paint()..color = const Color(0xFF4C6B45);
     for (var row = 0; row < world.fog.rows; row++) {
       for (var col = 0; col < world.fog.cols; col++) {
-        if (!world.fog.cellRevealed(col, row)) continue;
-        final center = Offset((col + 0.5) * cell, (row + 0.5) * (map.size.height / world.fog.rows));
+        final revealed = world.fog.cellRevealed(col, row);
+        final center = Offset(
+          (col + 0.5) * cell,
+          (row + 0.5) * (map.size.height / world.fog.rows),
+        );
         final biome = map.biomeAt(center);
-        final color = biome == null
-            ? baseCell.color
-            : _biomeTint(biome.kind);
+        final color = revealed
+            ? (biome == null ? baseCell.color : _biomeTint(biome.kind))
+            : _unexploredBiomeTint(biome?.kind);
         canvas.drawRect(
           Rect.fromLTWH(
             origin.dx + col * cell * scale,
@@ -155,6 +158,27 @@ class MinimapPainter extends CustomPainter {
       }
       water.strokeWidth = math.max(1.5, river.width * scale);
       canvas.drawPath(path, water);
+      // Small timber decks make all three dry crossings legible at minimap scale.
+      for (final bridge in river.bridges) {
+        final center = origin + bridge.center * scale;
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(bridge.angle);
+        final deck = Rect.fromCenter(
+          center: Offset.zero,
+          width: math.max(3.0, bridge.width * scale),
+          height: math.max(2.0, bridge.depth * scale),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(deck, const Radius.circular(1.2)),
+          Paint()..color = const Color(0xFF35271B),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(deck.deflate(0.7), const Radius.circular(0.8)),
+          Paint()..color = const Color(0xFFC18A4B),
+        );
+        canvas.restore();
+      }
     }
 
     // Castles (same design; the local player's castle is highlighted). A
@@ -224,6 +248,16 @@ class MinimapPainter extends CustomPainter {
         TerrainKind.desert => const Color(0xFFB79463),
         TerrainKind.snow => const Color(0xFFBFD8E6),
         TerrainKind.volcanic => const Color(0xFF7C4A42),
+      };
+
+  // Preserve the fog-of-war darkness while giving unexplored terrain a subtle
+  // biome silhouette, so players can read the overall map without seeing detail.
+  Color _unexploredBiomeTint(TerrainKind? kind) => switch (kind) {
+        TerrainKind.forest => const Color(0xFF17291B),
+        TerrainKind.desert => const Color(0xFF302719),
+        TerrainKind.snow => const Color(0xFF202D35),
+        TerrainKind.volcanic => const Color(0xFF301D1A),
+        null => const Color(0xFF172018),
       };
 
   @override
