@@ -83,3 +83,8 @@ The user subsequently supplied and approved a consolidated set of three visual r
 
 ### Repository verification note
 At the time this consolidated update was written, the three image paths above were present in the `ranger-reference-work` Git tree. Keep the original image bytes unchanged. Do not delete duplicate/older reference files until the approved three images are verified and a deliberate cleanup is requested.
+
+
+## Renderer-method clarification — approved 2.5D conversion decision (2026-11-23)
+
+The approved images above remain the sole authority for **character appearance**. The production rendering method is governed separately by the later approved `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` (2026-11-21): all four heroes and all four monsters are final 2D sprite actors with a polished 2.5D appearance inside a lightweight 3D world. The earlier sentence requiring actual 3D character assets describes the previous asset-production direction and is superseded for final runtime presentation. Do not change the reference designs; change only the approved rendering method.
