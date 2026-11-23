@@ -1068,24 +1068,6 @@ def storm_skill(m):
 # ------------------------------------------------------------- profiles -----
 
 PROFILES = {
-    "ranger": {
-        "display_name": "Ranger",
-        "prefix": "Ranger",
-        "rig": "Ranger_Rig",
-        "armature": "Ranger_Armature",
-        "palette": {},
-        "hair": "spiky",
-        "hair_style": "ranger",
-        "front_mantle": True,
-        "build_cape": long_cape,
-        "build_armour": None,
-        "build_headgear": None,
-        "build_weapon": None,
-        "build_fx": None,
-        "attack": None,
-        "skill": None,
-        "required_parts": (),
-    },
     "flame": {
         "display_name": "Flame",
         "prefix": "Flame",
