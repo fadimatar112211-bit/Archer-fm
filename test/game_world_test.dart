@@ -66,6 +66,29 @@ void runFor(GameWorld world, int ms, {int releaseEveryMs = 0}) {
 }
 
 void main() {
+  group('sprite direction mapping', () {
+    test('all eight screen-space facings map to their matching atlas row', () {
+      const cases = <({Offset facing, String name})>[
+        (facing: Offset(1, 0), name: 'e'),
+        (facing: Offset(0.7071, 0.7071), name: 'se'),
+        (facing: Offset(0, 1), name: 's'),
+        (facing: Offset(-0.7071, 0.7071), name: 'sw'),
+        (facing: Offset(-1, 0), name: 'w'),
+        (facing: Offset(-0.7071, -0.7071), name: 'nw'),
+        (facing: Offset(0, -1), name: 'n'),
+        (facing: Offset(0.7071, -0.7071), name: 'ne'),
+      ];
+      for (final testCase in cases) {
+        final index = GameWorld.octantIndexOf(testCase.facing);
+        expect(GameWorld.octantNames[index], testCase.name);
+      }
+    });
+
+    test('zero facing safely preserves the default south-facing sprite', () {
+      expect(GameWorld.octantNames[GameWorld.octantIndexOf(Offset.zero)], 's');
+    });
+  });
+
   group('attack → projectile → damage', () {
     test('a normal hit deals exactly 100% base damage', () {
       final world = makeWorld();
