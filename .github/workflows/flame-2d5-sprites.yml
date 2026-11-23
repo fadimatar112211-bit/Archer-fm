@@ -50,13 +50,12 @@ jobs:
             test/hero_catalog_test.dart \
             test/hero_render_policy_test.dart \
             test/hero_manifest_test.dart \
-            test/ultimate_kit_contract_test.dart
+            test/ultimate_kit_contract_test.dart \\\n            test/hero_kit_progression_test.dart
 
       - name: Verify Shadow pilot and shared sprite renderer
         run: |
           flutter test --reporter expanded \
             test/shadow_walk_atlas_acceptance_test.dart \
-            test/shadow_action_atlas_mapping_test.dart
-            test/shadow_walk_runtime_test.dart \
+            test/shadow_action_atlas_mapping_test.dart \\\n            test/shadow_walk_runtime_test.dart \
             test/sprite_actor_renderer_test.dart \
             test/sprite_actor_clip_resolver_test.dart
