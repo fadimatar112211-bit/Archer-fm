@@ -18,8 +18,15 @@ class SpriteActorRenderer {
     required double pivotY,
     required double targetHeight,
   }) {
-    if (frameSize.width <= 0 ||
+    final finiteAnchor = groundAnchor.dx.isFinite && groundAnchor.dy.isFinite;
+    final finiteFrame = frameSize.width.isFinite && frameSize.height.isFinite;
+    if (!finiteAnchor ||
+        !finiteFrame ||
+        frameSize.width <= 0 ||
         frameSize.height <= 0 ||
+        !pivotX.isFinite ||
+        !pivotY.isFinite ||
+        !targetHeight.isFinite ||
         targetHeight <= 0 ||
         pivotX < 0 ||
         pivotX > 1 ||
@@ -56,6 +63,20 @@ class SpriteActorRenderer {
       pivotY: pivotY,
       targetHeight: targetHeight,
     );
+    if (!opacity.isFinite) {
+      throw ArgumentError.value(opacity, 'opacity', 'Must be finite');
+    }
+    if (sourceRect.isEmpty ||
+        sourceRect.left < 0 ||
+        sourceRect.top < 0 ||
+        sourceRect.right > image.width ||
+        sourceRect.bottom > image.height) {
+      throw ArgumentError.value(
+        sourceRect,
+        'sourceRect',
+        'Must be a non-empty rectangle inside the source image',
+      );
+    }
     final alpha = opacity.clamp(0.0, 1.0).toDouble();
     final color = tint?.withValues(alpha: alpha) ??
         Color.fromRGBO(255, 255, 255, alpha);
