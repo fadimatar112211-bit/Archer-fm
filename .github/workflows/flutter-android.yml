@@ -207,7 +207,33 @@ jobs:
           adb shell input keyevent 82 || true
           adb devices
       - name: Run Android integration smoke test
-        run: timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
+        shell: bash
+        run: |
+          set +e
+          EMULATOR_PID="$(cat /tmp/archer-emulator.pid)"
+          (
+            while kill -0 "$EMULATOR_PID" 2>/dev/null; do
+              {
+                echo "===== $(date -Is) ====="
+                ps -eo pid,ppid,rss,vsz,stat,comm,args --sort=-rss | head -18
+                echo "--- host memory ---"
+                grep -E 'MemAvailable|MemFree|SwapFree' /proc/meminfo || true
+                echo "--- cgroup memory events ---"
+                cat /sys/fs/cgroup/memory.events 2>/dev/null || true
+                echo "--- cgroup memory current/max ---"
+                cat /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.max 2>/dev/null || true
+              } >> /tmp/archer-emulator-watch.log
+              sleep 1
+            done
+            echo "===== emulator process exited at $(date -Is) =====" >> /tmp/archer-emulator-watch.log
+          ) &
+          WATCH_PID=$!
+          timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
+          TEST_STATUS=$?
+          kill "$WATCH_PID" 2>/dev/null || true
+          wait "$WATCH_PID" 2>/dev/null || true
+          echo "ANDROID_SMOKE_EXIT_CODE=$TEST_STATUS"
+          exit "$TEST_STATUS"
 
       - name: Capture Android emulator diagnostics
         if: always()
@@ -221,6 +247,12 @@ jobs:
           dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
           if [ -f /tmp/archer-emulator.log ]; then
             cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
+          fi
+          if [ -f /tmp/archer-emulator-watch.log ]; then
+            cp /tmp/archer-emulator-watch.log build/android-emulator-diagnostics/emulator-watch.log
+          fi
+          if [ -f /sys/fs/cgroup/memory.events ]; then
+            cp /sys/fs/cgroup/memory.events build/android-emulator-diagnostics/cgroup-memory-events.txt
           fi
           if [ -f /tmp/archer-emulator.pid ]; then
             PID="$(cat /tmp/archer-emulator.pid)"
