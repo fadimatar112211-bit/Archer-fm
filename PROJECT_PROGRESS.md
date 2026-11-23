@@ -2189,3 +2189,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Atlas metadata frame entries now fail explicitly if IDs/rectangles are malformed, dimensions are non-positive, coordinates are negative, or a source rectangle exceeds the decoded image bounds. Malformed frame data is no longer silently skipped and later rendered as a missing frame.
 - Added a regression test that passes Flame's manifest identity to Ranger New's loader and expects a `FormatException` before asset access.
 - Source and test changes are committed; Flutter format/analyze/test and Android build results remain unverified until the pending validation workflow completes.
+
+
+
+## 2026-11-23 — Canonical combat kit IDs and refreshed hero roster specification
+
+- Removed the last silent hero-ID fallback from `kitForHero`: unknown IDs (including retired `ranger`) now throw instead of silently receiving Ranger's combat kit.
+- Extended the Ultimate contract tests to verify only the four canonical kit IDs are accepted and each hero has exactly three distinct weapons unlocked at levels 1/10/20.
+- Rewrote the stale 2026-11-15 roster document to reflect the approved 2.5D reference-only direction, current Ranger ID, real hero stats/speeds, the five-hit combo, four separately unlocked Ultimates and three weapons per hero. It also explicitly records that the present atlas files have not all passed visual review.
+- Changes are committed; the current GitHub Actions Android/runtime validation workflows are still queued/pending and no test pass is claimed yet.
