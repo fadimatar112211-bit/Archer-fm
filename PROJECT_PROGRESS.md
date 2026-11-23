@@ -1718,3 +1718,13 @@ Verification:
 - Source/test commit: `dffd452dbe4c0193fd8b80f9953068f754f28e14`. The new capture test is awaiting its own Flutter CI run; no visual acceptance is claimed until the artifact is inspected.
 - Existing run `45140104935` had Analyze and all Flutter tests passing, Android emulator boot successful, Android integration smoke still running, and release APK build in progress at the last check.
 - Next: inspect the four isolated captures, compare each silhouette to the approved monster reference, then correct only demonstrated art defects. Continue hero face/weapon review and confirm Android smoke + APK verification.
+
+
+## 2026-11-23 — Fix monster isolated-review camera alignment
+
+- Inspected the actual visual-review artifact from Android workflow run `45140989612` (artifact `archer-fm-visual-review-captures`, ID `14802575719`). The four isolated monster captures were byte-identical and showed no monster at all; the eight directional attack captures were also byte-identical. These images were not valid visual evidence and must not be used to approve monster art.
+- Root cause in `test/monster_capture_test.dart`: the capture setup manually moved `world.player.position` after `GameWorld` had initialized its smoothed camera, leaving `cameraOrigin` at the original spawn. The isolated monster was then placed at a hard-coded coordinate outside the captured viewport.
+- Fixed the capture setup to preserve the constructor's player/camera alignment and place each isolated monster 80 world units from the actual player spawn. Gameplay radii, combat values, and production rendering are unchanged.
+- Commit: `68d660fe864b19d266c9d5fc25299335a1267c06` (`Fix isolated monster review capture camera alignment`).
+- Verification pending: this commit must rerun the full Android workflow; inspect the regenerated isolated captures and confirm they differ by archetype and direction before recording visual acceptance. The preceding run `45140989612` had Analyze and all Flutter tests complete successfully; Android smoke and release APK build were still in progress at last inspection.
+- Next: inspect the new monster captures, then continue hero face/weapon review and map/castle/minimap visual checks from the same run artifact.
