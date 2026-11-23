@@ -257,7 +257,7 @@ def main():
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
-    supported_heroes = {"ranger", "ranger_new", "flame", "shadow", "storm"}
+    supported_heroes = {"ranger_new", "flame", "shadow", "storm"}
     require(hero_id in supported_heroes,
             f"Unsupported hero_id {hero_id!r}; expected one of {sorted(supported_heroes)}")
     expected_output = f"assets/heroes/{hero_id}/renders"
