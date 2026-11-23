@@ -2098,3 +2098,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - This is a structural integrity gate for all declared clips. It does **not** prove that attack/skill/hit/death artwork is visually distinct or approved; the current held-frame placeholders remain unaccepted and must not be described as completed animations.
 - Commit: `352dd7f1cfd57388c6158ecbd34454a32bde3962`.
 - No associated Actions run was available at commit lookup; formatting, Flutter tests/analyze, Android build and visual capture remain unverified.
+
+
+## 2026-11-23 — Shared renderer second-character contract test
+
+- Extended `test/sprite_actor_renderer_test.dart` with a two-atlas raster test using different source dimensions, aspect ratios and normalized pivots.
+- Both independent character atlases are painted by the same `SpriteActorRenderer.paint` implementation; the test checks that each appears at its own expected position and remains within its own destination bounds.
+- This strengthens the Phase 2 reusable-renderer gate without inventing or promoting any character artwork, changing gameplay, or enabling an unapproved hero pack.
+- Commit: `f9adbb8320afe72ab971b7eae6c5f80bc3d8793d`.
+- Verification limitation: the test has been added but has **not** been executed in Flutter in this session. No passing-test or CI claim is made. Shadow Phase 1, all hero/monster visual acceptance, and the lightweight 3D-world integration remain open.
