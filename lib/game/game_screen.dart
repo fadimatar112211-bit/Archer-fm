@@ -23,6 +23,7 @@ import 'progress/xp.dart';
 import 'settings.dart';
 import 'render3/glb.dart';
 import 'render3/hero3d_controller.dart';
+import 'render3/sprite_actor_clip_resolver.dart';
 import 'render3/hero3d_painter.dart';
 import 'world/castle_system.dart';
 import 'world/game_world.dart';
@@ -619,9 +620,8 @@ class _GameScreenState extends State<GameScreen>
     // Sprite playback still requires a manifest; gameplay simulation does not.
     if (m == null) return;
     final desired = _desiredState();
-    final desiredDir = GameWorld.octantNames[
-        GameWorld.octantIndexOf(player.facing)];
-    final desiredName = '${desired}_$desiredDir';
+    final desiredDir = SpriteActorClipResolver.directionFor(player.facing);
+    final desiredName = SpriteActorClipResolver.clipName(desired, player.facing);
 
     final busy = _busyClip != null &&
         _player != null &&
@@ -689,8 +689,8 @@ class _GameScreenState extends State<GameScreen>
   }) {
     final m = manifest;
     final dir = directionLocked ??
-        GameWorld.octantNames[GameWorld.octantIndexOf(world.player.facing)];
-    final name = '${state}_$dir';
+        SpriteActorClipResolver.directionFor(world.player.facing);
+    final name = SpriteActorClipResolver.clipName(state, world.player.facing);
 
     // Transitional GLB fallback: pose the retained model while this hero's
     // sprite pack is not yet accepted. When no sprite manifest exists, keep
