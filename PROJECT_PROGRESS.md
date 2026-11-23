@@ -1770,3 +1770,11 @@ Verification:
 - Match HUD now wraps the army panel and monster-upgrade action, and the army panel itself wraps its contents instead of forcing a single long row.
 - Fix commits: `c3d7318a` (home) and `a53344b9` (battle HUD). These are code fixes only; the new Android workflow must pass before claiming the smoke test is resolved.
 - The prior unit-test run also exposed the old directional pixel-hash assertion (`runner attack direction 1`), while the current branch replaces that assertion with the pure geometry/mirror-state check. Awaiting the queued verification run.
+
+
+## 2026-11-23 — Improve isolated monster visual-review scale
+
+- Inspected the actual isolated monster captures from artifact `14803505229`. The four archetypes are distinct and visible, but the original 800×450 arena-wide framing left each monster too small for reliable face/armor/weapon review.
+- Updated only the test capture path: isolated monster review frames now use a 2.4× projection zoom, while lineup, combat, map and all production gameplay camera settings remain unchanged. The pixel fingerprint assertion still checks that each archetype renders differently.
+- Commit: `8dab776b05ea2306d5cd66bd22bc68087b935f4b` (`Zoom isolated monster review captures for visual inspection`).
+- Verification is pending in the next Android workflow run. This is a review-capture improvement, not a claim that monster art has passed visual acceptance.
