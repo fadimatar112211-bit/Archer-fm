@@ -29,11 +29,7 @@ void main() {
         try {
           for (final animation in animations) {
             final sheet = await loader.loadSheet(manifest, animation);
-            final clip = manifest.clipFor(animation.split('_').first,
-                animation.substring(animation.indexOf('_') + 1));
-            // Clip lookup above uses the state/direction naming convention;
-            // direct map lookup also covers any future state names containing underscores.
-            final resolvedClip = manifest.clips[animation] ?? clip;
+            final resolvedClip = manifest.clips[animation];
             expect(resolvedClip, isNotNull, reason: animation);
             expect(sheet.width, greaterThan(0), reason: animation);
             expect(sheet.height, greaterThan(0), reason: animation);
