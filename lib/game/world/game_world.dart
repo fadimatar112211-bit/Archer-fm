@@ -1074,7 +1074,7 @@ class GameWorld {
         _applyDoT(
           enemy,
           ticks: 2,
-          tickDamage: kit.baseDamage * 0.15 * currentDamageMult(),
+          tickDamage: kit.baseDamage * 0.15,
         );
       }
     }
