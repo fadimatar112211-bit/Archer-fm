@@ -1,14 +1,11 @@
-"""Build the reference-matched, cel-shaded Ranger production scene.
+"""Build a source scene for the selected non-Ranger matrix hero.
 
 Run:
   blender -b --python tools/blender/build_ranger_source.py
 
-The character is original procedural geometry authored from the reference at
-assets/heroes/ranger/ranger_reference_crop.png: a chibi male archer with short
-thick brown hair, blue eyes, a knee-length green cloak, layered bronze-brown
-armour over a green tunic, green bracers and boots, a glowing green energy
-recurve bow with green energy effects, a quiver of arrows, and a brass cloak
-clasp. Nothing is downloaded or traced; every mesh is generated here.
+The active hero profile supplies its own model parts, palette, weapon and
+authored animation poses. The playable Ranger is built separately from its
+original high-detail source scene under assets/heroes/ranger_new/.
 
 The rig is a rigid-skinning rig: every visible mesh remains unparented and is bound to exactly one deform bone by a single 1.0-weight vertex group and one Armature modifier.
 Cloth secondary motion uses three overlapping cloak sections so the cloak can
@@ -38,16 +35,14 @@ def builder():
 def active_hero_id():
     """Which hero this run builds, chosen by a checked-in one-line marker.
 
-    The CI workflow cannot be edited (the push token has no `workflow` scope),
-    so it always invokes this filename and the ranger output paths. The marker
-    lets one hero at a time flow through that fixed pipeline while sharing the
-    entire builder; the outputs are bundled back under the ranger path.
+    The CI matrix selects Flame, Shadow or Storm through this marker. The playable
+    Ranger uses its dedicated original source scene and is not built here.
     """
     marker = Path(__file__).resolve().parent / "active_hero.txt"
     if not marker.is_file():
-        return "ranger"
+        return "flame"
     value = marker.read_text(encoding="utf-8").strip().lower()
-    return value or "ranger"
+    return value or "flame"
 
 
 ACTIVE_HERO = active_hero_id()
@@ -59,9 +54,8 @@ PROFILE = hero_profiles.PROFILES[ACTIVE_HERO]
 # only collects the ranger paths. Each hero is therefore written to the fixed
 # CI path, to its own repo path, and into the bundle directory the artifact
 # picks up so the downloaded hero survives the read-only CI checkout.
-OUT = ROOT / "assets/heroes/ranger/source/ranger_source.blend"
 HERO_OUT = ROOT / f"assets/heroes/{ACTIVE_HERO}/source/{ACTIVE_HERO}_source.blend"
-BUNDLE = ROOT / f"assets/heroes/ranger/renders/_bundle/{ACTIVE_HERO}"
+BUNDLE = ROOT / f"assets/heroes/_sprite_bundles/{ACTIVE_HERO}"
 
 
 HEAD_CENTER = Vector((0.0, 0.0, 2.545))
@@ -2012,17 +2006,14 @@ def main():
         raise SystemExit(
             f"{ACTIVE_HERO}: only {len(meshes)} mesh parts, expected at least "
             f"{hero_profiles.MIN_MESH_PARTS}")
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUT))
     HERO_OUT.parent.mkdir(parents=True, exist_ok=True)
-    if HERO_OUT != OUT:
-        shutil.copyfile(OUT, HERO_OUT)
+    bpy.ops.wm.save_as_mainfile(filepath=str(HERO_OUT))
     # Bundle the editor source next to the renders so the read-only CI
     # artifact carries it to the machine that commits the results.
     bundle_source = BUNDLE / "source" / f"{ACTIVE_HERO}_source.blend"
     bundle_source.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(OUT, bundle_source)
-    print(f"Saved {ACTIVE_HERO} source: {OUT}")
+    shutil.copyfile(HERO_OUT, bundle_source)
+    print(f"Saved {ACTIVE_HERO} source: {HERO_OUT}")
     print(f"Hero source copy: {HERO_OUT}")
     print(f"Bundled source: {bundle_source}")
 
