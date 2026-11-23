@@ -100,7 +100,7 @@ const HeroTheme stormTheme = HeroTheme(
 /// The playable roster.
 ///
 /// Exactly four selectable heroes. The reference-quality Ranger is the
-/// canonical roster entry; the legacy `ranger` assets remain in the repository
+/// canonical and only playable Ranger entry; legacy Ranger assets were retired
 /// for compatibility tests and provenance, but are not a fifth selectable hero.
 /// Names, weapons and skills mirror the production brief.
 const List<HeroDefinition> heroCatalog = [
