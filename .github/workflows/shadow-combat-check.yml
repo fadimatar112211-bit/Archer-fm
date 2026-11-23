@@ -44,7 +44,7 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Run focused combat and animation tests
-        run: flutter test --reporter expanded test/game_world_test.dart test/shadow_manifest_events_test.dart test/sprite_player_test.dart
+        run: flutter test --reporter expanded test/game_world_test.dart test/shadow_manifest_events_test.dart test/all_hero_render_manifest_test.dart test/hero_manifest_test.dart test/sprite_player_test.dart test/sprite_actor_clip_resolver_test.dart test/sprite_actor_renderer_test.dart
 
       - name: Commit formatter output on branch pushes
         if: success() && github.event_name == 'push'
