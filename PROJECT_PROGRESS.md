@@ -1614,3 +1614,9 @@ Verification:
 - Zero-distance movement segments now return the neutral movement factor (1.0) instead of inheriting a water penalty from the stationary point.
 - Reduced isolated 3D hero close-up calibration slightly so tall production models fit the review framing rather than clipping at the top.
 - These changes address observed CI failures; the full suite must confirm the remaining arena and capture cases.
+
+## 2026-11-23 — Separate Stalker melee reach from Runner
+
+- Increased the Stalker's melee attack reach from 30 to 38 arena units.
+- This restores the intended strict role ordering (Stalker reach > Runner reach) while keeping the Ranged unit at 210 and the Tank at 36.
+- The adjustment is deliberately small and leaves HP, damage, speed, cooldowns and upgrade scaling unchanged.

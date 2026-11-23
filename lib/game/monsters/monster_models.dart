@@ -125,7 +125,10 @@ class MonsterCatalog {
       baseSpeed: 108,
       baseDamage: 12,
       radius: 11,
-      attackRange: 30,
+      // The flanker gets a little more reach than the fast runner,
+      // reinforcing its distinct side-entry/harass role without competing
+      // with the ranged unit's long-distance attack.
+      attackRange: 38,
       attackCooldownMs: 1000,
       xpValue: 12,
       price: 40,
