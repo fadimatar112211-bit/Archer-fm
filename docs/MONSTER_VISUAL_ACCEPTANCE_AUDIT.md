@@ -1,3 +1,18 @@
+## SUPERSEDING FINAL DIRECTION — 2.5D sprite actors (2026-11-23)
+
+The binding final presentation is **the four approved monster designs as 2D sprite actors with a polished 2.5D appearance inside a lightweight 3D world**, per `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` (approved 2026-11-21). This supersedes later 3D-only wording in the historical audit below.
+
+- Use only the exact four monsters in `assets/references/approved_all/archer_fm_monsters_reference.png`.
+- Keep the existing four gameplay roles, stats, targeting, prices, XP and army rules unchanged.
+- Required monster states are idle, locomotion, attack, hit and death, with direction coverage appropriate to the conversion plan.
+- Current Canvas painters and rejected low-poly GLB prototypes remain transitional/review-only; neither is final art.
+- Do not generate substitute character art or wire rejected prototypes into production.
+- Promote only after reference comparison, sprite/manifest validation and real in-game 16:9 capture review.
+
+Historical 3D-only requirements below are retained for traceability; the approved 2.5D conversion plan is authoritative wherever they conflict.
+
+---
+
 # Archer FM — Monster Visual Acceptance Audit
 
 Date: 2026-11-21  
