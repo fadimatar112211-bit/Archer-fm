@@ -138,11 +138,9 @@ These are pipeline integrity checks, not proof that the resulting faces, armor, 
 - This is a successful pipeline/artifact result on the stated source commit, not proof that the current branch-head matrix run has completed and not a final art approval.
 
 
-## 2026-11-23 — Clarify 3D-only final acceptance
+## 2026-11-23 — Supersede the earlier 3D-only wording
 
-- Removed stale table wording that implied 2.5D sprite acceptance was still a final production goal.
-- All four heroes are now consistently described as GLB-route or GLB-migration work with 3D visual acceptance still open. Shadow's sprite remains a temporary fallback, not an approved final visual.
-- No hero route, model, geometry, or animation was changed in this documentation correction.
+An earlier note in this audit described GLB characters as the final production target. That wording is obsolete and is superseded by the approved project direction at the top of this document: **2D/2.5D sprite actors in a lightweight 3D arena**. GLBs remain source/animation inputs only. Do not treat the older 3D-only note below as a current art or runtime requirement.
 
 
 ## 2026-11-23 — Face readability source audit (no speculative geometry edits)
@@ -234,3 +232,11 @@ No GLB binary, rig, mesh, face, weapon, yaw, lighting, or combat values were
 changed in this review. Next model pass must inspect the exact Blender source
 and node/skin transforms for one hero at a time; do not rotate all four rigs
 or enlarge faces globally to compensate for model-specific occlusion.
+
+
+## 2026-11-23 — Verify weapon selection effects in combat-kit tests
+
+- Extended `test/hero_kit_progression_test.dart` to verify that every hero's starting, fast and heavy weapons apply their configured damage, attack-rate and range multipliers.
+- Added checks that weapon selection preserves the hero's HP, movement speed, five-hit combo and four Ultimate definitions.
+- Added coverage for weapon mastery (+2% damage per level, capped at level 10) and for unknown weapon IDs leaving the kit unchanged.
+- These are source-level test additions; report them as verified only after the queued Flutter CI run executes successfully.
