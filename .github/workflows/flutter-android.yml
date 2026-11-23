@@ -1,7 +1,7 @@
 name: Flutter Android Release APK
 
 concurrency:
-  group: archer-fm-android-${{ github.ref }}
+  group: archer-fm-android-v2-${{ github.ref }}
   # Do not cancel long analysis/test/emulator jobs when another small commit lands.
   # Keep the active verification run alive; newer pushes may wait in the queue.
   cancel-in-progress: false
@@ -211,8 +211,8 @@ jobs:
           mkdir -p build/android-emulator-diagnostics
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
           if [ -n "$SDK" ]; then export PATH="$SDK/platform-tools:$PATH"; fi
-          adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
-          adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
+          timeout 8s adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
+          timeout 12s adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
           free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
           dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
           if [ -f /tmp/archer-emulator.log ]; then
@@ -220,7 +220,7 @@ jobs:
           fi
           if [ -f /tmp/archer-emulator.pid ]; then
             PID="$(cat /tmp/archer-emulator.pid)"
-            ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
+            timeout 5s ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
           fi
 
       - name: Upload Android emulator diagnostics
