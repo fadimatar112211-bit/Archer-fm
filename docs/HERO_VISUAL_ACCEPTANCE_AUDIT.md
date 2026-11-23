@@ -169,3 +169,21 @@ Evidence:
 - `test/special_abilities_capture_test.dart` attempts in-game-state captures for all four heroes' ability effects.
 
 This confirms the design/data contract exists in source and tests; it does not by itself certify balance, animation quality, visual readability, or successful Android runtime execution. Keep those checks separate.
+
+## 2026-11-23 — Inspect uploaded in-game face captures at native resolution
+
+Inspected the actual uploaded `70_game_3d_hero_face_3quarter_idle.png` and `71_game_3d_hero_idle.png` at 800×450, not just the artifact filename.
+
+Observed:
+- The 3D hero is present and the GLB renderer is drawing a posed character in the arena.
+- At the captured 16:9 gameplay scale the hero occupies only a small central portion of the frame (roughly 55–75 px tall in these samples); facial features cannot be judged reliably at this scale.
+- The three-quarter and idle captures do not yet establish a clear, readable face or reference-faithful armor/weapon silhouette. This is a visual acceptance failure, not proof that the face mesh is absent.
+- The surrounding scene is partly dark/occluded in the supplied captures. Determine whether this is the intentional capture overlay/viewport mask or the actual production viewport before adjusting world lighting or camera framing.
+
+Required next evidence:
+1. Capture a clean full-frame 16:9 gameplay screenshot with all capture masks/overlays disabled, plus a separate close-up inspection render for each hero.
+2. Include a ruler/bounds diagnostic for projected hero height and face pixel size; target a clearly legible gameplay silhouette without changing the established arena camera blindly.
+3. Capture front, three-quarter and gameplay-facing yaw from the same rest-pose/idle state, then compare headgear, eyes, hair, armor and signature weapon directly against `hero_roster_concept.jpg`.
+4. Correct one hero at a time. Do not globally enlarge heads/eyes or rotate all hero rigs to compensate for a possibly cropped capture.
+
+No model, camera, face geometry, lighting, or combat code was changed based on these screenshots alone.
