@@ -1808,10 +1808,17 @@ class GameWorld {
   void _updateBurns() {
     for (final enemy in enemies) {
       if (enemy.hp <= 0 || enemy.burnTicksLeft <= 0) continue;
-      if (nowMs < enemy.burnNextTickAtMs) continue;
-      enemy.burnNextTickAtMs = nowMs + 800;
-      enemy.burnTicksLeft--;
-      _damageEnemy(enemy, enemy.burnTickDamage);
+      // Keep the original tick schedule when a frame takes longer than the
+      // DoT interval. Advancing from nowMs would silently drop overdue poison
+      // or burn ticks after a hitch; advancing from the scheduled timestamp
+      // catches up without accumulating timing drift.
+      while (enemy.hp > 0 &&
+          enemy.burnTicksLeft > 0 &&
+          nowMs >= enemy.burnNextTickAtMs) {
+        enemy.burnNextTickAtMs += 800;
+        enemy.burnTicksLeft--;
+        _damageEnemy(enemy, enemy.burnTickDamage);
+      }
     }
   }
 
