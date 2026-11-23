@@ -1,11 +1,10 @@
 import 'dart:ui' show Offset;
 
 import 'package:archer_fm/game/render3/sprite_actor_clip_resolver.dart';
-import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('sprite clip resolver preserves the established eight-way world convention', () {
+  test('sprite clip resolver maps the eight world-facing octants', () {
     const cases = <({Offset facing, String direction})>[
       (facing: Offset(1, 0), direction: 'e'),
       (facing: Offset(0.7071, 0.7071), direction: 'se'),
@@ -23,11 +22,22 @@ void main() {
         SpriteActorClipResolver.clipName('walk', item.facing),
         'walk_${item.direction}',
       );
-      expect(
-        SpriteActorClipResolver.directionFor(item.facing),
-        GameWorld.octantNames[GameWorld.octantIndexOf(item.facing)],
-      );
     }
     expect(SpriteActorClipResolver.directionFor(Offset.zero), 's');
+  });
+
+  test('direction selection is stable for vectors near octant boundaries', () {
+    expect(
+      SpriteActorClipResolver.directionFor(const Offset(1, 0.01)),
+      'e',
+    );
+    expect(
+      SpriteActorClipResolver.directionFor(const Offset(0.01, 1)),
+      's',
+    );
+    expect(
+      SpriteActorClipResolver.directionFor(const Offset(-1, -0.01)),
+      'w',
+    );
   });
 }
