@@ -170,9 +170,9 @@ Still to decide or test:
 - What happens if all players lose every crystal, and the interaction between rebuilding and the “last player with crystals” match-ending rule.
 - Minimum player count and exact matchmaking timeout/start behavior when fewer than four players join.
 - LAN host migration/host disconnect handling and secure account progression synchronization.
-- Final rendering direction (approved 2026-11-21): reference-faithful 2D/2.5D sprite actors for all four heroes and four existing monster roles inside a lightweight 3D world; see `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`.
+- Final rendering direction: 2.5D sprite sheets rendered from a consistent 3D Chibi source model; runtime engine remains undecided.
 - Networking technology, backend, hosting, persistence schema, and anti-cheat architecture.
-- **Final renderer decision is no longer unresolved:** the approved 2026-11-21 visual plan fixes the final target as 2D/2.5D sprite characters (all four heroes and all four existing monster roles) in a lightweight 3D world. Current live-GLB hero routes and procedural Canvas monsters are transitional implementation/fallback paths, not the final target. Follow `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`; do not infer a new renderer direction from later contradictory status notes.
+- **Unresolved conflict requiring the user's decision (recorded 2026-11-18, not silently changed):** §9 fixes the rendering direction as pre-rendered 2.5D sprite sheets, but the shipped implementation (§19–§24) renders real-time skinned GLB heroes on Android. Both satisfy “colorful 3D/2.5D chibi”, but they are different runtime architectures. The working code was kept; switching it would be a visual/performance decision, not a bug fix.
 - **Not fulfilled, not claimed:** account-based cloud save across reinstall and Google/Apple sign-in (§3 “Accounts and social” / “Networking”). Only local username/password accounts and local persistence exist. An online authoritative server class exists, but no hosted backend is deployed (`127.0.0.1` default in the lobby).
 - Combat/spec gaps from the step-3 audit (2026-11-18) are now **resolved**: freeze and stun exist as real disables in `GameWorld` (movement/attacks/windups stop), and the dodge API/button/i-frames/combo-cancel were removed while the GLB dodge animation asset was left untouched. Durations/sources are documented balance placeholders (see §31). The third audit item — three weapons per hero unlocked by progression — was resolved in step 12 at the user's explicit clarification: they are chosen **before** the match, one starting plus two at hero levels 10 and 20 (see §32).
 
@@ -184,7 +184,7 @@ Still to decide or test:
 | Product vision and core requirements | Documented | §3 is the confirmed spec; §5 keeps unresolved decisions explicit |
 | Preliminary balance design | Not finalized | Numbers require simulation and playtesting; implemented values are documented placeholders |
 | Legacy asset audit | Partial | Hero SVG/GLB assets audited and copied; legacy monster art was unavailable, procedural painter used |
-| Engine/architecture decision | Approved: 2.5D characters + lightweight 3D world | Final target is defined by `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`; current GLB/Canvas routes are transitional |
+| Engine/architecture decision | Conflict recorded | Plan §9 fixed 2.5D sprite sheets; shipping code uses real-time skinned GLB heroes (§19–§24). Per user rule, no silent change — see §5 |
 | Project scaffold | Done | Flutter app, Android Gradle project, assets and CI workflows present |
 | Gameplay implementation | Done (pending device QA) | Systems 1–13 of §7 implemented plus XP/progression closure (§35); hero/monster XP, abilities, weapons, save, Arabic progression UI and post-match XP summary implemented and covered by tests |
 | Backend/multiplayer | Partial | Authoritative in-app server + LAN/hotspot implemented; no hosted backend and no Google/Apple sign-in or cloud save |
