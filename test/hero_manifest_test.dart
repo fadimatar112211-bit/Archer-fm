@@ -6,7 +6,7 @@ import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const String _renderRoot = 'assets/heroes/ranger/renders';
+const String _renderRoot = 'assets/heroes/ranger_new/renders';
 const List<String> _states = [
   'idle',
   'walk',
@@ -30,7 +30,7 @@ const List<String> _directions = [
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final manifestFile = File('$_renderRoot/ranger_manifest.json');
+  final manifestFile = File('$_renderRoot/ranger_new_manifest.json');
   if (!manifestFile.existsSync()) {
     test(
       'the rendered Ranger manifest is committed',
@@ -48,7 +48,7 @@ void main() {
   });
 
   test('every state and direction has an animation and an atlas', () {
-    expect(manifest.heroId, 'ranger');
+    expect(manifest.heroId, 'ranger_new');
     expect(manifest.frameWidth, 192);
     expect(manifest.frameHeight, 192);
     expect(manifest.pivotX, closeTo(0.5, 1e-9));
@@ -112,7 +112,7 @@ void main() {
     }
   });
   test('the real Ranger bundle decodes every atlas and covers every frame', () async {
-    final hero = heroById('ranger');
+    final hero = heroById('ranger_new');
     final manifestLoader = BundleHeroAssetLoader(hero);
     late final HeroManifest loaded;
     try {
@@ -121,7 +121,7 @@ void main() {
       manifestLoader.dispose();
     }
 
-    expect(loaded.heroId, 'ranger');
+    expect(loaded.heroId, 'ranger_new');
     expect(loaded.atlases.length, 64);
     expect(loaded.clips.length, 64);
 
