@@ -2065,3 +2065,20 @@ This batch continues the approved 2.5D sprite migration. It does not change any 
   - `41c9e1caca7f01148dcb88ed6ec94c9804643266` — test non-finite sprite atlas source rectangles.
 - Validation: Flutter analyze/tests and Android build have **not** been run locally in this session. The latest Actions runs queried before this change showed failed conclusions but returned zero job records, so the failing step could not be identified from the available API response. Do not mark this patch as CI-verified until a run exposes a successful result.
 - Scope: renderer input validation only; no hero art, monster art, map rules, combat values, or game balance changed.
+
+
+## 2026-11-23 — Sprite pilot runtime-contract tests
+
+This is a test-hardening continuation of the first sprite migration batch. No visual reference, game objective, combat rule, character design, monster role or acceptance gate was changed.
+
+### Implemented
+- Added `test/sprite_actor_clip_resolver_test.dart` to verify all eight world-facing vectors resolve to the exact documented sprite direction names.
+- Added explicit zero-facing coverage for the south-facing fallback.
+- Added a manifest-backed test proving directional clip lookup returns only the exact requested clip and never silently borrows another direction or animation.
+- Extended `test/sprite_actor_renderer_test.dart` with an actual raster-pixel check: the renderer draws the atlas frame at the expected location and applies 50% opacity to the rendered alpha channel.
+- Kept the approved Shadow atlas and reference images unchanged.
+
+### Verification status
+- Commits: `0d6e0cd2e7db4d5ff3c94d7db3b3b72648784ad7`, `c644518b0574b32b552e389990498b47faa0852e`, `794b71036817be2192b2cceab11ee6392593041f`.
+- The latest commit lookup returned no associated workflow runs. These are committed tests, not a passing test report; Flutter format, analyze, tests, Android build/smoke and visual capture review remain unverified.
+- Shadow Phase 1 is still open until its full plan-defined animation and visual gates pass. Ranger, Flame and Storm remain on their safe transitional route; monster sprites and lightweight 3D-world integration remain outstanding.
