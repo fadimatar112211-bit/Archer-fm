@@ -65,7 +65,7 @@ void main() {
           type: type,
           team: MonsterTeam.player,
           level: 6,
-          position: Offset(330 + slot * 90, 420),
+          position: world.player.position + Offset(-150 + slot * 90, 90),
           maxHp: stats.maxHp,
           speed: stats.speed,
           contactDamage: stats.damage,
@@ -89,7 +89,7 @@ void main() {
           type: type,
           team: MonsterTeam.enemy,
           level: 4,
-          position: Offset(330 + slot * 90, 170),
+          position: world.player.position + Offset(-150 + slot * 90, -170),
           maxHp: stats.maxHp,
           speed: stats.speed,
           contactDamage: stats.damage,
@@ -109,7 +109,7 @@ void main() {
         MonsterCorpse(
           type: MonsterType.runner,
           team: MonsterTeam.enemy,
-          position: const Offset(620, 250),
+          position: world.player.position + const Offset(140, -90),
           facing: const Offset(1, 0),
           bornAtMs: world.nowMs - 250,
         ),
@@ -158,7 +158,7 @@ void main() {
         MonsterCorpse(
           type: MonsterType.stalker,
           team: MonsterTeam.player,
-          position: const Offset(700, 300),
+          position: world.player.position + const Offset(210, -40),
           facing: const Offset(-1, 0),
           bornAtMs: world.nowMs - 250,
         ),
@@ -196,9 +196,14 @@ void main() {
           final angle = direction * math.pi / 4;
           actor.attackAnimUntilMs = world.nowMs + 230;
           actor.facing = Offset(math.cos(angle), math.sin(angle));
-          await _save(
+          final fingerprint = await _save(
             '23b_monster_${type.name}_attack_dir_$direction',
             capture('ranger_new_idle_e_000'),
+          );
+          expect(
+            directionFingerprints.add(fingerprint),
+            isTrue,
+            reason: '${type.name} attack direction $direction must change the rendered capture',
           );
         }
       }
@@ -209,6 +214,7 @@ void main() {
       final isolatedActors = {
         for (final actor in world.enemies) actor.type: actor,
       };
+      final isolatedFingerprints = <int>{};
       for (final type in armyTypes) {
         final source = isolatedActors[type]!;
         final actor = EnemyState(
@@ -231,9 +237,14 @@ void main() {
           ..add(actor);
         world.army.clear();
         world.corpses.clear();
-        await _save(
+        final fingerprint = await _save(
           '24_monster_${type.name}_isolated_review',
           capture('ranger_new_idle_e_000'),
+        );
+        expect(
+          isolatedFingerprints.add(fingerprint),
+          isTrue,
+          reason: '${type.name} isolated monster must be visible and distinct',
         );
       }
 
@@ -246,12 +257,21 @@ void main() {
   );
 }
 
-Future<void> _save(String name, ui.Image image) async {
+Future<int> _save(String name, ui.Image image) async {
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
   final dir = Directory('build/arena-captures');
   if (!dir.existsSync()) dir.createSync(recursive: true);
   File('${dir.path}/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
+
+  // Sample the rendered pixels so the capture test fails if the actor is
+  // outside the viewport or a direction/archetype silently renders identically.
+  var fingerprint = 0x811c9dc5;
+  for (var i = 0; i < pixels!.lengthInBytes; i += 32) {
+    fingerprint = ((fingerprint ^ pixels.getUint8(i)) * 0x01000193) & 0xffffffff;
+  }
   image.dispose();
+  return fingerprint;
 }
 
 class _FileAtlasLoader extends HeroAssetLoader {
