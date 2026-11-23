@@ -1,16 +1,25 @@
+import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
 import '../../hero/hero_manifest.dart';
-import '../world/game_world.dart';
 
-/// Shared state/direction lookup for camera-facing hero and monster sprites.
-/// Gameplay facing remains in world space; GameWorld owns the established
-/// screen/world octant convention, so art packs cannot invent a second one.
+/// Converts a world-facing vector into the eight-direction naming convention
+/// used by the hero sprite manifests. Positive Y points south on the game plane.
 class SpriteActorClipResolver {
   const SpriteActorClipResolver._();
 
-  static String directionFor(Offset facing) =>
-      GameWorld.octantNames[GameWorld.octantIndexOf(facing)];
+  static const List<String> directions = [
+    'e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne',
+  ];
+
+  static String directionFor(Offset facing) {
+    if (facing == Offset.zero) return 's';
+    final angle = math.atan2(facing.dy, facing.dx);
+    final octant = (angle / (math.pi / 4)).round();
+    final index = (octant % directions.length + directions.length) %
+        directions.length;
+    return directions[index];
+  }
 
   static String clipName(String state, Offset facing) =>
       '${state}_${directionFor(facing)}';
