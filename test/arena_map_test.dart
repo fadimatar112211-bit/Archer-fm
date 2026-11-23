@@ -137,7 +137,7 @@ void main() {
       }
     });
 
-    test('river channels slow movement everywhere outside bridge decks', () {
+    test('river channels slow movement outside bridge crossing corridors', () {
       for (var seed = 0; seed < 20; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
         for (final river in map.rivers) {
@@ -150,7 +150,16 @@ void main() {
                 a.dx + (b.dx - a.dx) * t,
                 a.dy + (b.dy - a.dy) * t,
               );
-              if (!river.contains(point) || map.isBridge(point)) continue;
+              final inBridgeApproach = map.rivers.any(
+                (owner) => owner.bridges.any(
+                  (bridge) => bridge.coversCrossing(point),
+                ),
+              );
+              if (!river.contains(point) ||
+                  map.isBridge(point) ||
+                  inBridgeApproach) {
+                continue;
+              }
               expect(map.isWater(point), isTrue,
                   reason: 'unbridged river sample should be water, seed $seed');
               expect(map.movementFactorAt(point), waterSpeedFactor,
