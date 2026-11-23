@@ -1667,3 +1667,10 @@ Verification:
 - Refined the bridge dry approach to match the regression's actual bank-to-bank path: the test starts 20 world units beyond each deck edge, so the dry corridor now extends 22 units past the deck on both sides (with a small margin). The previous corridor used only the river half-width and could leave those test endpoints in water, explaining the 0.9368 average-speed failure.
 - This only changes water-speed classification along the bridge axis; bridge rendering, deck size, and collision geometry remain unchanged.
 - Saved as commit `3c6c2b1`; awaiting a non-cancelled CI run.
+
+
+## CI diagnostics hardening — 2026-11-23
+
+- The previous Android smoke job completed its integration-test step with a failure, then stalled while collecting `adb logcat` diagnostics. The diagnostic commands now have strict timeouts so an unresponsive emulator cannot hold the workflow open indefinitely.
+- Bumped the Android workflow concurrency group to `archer-fm-android-v2` so the new verification can proceed independently of the stale run still holding the previous group. Existing jobs are not forcibly cancelled.
+- Saved in commit `e386716`; the new run must still complete before the branch can be called green.
