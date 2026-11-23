@@ -466,6 +466,6 @@ HeroKit kitForHero(String heroId) {
     case 'storm':
       return stormKit;
     default:
-      return rangerNewKit;
+      throw ArgumentError.value(heroId, 'heroId', 'Unknown hero kit');
   }
 }
