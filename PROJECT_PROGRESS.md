@@ -2054,3 +2054,14 @@ This batch continues the approved 2.5D sprite migration. It does not change any 
 - Changes are committed on `ranger-reference-work`.
 - The GitHub commit lookup returned no associated workflow runs for this commit. Flutter format, analyze, tests, Android build/smoke and visual capture review remain unverified.
 - Shadow Phase 1 remains open; its action poses are still held frames pending approved source artwork. The other heroes and four monster sprite packs are not yet migrated. The current Canvas arena also remains a 2D renderer; lightweight 3D-world integration is still outstanding.
+
+
+## 2026-11-23 — Sprite atlas rectangle validation hardening
+
+- Hardened `lib/game/render3/sprite_actor_renderer.dart` so atlas source rectangles with NaN or infinite coordinates are rejected before reaching Canvas drawing. Existing non-empty and image-bounds checks remain in place.
+- Extended `test/sprite_actor_renderer_test.dart` with NaN and positive-infinity source-rectangle regression cases.
+- Commits:
+  - `92b0cae672a7d108f8a944ef87ec0173094d171b` — reject non-finite sprite atlas source rectangles.
+  - `41c9e1caca7f01148dcb88ed6ec94c9804643266` — test non-finite sprite atlas source rectangles.
+- Validation: Flutter analyze/tests and Android build have **not** been run locally in this session. The latest Actions runs queried before this change showed failed conclusions but returned zero job records, so the failing step could not be identified from the available API response. Do not mark this patch as CI-verified until a run exposes a successful result.
+- Scope: renderer input validation only; no hero art, monster art, map rules, combat values, or game balance changed.
