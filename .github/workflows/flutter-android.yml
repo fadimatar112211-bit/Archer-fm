@@ -162,10 +162,11 @@ jobs:
           test "$LICENSE_STATUS" -eq 0
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
-          # Use a lower-resolution display and more guest RAM/CPU headroom:
-          # the prior Pixel 2 defaults (1080x1920, 2 GiB) went offline as the
-          # match arena mounted after the home/setup screens had passed.
-          "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -wipe-data -skin 720x1280 -memory 4096 -cores 4 > /tmp/archer-emulator.log 2>&1 &
+          # The last smoke run reached the match transition, then the emulator
+          # process disappeared and ADB reported "device offline". Reduce the
+          # software-rendered framebuffer and give the guest more RAM headroom
+          # before retrying the full 3D arena mount.
+          "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-metrics -wipe-data -skin 540x960 -memory 6144 -cores 4 > /tmp/archer-emulator.log 2>&1 &
           EMULATOR_PID=$!
           echo "$EMULATOR_PID" > /tmp/archer-emulator.pid
           adb start-server
@@ -235,8 +236,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  # Historical 3D source-model validation only. Production monsters are 2D/2.5D sprites.
-  # Keep this job disabled until a user-approved sprite workflow replaces it.
+  # Legacy disabled job retained for reference. The approved production direction
+  # is reference-faithful rigged 3D monsters; the separate review workflow owns
+  # prototype generation until those models pass visual acceptance.
   generate-monster-glbs:
     if: ${{ false }}
     runs-on: ubuntu-22.04
