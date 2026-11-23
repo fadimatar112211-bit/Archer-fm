@@ -804,6 +804,17 @@ void main() {
   });
 
   group('world integration', () {
+    test('randomized scenery keeps the full hero spawn collider clear', () {
+      for (var seed = 0; seed < 120; seed++) {
+        final map = ArenaMap.generate(math.Random(seed));
+        expect(
+          map.obstacleBlocking(map.playerSpawn, 24),
+          isNull,
+          reason: 'tree/rock must not overlap hero spawn for seed $seed',
+        );
+      }
+    });
+
     test('hero starts beside their castle on clear dry ground', () {
       final world = makeWorld();
       final spawn = world.player.position;
