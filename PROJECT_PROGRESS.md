@@ -2037,3 +2037,20 @@ This batch follows the existing approved conversion plan without changing its ob
 - Added `test/shadow_walk_capture_test.dart`. It decodes the supplied 8×4 atlas once, loads each of the eight original directional metadata files, and renders all 32 poses through the production `ArenaPainter` at the normal 800×450 gameplay capture size.
 - The test writes 32 PNGs under `build/arena-captures/shadow-walk/` for visual inspection by the existing capture-artifact workflow. It verifies each frame resolves to a real source rectangle and each rendered PNG is non-empty.
 - This is a capture-generation test only; no fresh capture artifact exists until CI runs it and uploads the output.
+
+
+## 2026-11-23 — Sprite renderer safety and validation batch
+
+This batch continues the approved 2.5D sprite migration. It does not change any game-design objective, character reference, monster role, map rule, combat value or phase acceptance gate.
+
+### Implemented
+- Hardened `lib/game/render3/sprite_actor_renderer.dart` against non-finite ground anchors, frame dimensions, pivots and target heights.
+- Added validation that sprite source rectangles are non-empty and remain inside the decoded atlas image.
+- Added finite-opacity validation before drawing, while preserving the existing 0–1 opacity clamp for valid finite values.
+- Expanded `test/sprite_actor_renderer_test.dart` to cover invalid numeric geometry, non-finite opacity and out-of-bounds atlas rectangles.
+- Confirmed the existing eight-way resolver test remains present at `test/sprite_actor_clip_resolver_test.dart`; no duplicate test file was created.
+
+### Verification status
+- Changes are committed on `ranger-reference-work`.
+- The GitHub commit lookup returned no associated workflow runs for this commit. Flutter format, analyze, tests, Android build/smoke and visual capture review remain unverified.
+- Shadow Phase 1 remains open; its action poses are still held frames pending approved source artwork. The other heroes and four monster sprite packs are not yet migrated. The current Canvas arena also remains a 2D renderer; lightweight 3D-world integration is still outstanding.
