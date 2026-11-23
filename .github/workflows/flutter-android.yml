@@ -256,13 +256,59 @@ jobs:
             if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
               echo "QEMU process no longer exists after smoke test." >> /tmp/archer-emulator-watch.log
               break
-              if timeout 3s adb devices 2>/dev/null | grep -qE '^emulator-[0-9]+[[:space:]]+device$'; then
-                echo "ADB remained online after smoke test at $(date -Is)." >> /tmp/archer-emulator-watch.log
-              else
-                echo "ADB unavailable while QEMU process still exists at $(date -Is)." >> /tmp/archer-emulator-watch.log
-              fi
-              sleep 1
-            done
+            fi
+            if timeout 3s adb devices 2>/dev/null | grep -qE '^emulator-[0-9]+[[:space:]]+device
+          if kill -0 "$EMULATOR_PID" 2>/dev/null; then
+            echo "QEMU process survived the 30-second post-test observation window." >> /tmp/archer-emulator-watch.log
+          fi
+          kill "$WATCH_PID" 2>/dev/null || true
+          wait "$WATCH_PID" 2>/dev/null || true
+          exit "$TEST_STATUS"
+
+      - name: Capture Android emulator diagnostics
+        if: always()
+        run: |
+          mkdir -p build/android-emulator-diagnostics
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -n "$SDK" ]; then export PATH="$SDK/platform-tools:$PATH"; fi
+          timeout 8s adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
+          timeout 12s adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
+          free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
+          dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
+          if [ -f /tmp/archer-emulator.log ]; then
+            cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
+          fi
+          if [ -f /tmp/archer-emulator-watch.log ]; then
+            cp /tmp/archer-emulator-watch.log build/android-emulator-diagnostics/emulator-watch.log
+          fi
+          if [ -f /sys/fs/cgroup/memory.events ]; then
+            cp /sys/fs/cgroup/memory.events build/android-emulator-diagnostics/cgroup-memory-events.txt
+          fi
+          if [ -f /tmp/archer-emulator.pid ]; then
+            PID="$(cat /tmp/archer-emulator.pid)"
+            timeout 5s ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
+            if [ -r "/proc/$PID/status" ]; then
+              cp "/proc/$PID/status" build/android-emulator-diagnostics/emulator-proc-status.txt || true
+            fi
+          fi
+          pgrep -af 'qemu-system|/emulator/emulator|adb.*server' > build/android-emulator-diagnostics/emulator-and-adb-processes.txt 2>&1 || true
+          timeout 5s adb version > build/android-emulator-diagnostics/adb-version.txt 2>&1 || true
+
+      - name: Upload Android emulator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-android-emulator-diagnostics
+          path: build/android-emulator-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
+; then
+              echo "ADB remained online after smoke test at $(date -Is)." >> /tmp/archer-emulator-watch.log
+            else
+              echo "ADB unavailable while QEMU process still exists at $(date -Is)." >> /tmp/archer-emulator-watch.log
+            fi
+            sleep 1
+          done
           if kill -0 "$EMULATOR_PID" 2>/dev/null; then
             echo "QEMU process survived the 30-second post-test observation window." >> /tmp/archer-emulator-watch.log
           fi
