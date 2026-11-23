@@ -23,8 +23,10 @@ Do not rename or remap existing gameplay roles until the current monster code an
 
 - The approved reference sheet is present at the canonical path above.
 - The Phase 0 repository audit recorded no `assets/monsters/` production image directory at that audit point.
-- No production monster model, rig, animation pack, or in-game visual acceptance has been demonstrated by the evidence reviewed for this audit.
-- Therefore all four monster visuals remain **NOT READY**. Do not display generic placeholders as approved monster art.
+- Runtime inspection on 2026-11-23 confirms that `lib/game/arena_painter.dart` still draws all four monsters procedurally with Flutter Canvas (`_paintMonster` and per-type body painters). These are readable gameplay placeholders, not skinned 3D production monsters.
+- `tools/monsters/generate_monsters_blender.py` exists and can generate review-only low-poly rigged prototypes, but the generated prototypes have not passed reference comparison and are not wired into the production runtime. Their existence is not production acceptance.
+- The four gameplay identities and their current combat stats remain defined in `lib/game/monsters/monster_models.dart`; this visual pass does not alter those gameplay contracts.
+- Therefore all four monster visuals remain **NOT READY**. Keep the current painter fallback while the reference-matched 3D assets are built and reviewed; do not label it as final art.
 
 ## Required production pipeline
 
@@ -42,10 +44,10 @@ For each of the four reference designs:
 
 ## Next actions
 
-- Inventory the repository for every monster-related source/model/script and record exact paths.
-- Confirm the four current gameplay actor IDs, stats, attack patterns, collision sizes, and animation event contracts without changing them.
-- Establish a monster-specific Blender render/build profile based on existing tools only after source availability is confirmed.
-- Start with the ordinary green sword enemy as a pilot only if its exact source/reference and model are available; otherwise stop and report the missing source rather than inventing a model.
+- Preserve the canonical reference and inspect every source mesh/GLB/Blend before editing or replacing any monster.
+- Keep the gameplay mapping unchanged: runner = green goblin sword, stalker = skeleton dual blade, tank = horned mace brute, ranged = violet hooded masked fighter. The code's current labels/stats do not authorize changing the reference roster.
+- Use the Blender prototype generator only to create review artifacts. Do not wire its low-poly output into production until it passes the exact-reference checklist.
+- Build the green goblin sword enemy first as the pilot, but only from the approved reference and any preserved original source; stop if the exact source geometry is unavailable rather than inventing substitute art.
 - Add per-monster tests for manifest completeness, frame validity, and correct runtime identity.
 - Update this audit with actual file paths, screenshots, test results, and acceptance status. Never mark a monster ready based on a populated manifest alone.
 
