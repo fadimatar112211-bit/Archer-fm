@@ -39,15 +39,11 @@ jobs:
           blender --version
       - name: Select Flame source and render all eight directions
         run: |
-          printf 'flame\\n' > tools/blender/active_hero.txt
-          blender --background assets/heroes/flame/source/flame_source.blend \\
-            --python tools/blender/render_hero.py -- \\
-            --config assets/heroes/ranger/source/render_config.json
+          echo flame > tools/blender/active_hero.txt
+          blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
       - name: Pack Flame frame atlases
         run: |
-          blender --background assets/heroes/flame/source/flame_source.blend \\
-            --python tools/blender/pack_hero_atlases.py -- \\
-            --manifest assets/heroes/flame/renders/flame_manifest.json
+          blender --background assets/heroes/flame/source/flame_source.blend --python tools/blender/pack_hero_atlases.py -- --manifest assets/heroes/flame/renders/flame_manifest.json
       - name: Upload rendered Flame preview
         uses: actions/upload-artifact@v4
         with:
