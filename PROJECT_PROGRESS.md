@@ -2160,3 +2160,10 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - The old Ranger ID is rejected, and regression coverage now locks the four playable IDs and the canonical Ranger New manifest path.
 - The four-hero sprite workflow now writes Flame/Shadow/Storm bundles outside runtime folders and builds Ranger from `ranger_new` separately.
 - The latest sprite matrix workflow was queued at the last poll. Android workflow runs reported failure with no job records exposed; no cause or test result is inferred. Flutter, Python and Blender checks remain unverified until the workflow returns job logs/results.
+
+
+## 2026-11-23 — Runtime verification for all four hero bundles
+
+- Added `test/all_hero_runtime_bundle_test.dart`: loads Ranger New, Flame, Shadow and Storm through the exact `BundleHeroAssetLoader` used in matches, checks each 64-clip/64-atlas manifest and all eight directions/states, then decodes representative walk/attack/skill atlas pages and verifies every referenced frame rectangle is inside the image.
+- Hardened `BundleHeroAssetLoader.loadManifest()` so a manifest stored under one hero's folder cannot silently identify itself as another hero. A mismatch now fails with a clear `FormatException`.
+- This is runtime test coverage added to source; it has not yet been executed. The current Android workflow was still running on an earlier commit when checked, and the sprite pipeline was queued. No pass is claimed.
