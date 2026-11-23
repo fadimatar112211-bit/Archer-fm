@@ -260,10 +260,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
             child: Column(
               children: [
                 _topBar(),
-                const Spacer(),
-                _pageIndicator(),
+                if (!compactLandscape) const Spacer(),
+                if (!compactLandscape) _pageIndicator(),
                 SizedBox(
-                  height: compactLandscape ? 96 : 132,
+                  height: compactLandscape ? 72 : 132,
                   child: PageView(
                     key: const ValueKey('home_page_view'),
                     controller: _pages,
@@ -280,6 +280,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 Padding(
                   padding: EdgeInsets.only(bottom: compactLandscape ? 6 : 12),
                   child: FilledButton.icon(
+                    style: compactLandscape
+                        ? FilledButton.styleFrom(
+                            minimumSize: const Size(0, 32),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            visualDensity: VisualDensity.compact,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          )
+                        : null,
                     key: const ValueKey('home_play'),
                     onPressed: _openArmySelection,
                     icon: const Icon(Icons.play_arrow),
@@ -310,22 +318,27 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         ),
       );
 
-  Widget _topBar() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+  Widget _topBar() {
+    final compact = MediaQuery.sizeOf(context).height < 320;
+    return Padding(
+        padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 14, vertical: compact ? 1 : 6),
         child: Row(
           textDirection: TextDirection.rtl,
           children: [
-            const Text(
+            Text(
               'ARCHER FM',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: compact ? 17 : 22,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+                letterSpacing: compact ? 1 : 2,
               ),
             ),
             const Spacer(),
             IconButton(
+              constraints: compact ? const BoxConstraints.tightFor(width: 32, height: 32) : null,
+              padding: compact ? EdgeInsets.zero : null,
+              visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
               key: const ValueKey('home_online'),
               tooltip: 'جماعي',
               color: Colors.white,
@@ -333,6 +346,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               onPressed: _openLobby,
             ),
             IconButton(
+              constraints: compact ? const BoxConstraints.tightFor(width: 32, height: 32) : null,
+              padding: compact ? EdgeInsets.zero : null,
+              visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
               key: const ValueKey('home_settings'),
               tooltip: 'إعدادات',
               color: Colors.white,
@@ -342,6 +358,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           ],
         ),
       );
+  }
 
   Widget _pageIndicator() => Padding(
         padding: const EdgeInsets.only(bottom: 6),
