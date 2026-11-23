@@ -1588,3 +1588,10 @@ Verification:
 
 - Added an integration check that player-owned monsters damage rival crystals when no hostile monster is closer.
 - Added a priority check that the army engages a nearby hostile monster instead of striking a rival crystal.
+
+## 2026-11-23 — Repair arena regression analyzer blockers
+
+- Fixed the biome-terrain test's stray unused `checkedCrossings` declaration; the counter now belongs to the river movement-crossing test that increments and asserts it.
+- Qualified the army purchase-cap test with `GameWorld.maxArmySize`, matching the actual public static constant used by the simulation.
+- These changes address the exact three analyzer errors reported by the latest Android workflow. They do not alter hero, monster, or map runtime behaviour.
+- Re-run Flutter analysis, tests, Android smoke, and release build before treating the branch as verified.

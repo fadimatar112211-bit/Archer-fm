@@ -340,7 +340,6 @@ void main() {
     });
 
     test('biome interiors stay assigned to their own terrain across seeds', () {
-      var checkedCrossings = 0;
       for (var seed = 0; seed < 24; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
         for (final patch in map.biomes) {
@@ -489,6 +488,7 @@ void main() {
     });
 
     test('movement factor samples the full path across water and bridges', () {
+      var checkedCrossings = 0;
       for (var seed = 0; seed < 24; seed++) {
         final map = ArenaMap.generate(math.Random(seed));
         final river = map.rivers.first;
@@ -751,7 +751,7 @@ void main() {
     test('army purchase cap rejects without charging resources', () {
       final world = makeWorld(seed: 33);
       world.resources = 100000;
-      for (var i = world.army.length; i < maxArmySize; i++) {
+      for (var i = world.army.length; i < GameWorld.maxArmySize; i++) {
         expect(world.buyMonster(MonsterType.runner), isTrue);
       }
       final balance = world.resources;
