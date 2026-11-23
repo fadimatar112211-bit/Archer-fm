@@ -1836,3 +1836,15 @@ Verification:
 - Corrected stale smoke-test/workflow comments so they describe the current 3D arena/monster production direction rather than 2.5D sprites.
 - Workflow change: `74be09c0d4025f36a1d8cb084aa2377429e00fe5`; smoke-test comment update: `50dc0359bc8ce658cab59970ebf15a226d95c754`.
 - The emulator adjustment is a retry, not a verified fix. Await the new CI smoke result before declaring match entry stable.
+
+## 2026-11-23 — First four-monster Blender prototypes reviewed
+
+- Monster prototype workflow run `45146774825` completed successfully: Python syntax, Blender generation, GLB structural/clip validation, and artifact upload all passed.
+- Downloaded and visually inspected all four 768×768 preview renders. The prototypes are still primitive low-poly blockouts and do not match the approved monster reference closely enough:
+  - Runner: generic green blob-like goblin; sword and clothing silhouette too simple.
+  - Stalker: skull is readable, but rib/spine anatomy looks like disconnected beads and blades are generic.
+  - Tank: horns exist, but armor and oversized spiked mace silhouette are not convincing.
+  - Ranged: purple palette exists, but hood/mask identity and violet energy blades are missing.
+- Rejected all four for production use. No prototype GLB was copied into game assets or runtime. The existing arena painter remains the fallback.
+- Updated `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` with per-monster review evidence and rejection decisions. Audit commit: `d75d41905a4c7296c1dfefb69397b13ce6888a14`.
+- Next: redesign base silhouettes and signature gear directly against the canonical reference before spending time on additional animation polish.
