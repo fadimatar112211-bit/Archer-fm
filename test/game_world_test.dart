@@ -692,13 +692,11 @@ void main() {
       // the hero moves before the later animation frames are dispatched.
       final energyAfterFirstHit = world.player.energy;
       world.player.position += const Offset(250, 0);
-      world.update(70);
       world.releaseTwinFangsFollowUp();
       expect(
         100 - lone.hp,
         closeTo(shadowKit.baseDamage * 0.8 * 2, 0.01),
       );
-      world.update(70);
       world.releaseTwinFangsFollowUp();
       expect(
         100 - lone.hp,
