@@ -715,7 +715,9 @@ class _GameScreenState extends State<GameScreen>
     }
 
     if (m == null) return;
-    final clip = m.clipFor(state, dir);
+    final clip = directionLocked == null
+        ? SpriteActorClipResolver.clipFor(m, state, world.player.facing)
+        : m.clipFor(state, dir);
     if (clip == null) return;
     final player = _player;
     if (player == null || _clipName != name) {
