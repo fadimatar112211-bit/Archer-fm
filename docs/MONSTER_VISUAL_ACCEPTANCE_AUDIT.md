@@ -63,3 +63,19 @@ For each of the four reference designs:
 - [ ] Animation events align with existing gameplay timing.
 - [ ] In-game 16:9 captures are legible and reviewed.
 - [ ] Production route is explicitly approved in code and covered by regression tests.
+
+
+## 2026-11-23 — First Blender prototype visual review (not accepted)
+
+Review artifact: workflow run `45146774825`, artifact `monster-reference-prototypes` (four GLBs, four 768×768 previews). The Blender build, Python syntax check, GLB structural validation and artifact upload all passed. This proves the prototype pipeline executes; it does **not** prove visual acceptance.
+
+Visual inspection of the four generated previews found:
+
+| Prototype | Visible result | Decision |
+|---|---|---|
+| runner / green sword goblin | Green chibi body is recognizable by palette and ears, but the body is assembled from smooth primitive blobs; face, tunic and short sword are generic and do not reproduce the approved goblin silhouette/details | **REJECT — redesign from reference** |
+| stalker / skeleton dual blade | Skull and exposed bones are identifiable, but ribs/spine read as separated beads and the paired weapons are thin generic spikes rather than the reference blades | **REJECT — redesign anatomy and weapons** |
+| tank / horned mace brute | Horns and heavy palette are present, but armor is spherical shoulder/chest pieces; mace and spikes do not read as the approved oversized spiked weapon silhouette | **REJECT — redesign armor and mace** |
+| ranged / violet hooded blades | Purple palette and two hand-held shapes are present, but there is no convincing hood/mask silhouette and the weapons do not read as violet energy blades | **REJECT — redesign hood, mask and energy blades** |
+
+All four prototypes remain review-only and must not be copied into production assets or runtime routing. The current Canvas painters remain the safe gameplay fallback. Next iteration must prioritize matching the approved reference's distinct silhouette and signature gear before adding more animation polish.
