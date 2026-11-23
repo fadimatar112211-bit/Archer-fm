@@ -110,6 +110,7 @@ void main() {
       final sheet = await loader.loadSheet(manifest, clipName);
       final events = <String>[];
       final player = SpritePlayer(
+        clip: resolved,
         onEvent: (event) => events.add(event.name),
       );
       await capture(
