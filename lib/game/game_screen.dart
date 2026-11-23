@@ -381,7 +381,7 @@ class _GameScreenState extends State<GameScreen>
     try {
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
-      setState(() => _hero3d = Hero3DController(Hero3DModel(model)));
+      setState(() => _hero3d = Hero3DController(Hero3DModel(model, heroId: widget.hero.id)));
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
