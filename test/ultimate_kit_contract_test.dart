@@ -1,5 +1,4 @@
 import 'package:archer_fm/game/combat/hero_kit.dart';
-import 'package:archer_fm/game/combat/hero_weapons.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

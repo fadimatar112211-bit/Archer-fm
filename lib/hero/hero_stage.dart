@@ -28,7 +28,7 @@ class HeroStage extends StatelessWidget {
     required this.effects,
     required this.timeMs,
     required this.placeholder,
-    this.theme = rangerTheme,
+    this.theme = rangerNewTheme,
   });
 
   final AtlasSheet? sheet;
