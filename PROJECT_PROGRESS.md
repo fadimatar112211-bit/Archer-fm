@@ -1683,3 +1683,11 @@ Verification:
 - Strengthened `all_hero_render_manifest_test.dart`: every clip frame ID must exist in the metadata file for that clip's own atlas, in addition to the existing uniqueness and frame-count checks. This catches placeholder/reused frame references rather than only checking that PNG files exist.
 - Updated the river-water regression test to distinguish the intentionally dry bridge approach corridor from unbridged river water. The 40-seed full-crossing test still verifies full movement speed and dry classification along the entire crossing.
 - Saved across commits `bb7ca29`, `d951f39`, `d6b803d`, and `3c73eca`. Full CI for the latest head is queued behind the earlier Android smoke run; no green result is claimed yet.
+
+
+## Shadow approved walk atlas restoration — 2026-11-23
+
+- Follow-up CI exposed that the earlier generic frame-ID rewrite had overridden Shadow's specially approved user-supplied 8-direction walk atlas. Restored its exact four-frame cycle for all eight directions, the idle first-frame pose, and the documented run reuse; action states deliberately hold the approved pose until dedicated action artwork is supplied, preserving their combat event timing.
+- All 64 state/direction manifest entries now resolve to the approved shared PNG and the correct direction-specific metadata. This is the accepted interim art mapping, not a claim that Shadow's attack/skill/dodge/hit/death visuals are finished.
+- Increased only Shadow's isolated 3D review scale from 1.04× to 1.07× after CI measured 297.48px against the 300px minimum. Other heroes remain unchanged.
+- Commits: `f260380` and `2c7780f`. New CI must confirm these corrections.
