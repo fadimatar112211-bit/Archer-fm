@@ -2180,3 +2180,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 
 - Corrected the catalog comment so it no longer claims the deleted legacy Ranger files are retained.
 - Replaced the Ranger selection description's premature "final/reference-quality" claim with a concise gameplay description. Visual acceptance remains governed by the approved hero reference and the 2.5D acceptance audit.
+
+
+
+## 2026-11-23 — Strict per-hero atlas loading boundary
+
+- Hardened `BundleHeroAssetLoader.loadSheet` to reject a manifest whose `hero_id` does not match the loader's hero before it can read any atlas path. Previously the manifest identity was checked only when loaded from the hero's own manifest path; a caller could pass a foreign parsed manifest directly to `loadSheet`.
+- Atlas metadata frame entries now fail explicitly if IDs/rectangles are malformed, dimensions are non-positive, coordinates are negative, or a source rectangle exceeds the decoded image bounds. Malformed frame data is no longer silently skipped and later rendered as a missing frame.
+- Added a regression test that passes Flame's manifest identity to Ranger New's loader and expects a `FormatException` before asset access.
+- Source and test changes are committed; Flutter format/analyze/test and Android build results remain unverified until the pending validation workflow completes.
