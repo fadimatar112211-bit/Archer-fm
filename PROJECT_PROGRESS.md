@@ -1917,3 +1917,12 @@ Verification:
 - Recorded the exact four-hero ability names and supporting test files in `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md`. This is a source/test contract confirmation, not a claim that every ability is fully balanced or visually accepted.
 - No combat stats, ability thresholds, hero geometry, monster geometry, map generation, or runtime routing were changed in this documentation pass.
 - Next batch: finish and inspect Android smoke/APK results; then capture each hero at front/three-quarter/gameplay yaw after the rest-pose fix and make evidence-backed per-hero corrections. Keep all four monster prototypes rejected until their reference silhouettes and weapons are rebuilt and reviewed.
+
+## 2026-11-23 — Larger batch: native gameplay capture review
+
+- Inspected uploaded gameplay screenshots `70_game_3d_hero_face_3quarter_idle.png` and `71_game_3d_hero_idle.png` at native 800×450 resolution. A 3D hero is rendered, but its projected height is only roughly 55–75 px in these samples and the face is not yet readable enough for reference acceptance. The scene also contains dark/occluded regions; determine whether those are capture masks before changing the production camera or lighting.
+- Added this evidence and a concrete clean-capture/bounds/reference-comparison checklist to `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` (commit `43ae8150`). No speculative model, face, camera, lighting or combat edits were made.
+- Inspected `32_map_minimap.png`: four biome regions, river, bridges and map markers are visible in the minimap capture. This is only a minimap rendering check; it does not validate pathfinding, collision, water slowdown or full-arena visual quality.
+- Latest Android run `45170295329` on `4d7664e8`: release job has completed Flutter setup, release signing configuration, dependency install and analyze; full Flutter tests are running. Emulator job has completed Flutter setup and is still booting the Android emulator. Neither job has a final result yet.
+- The two immediately preceding push-triggered runs on documentation-only commits failed before creating jobs; the current run was created with two active jobs. Do not confuse those zero-job workflow failures with app build or runtime test failures.
+- Next: finish current Android run; create clean full-frame gameplay captures and projected-size diagnostics; then use the exact four hero source models and canonical sheet for per-hero fixes. Continue keeping the four monster prototypes out of production until they pass silhouette/weapon review.
