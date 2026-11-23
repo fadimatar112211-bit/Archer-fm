@@ -84,6 +84,53 @@ void main() {
       );
     }
 
+    // Every runtime clip (not only walking) must resolve through exactly
+    // one atlas entry, and every referenced frame must exist inside its
+    // directional metadata page and the shared source image.
+    final atlasByAnimation = <String, Map<String, dynamic>>{};
+    for (final rawEntry in atlases) {
+      final entry = rawEntry as Map<String, dynamic>;
+      final animation = entry['animation'] as String;
+      expect(
+        atlasByAnimation.containsKey(animation),
+        isFalse,
+        reason: 'duplicate atlas mapping for $animation',
+      );
+      atlasByAnimation[animation] = entry;
+    }
+    expect(atlasByAnimation.keys.toSet(), animations.keys.toSet());
+
+    for (final entry in atlasByAnimation.entries) {
+      final animation = entry.key;
+      final atlas = entry.value;
+      final metaPath = '$_root/${atlas['meta']}';
+      final meta = jsonDecode(await rootBundle.loadString(metaPath))
+          as Map<String, dynamic>;
+      final frames = meta['frames'] as Map<String, dynamic>;
+      final clip = animations[animation] as Map<String, dynamic>;
+      final clipFrames = clip['frames'] as List<dynamic>;
+      expect(clipFrames, isNotEmpty, reason: animation);
+      for (final frameId in clipFrames) {
+        final frameEntry = frames[frameId] as Map<String, dynamic>?;
+        expect(frameEntry, isNotNull, reason: '$animation references $frameId');
+        final rect = frameEntry!['frame'] as Map<String, dynamic>;
+        expect(rect['x'], greaterThanOrEqualTo(0), reason: frameId);
+        expect(rect['y'], greaterThanOrEqualTo(0), reason: frameId);
+        expect(rect['w'], 192, reason: frameId);
+        expect(rect['h'], 192, reason: frameId);
+        expect(rect['x'] + rect['w'], lessThanOrEqualTo(768), reason: frameId);
+        expect(rect['y'] + rect['h'], lessThanOrEqualTo(1536), reason: frameId);
+      }
+      final events = clip['events'] as List<dynamic>? ?? const [];
+      for (final rawEvent in events) {
+        final event = rawEvent as Map<String, dynamic>;
+        expect(event['frame'], greaterThanOrEqualTo(0), reason: animation);
+        expect(event['frame'], lessThan(clipFrames.length), reason: animation);
+        expect(event['name'], isA<String>(), reason: animation);
+        expect((event['name'] as String).isNotEmpty, isTrue, reason: animation);
+      }
+    }
+
     // Each directional manifest must describe four full, untrimmed 192×192
     // cells at the expected row in the one shared 4-column atlas.
     for (var row = 0; row < _directions.length; row++) {
