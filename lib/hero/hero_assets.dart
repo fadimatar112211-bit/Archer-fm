@@ -94,6 +94,11 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
 
   @override
   Future<AtlasSheet> loadSheet(HeroManifest manifest, String animation) async {
+    if (manifest.heroId != hero.id) {
+      throw FormatException(
+        'Cannot load ${manifest.heroId} atlas with ${hero.id} asset loader',
+      );
+    }
     final cached = _cache[animation];
     if (cached != null) return cached;
     final entry = manifest.atlasFor(animation);
@@ -116,14 +121,24 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
     for (final entry in framesJson.entries) {
       final frameId = entry.key;
       final value = entry.value;
-      if (frameId is! String || value is! Map) continue;
+      if (frameId is! String || frameId.isEmpty || value is! Map) {
+        throw FormatException('Atlas metadata for $animation has an invalid frame entry');
+      }
       final rect = value['frame'];
-      if (rect is! Map) continue;
+      if (rect is! Map) {
+        throw FormatException('Atlas frame $frameId has no frame rectangle');
+      }
       final x = rect['x'];
       final y = rect['y'];
       final w = rect['w'];
       final h = rect['h'];
-      if (x is! int || y is! int || w is! int || h is! int) continue;
+      if (x is! int || y is! int || w is! int || h is! int ||
+          x < 0 || y < 0 || w < 1 || h < 1 ||
+          x + w > image.width || y + h > image.height) {
+        throw FormatException(
+          'Atlas frame $frameId for $animation has invalid image bounds',
+        );
+      }
       frames[frameId] = ui.Rect.fromLTWH(
         x.toDouble(),
         y.toDouble(),
