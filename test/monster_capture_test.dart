@@ -41,7 +41,9 @@ void main() {
           MonsterType.ranged: 2,
         },
       );
-      world.player.position = const Offset(480, 340);
+      // Keep the constructor's camera target and player spawn in sync. Moving
+      // only PlayerState.position leaves cameraOrigin at the old spawn and can
+      // silently capture the isolated actors outside the viewport.
       world.enemies.clear();
       world.projectiles.clear();
       world.corpses.clear();
@@ -215,7 +217,7 @@ void main() {
           type: type,
           team: MonsterTeam.enemy,
           level: source.level,
-          position: const Offset(560, 340),
+          position: world.player.position + const Offset(80, 0),
           maxHp: source.maxHp,
           speed: source.speed,
           contactDamage: source.contactDamage,
