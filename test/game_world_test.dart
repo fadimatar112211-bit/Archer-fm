@@ -688,7 +688,10 @@ void main() {
         closeTo(shadowKit.baseDamage * 0.8, 0.01),
       );
 
-      // The two follow-up impacts are dispatched by later manifest frames.
+      // Follow-ups retain the cast's original position and facing, even if
+      // the hero moves before the later animation frames are dispatched.
+      final energyAfterFirstHit = world.player.energy;
+      world.player.position += const Offset(250, 0);
       world.update(70);
       world.releaseTwinFangsFollowUp();
       expect(
@@ -701,6 +704,7 @@ void main() {
         100 - lone.hp,
         closeTo(shadowKit.baseDamage * 0.8 * 3, 0.01),
       );
+      expect(world.player.energy, energyAfterFirstHit);
 
       // Extra/stale events after the three-hit cast cannot add more damage.
       world.releaseTwinFangsFollowUp();
@@ -708,6 +712,7 @@ void main() {
         100 - lone.hp,
         closeTo(shadowKit.baseDamage * 0.8 * 3, 0.01),
       );
+      expect(world.player.energy, energyAfterFirstHit);
     });
 
     test('shadow_veil grants 4 seconds of immunity and a speed boost', () {
