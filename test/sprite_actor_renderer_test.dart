@@ -118,5 +118,14 @@ void main() {
       () => paint(sourceRect: const Rect.fromLTWH(8, 8, 16, 16)),
       throwsArgumentError,
     );
+
+    expect(
+      () => paint(sourceRect: Rect.fromLTWH(double.nan, 0, 8, 8)),
+      throwsArgumentError,
+    );
+    expect(
+      () => paint(sourceRect: Rect.fromLTWH(double.infinity, 0, 8, 8)),
+      throwsArgumentError,
+    );
   });
 }
