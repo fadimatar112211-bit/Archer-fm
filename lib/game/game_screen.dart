@@ -690,7 +690,7 @@ class _GameScreenState extends State<GameScreen>
     final m = manifest;
     final dir = directionLocked ??
         SpriteActorClipResolver.directionFor(world.player.facing);
-    final name = SpriteActorClipResolver.clipName(state, world.player.facing);
+    final name = '${state}_$dir';
 
     // Transitional GLB fallback: pose the retained model while this hero's
     // sprite pack is not yet accepted. When no sprite manifest exists, keep
