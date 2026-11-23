@@ -15,7 +15,7 @@ atlas byte-identical to the rendered frames.
 
 Run:
   blender -b ranger_source.blend --python tools/blender/pack_hero_atlases.py -- \
-    --manifest assets/heroes/ranger/renders/ranger_manifest.json
+    --manifest assets/heroes/ranger_new/renders/ranger_new_manifest.json
 """
 from __future__ import annotations
 
