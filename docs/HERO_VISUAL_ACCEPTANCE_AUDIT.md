@@ -36,7 +36,7 @@ The manifests currently present in the repository are structural data, not visua
 
 - [ ] Preserve the approved face, hair/hood silhouette, costume layers, palette and signature weapon.
 - [ ] All eight directions are genuine views of the same character; no unrelated view reuse.
-- [ ] Idle, walk, run, attack, skill, dodge, hit and death are coherent and visually distinct.
+- [ ] Idle, walk, run, attack/combo, hit and death are coherent and visually distinct; each of the four Ultimates has its own readable sequence. Dodge is not required by current gameplay.
 - [ ] Weapon-release / impact / skill events align with their authored frames.
 - [ ] Feet, pivot, character scale and alpha edges remain stable across frames.
 - [ ] Atlas image dimensions, metadata, frame rectangles and manifest agree.
@@ -50,6 +50,36 @@ The manifests currently present in the repository are structural data, not visua
 3. Correct Flame's reference mismatch and oversized foreground weapon presentation.
 4. Rebuild Storm's blank/rejected sprite views from its retained source and verify the front-facing pose.
 5. Enable each hero's sprite runtime route only after its own visual acceptance gate passes.
+
+## 2026-11-23 — Hero-first production gate and current asset audit
+
+The requested production order is now explicit: **do not start monster sprite replacement until Ranger, Flame, Shadow and Storm have each passed the hero visual acceptance gate.** Arena/environment work may continue independently.
+
+### Current repository evidence (manifest/tree inspection only)
+
+| Hero | Checked-in asset evidence | Current production decision |
+|---|---|---|
+| Ranger New | 64 directional clips and populated per-direction atlas PNG/JSON files under `assets/heroes/ranger_new/renders/atlases/`. Earlier close-up review found the front face angled down/partly obscured and weapon/action readability still unresolved. | Keep transitional GLB route. Re-review face, hood, bow and cape against the approved roster sheet; then capture at actual 16:9 gameplay scale. |
+| Flame | 64 directional clips and populated per-direction atlas PNG/JSON files under `assets/heroes/flame/renders/atlases/`. Earlier review found a reference mismatch and the oversized foreground weapon obscuring the face. | Keep transitional GLB route. Correct the source pose/composition and prove the face and signature weapon both read clearly. |
+| Shadow | User-approved 8-direction × 4-frame walk atlas exists and is routed as the current sprite pilot. Additional generated directional action atlases exist, but have not passed visual review. | Sprite pilot only; do not mark the full hero complete until every required action/Ultimate and in-game capture passes review. |
+| Storm | Manifest declares 64 clips, but the checked-in per-direction atlas PNG files are only 581 bytes each (the JSON metadata files are present). This is placeholder/empty image data, not a playable sprite pack. | Keep transitional GLB route. Rebuild actual frames from the retained Storm source and validate the rendered pixels before any runtime switch. |
+
+**Important:** atlas counts and manifest validity are structural evidence only. The current inspection did not visually approve any new complete hero pack. In particular, a 64-clip Storm manifest must not be reported as a completed Storm sprite.
+
+### Required completion order
+
+1. **Ranger New:** correct face/hood/bow/cape readability; validate all eight facings and required actions; capture at gameplay scale.
+2. **Flame:** restore reference-accurate face, costume and weapon proportions; keep the face unobscured; validate all directions/actions and gameplay-scale capture.
+3. **Shadow:** retain the user's exact walk sheet; visually review all non-walk states and replace any held-frame/reused placeholder animation with genuine source-faithful motion.
+4. **Storm:** rebuild the blank 581-byte atlas images from the retained original source; inspect front face, armor and weapon; validate all directions/actions and gameplay-scale capture.
+5. **Roster gate:** run the all-hero manifest/runtime tests, inspect a four-hero side-by-side sheet, and capture all four in the actual 16:9 arena. Only after every hero passes, begin the monster sprite replacement phase.
+
+### Animation and Ultimate gate
+
+- The five-hit combo remains five distinct basic-attack steps and is not an Ultimate.
+- Each hero has four separate Ultimates unlocked at levels 1, 10, 20 and 30. A single generic `skill` animation is not proof that four unique Ultimate animations are complete.
+- Each Ultimate needs a distinct readable action/VFX sequence and a correctly timed gameplay event, while preserving the existing kit contract and balance.
+- Dodge is not a gameplay action in the approved current rules. A legacy dodge clip may remain as unused source material, but it is not a required completion gate and must not add a dodge control or mechanic.
 
 ## Legacy Ranger retirement
 
