@@ -917,11 +917,13 @@ class _GameScreenState extends State<GameScreen>
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        spacing: 8,
+                        runSpacing: 6,
                         children: [
                           _armyPanel(theme),
-                          const Spacer(),
                           _monsterUpgradeButton(theme),
                         ],
                       ),
@@ -1320,8 +1322,10 @@ class _GameScreenState extends State<GameScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: _panelDecoration(),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
             'الجيش ${world.army.length}',
