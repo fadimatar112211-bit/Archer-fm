@@ -2174,3 +2174,9 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Replaced the previous four-pack Blender generation workflow with a focused Flutter runtime-contract workflow. It verifies the four checked-in manifests/bundles and the Shadow pilot/renderer tests; it does not procedurally invent or mass-generate hero art.
 - This follows the approved plan's rule: Phase 1 Shadow walk proof and reference-only art acceptance come before mass conversion. Flame/Shadow/Storm generated geometry from the previous matrix is not approved production art and must not be promoted merely because a render pipeline completes.
 - The older queued run `45253566534` was created against an earlier workflow revision and was still queued at the last check; this new workflow revision prevents future push-triggered mass generation. No claim is made that the older queued run was cancelled.
+
+
+## 2026-11-23 — Keep Ranger catalog copy accurate after asset retirement
+
+- Corrected the catalog comment so it no longer claims the deleted legacy Ranger files are retained.
+- Replaced the Ranger selection description's premature "final/reference-quality" claim with a concise gameplay description. Visual acceptance remains governed by the approved hero reference and the 2.5D acceptance audit.
