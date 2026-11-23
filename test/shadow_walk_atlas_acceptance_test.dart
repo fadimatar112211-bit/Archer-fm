@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 const _atlasPath =
     'assets/heroes/shadow/renders/atlases/shadow_walk_8dir_4frames_FINAL.png';
 const _root = 'assets/heroes/shadow/renders/atlases';
-const _directions = ['s', 'sw', 'w', 'nw', 'n', 'ne', 'e', 'se'];
+const _directions = ['s', 'se', 'e', 'ne', 'n', 'nw', 'w', 'sw'];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
