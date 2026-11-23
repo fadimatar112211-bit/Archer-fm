@@ -733,7 +733,14 @@ void main() {
     });
 
     test('monster upgrades affect future recruits without rewriting survivors', () {
-      final world = makeWorld(seed: 44);
+      // This integration case needs living survivors; the no-wave test helper
+      // intentionally starts empty unless an army is explicitly requested.
+      final world = GameWorld(
+        kit: rangerNewKit,
+        random: math.Random(44),
+        spawnWaves: false,
+        startingArmy: MonsterCatalog.defaultStartingArmy,
+      );
       final original = world.army.firstWhere(
         (monster) => monster.type == MonsterType.tank,
       );
@@ -825,6 +832,9 @@ void main() {
     test('hostile monsters damage a nearby home crystal when hero is absent', () {
       final world = makeWorld(seed: 61);
       world.player.dead = true;
+      // Keep the hero absent during the assertion; update() otherwise
+      // immediately processes the default zero respawn timestamp.
+      world.player.respawnAtMs = 100000;
       world.army.clear();
       world.enemies.clear();
       final crystal = world.castleSystem.playerCastle.alive.first;
