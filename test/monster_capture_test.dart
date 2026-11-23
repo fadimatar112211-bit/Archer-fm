@@ -16,8 +16,10 @@ import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Visual capture of the procedural monster renderer with the real ranger
-/// atlas composited on top. Plain test for the same reason as
+/// Visual capture of the temporary procedural monster fallback with the
+/// real ranger atlas composited on top. This proves role rendering executes;
+/// it does not approve the monster art against the user's reference sheet.
+/// Plain test for the same reason as
 /// `game_capture_test.dart`: `ArenaPainter.paint` is captured directly, so the
 /// four monster silhouettes, gait frames, team rings, HP bars and corpses are
 /// checked without the slow widget rasterizer.
