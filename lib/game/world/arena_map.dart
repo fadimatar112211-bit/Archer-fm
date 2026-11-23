@@ -748,7 +748,11 @@ class ArenaMap {
           60 + rng.nextDouble() * (size.height - 120),
         );
         if (_inWater(rivers, point)) continue;
-        if ((point - spawn).distance < 220) continue;
+        // Keep the complete obstacle collider outside the hero's spawn
+        // footprint. Checking only the obstacle centre against 220 allowed
+        // a large tree/rock to overlap the hero even when its centre was
+        // technically outside the old exclusion circle.
+        if ((point - spawn).distance < 220 + radius + 24) continue;
         if (castles.any((castle) => (castle - point).distance < 250)) continue;
         if (mines.any((mine) => (mine.position - point).distance < mine.radius + 50)) {
           continue;
