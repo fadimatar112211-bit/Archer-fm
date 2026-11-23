@@ -747,6 +747,44 @@ void main() {
       );
     });
 
+    test('venom ticks catch up after a long frame even after the cloak expires', () {
+      final world = GameWorld(
+        kit: shadowKit,
+        random: math.Random(3),
+        spawnWaves: false,
+      );
+      world.enemies.clear();
+      world.level = 20;
+      world.player.facing = const Offset(1, 0);
+      final enemy = addEnemy(
+        world,
+        position: world.player.position + const Offset(70, 0),
+        hp: 100,
+        xp: 40,
+      );
+      enemy.speed = 0;
+      expect(world.useAbility('venom_coat'), isNotNull);
+      world.releaseWeaponPayload(volley: true);
+
+      // The venom is about to expire when the attack applies its two delayed
+      // poison ticks. Their damage is captured at application time.
+      world.update(7900);
+      expect(world.player.buffUntilMs, 8000);
+      expect(world.requestAttack(), isTrue);
+      world.releaseMeleeSwing();
+      world.update(1600);
+
+      expect(world.nowMs, 9500);
+      expect(world.player.buffUntilMs, lessThan(world.nowMs));
+      expect(
+        100 - enemy.hp,
+        closeTo(
+          shadowKit.baseDamage * (1.0 * 1.15 + 0.15 * 2 * 1.15),
+          0.01,
+        ),
+      );
+    });
+
     test('shadow_execute teleports to the weakest enemy and deals 300%', () {
       final world = GameWorld(
         kit: shadowKit,
