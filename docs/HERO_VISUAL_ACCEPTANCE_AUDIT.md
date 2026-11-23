@@ -6,11 +6,11 @@ Canonical visual reference: `assets/references/approved_all/hero_roster_concept.
 
 ## Production rule
 
-**Final production target:** all four heroes are reference-faithful 2D/2.5D sprite actors inside the lightweight 3D arena. GLB/Blender files are retained as source and animation inputs, not as the final in-match character renderer.
+**Final production target:** all four heroes are reference-faithful, fully skinned 3D chibi models in the arena, with readable faces, recognizable signature weapons, rigged bones and coherent real-time animations. GLB/Blender is the production character pipeline; 2D/2.5D atlases are legacy/review assets and must not replace the 3D heroes in the final match.
 
-**Temporary migration state:** the checked-in runtime still uses the GLB route for Ranger, Flame and Storm; Shadow is the only currently approved 2.5D sprite pilot. This temporary state is not a change to the final target. Keep rejected atlases disabled and do not switch a hero to an unapproved atlas merely because a manifest exists. A GLB file or a non-empty sprite manifest is not, by itself, proof of visual acceptance.
+**Temporary migration state:** Ranger, Flame and Storm currently use the GLB route; Shadow remains on the previously approved 2.5D sprite pilot until its real 3D model passes visual acceptance. This is an incomplete migration, not the final target. Keep rejected atlases disabled and do not treat a GLB file, rig validation, animation count, or sprite manifest as proof of visual acceptance.
 
-Do not generate substitute character art or silently promote an atlas because it has a manifest. A hero may switch to the sprite route only after its front/side/back views, all eight directions, action states, foot contact, transparency, and in-game captures are reviewed against the canonical reference.
+Do not generate substitute character art or silently promote an atlas because it has a manifest. A hero is accepted only after its actual 3D front/side/back views, gameplay-facing orientations, idle and action animations, foot contact, face/weapon readability, and in-game captures are reviewed against the canonical reference.
 
 ## Current roster evidence
 
@@ -44,11 +44,11 @@ Keep these source assets intact while producing and reviewing replacement sprite
 
 ## Next work
 
-1. Keep Shadow as the only approved sprite pilot. Finish dedicated Shadow action artwork from approved source material; do not use the temporary held poses as final.
-2. Flame: use the preserved source model as the rendering source for a new reference-faithful sprite set; ensure red spiky hair, gold armor and greatsword are visible. Do not use the current simplified atlas.
-3. Storm: regenerate the sprite set from the preserved animated source model; replace all flat blue placeholders with real transparent character frames.
-4. Ranger: leave the existing benchmark unchanged until its full sprite set has passed the same visual acceptance checklist.
-5. After each hero passes visual review, update `HeroRenderPolicy` and add a regression test for the approved route. Do not switch multiple heroes at once.
+1. Bring Shadow's real 3D model into the same production GLB renderer used by the other heroes; keep its sprite pilot only as a temporary fallback until the 3D model is accepted.
+2. Flame: correct the oversized/foreground weapon presentation so the red hair, face, gold armor and greatsword remain readable from the gameplay camera.
+3. Storm: inspect the source rig's idle pose and front axis; correct the apparent reclined/sideways presentation only after confirming the rig and animation basis.
+4. Ranger: preserve the reference-quality green identity while validating face, hood, bow and cape readability at actual gameplay scale.
+5. After each hero passes the 3D visual checklist, update `HeroRenderPolicy` and add a regression test for the accepted GLB route. Do not switch multiple heroes at once.
 
 
 ## 2026-11-21 — Review actual in-game GLB captures and bind-pose fix
