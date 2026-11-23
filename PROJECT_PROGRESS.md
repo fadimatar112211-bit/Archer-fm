@@ -1827,3 +1827,12 @@ Verification:
 - Corrected all four roster entries: GLB route/migration is the production path; visual acceptance remains open; Shadow's sprite is only a temporary fallback.
 - No hero rendering route, geometry, rig, animation, or gameplay behavior was changed.
 - Audit correction commit: `9e9ca9c970f59ac6afc78f3295bdf6d92008a2c9`.
+
+## 2026-11-23 — Diagnose Android emulator loss at match entry
+
+- Retrieved the failed smoke-run diagnostics artifact from run `45145948294`. The test successfully mounted the app, loaded Flame's GLB, opened army selection, and tapped Start; immediately after match entry ADB reported `device offline`.
+- The diagnostics show the emulator process was no longer present, ADB listed the emulator as offline, and logcat could not reconnect. Host memory still showed substantial available memory; kernel logs were not readable in the runner. The exact QEMU exit cause is therefore not proven.
+- Increased the smoke emulator guest RAM from 4 GiB to 6 GiB and reduced the software-rendered display from 720×1280 to 540×960 to lower framebuffer/render pressure while retaining the full arena transition test. Added `-no-metrics` for unattended CI startup.
+- Corrected stale smoke-test/workflow comments so they describe the current 3D arena/monster production direction rather than 2.5D sprites.
+- Workflow change: `74be09c0d4025f36a1d8cb084aa2377429e00fe5`; smoke-test comment update: `50dc0359bc8ce658cab59970ebf15a226d95c754`.
+- The emulator adjustment is a retry, not a verified fix. Await the new CI smoke result before declaring match entry stable.
