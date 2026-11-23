@@ -1778,3 +1778,11 @@ Verification:
 - Updated only the test capture path: isolated monster review frames now use a 2.4× projection zoom, while lineup, combat, map and all production gameplay camera settings remain unchanged. The pixel fingerprint assertion still checks that each archetype renders differently.
 - Commit: `8dab776b05ea2306d5cd66bd22bc68087b935f4b` (`Zoom isolated monster review captures for visual inspection`).
 - Verification is pending in the next Android workflow run. This is a review-capture improvement, not a claim that monster art has passed visual acceptance.
+
+
+## 2026-11-23 — Four-hero close-up visual audit (not approved)
+
+- Reviewed the hero yaw close-up captures from artifact `14803505229`, not just the small in-arena frames. Ranger's face is visible only in some angles and is frequently obscured by the oversized bow/hood silhouette. Flame's current close-ups are dominated by a large circular foreground weapon/shield and do not provide a clear readable face. Shadow's hood/face area is mostly obscured, and Storm's current close-ups mostly show the rear/side armor rather than a readable face.
+- The gameplay-scale `face_idle` captures also show all four heroes too small for a face-quality sign-off. These assets are not visually approved against the reference sheet. Do not mark hero completion based on successful atlas rendering alone.
+- Required next art pass: verify each model's true front axis and camera-facing pose; make the face/eyes readable at gameplay scale; reduce weapon/hood occlusion without changing the approved color/armor identity; regenerate the close-up and gameplay-scale evidence before acceptance.
+- This is an evidence/audit finding only; no production hero model or camera was changed in this pass.
