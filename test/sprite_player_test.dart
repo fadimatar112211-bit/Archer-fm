@@ -69,6 +69,26 @@ void main() {
     expect(events, ['start']);
   });
 
+  test('a large delta fires one-shot gameplay events once and stops', () {
+    final events = <String>[];
+    final player = SpritePlayer(
+      clip: _clip(),
+      onEvent: (event) => events.add(event.name),
+    );
+
+    // Constructor enters frame zero. A delayed render tick may cross all
+    // remaining frames, but must not repeat the impact event or loop the clip.
+    expect(events, ['start']);
+    player.advance(1000);
+
+    expect(player.frameIndex, 2);
+    expect(player.completed, isTrue);
+    expect(player.playing, isFalse);
+    expect(events, ['start', 'mid']);
+    player.advance(1000);
+    expect(events, ['start', 'mid']);
+  });
+
   test('seek clamps to the clip length', () {
     final player = SpritePlayer(clip: _clip(loop: true));
     player.seek(99);
