@@ -145,6 +145,7 @@ class _Harness {
     this.dummyDistance = 150,
     this.configureWorld,
     this.settingsStore,
+    this.screenSize = const Size(1280, 720),
   }) : kit = kit ?? kitForHero(heroId);
 
   final HeroProgress? seedProgress;
@@ -155,6 +156,7 @@ class _Harness {
   /// Extra setup for the injected world (chests, pending rewards...).
   final void Function(GameWorld world)? configureWorld;
   final SettingsStore? settingsStore;
+  final Size screenSize;
   final store = MemoryProgressStore();
   final RecordingAudioService audio = RecordingAudioService();
   GameWorld? world;
@@ -164,7 +166,7 @@ class _Harness {
     if (seedProgress != null) {
       await store.save(heroId, seedProgress!);
     }
-    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.physicalSize = screenSize;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -233,6 +235,12 @@ Future<bool> pumpUntil(
 }
 
 void main() {
+  testWidgets('compact landscape match HUD does not overflow', (tester) async {
+    final harness = _Harness(screenSize: const Size(960, 540));
+    await harness.pump(tester);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'normal attack chain deals the real escalating damage to an enemy',
     (tester) async {
