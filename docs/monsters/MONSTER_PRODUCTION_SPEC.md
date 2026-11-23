@@ -10,11 +10,11 @@
 
 ## Scope lock
 
-## Final runtime art direction — 2.5D
+## Final runtime art direction — fully 3D
 
-All four monster types must ship as reference-faithful 2D/2.5D animated sprite actors inside the lightweight 3D arena. Do not make the procedural GLB prototypes the final in-match presentation and do not leave a mixed final roster of some GLB monsters and some sprite monsters. GLB/BLEND files may remain as source, rigging, animation and sprite-render inputs only.
+All four monster types must ship as reference-faithful, genuinely 3D skinned actors inside the lightweight 3D arena. Their geometry, materials, proportions, face/headgear, armor/clothing, signature weapons and effects must match the exact user-approved monster reference sheet. Do not use the procedural low-poly prototype GLBs as final art; those outputs are review-only and were rejected in visual review.
 
-The final sprite pack must provide the same eight-direction coverage and consistent ground pivot used by the hero pipeline, with readable face and weapon silhouettes at normal mobile gameplay zoom. Required states are idle, walk, attack, hit and death; preserve each type's existing combat timing and gameplay events. Keep the current procedural Canvas renderer as the safe fallback until each type passes technical validation and visual review against the approved monster sheet. Never integrate placeholder or rejected atlases.
+The final runtime actors require real rigs and coherent idle, walk/locomotion, attack, hit and death animations. Preserve existing gameplay timing/events in the simulation; animation must not independently apply damage. Do not impose an eight-direction sprite-atlas requirement on the final 3D actors. Keep the current procedural Canvas renderer as a temporary safe fallback until each 3D monster passes source/rig validation, reference silhouette and weapon review, animation/deformation review, gameplay-scale capture, and actual in-game review. Promote one monster at a time only after acceptance.
 
 
 - Keep exactly four types: Runner, Tank, Stalker, Ranged.
