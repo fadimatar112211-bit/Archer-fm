@@ -268,7 +268,7 @@ Future<int> _save(String name, ui.Image image) async {
   // Sample the rendered pixels so the capture test fails if the actor is
   // outside the viewport or a direction/archetype silently renders identically.
   var fingerprint = 0x811c9dc5;
-  for (var i = 0; i < pixels!.lengthInBytes; i += 32) {
+  for (var i = 0; i < pixels!.lengthInBytes; i += 4) {
     fingerprint = ((fingerprint ^ pixels.getUint8(i)) * 0x01000193) & 0xffffffff;
   }
   image.dispose();
