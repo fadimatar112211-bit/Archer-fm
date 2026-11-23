@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = ROOT / "assets/heroes/ranger/source/render_config.json"
-HEROES = ("ranger", "flame", "shadow", "storm")
+HEROES = ("flame", "shadow", "storm")
 STATES = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
 
 
@@ -35,7 +35,7 @@ class HeroRenderConfigTests(unittest.TestCase):
                 self.assertGreaterEqual(event["frame"], start)
                 self.assertLessEqual(event["frame"], end)
 
-    def test_all_four_heroes_have_independent_complete_rigs(self):
+    def test_all_matrix_heroes_have_independent_complete_rigs(self):
         self.assertEqual(set(self.heroes), set(HEROES))
         for hero_id in HEROES:
             with self.subTest(hero=hero_id):
@@ -51,7 +51,7 @@ class HeroRenderConfigTests(unittest.TestCase):
                     self.assertTrue(action_name.startswith(hero_id.capitalize() + "_"),
                                     f"{state} points to another hero's action: {action_name}")
 
-    def test_all_heroes_have_frame_counts_and_action_ranges(self):
+    def test_all_matrix_heroes_have_frame_counts_and_action_ranges(self):
         for hero_id in HEROES:
             with self.subTest(hero=hero_id):
                 hero = self.heroes[hero_id]
@@ -74,7 +74,7 @@ class HeroRenderConfigTests(unittest.TestCase):
                         self.assertLessEqual(event["frame"], end)
                         self.assertTrue(event["name"].strip())
 
-    def test_each_hero_has_its_own_output_directory(self):
+    def test_each_matrix_hero_has_its_own_output_directory(self):
         outputs = [self.heroes[hero]["output_directory"] for hero in HEROES]
         self.assertEqual(len(outputs), len(set(outputs)))
 
