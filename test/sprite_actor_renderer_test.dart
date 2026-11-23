@@ -176,4 +176,72 @@ void main() {
     expect(bytes[center + 3], closeTo(128, 2));
   });
 
+
+  test('one renderer paints independent character atlases with their own pivots', () async {
+    Future<ui.Image> makeAtlas(int width, int height, Color color) async {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+        Paint()..color = color,
+      );
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(width, height);
+      picture.dispose();
+      return image;
+    }
+
+    final firstAtlas = await makeAtlas(4, 4, const Color(0xFFFF0000));
+    final secondAtlas = await makeAtlas(8, 4, const Color(0xFF0000FF));
+    final outputRecorder = PictureRecorder();
+    final outputCanvas = Canvas(outputRecorder);
+
+    // These deliberately use different source dimensions and pivots. The
+    // renderer receives data only; it contains no character-specific rules.
+    SpriteActorRenderer.paint(
+      outputCanvas,
+      image: firstAtlas,
+      sourceRect: const Rect.fromLTWH(0, 0, 4, 4),
+      groundAnchor: const Offset(8, 12),
+      frameSize: const Size(4, 4),
+      pivotX: 0.5,
+      pivotY: 1,
+      targetHeight: 8,
+      filterQuality: FilterQuality.none,
+    );
+    SpriteActorRenderer.paint(
+      outputCanvas,
+      image: secondAtlas,
+      sourceRect: const Rect.fromLTWH(0, 0, 8, 4),
+      groundAnchor: const Offset(24, 12),
+      frameSize: const Size(8, 4),
+      pivotX: 0.25,
+      pivotY: 0.75,
+      targetHeight: 8,
+      filterQuality: FilterQuality.none,
+    );
+
+    final outputPicture = outputRecorder.endRecording();
+    final output = await outputPicture.toImage(32, 24);
+    addTearDown(() {
+      firstAtlas.dispose();
+      secondAtlas.dispose();
+      output.dispose();
+      outputPicture.dispose();
+    });
+
+    final data = await output.toByteData(format: ImageByteFormat.rawRgba);
+    expect(data, isNotNull);
+    final bytes = data!.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+
+    int alphaAt(int x, int y) => bytes[(y * 32 + x) * 4 + 3];
+    expect(alphaAt(8, 8), 255, reason: 'first character atlas is painted');
+    expect(alphaAt(22, 8), 255, reason: 'second character atlas is painted');
+    expect(alphaAt(2, 2), 0, reason: 'first pivot/size stays bounded');
+    expect(alphaAt(30, 20), 0, reason: 'second pivot/size stays bounded');
+  });
+
 }
