@@ -1,4 +1,4 @@
-"""Pure Python atlas packer for Ranger sprite sheets (testable without Blender).
+"""Pure Python atlas packer for hero sprite sheets (testable without Blender).
 
 This is the single atlas packer implementation. `tools/blender/pack_hero_atlases.py`
 loads it so the CI pipeline and these unit tests exercise exactly the same code,
