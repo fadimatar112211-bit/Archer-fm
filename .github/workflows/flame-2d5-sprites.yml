@@ -56,6 +56,7 @@ jobs:
         run: |
           flutter test --reporter expanded \
             test/shadow_walk_atlas_acceptance_test.dart \
+            test/shadow_action_atlas_mapping_test.dart
             test/shadow_walk_runtime_test.dart \
             test/sprite_actor_renderer_test.dart \
             test/sprite_actor_clip_resolver_test.dart
