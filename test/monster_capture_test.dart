@@ -192,6 +192,7 @@ void main() {
           other.hitFlashUntilMs = 0;
         }
         final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
+        final directionFingerprints = <int>{};
         for (var direction = 0; direction < 8; direction++) {
           final angle = direction * math.pi / 4;
           actor.attackAnimUntilMs = world.nowMs + 230;
