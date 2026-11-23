@@ -162,6 +162,6 @@ const List<HeroDefinition> heroCatalog = [
 HeroDefinition heroById(String id) {
   return heroCatalog.firstWhere(
     (hero) => hero.id == id,
-    orElse: () => heroCatalog.first,
+    orElse: () => throw ArgumentError.value(id, 'id', 'Unknown hero id'),
   );
 }
