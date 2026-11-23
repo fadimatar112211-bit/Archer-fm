@@ -1,0 +1,57 @@
+name: Flame Sprite Render Preview
+
+on:
+  push:
+    branches:
+      - flame-reference-render-preview
+    paths:
+      - '.github/workflows/flame-sprite-preview.yml'
+      - 'tools/blender/render_hero.py'
+      - 'tools/blender/pack_hero_atlases.py'
+      - 'tools/pack_hero_atlases.py'
+      - 'assets/heroes/flame/source/flame_source.blend'
+      - 'assets/heroes/ranger/source/render_config.json'
+  pull_request:
+    branches:
+      - ranger-reference-work
+    paths:
+      - '.github/workflows/flame-sprite-preview.yml'
+      - 'tools/blender/render_hero.py'
+      - 'tools/blender/pack_hero_atlases.py'
+      - 'tools/pack_hero_atlases.py'
+      - 'assets/heroes/flame/source/flame_source.blend'
+      - 'assets/heroes/ranger/source/render_config.json'
+
+permissions:
+  contents: read
+
+jobs:
+  render-flame-preview:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --version
+      - name: Select Flame source and render all eight directions
+        run: |
+          printf 'flame\\n' > tools/blender/active_hero.txt
+          blender --background assets/heroes/flame/source/flame_source.blend \\
+            --python tools/blender/render_hero.py -- \\
+            --config assets/heroes/ranger/source/render_config.json
+      - name: Pack Flame frame atlases
+        run: |
+          blender --background assets/heroes/flame/source/flame_source.blend \\
+            --python tools/blender/pack_hero_atlases.py -- \\
+            --manifest assets/heroes/flame/renders/flame_manifest.json
+      - name: Upload rendered Flame preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: flame-reference-render-preview
+          path: assets/heroes/flame/renders/
+          if-no-files-found: error
+          retention-days: 7
