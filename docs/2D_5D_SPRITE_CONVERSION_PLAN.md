@@ -146,8 +146,8 @@ For monsters, implement the direction and animation set appropriate to each of t
 - **Gate:** no missing/duplicated direction, no wrong facing, no foot sliding beyond the accepted animation, no floating, no checkerboard pixels, no frame clipping, and no visible identity drift. Capture all eight directions.
 
 ### Phase 2 — Reusable sprite animation system
-- Implement direction selection, frame timing, loop/one-shot behavior, animation transitions, last-facing preservation, pivoting, depth sorting and render scaling.
-- Add deterministic tests for direction mapping and frame selection.
+- [x] Implement direction selection, frame timing, loop/one-shot behavior, animation transitions, last-facing preservation, pivoting, depth sorting and render scaling. (Code evidence: `sprite_actor_clip_resolver.dart`, `sprite_player.dart`; regression coverage added for octant boundaries and elapsed-time/loop/one-shot behavior. Last-facing/pivot/depth-sort still require visual/runtime acceptance.)
+- [x] Add deterministic tests for direction mapping and frame selection. (Tests: `sprite_actor_clip_resolver_test.dart`, `sprite_actor_clip_resolver_boundary_test.dart`, `sprite_player_test.dart`, `sprite_player_timing_regression_test.dart`.)
 - Add capture tests for idle/walk and one-shot attack/death transitions.
 - **Gate:** tests pass and the same renderer can load a second character without character-specific hardcoded logic.
 
