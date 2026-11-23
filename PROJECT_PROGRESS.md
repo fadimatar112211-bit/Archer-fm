@@ -1882,3 +1882,12 @@ Verification:
 - The four isolated monster review images still depict the existing simple placeholder actors, not approved reference-faithful production models. Keep all four monster prototypes rejected and do not integrate them.
 - This was a visual audit only: no hero models, monster models, combat stats, map generation, collision or runtime rendering policies were changed.
 - Next: finish the Android smoke run, inspect its job logs and any updated captures, then generate isolated front/side/back plus actual gameplay-facing GLB captures for each hero. Redesign monster silhouettes from the canonical reference before another prototype batch.
+
+
+## 2026-11-23 — Fix match HUD overflow discovered by Android smoke
+
+- Android run `45167493378` passed the release APK build and reached the live match after opening the home menu, army selection, and tapping Start.
+- The emulator then reported a real horizontal `RenderFlex` overflow of 38 logical pixels at `lib/game/game_screen.dart:931`, in the mine/castle status panel row. The smoke test failed because of this match-HUD layout error; this was not an emulator boot failure.
+- Replaced only the mine/castle status-panel `Row` with a wrapping layout using the same panel widgets, order, spacing, and actions. On narrow landscape widths the panels can now move to a second line rather than overflow.
+- Code commit: `8c8756cadb3fb8cfaebfe6ec5c84753e214df407`.
+- No gameplay state, resource values, mine/castle behavior, controls, map generation, or combat logic changed. Await the next Android analyze/test/APK/smoke run before calling the fix verified.
