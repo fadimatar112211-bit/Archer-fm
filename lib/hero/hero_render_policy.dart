@@ -1,8 +1,9 @@
-/// Production visual routing during the reference-approved 2.5D migration.
+/// Production visual routing while all four reference-faithful 3D heroes are
+/// brought through visual acceptance.
 ///
-/// Final production target: all four heroes use reference-approved 2.5D
-/// sprite actors. This route table is only a migration safety gate: it prevents
-/// rejected atlases from being exposed while replacement packs are built.
+/// GLB is the final in-match character pipeline. Sprite atlases are legacy or
+/// temporary review fallbacks; an atlas must never be promoted just because a
+/// GLB is unavailable or an atlas manifest exists.
 enum HeroVisualRoute {
   approvedSpritePilot,
   glbPrimary,
@@ -11,6 +12,8 @@ enum HeroVisualRoute {
 class HeroRenderPolicy {
   HeroRenderPolicy._();
 
+  // Shadow's approved sprite pilot is temporary until its production GLB passes
+  // the same face, weapon, animation and gameplay-scale visual review.
   static const Set<String> _approvedSpritePilotIds = {'shadow'};
 
   static HeroVisualRoute routeFor(String heroId) =>
@@ -18,8 +21,8 @@ class HeroRenderPolicy {
           ? HeroVisualRoute.approvedSpritePilot
           : HeroVisualRoute.glbPrimary;
 
-  /// True only when the hero's sprite art has passed the visual acceptance
-  /// gate. A populated manifest or a failed GLB load is not sufficient.
+  /// True only for the explicitly approved temporary sprite fallback.
+  /// This does not mean the hero has passed final 3D visual acceptance.
   static bool allowsSpriteAtlas(String heroId) =>
       routeFor(heroId) == HeroVisualRoute.approvedSpritePilot;
 }
