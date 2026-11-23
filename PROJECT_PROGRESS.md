@@ -2089,3 +2089,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - This closes the gap between checking that eight metadata files exist and checking that the game manifest actually selects those files.
 - Commit: `f18799b3d81639fb36b86ec093338974ff621abe`.
 - Still unverified by Flutter execution; no workflow run was returned for the latest commit.
+
+
+## 2026-11-23 — Shadow full-manifest asset-reference gate
+
+- Extended `test/shadow_walk_atlas_acceptance_test.dart` beyond the 32 walk frames.
+- The acceptance test now checks every animation declared in Shadow's runtime manifest has exactly one atlas mapping; every referenced frame ID exists in that atlas metadata; every source rectangle is a 192×192 cell inside the 768×1536 approved sheet; and all animation events point to valid frame indices with non-empty names.
+- This is a structural integrity gate for all declared clips. It does **not** prove that attack/skill/hit/death artwork is visually distinct or approved; the current held-frame placeholders remain unaccepted and must not be described as completed animations.
+- Commit: `352dd7f1cfd57388c6158ecbd34454a32bde3962`.
+- No associated Actions run was available at commit lookup; formatting, Flutter tests/analyze, Android build and visual capture remain unverified.
