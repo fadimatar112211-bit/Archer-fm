@@ -2123,3 +2123,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Source files and test additions are committed. Flutter tests/analyze/format/build have not been executed in this session, and no CI success is claimed.
 - Existing manifests passed the read-only structural comparison described above; the runtime parser's new rejection tests still require execution.
 - This change does not approve any hero artwork, does not convert the three transitional heroes, and does not turn Shadow's held-frame attack/skill/hit/death placeholders into accepted animations. Monster art and lightweight 3D-world integration remain outstanding.
+
+
+## 2026-11-23 — Retire duplicate legacy Ranger character assets
+
+- Confirmed `ranger_new` is the sole playable Ranger in `heroCatalog`; the old `ranger` folder is not a selectable hero.
+- Removed the legacy Ranger definition from the runtime catalogue and removed the old Ranger manifest/atlas declarations from `pubspec.yaml`.
+- Redirected the Ranger manifest regression test to the playable `ranger_new` bundle, including its runtime bundle-loader test.
+- The shared Blender render configuration remains temporarily at `assets/heroes/ranger/source/render_config.json` because the four-hero sprite workflow and its regression tests still consume it. It is pipeline configuration, not a playable hero asset; it will be relocated before the legacy folder is fully removed.
+- Legacy visual files and source model are being removed separately after preserving the shared configuration dependency. Flutter tests/build have not been run in this session.
