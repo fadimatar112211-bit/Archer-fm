@@ -1674,3 +1674,12 @@ Verification:
 - The previous Android smoke job completed its integration-test step with a failure, then stalled while collecting `adb logcat` diagnostics. The diagnostic commands now have strict timeouts so an unresponsive emulator cannot hold the workflow open indefinitely.
 - Bumped the Android workflow concurrency group to `archer-fm-android-v2` so the new verification can proceed independently of the stale run still holding the previous group. Existing jobs are not forcibly cancelled.
 - Saved in commit `e386716`; the new run must still complete before the branch can be called green.
+
+
+## Hero atlas frame integrity and bridge regression coverage — 2026-11-23
+
+- Corrected Shadow's 64 animation clips to reference the real frame IDs in their own directional atlas metadata. Idle now uses its five authored frames; walk/run use nine; attack seven; skill/dodge/death nine; hit five. The manifest's 64 atlas image/metadata paths are all present.
+- Corrected Storm's 64 clips, which were incorrectly naming Flame frames, to use the actual frame IDs in Storm's atlas metadata. All 64 Storm atlas pairs are present.
+- Strengthened `all_hero_render_manifest_test.dart`: every clip frame ID must exist in the metadata file for that clip's own atlas, in addition to the existing uniqueness and frame-count checks. This catches placeholder/reused frame references rather than only checking that PNG files exist.
+- Updated the river-water regression test to distinguish the intentionally dry bridge approach corridor from unbridged river water. The 40-seed full-crossing test still verifies full movement speed and dry classification along the entire crossing.
+- Saved across commits `bb7ca29`, `d951f39`, `d6b803d`, and `3c73eca`. Full CI for the latest head is queued behind the earlier Android smoke run; no green result is claimed yet.
