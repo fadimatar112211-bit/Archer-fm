@@ -1652,3 +1652,11 @@ Verification:
 - Added a distinct dry crossing corridor to each bridge, extending only across the river banks by the owning river's half-width. The rendered/physical deck footprint remains unchanged; this is a movement/water classification allowance for the immediate bank-to-bank approach.
 - `ArenaMap.isWater` now checks all bridge crossing corridors before testing all river channels. This also prevents an intersecting tributary from reclassifying the approach of another river's bridge as water.
 - The existing 40-seed regression `full cross-river movement over every bridge stays full speed` exercises the entire bank-to-bank traversal, including overlapping channels. Awaiting CI verification on commit `25a0de9`.
+
+
+## Shadow atlas wiring and hero-specific 3D scale — 2026-11-23
+
+- Rewired all **64 Shadow animation/direction manifest entries** to their matching authored atlases and metadata: `atlases/<state>_<direction>.png` + `.json`. The previous manifest incorrectly pointed every state (including attack) at the same walk sheet and user-walk metadata. Verified all 128 referenced files exist in the repository tree.
+- Added a small per-hero 3D review-scale calibration: Shadow receives 1.04× the shared isolated-capture scale because its shorter standing silhouette measured 290.98px against the 300px minimum; other heroes retain the shared 0.79 calibration. This affects presentation only, not movement/collision.
+- Runtime `GameScreen` and the four-hero capture test both pass the hero ID into the model calibration, so the same scale is used in-game and in evidence captures.
+- Changes saved through commit `00a7aef`. The Flutter Android workflow for this head is pending in GitHub Actions; no green test result or APK is claimed yet.
