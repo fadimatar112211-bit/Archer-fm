@@ -29,7 +29,14 @@ void main() {
           final clip = animations[name] as Map<String, dynamic>;
           final frameIds = (clip['frames'] as List).cast<String>();
           final frameCount = frameIds.length;
-          if (state != 'idle') {
+          // Shadow currently has approved user art for its eight-way
+          // walk cycle only. Until dedicated action art is supplied, its
+          // combat clips intentionally hold the approved first walk pose;
+          // their timing/events remain real and must not be faked with
+          // unrelated generated atlas frames.
+          final shadowHeldAction = hero == 'shadow' &&
+              const {'attack', 'skill', 'dodge', 'hit', 'death'}.contains(state);
+          if (state != 'idle' && !shadowHeldAction) {
             expect(
               frameIds.toSet().length,
               frameCount,
