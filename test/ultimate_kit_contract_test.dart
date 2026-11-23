@@ -1,4 +1,5 @@
 import 'package:archer_fm/game/combat/hero_kit.dart';
+import 'package:archer_fm/game/combat/hero_weapons.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -42,4 +43,37 @@ void main() {
       });
     }
   });
+  test('only the four canonical hero IDs have combat kits', () {
+    expect(
+      () => kitForHero('ranger'),
+      throwsArgumentError,
+    );
+    expect(
+      () => kitForHero('unknown'),
+      throwsArgumentError,
+    );
+    expect(
+      [rangerNewKit, flameKit, shadowKit, stormKit]
+          .map((kit) => kit.heroId)
+          .toSet(),
+      {'ranger_new', 'flame', 'shadow', 'storm'},
+    );
+  });
+
+  test('each playable hero has exactly three distinct weapons', () {
+    for (final kit in kits) {
+      expect(kit.weapons, hasLength(3), reason: kit.heroId);
+      expect(
+        kit.weapons.map((weapon) => weapon.id).toSet(),
+        hasLength(3),
+        reason: kit.heroId,
+      );
+      expect(
+        kit.weapons.map((weapon) => weapon.unlockLevel).toList(),
+        [1, 10, 20],
+        reason: kit.heroId,
+      );
+    }
+  });
+
 }
