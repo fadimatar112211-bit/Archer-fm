@@ -1907,3 +1907,13 @@ Verification:
 - Changed `.github/workflows/flutter-android.yml` to cancel superseded runs for the same branch/ref so the newest branch head gets the single active verification slot.
 - This is CI scheduling only; it does not change game runtime or test behavior. The compact-landscape HUD regression test and Android smoke still need a successful fresh run before the layout fix is accepted.
 - Workflow policy commit: `e0fe4d2e8884d2829e86a85311fa672b1ed74738`.
+
+## 2026-11-23 — Larger continuation: Android evidence and Ultimate contract audit
+
+- Re-polled Android release workflow run `45169276474` on branch `ranger-reference-work`. At the latest check, both `android-emulator-smoke` and `build-release-apk` remained in progress; no success or failure is claimed for either job.
+- Confirmed the emulator boot step completed successfully. Flutter analyze, the full Flutter test step, release-signing configuration, and upload of the visual capture artifact completed successfully.
+- Retrieved artifact `archer-fm-visual-review-captures` (artifact ID `14816022759`, about 48.2 MB). Its existence proves captures were uploaded, not that hero or monster art passed visual acceptance. The current hero captures remain insufficient to approve face readability/reference match; monster previews remain placeholders/review-only.
+- Audited `lib/game/combat/hero_kit.dart`, `lib/game/progress/hero_progress.dart`, and the related tests. Confirmed all four heroes have four distinct special abilities at levels 1/10/20/30, separate from the five manual combo hits. XP settlement persists ability IDs for the reached level.
+- Recorded the exact four-hero ability names and supporting test files in `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md`. This is a source/test contract confirmation, not a claim that every ability is fully balanced or visually accepted.
+- No combat stats, ability thresholds, hero geometry, monster geometry, map generation, or runtime routing were changed in this documentation pass.
+- Next batch: finish and inspect Android smoke/APK results; then capture each hero at front/three-quarter/gameplay yaw after the rest-pose fix and make evidence-backed per-hero corrections. Keep all four monster prototypes rejected until their reference silhouettes and weapons are rebuilt and reviewed.
