@@ -1,4 +1,5 @@
-import 'dart:ui' show Canvas, Color, FilterQuality, Image, ImageByteFormat, Offset, Paint, PictureRecorder, Rect, Size;
+import 'dart:ui' as ui;
+import 'dart:ui' show Canvas, Color, FilterQuality, ImageByteFormat, Offset, Paint, PictureRecorder, Rect, Size;
 
 import 'package:archer_fm/game/render3/sprite_actor_renderer.dart';
 import 'package:flutter_test/flutter_test.dart';
