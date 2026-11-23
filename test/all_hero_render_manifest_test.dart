@@ -29,10 +29,22 @@ Future<void> _expectVisiblePng(String path, String reason) async {
         rgba.lengthInBytes,
       );
       var visiblePixels = 0;
-      for (var alpha = 3; alpha < data.length; alpha += 4) {
-        if (data[alpha] != 0) visiblePixels++;
+      final visibleColors = <int>{};
+      for (var pixel = 0; pixel < data.length; pixel += 4) {
+        final alpha = data[pixel + 3];
+        if (alpha == 0) continue;
+        visiblePixels++;
+        // Quantize RGB to avoid treating tiny compression/noise differences as
+        // actual artwork detail.
+        final color = ((data[pixel] >> 4) << 8) |
+            ((data[pixel + 1] >> 4) << 4) |
+            (data[pixel + 2] >> 4);
+        visibleColors.add(color);
       }
-      expect(visiblePixels, greaterThan(0), reason: '$reason must contain visible pixels');
+      expect(visiblePixels, greaterThan(100),
+          reason: '$reason must contain a real visible character image');
+      expect(visibleColors.length, greaterThan(8),
+          reason: '$reason must not be a flat-color placeholder');
     } finally {
       image.dispose();
     }
