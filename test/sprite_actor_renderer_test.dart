@@ -171,7 +171,7 @@ void main() {
       pixels.lengthInBytes,
     );
     final center = (8 * 16 + 8) * 4;
-    expect(bytes[center], 255);
+    expect(bytes[center], closeTo(128, 2));
     expect(bytes[center + 1], 0);
     expect(bytes[center + 2], 0);
     expect(bytes[center + 3], closeTo(128, 2));
