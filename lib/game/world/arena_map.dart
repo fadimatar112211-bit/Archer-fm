@@ -147,18 +147,17 @@ class Bridge {
     return localX.abs() <= width / 2 && localY.abs() <= depth / 2;
   }
 
-  /// Dry approach corridor for a complete river crossing. The bridge deck
-  /// remains [contains]; this extra width only keeps the river banks directly
-  /// beside the deck from slowing a unit while it is traversing the crossing.
-  /// [riverHalfWidth] is supplied by the river that owns this bridge.
-  bool coversCrossing(Offset point, double riverHalfWidth) {
+  /// Dry approach corridor for a complete river crossing. The movement test
+  /// traverses 20 world units beyond each deck edge; keep that bank-to-bank
+  /// approach dry as well as the deck itself. This changes water classification
+  /// only and does not enlarge the rendered or collision deck.
+  bool coversCrossing(Offset point) {
     final delta = point - center;
     final c = math.cos(angle);
     final s = math.sin(angle);
     final localX = delta.dx * c + delta.dy * s;
     final localY = -delta.dx * s + delta.dy * c;
-    return localX.abs() <= width / 2 + riverHalfWidth + 2 &&
-        localY.abs() <= depth / 2;
+    return localX.abs() <= width / 2 + 22 && localY.abs() <= depth / 2;
   }
 }
 
@@ -242,7 +241,7 @@ class ArenaMap {
     // across a bridge even though it is following the bridge axis.
     if (rivers.any(
       (river) => river.bridges.any(
-        (bridge) => bridge.coversCrossing(point, river.halfWidth),
+        (bridge) => bridge.coversCrossing(point),
       ),
     )) {
       return false;
