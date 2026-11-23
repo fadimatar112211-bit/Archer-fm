@@ -1728,3 +1728,12 @@ Verification:
 - Commit: `68d660fe864b19d266c9d5fc25299335a1267c06` (`Fix isolated monster review capture camera alignment`).
 - Verification pending: this commit must rerun the full Android workflow; inspect the regenerated isolated captures and confirm they differ by archetype and direction before recording visual acceptance. The preceding run `45140989612` had Analyze and all Flutter tests complete successfully; Android smoke and release APK build were still in progress at last inspection.
 - Next: inspect the new monster captures, then continue hero face/weapon review and map/castle/minimap visual checks from the same run artifact.
+
+
+## 2026-11-23 — Strengthen monster capture evidence
+
+- Follow-up inspection showed the capture test also placed its friendly/hostile lineup at hard-coded world coordinates after constructing the world. The camera starts at the generated castle spawn, so those coordinates made the review coverage unreliable.
+- Repositioned the lineup and corpse samples relative to the actual player spawn. Isolated actors are now placed 80 world units from the spawn, within the initialized camera view and enemy reveal radius.
+- Added pixel fingerprints to the capture helper and assertions that all four isolated archetypes and all eight attack directions produce distinct rendered images. This turns off-screen/identical captures into a test failure instead of silently uploading misleading evidence.
+- Commits: `870bce2a399ec231723fce903497518a4163a57c` and `104653732738b85fde793a7f92c96d45be3ed175`.
+- Verification is pending on the latest test commit. The previous Android workflow attempt was cancelled by a newer push before it produced a result; do not treat its artifact as visual acceptance. Inspect the next successful artifact before approving monster visuals.
