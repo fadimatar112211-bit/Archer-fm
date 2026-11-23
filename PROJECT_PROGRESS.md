@@ -1636,3 +1636,12 @@ Verification:
 - Shadow atlas manifest still contains placeholder attack frames: `shadow/attack_n` reuses a walk atlas and its frame list has only one unique frame. This is an asset-quality blocker, not something to fix by weakening the test; it needs approved source art / correct animation frames.
 - Immediate patch after this diagnosis: correct the Ranger GLB texture expectation and reduce isolated close-up calibration from 0.82 to 0.79. These changes are not yet CI-verified.
 - Next: inspect and fix the bridge overlap, movement/castle integration issues, and camera precision; inspect visual captures and do not claim face/reference quality from triangle-count tests alone.
+
+
+## Follow-up fixes — 2026-11-23
+
+- `ArenaMap.slideMove` now clamps the starting point before swept collision checks. The failing boundary test started at (10,10) with radius 24; the previous sweep treated the invalid origin as blocked and returned it unchanged.
+- The monster-upgrade integration test now explicitly creates the default 20-unit army. Its shared no-wave helper deliberately leaves the army empty, so the former `firstWhere(tank)` threw before exercising upgrades.
+- The crystal-combat test now holds the dead hero's respawn timer in the future. Without this, `update(16)` immediately respawned the hero because the test set `dead=true` but left `respawnAtMs=0`, allowing the hero to distract the attacker.
+- Camera edge assertions now tolerate ±1e-6 logical pixels for floating-point projection noise; this does not change the camera or rendering.
+- These fixes are pushed as a separate batch and still require CI verification. The bridge traversal failure and Shadow's repeated placeholder frames remain open.
