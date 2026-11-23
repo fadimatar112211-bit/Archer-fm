@@ -2,8 +2,6 @@ name: Flutter Android Release APK
 
 concurrency:
   group: archer-fm-android-v2-${{ github.ref }}
-  # Always verify the newest branch head. Cancel stale runs that can otherwise
-  # occupy the single concurrency slot and leave current commits queued.
   cancel-in-progress: true
 
 on:
@@ -21,7 +19,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'tools/**'
-      - 'docs/monsters/**'
+      - 'docs/**'
       - 'PROJECT_PROGRESS.md'
       - '.github/workflows/flutter-android.yml'
 
@@ -30,8 +28,9 @@ permissions:
 
 jobs:
   build-release-apk:
+    name: Analyze, test and build release APK
     runs-on: ubuntu-22.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,7 +48,7 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Configure release signing from secrets
+      - name: Configure release signing
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
           test -s android/app/release.jks
@@ -66,22 +65,13 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Run all tests
-        run: timeout 20m flutter test --reporter expanded
+      - name: Run Flutter tests
+        run: timeout 25m flutter test --reporter expanded
 
-      - name: Upload visual captures even when tests fail
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: archer-fm-visual-review-captures
-          path: build/arena-captures/
-          if-no-files-found: warn
-          retention-days: 30
-
-      - name: Build Release APK
+      - name: Build release APK
         run: flutter build apk --release
 
-      - name: Verify APK
+      - name: Verify APK and signature
         run: |
           APK="build/app/outputs/flutter-apk/app-release.apk"
           test -f "$APK"
@@ -91,7 +81,7 @@ jobs:
           test -n "$APKSIGNER"
           "$APKSIGNER" verify --verbose "$APK"
 
-      - name: Upload APK as Actions artifact
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
           name: archer-fm-release-apk
@@ -99,7 +89,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Publish GitHub Release with APK
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}-${{ github.run_id }}
@@ -109,19 +99,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Write build summary
-        if: always()
-        run: |
-          {
-            echo "### Archer FM Release APK"
-            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- APK: build/app/outputs/flutter-apk/app-release.apk"
-            echo "- Release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v1.0.${{ github.run_number }}-${{ github.run_id }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
   android-emulator-smoke:
+    name: Android emulator integration smoke
     runs-on: ubuntu-22.04
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -142,130 +123,47 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Boot Android emulator without post-boot ADB mutations
+      - name: Create and boot Android emulator
+        shell: bash
         run: |
           set -euxo pipefail
-          SDKMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
-          AVDMANAGER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:?Android SDK path missing}}"
           export PATH="$SDK/platform-tools:$PATH"
-          if [ -e /dev/kvm ]; then
-            sudo chmod 666 /dev/kvm
-            ls -l /dev/kvm
-          else
-            echo "WARNING: /dev/kvm is not exposed by this runner."
-          fi
-          set +o pipefail
+          SDKMANAGER="$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
+          AVDMANAGER="$(find "$SDK/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
+          test -x "$SDKMANAGER"
+          test -x "$AVDMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null
-          LICENSE_STATUS=${PIPESTATUS[1]}
-          set -o pipefail
-          test "$LICENSE_STATUS" -eq 0
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
-          # The last smoke run reached the match transition, then the emulator
-          # process disappeared and ADB reported "device offline". Reduce the
-          # software-rendered framebuffer and give the guest more RAM headroom
-          # before retrying the full 3D arena mount.
           "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-metrics -wipe-data -skin 540x960 -memory 6144 -cores 4 > /tmp/archer-emulator.log 2>&1 &
-          EMULATOR_PID=$!
-          echo "$EMULATOR_PID" > /tmp/archer-emulator.pid
+          echo "$!" > /tmp/archer-emulator.pid
           adb start-server
           DEVICE_READY=0
           for attempt in $(seq 1 120); do
-            if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
-              echo "Android emulator process exited before ADB became ready."
-              cat /tmp/archer-emulator.log || true
-              exit 1
-            fi
             if adb devices | grep -qE '^emulator-[0-9]+[[:space:]]+device$'; then
               DEVICE_READY=1
               break
             fi
             sleep 5
           done
-          if [ "$DEVICE_READY" != "1" ]; then
-            echo "Timed out waiting for an online Android emulator device."
-            adb devices || true
-            cat /tmp/archer-emulator.log || true
-            exit 1
-          fi
+          test "$DEVICE_READY" = "1"
           BOOT_COMPLETED=0
           for attempt in $(seq 1 120); do
-            BOOTED="$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
-            if [ "$BOOTED" = "1" ]; then
+            if [ "$(timeout 10 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)" = "1" ]; then
               BOOT_COMPLETED=1
               break
             fi
             sleep 5
           done
-          if [ "$BOOT_COMPLETED" != "1" ]; then
-            echo "Emulator connected to ADB but Android did not finish booting."
-            adb devices || true
-            cat /tmp/archer-emulator.log || true
-            exit 1
-          fi
+          test "$BOOT_COMPLETED" = "1"
           adb shell input keyevent 82 || true
-          adb devices
+          adb devices -l
+
       - name: Run Android integration smoke test
-        shell: bash
-        run: |
-          set +e
-          EMULATOR_PID="$(cat /tmp/archer-emulator.pid)"
-          (
-            while kill -0 "$EMULATOR_PID" 2>/dev/null; do
-              {
-                echo "===== $(date -Is) ====="
-                ps -eo pid,ppid,rss,vsz,stat,comm,args --sort=-rss | head -18
-                echo "--- emulator process status ---"
-                if [ -r "/proc/$EMULATOR_PID/status" ]; then
-                  grep -E '^(Name|State|VmRSS|VmSize|Threads):' "/proc/$EMULATOR_PID/status" || true
-                fi
-                echo "--- adb device state ---"
-                timeout 3s adb devices -l 2>&1 || true
-                echo "--- adb server processes ---"
-                pgrep -af 'adb.*server|/platform-tools/adb' || true
-                echo "--- host memory ---"
-                grep -E 'MemAvailable|MemFree|SwapFree' /proc/meminfo || true
-                echo "--- cgroup v2 memory events/current/max ---"
-                for file in /sys/fs/cgroup/memory.events /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.max; do
-                  if [ -r "$file" ]; then
-                    echo "$file"
-                    cat "$file" || true
-                  fi
-                done
-                echo "--- cgroup v1 memory events/usage/limit ---"
-                for file in /sys/fs/cgroup/memory/memory.oom_control /sys/fs/cgroup/memory/memory.usage_in_bytes /sys/fs/cgroup/memory/memory.limit_in_bytes; do
-                  if [ -r "$file" ]; then
-                    echo "$file"
-                    cat "$file" || true
-                  fi
-                done
-              } >> /tmp/archer-emulator-watch.log
-              sleep 1
-            done
-            echo "===== emulator process exited at $(date -Is) =====" >> /tmp/archer-emulator-watch.log
-          ) &
-          WATCH_PID=$!
-          timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
-          TEST_STATUS=$?
-          echo "ANDROID_SMOKE_EXIT_CODE=$TEST_STATUS"
-          # Keep the watcher alive after Flutter returns. This distinguishes
-          # an ADB disconnect with a still-running QEMU process from an actual
-          # emulator exit, and records the final seconds before runner cleanup.
-          for attempt in $(seq 1 30); do
-            if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
-              echo "QEMU process no longer exists after smoke test." >> /tmp/archer-emulator-watch.log
-              break
-            fi
-            if timeout 3s adb devices 2>/dev/null | grep -qE '^emulator-[0-9]+[[:space:]]+device
-          if kill -0 "$EMULATOR_PID" 2>/dev/null; then
-            echo "QEMU process survived the 30-second post-test observation window." >> /tmp/archer-emulator-watch.log
-          fi
-          kill "$WATCH_PID" 2>/dev/null || true
-          wait "$WATCH_PID" 2>/dev/null || true
-          exit "$TEST_STATUS"
+        run: timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
 
-      - name: Capture Android emulator diagnostics
+      - name: Capture emulator diagnostics
         if: always()
         run: |
           mkdir -p build/android-emulator-diagnostics
@@ -274,78 +172,13 @@ jobs:
           timeout 8s adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
           timeout 12s adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
           free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
-          dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
-          if [ -f /tmp/archer-emulator.log ]; then
-            cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
-          fi
-          if [ -f /tmp/archer-emulator-watch.log ]; then
-            cp /tmp/archer-emulator-watch.log build/android-emulator-diagnostics/emulator-watch.log
-          fi
-          if [ -f /sys/fs/cgroup/memory.events ]; then
-            cp /sys/fs/cgroup/memory.events build/android-emulator-diagnostics/cgroup-memory-events.txt
-          fi
+          if [ -f /tmp/archer-emulator.log ]; then cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log; fi
           if [ -f /tmp/archer-emulator.pid ]; then
             PID="$(cat /tmp/archer-emulator.pid)"
-            timeout 5s ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
-            if [ -r "/proc/$PID/status" ]; then
-              cp "/proc/$PID/status" build/android-emulator-diagnostics/emulator-proc-status.txt || true
-            fi
+            ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
           fi
-          pgrep -af 'qemu-system|/emulator/emulator|adb.*server' > build/android-emulator-diagnostics/emulator-and-adb-processes.txt 2>&1 || true
-          timeout 5s adb version > build/android-emulator-diagnostics/adb-version.txt 2>&1 || true
 
-      - name: Upload Android emulator diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: archer-fm-android-emulator-diagnostics
-          path: build/android-emulator-diagnostics/
-          if-no-files-found: warn
-          retention-days: 14
-; then
-              echo "ADB remained online after smoke test at $(date -Is)." >> /tmp/archer-emulator-watch.log
-            else
-              echo "ADB unavailable while QEMU process still exists at $(date -Is)." >> /tmp/archer-emulator-watch.log
-            fi
-            sleep 1
-          done
-          if kill -0 "$EMULATOR_PID" 2>/dev/null; then
-            echo "QEMU process survived the 30-second post-test observation window." >> /tmp/archer-emulator-watch.log
-          fi
-          kill "$WATCH_PID" 2>/dev/null || true
-          wait "$WATCH_PID" 2>/dev/null || true
-          exit "$TEST_STATUS"
-
-      - name: Capture Android emulator diagnostics
-        if: always()
-        run: |
-          mkdir -p build/android-emulator-diagnostics
-          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
-          if [ -n "$SDK" ]; then export PATH="$SDK/platform-tools:$PATH"; fi
-          timeout 8s adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
-          timeout 12s adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
-          free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
-          dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
-          if [ -f /tmp/archer-emulator.log ]; then
-            cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
-          fi
-          if [ -f /tmp/archer-emulator-watch.log ]; then
-            cp /tmp/archer-emulator-watch.log build/android-emulator-diagnostics/emulator-watch.log
-          fi
-          if [ -f /sys/fs/cgroup/memory.events ]; then
-            cp /sys/fs/cgroup/memory.events build/android-emulator-diagnostics/cgroup-memory-events.txt
-          fi
-          if [ -f /tmp/archer-emulator.pid ]; then
-            PID="$(cat /tmp/archer-emulator.pid)"
-            timeout 5s ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
-            if [ -r "/proc/$PID/status" ]; then
-              cp "/proc/$PID/status" build/android-emulator-diagnostics/emulator-proc-status.txt || true
-            fi
-          fi
-          pgrep -af 'qemu-system|/emulator/emulator|adb.*server' > build/android-emulator-diagnostics/emulator-and-adb-processes.txt 2>&1 || true
-          timeout 5s adb version > build/android-emulator-diagnostics/adb-version.txt 2>&1 || true
-
-      - name: Upload Android emulator diagnostics
+      - name: Upload emulator diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
