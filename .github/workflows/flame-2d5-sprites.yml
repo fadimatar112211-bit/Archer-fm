@@ -42,6 +42,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify shared sprite renderer, captures and multi-hero loading
+        run: |
+          flutter test --reporter expanded \
+            test/sprite_animation_capture_test.dart \
+            test/sprite_actor_renderer_test.dart \
+            test/sprite_actor_clip_resolver_test.dart \
+            test/sprite_player_test.dart \
+            test/sprite_player_timing_regression_test.dart \
+            test/all_hero_runtime_loader_test.dart
+
+      - name: Upload Shadow Phase 2 sprite captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-phase2-sprite-captures
+          path: build/sprite-captures/shadow-phase2/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Verify four production manifests and runtime bundles
         run: |
           flutter test --reporter expanded \
