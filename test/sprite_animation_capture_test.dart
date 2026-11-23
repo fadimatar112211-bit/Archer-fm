@@ -27,7 +27,6 @@ void main() {
 
     Future<void> capture({
       required String name,
-      required AnimationClip clip,
       required String frameId,
       required AtlasSheet sheet,
     }) async {
@@ -86,7 +85,6 @@ void main() {
       final player = SpritePlayer(clip: resolved);
       await capture(
         name: '${state}_frame_0',
-        clip: resolved,
         frameId: player.frameId,
         sheet: sheet,
       );
@@ -95,7 +93,6 @@ void main() {
       expect(player.playing, isTrue, reason: '$clipName remains looping');
       await capture(
         name: '${state}_frame_1',
-        clip: resolved,
         frameId: player.frameId,
         sheet: sheet,
       );
@@ -113,12 +110,10 @@ void main() {
       final sheet = await loader.loadSheet(manifest, clipName);
       final events = <String>[];
       final player = SpritePlayer(
-        clip: resolved,
         onEvent: (event) => events.add(event.name),
       );
       await capture(
         name: '${state}_start',
-        clip: resolved,
         frameId: player.frameId,
         sheet: sheet,
       );
@@ -131,7 +126,6 @@ void main() {
       }
       await capture(
         name: '${state}_event',
-        clip: resolved,
         frameId: player.frameId,
         sheet: sheet,
       );
@@ -141,7 +135,6 @@ void main() {
       expect(player.playing, isFalse, reason: '$clipName stops after final frame');
       await capture(
         name: '${state}_final',
-        clip: resolved,
         frameId: player.frameId,
         sheet: sheet,
       );
