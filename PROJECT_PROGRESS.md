@@ -1803,3 +1803,11 @@ Verification:
 - Code commit: `00e2fae515df7171ccde3ff76feaa31529a0f0c8` (`Fix compact landscape home card overflows`). The fix is not yet verified; wait for the new Android workflow and inspect its rendering logs before marking the overflow resolved.
 - APK packaging, Flutter Analyze and the full Flutter test suite passed on the pre-fix head `da38bdf`; emulator smoke remains blocked by both the confirmed menu overflow and the ADB-offline event.
 - Next: verify this responsive fix on the new CI run; if menu layout passes but ADB still drops offline after Start, isolate the emulator/runtime transition separately. Then resume evidence-led four-hero face/weapon correction and monster 3D replacement work.
+
+## 2026-11-23 — Reconcile hero acceptance target with the approved 3D direction
+
+- A repository audit found that `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md` still described 2D/2.5D sprites as the final production target, contradicting the current Archer FM direction: four reference-faithful, fully rigged 3D chibi heroes in the arena.
+- Corrected the audit's production rule and next steps: GLB is the final character pipeline; sprite atlases are legacy/review assets. Ranger, Flame and Storm currently use GLB; Shadow's sprite pilot is explicitly temporary until its 3D model passes the same visual gate.
+- Recorded hero-specific evidence-led priorities: Flame's weapon occlusion, Storm's idle/front-axis pose, Ranger's face/hood/bow readability, and Shadow's 3D migration. No model orientation or geometry was guessed or changed in this documentation pass.
+- Documentation commit: `d8051d51256f17c4e5dc140f076bb844390b9e9c`.
+- Next: complete the compact-landscape CI verification; then inspect source rig/front-axis and close-up captures before making per-hero model corrections. All four heroes remain unapproved for final visual sign-off.
