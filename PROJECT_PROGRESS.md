@@ -2132,3 +2132,13 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Redirected the Ranger manifest regression test to the playable `ranger_new` bundle, including its runtime bundle-loader test.
 - The shared Blender render configuration remains temporarily at `assets/heroes/ranger/source/render_config.json` because the four-hero sprite workflow and its regression tests still consume it. It is pipeline configuration, not a playable hero asset; it will be relocated before the legacy folder is fully removed.
 - Legacy visual files and source model are being removed separately after preserving the shared configuration dependency. Flutter tests/build have not been run in this session.
+
+
+## 2026-11-23 — Enforce one canonical Ranger identity
+
+- Removed the retired `ranger` character's 630 visual/source files and removed its selectable definition and runtime asset declarations. The only remaining file under the old path is the shared Blender render configuration, retained temporarily because the multi-hero render workflow consumes it; the old model and art are gone.
+- The playable roster remains exactly Ranger (`ranger_new`), Flame, Shadow and Storm. `heroById` now throws for unknown IDs instead of silently returning Flame, preventing `ranger` from accidentally resolving to a different hero.
+- Updated the Ranger manifest/runtime bundle test to load `ranger_new` only and added roster identity regression coverage.
+- Removed the retired generic `ranger` profile from the shared Blender config and render-profile registry; the three matrix-built heroes remain Flame, Shadow and Storm, while playable Ranger continues using its dedicated `ranger_new` source job.
+- Removed `ranger` from the renderer's supported hero IDs; the default active marker now resolves to `ranger_new`.
+- Flutter/Python tests and Blender workflows have not been executed in this session. These edits are committed source changes, not a claim of a green pipeline.
