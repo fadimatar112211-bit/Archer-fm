@@ -43,7 +43,7 @@ The final deliverable is **all four heroes (Ranger, Flame, Shadow and Storm) as 
 
 During migration, keep the last safe runtime route for each hero until its replacement 2.5D pack passes acceptance. This temporary fallback must never be mistaken for the final art direction. In particular, do not enable the rejected Flame simplification or Storm blue placeholder atlas.
 
-Map/environment production proceeds **in parallel** with the hero and monster sprite work. The arena pass covers terrain/biomes, river and bridges, paths, trees/rocks, mines, castles/walls/crystals, resource pickups, depth/occlusion, and the 16:9 camera composition. Preserve map generation, collision, economy, combat and touch transforms unless a separate test-backed change is approved.
+Map/environment production may proceed in parallel, but the character-art sequence is strict: **finish and visually accept all four heroes first; only then begin production replacement work for the four monsters.** The arena pass covers terrain/biomes, river and bridges, paths, trees/rocks, mines, castles/walls/crystals, resource pickups, depth/occlusion, and the 16:9 camera composition. Preserve map generation, collision, economy, combat and touch transforms unless a separate test-backed change is approved.
 
 ## 1. Final approved direction
 
@@ -98,6 +98,7 @@ For each hero, produce and validate:
 - hit reaction;
 - death;
 - four hero-specific Ultimate abilities, unlocked at levels 1 / 10 / 20 / 30.
+- Each of the four Ultimate abilities must have its own identifiable animation/event sequence per hero; a single generic `skill` clip or VFX recolor is not sufficient to claim all four are complete. Keep the Ultimate names, unlock levels and gameplay effects bound to the hero kit contract.
 
 Dodge is not a gameplay action in the current documented combat rules; do not reintroduce a dodge control or gameplay ability during this art conversion. Only create a dodge animation if a separately approved gameplay change requires it.
 
