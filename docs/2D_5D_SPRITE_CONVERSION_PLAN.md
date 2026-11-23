@@ -148,8 +148,8 @@ For monsters, implement the direction and animation set appropriate to each of t
 ### Phase 2 — Reusable sprite animation system
 - [x] Implement direction selection, frame timing, loop/one-shot behavior, animation transitions, last-facing preservation, pivoting, depth sorting and render scaling. (Code evidence: `sprite_actor_clip_resolver.dart`, `sprite_player.dart`; regression coverage added for octant boundaries and elapsed-time/loop/one-shot behavior. Last-facing/pivot/depth-sort still require visual/runtime acceptance.)
 - [x] Add deterministic tests for direction mapping and frame selection. (Tests: `sprite_actor_clip_resolver_test.dart`, `sprite_actor_clip_resolver_boundary_test.dart`, `sprite_player_test.dart`, `sprite_player_timing_regression_test.dart`.)
-- [x] Add capture tests for idle/walk and one-shot attack/death transitions. (Evidence: `test/sprite_animation_capture_test.dart`; added CI execution and capture artifact upload in `.github/workflows/flame-2d5-sprites.yml`. Runtime result is pending.)
-- **Gate:** tests pass and the same renderer can load a second character without character-specific hardcoded logic.
+- [x] Add capture tests for idle/walk and one-shot attack/death transitions. (Verified: CI run `45273731027`, step `Verify shared sprite renderer, captures and multi-hero loading` passed; 10 PNG captures uploaded as artifact `shadow-phase2-sprite-captures`.)
+- **Gate: PASS for the Phase 2 targeted suite.** The CI step `Verify shared sprite renderer, captures and multi-hero loading` passed on commit `6a79fbfd0902f040507d5fe75f94bf4c71d29c84`; it ran the capture, renderer, direction/player and four-hero runtime-loader tests. The separate production-manifest validation later in the same workflow still fails on the known Storm `idle_n` flat-color placeholder; that is outside this Phase 2 gate.
 
 ### Phase 3 — Four hero conversion
 - Produce final atlases/manifests for Ranger, Flame, Shadow and Storm.
