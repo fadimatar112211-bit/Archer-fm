@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'dart:ui' show Canvas, Color, Offset, Paint, PictureRecorder, Rect, Size;
 
 import 'package:archer_fm/game/render3/sprite_actor_renderer.dart';
@@ -79,7 +80,7 @@ void main() {
   });
 
   test('non-finite opacity and atlas rectangles outside the image are rejected', () async {
-    final recorder = ui.PictureRecorder();
+    final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.drawRect(
       const Rect.fromLTWH(0, 0, 16, 16),
@@ -87,6 +88,7 @@ void main() {
     );
     final picture = recorder.endRecording();
     final image = await picture.toImage(16, 16);
+    final validationCanvas = Canvas(PictureRecorder());
     addTearDown(() {
       image.dispose();
       picture.dispose();
@@ -94,7 +96,7 @@ void main() {
 
     void paint({required Rect sourceRect, double opacity = 1}) {
       SpriteActorRenderer.paint(
-        canvas,
+        validationCanvas,
         image: image,
         sourceRect: sourceRect,
         groundAnchor: Offset.zero,
@@ -107,7 +109,10 @@ void main() {
     }
 
     expect(
-      () => paint(sourceRect: const Rect.fromLTWH(0, 0, 16, 16), opacity: double.nan),
+      () => paint(
+        sourceRect: const Rect.fromLTWH(0, 0, 16, 16),
+        opacity: double.nan,
+      ),
       throwsArgumentError,
     );
     expect(
