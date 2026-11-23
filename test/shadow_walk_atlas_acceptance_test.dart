@@ -45,6 +45,14 @@ void main() {
     expect(opaquePixels, greaterThan(0),
         reason: 'the sheet must contain visible character pixels');
 
+    final heroManifest = jsonDecode(
+      await rootBundle.loadString(
+        'assets/heroes/shadow/renders/shadow_manifest.json',
+      ),
+    ) as Map<String, dynamic>;
+    expect(heroManifest['frame_size'], {'width': 192, 'height': 192});
+    expect(heroManifest['pivot'], {'x': 0.5, 'y': 0.86});
+
     // Each directional manifest must describe four full, untrimmed 192×192
     // cells at the expected row in the one shared 4-column atlas.
     for (var row = 0; row < _directions.length; row++) {
