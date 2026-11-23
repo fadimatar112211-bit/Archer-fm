@@ -1645,3 +1645,10 @@ Verification:
 - The crystal-combat test now holds the dead hero's respawn timer in the future. Without this, `update(16)` immediately respawned the hero because the test set `dead=true` but left `respawnAtMs=0`, allowing the hero to distract the attacker.
 - Camera edge assertions now tolerate ±1e-6 logical pixels for floating-point projection noise; this does not change the camera or rendering.
 - These fixes are pushed as a separate batch and still require CI verification. The bridge traversal failure and Shadow's repeated placeholder frames remain open.
+
+
+## Bridge traversal correction — 2026-11-23
+
+- Added a distinct dry crossing corridor to each bridge, extending only across the river banks by the owning river's half-width. The rendered/physical deck footprint remains unchanged; this is a movement/water classification allowance for the immediate bank-to-bank approach.
+- `ArenaMap.isWater` now checks all bridge crossing corridors before testing all river channels. This also prevents an intersecting tributary from reclassifying the approach of another river's bridge as water.
+- The existing 40-seed regression `full cross-river movement over every bridge stays full speed` exercises the entire bank-to-bank traversal, including overlapping channels. Awaiting CI verification on commit `25a0de9`.
