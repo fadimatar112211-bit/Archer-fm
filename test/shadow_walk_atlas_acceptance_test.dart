@@ -53,6 +53,37 @@ void main() {
     expect(heroManifest['frame_size'], {'width': 192, 'height': 192});
     expect(heroManifest['pivot'], {'x': 0.5, 'y': 0.86});
 
+    final animations = heroManifest['animations'] as Map<String, dynamic>;
+    final atlases = heroManifest['atlases'] as List<dynamic>;
+
+    // The runtime manifest must point every walk direction at its own
+    // directional metadata and at exactly the four frames in that atlas row.
+    for (var row = 0; row < _directions.length; row++) {
+      final direction = _directions[row];
+      final clip = animations['walk_$direction'] as Map<String, dynamic>;
+      final clipFrames = clip['frames'] as List<dynamic>;
+      expect(clipFrames, hasLength(4), reason: 'walk_$direction');
+      for (var column = 0; column < 4; column++) {
+        expect(
+          clipFrames[column],
+          'shadow_walk_${direction}_user_00$column',
+          reason: 'walk_$direction frame $column',
+        );
+      }
+      final atlasEntry = atlases.cast<Map<String, dynamic>>().singleWhere(
+        (entry) => entry['animation'] == 'walk_$direction',
+      );
+      expect(
+        atlasEntry['meta'],
+        'atlases/walk_${direction}_user.json',
+        reason: 'walk_$direction must use its own row metadata',
+      );
+      expect(
+        atlasEntry['image'],
+        'atlases/shadow_walk_8dir_4frames_FINAL.png',
+      );
+    }
+
     // Each directional manifest must describe four full, untrimmed 192×192
     // cells at the expected row in the one shared 4-column atlas.
     for (var row = 0; row < _directions.length; row++) {
