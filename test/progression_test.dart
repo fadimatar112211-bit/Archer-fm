@@ -349,6 +349,30 @@ void main() {
       );
     });
 
+    test('each hero restores only its own level-based weapon and Ultimate unlocks', () async {
+      const heroIds = ['ranger_new', 'flame', 'shadow', 'storm'];
+      final store = SharedPreferencesProgressStore();
+      for (final heroId in heroIds) {
+        final kit = kitForHero(heroId);
+        await store.save(
+          heroId,
+          HeroProgress(level: 20, xp: 0, kills: 0),
+        );
+        final loaded = await store.load(heroId);
+        expect(loaded, isNotNull, reason: heroId);
+        expect(
+          loaded!.unlockedWeaponIds.toSet(),
+          kit.weaponsUnlockedAt(20).map((weapon) => weapon.id).toSet(),
+          reason: heroId,
+        );
+        expect(
+          loaded.unlockedAbilityIds.toSet(),
+          kit.abilitiesUnlockedAt(20).map((ability) => ability.id).toSet(),
+          reason: heroId,
+        );
+      }
+    });
+
     test('old saves without progression fields still load', () async {
       SharedPreferences.setMockInitialValues({
         'archer_fm.progress.ranger_new':
