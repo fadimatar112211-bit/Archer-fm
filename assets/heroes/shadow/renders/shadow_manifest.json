@@ -13,323 +13,323 @@
   "atlases": [
     {
       "animation": "attack_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/attack_e.png",
+      "meta": "atlases/attack_e.json"
     },
     {
       "animation": "attack_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/attack_n.png",
+      "meta": "atlases/attack_n.json"
     },
     {
       "animation": "attack_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/attack_ne.png",
+      "meta": "atlases/attack_ne.json"
     },
     {
       "animation": "attack_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/attack_nw.png",
+      "meta": "atlases/attack_nw.json"
     },
     {
       "animation": "attack_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/attack_s.png",
+      "meta": "atlases/attack_s.json"
     },
     {
       "animation": "attack_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/attack_se.png",
+      "meta": "atlases/attack_se.json"
     },
     {
       "animation": "attack_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/attack_sw.png",
+      "meta": "atlases/attack_sw.json"
     },
     {
       "animation": "attack_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/attack_w.png",
+      "meta": "atlases/attack_w.json"
     },
     {
       "animation": "death_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/death_e.png",
+      "meta": "atlases/death_e.json"
     },
     {
       "animation": "death_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/death_n.png",
+      "meta": "atlases/death_n.json"
     },
     {
       "animation": "death_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/death_ne.png",
+      "meta": "atlases/death_ne.json"
     },
     {
       "animation": "death_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/death_nw.png",
+      "meta": "atlases/death_nw.json"
     },
     {
       "animation": "death_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/death_s.png",
+      "meta": "atlases/death_s.json"
     },
     {
       "animation": "death_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/death_se.png",
+      "meta": "atlases/death_se.json"
     },
     {
       "animation": "death_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/death_sw.png",
+      "meta": "atlases/death_sw.json"
     },
     {
       "animation": "death_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/death_w.png",
+      "meta": "atlases/death_w.json"
     },
     {
       "animation": "dodge_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/dodge_e.png",
+      "meta": "atlases/dodge_e.json"
     },
     {
       "animation": "dodge_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/dodge_n.png",
+      "meta": "atlases/dodge_n.json"
     },
     {
       "animation": "dodge_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/dodge_ne.png",
+      "meta": "atlases/dodge_ne.json"
     },
     {
       "animation": "dodge_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/dodge_nw.png",
+      "meta": "atlases/dodge_nw.json"
     },
     {
       "animation": "dodge_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/dodge_s.png",
+      "meta": "atlases/dodge_s.json"
     },
     {
       "animation": "dodge_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/dodge_se.png",
+      "meta": "atlases/dodge_se.json"
     },
     {
       "animation": "dodge_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/dodge_sw.png",
+      "meta": "atlases/dodge_sw.json"
     },
     {
       "animation": "dodge_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/dodge_w.png",
+      "meta": "atlases/dodge_w.json"
     },
     {
       "animation": "hit_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/hit_e.png",
+      "meta": "atlases/hit_e.json"
     },
     {
       "animation": "hit_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/hit_n.png",
+      "meta": "atlases/hit_n.json"
     },
     {
       "animation": "hit_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/hit_ne.png",
+      "meta": "atlases/hit_ne.json"
     },
     {
       "animation": "hit_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/hit_nw.png",
+      "meta": "atlases/hit_nw.json"
     },
     {
       "animation": "hit_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/hit_s.png",
+      "meta": "atlases/hit_s.json"
     },
     {
       "animation": "hit_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/hit_se.png",
+      "meta": "atlases/hit_se.json"
     },
     {
       "animation": "hit_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/hit_sw.png",
+      "meta": "atlases/hit_sw.json"
     },
     {
       "animation": "hit_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/hit_w.png",
+      "meta": "atlases/hit_w.json"
     },
     {
       "animation": "idle_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/idle_e.png",
+      "meta": "atlases/idle_e.json"
     },
     {
       "animation": "idle_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/idle_n.png",
+      "meta": "atlases/idle_n.json"
     },
     {
       "animation": "idle_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/idle_ne.png",
+      "meta": "atlases/idle_ne.json"
     },
     {
       "animation": "idle_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/idle_nw.png",
+      "meta": "atlases/idle_nw.json"
     },
     {
       "animation": "idle_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/idle_s.png",
+      "meta": "atlases/idle_s.json"
     },
     {
       "animation": "idle_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/idle_se.png",
+      "meta": "atlases/idle_se.json"
     },
     {
       "animation": "idle_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/idle_sw.png",
+      "meta": "atlases/idle_sw.json"
     },
     {
       "animation": "idle_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/idle_w.png",
+      "meta": "atlases/idle_w.json"
     },
     {
       "animation": "run_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/run_e.png",
+      "meta": "atlases/run_e.json"
     },
     {
       "animation": "run_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/run_n.png",
+      "meta": "atlases/run_n.json"
     },
     {
       "animation": "run_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/run_ne.png",
+      "meta": "atlases/run_ne.json"
     },
     {
       "animation": "run_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/run_nw.png",
+      "meta": "atlases/run_nw.json"
     },
     {
       "animation": "run_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/run_s.png",
+      "meta": "atlases/run_s.json"
     },
     {
       "animation": "run_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/run_se.png",
+      "meta": "atlases/run_se.json"
     },
     {
       "animation": "run_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/run_sw.png",
+      "meta": "atlases/run_sw.json"
     },
     {
       "animation": "run_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/run_w.png",
+      "meta": "atlases/run_w.json"
     },
     {
       "animation": "skill_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/skill_e.png",
+      "meta": "atlases/skill_e.json"
     },
     {
       "animation": "skill_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/skill_n.png",
+      "meta": "atlases/skill_n.json"
     },
     {
       "animation": "skill_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/skill_ne.png",
+      "meta": "atlases/skill_ne.json"
     },
     {
       "animation": "skill_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/skill_nw.png",
+      "meta": "atlases/skill_nw.json"
     },
     {
       "animation": "skill_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/skill_s.png",
+      "meta": "atlases/skill_s.json"
     },
     {
       "animation": "skill_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/skill_se.png",
+      "meta": "atlases/skill_se.json"
     },
     {
       "animation": "skill_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/skill_sw.png",
+      "meta": "atlases/skill_sw.json"
     },
     {
       "animation": "skill_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/skill_w.png",
+      "meta": "atlases/skill_w.json"
     },
     {
       "animation": "walk_e",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_e_user.json"
+      "image": "atlases/walk_e.png",
+      "meta": "atlases/walk_e.json"
     },
     {
       "animation": "walk_n",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_n_user.json"
+      "image": "atlases/walk_n.png",
+      "meta": "atlases/walk_n.json"
     },
     {
       "animation": "walk_ne",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_ne_user.json"
+      "image": "atlases/walk_ne.png",
+      "meta": "atlases/walk_ne.json"
     },
     {
       "animation": "walk_nw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_nw_user.json"
+      "image": "atlases/walk_nw.png",
+      "meta": "atlases/walk_nw.json"
     },
     {
       "animation": "walk_s",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_s_user.json"
+      "image": "atlases/walk_s.png",
+      "meta": "atlases/walk_s.json"
     },
     {
       "animation": "walk_se",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_se_user.json"
+      "image": "atlases/walk_se.png",
+      "meta": "atlases/walk_se.json"
     },
     {
       "animation": "walk_sw",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_sw_user.json"
+      "image": "atlases/walk_sw.png",
+      "meta": "atlases/walk_sw.json"
     },
     {
       "animation": "walk_w",
-      "image": "atlases/shadow_walk_8dir_4frames_FINAL.png",
-      "meta": "atlases/walk_w_user.json"
+      "image": "atlases/walk_w.png",
+      "meta": "atlases/walk_w.json"
     }
   ],
   "animations": {
