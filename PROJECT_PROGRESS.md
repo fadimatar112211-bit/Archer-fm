@@ -1754,3 +1754,10 @@ Verification:
 - Fix commit: `48a59931588474d781e63afbad947a4470b5e1e6`, with west-facing mirror-state correction `0fea17ca80fce072a9fce883e06ca8fcddf5f06d`.
 - The failed run still uploaded artifact `14802956098`; map captures show the four-castle/rivers/bridges/mines layout and minimap, but the map/fog capture has large dark unexplored regions and the minimap remains a very schematic silhouette. These are review targets, not a final visual sign-off. The capture set did not reach the isolated monster images because the directional assertion stopped the test.
 - Next verification must run the latest test change; then inspect the isolated monster captures and full map presentation. No hero/monster visual acceptance is claimed.
+
+
+## 2026-11-23 — Map screenshot review and verification queue status
+
+- Reviewed actual captures from failed verification artifact `14802956098`: world/castle captures are valid and show the river crossing, bridge, crystals, castle structures and units. However, the camera/test composition crops parts of the arena at the frame edges and large unexplored fog blocks dominate the view; this is not yet a polished full-map acceptance capture.
+- The minimap capture correctly communicates the river, explored biomes, four castle sites, mine markers and player marker, but at the current 156×92 size it reads as a sparse tactical diagram. Revisit its size/contrast/legend only after comparing against the approved gameplay screenshot and live HUD composition; do not change it from an isolated capture alone.
+- Latest directional-capture assertion fix is committed. Android workflow `45142398925` is queued because the previous run's emulator smoke job `137581730985` remains active; its companion test/build job in `45141740087` failed only at the earlier brittle pixel-direction assertion. No successful full test or APK result is claimed yet.
