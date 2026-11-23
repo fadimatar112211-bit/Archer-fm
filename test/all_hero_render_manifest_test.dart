@@ -22,6 +22,20 @@ void main() {
       final atlases = manifest['atlases'] as List<dynamic>;
       expect(animations.length, 64, reason: hero);
       expect(atlases.length, 64, reason: hero);
+
+      if (hero == 'shadow') {
+        // Phase 1 of the approved conversion plan is the user's supplied
+        // eight-direction, four-frame Shadow walk sheet. Other Shadow states
+        // intentionally hold that approved source pose until dedicated art is
+        // available; do not count those held frames as finished animations.
+        for (final direction in _directions) {
+          final walk = animations['walk_$direction'] as Map<String, dynamic>;
+          final frames = (walk['frames'] as List).cast<String>();
+          expect(frames, hasLength(4), reason: 'shadow/walk_$direction');
+          expect(frames.toSet(), hasLength(4),
+              reason: 'shadow/walk_$direction must contain four real frames');
+        }
+      }
       for (final state in _states) {
         for (final direction in _directions) {
           final name = '${state}_${direction}';
