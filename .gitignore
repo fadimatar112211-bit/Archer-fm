@@ -30,10 +30,9 @@ dist/
 local.properties
 *.local.yaml
 
-# CI-only hero bundle: published under the fixed Ranger render path so the
-# workflow's artifact upload carries non-Ranger heroes to the committing
-# machine. The real files live in assets/heroes/<hero>/.
-assets/heroes/ranger/renders/_bundle/
+# CI-only sprite bundles are generated outside the runtime hero folders.
+assets/heroes/_sprite_bundles/
+
 
 # Flutter build artifacts
 .dart_tool/
