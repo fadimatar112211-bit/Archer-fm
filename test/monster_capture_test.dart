@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
+import 'package:archer_fm/game/monsters/monster_telegraph_geometry.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
@@ -192,19 +193,28 @@ void main() {
           other.hitFlashUntilMs = 0;
         }
         final actor = world.enemies.firstWhere((enemy) => enemy.type == type);
-        final directionFingerprints = <int>{};
+        final directionAngles = <int>{};
         for (var direction = 0; direction < 8; direction++) {
           final angle = direction * math.pi / 4;
           actor.attackAnimUntilMs = world.nowMs + 230;
           actor.facing = Offset(math.cos(angle), math.sin(angle));
-          final fingerprint = await _save(
-            '23b_monster_${type.name}_attack_dir_$direction',
-            capture('ranger_new_idle_e_000'),
+          // The pure geometry test verifies that all eight vectors map to
+          // unique body-local angles. Full-frame pixel hashes are unsuitable
+          // here: the body is intentionally kept upright and some telegraphs
+          // are rotationally symmetric, so distinct lanes can rasterize to
+          // the same pixels at this capture scale.
+          final localAngle = monsterTelegraphAngle(
+            actor.facing,
+            mirrored: actor.facing.dx < -0.08,
           );
           expect(
-            directionFingerprints.add(fingerprint),
+            directionAngles.add((localAngle * 1000000).round()),
             isTrue,
-            reason: '${type.name} attack direction $direction must change the rendered capture',
+            reason: '${type.name} attack direction $direction must map to a unique warning angle',
+          );
+          await _save(
+            '23b_monster_${type.name}_attack_dir_$direction',
+            capture('ranger_new_idle_e_000'),
           );
         }
       }
