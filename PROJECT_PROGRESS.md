@@ -2151,3 +2151,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Moved generated CI-only sprite bundles to `assets/heroes/_sprite_bundles/<hero>/renders`, so the pipeline no longer writes artifacts beneath the retired Ranger folder.
 - Updated the source builder to write each matrix hero directly to its own source folder and bundle location. The playable Ranger remains sourced only from `ranger_new`.
 - The old Ranger folder is now ready for complete removal, including its former shared config file. Tests/Blender/CI remain unexecuted in this session.
+
+
+## 2026-11-23 — Legacy Ranger fully removed and hero acceptance direction reconciled
+
+- Verified the active branch tree contains zero paths under `assets/heroes/ranger/`; the old Ranger-only workflow has also been deleted.
+- Corrected stale catalog/profile comments and updated the hero visual audit to follow the approved 2D/2.5D sprite actors in a lightweight 3D arena plan. Retained GLBs are source inputs, not the final runtime character route.
+- The old Ranger ID is rejected, and regression coverage now locks the four playable IDs and the canonical Ranger New manifest path.
+- The four-hero sprite workflow now writes Flame/Shadow/Storm bundles outside runtime folders and builds Ranger from `ranger_new` separately.
+- The latest sprite matrix workflow was queued at the last poll. Android workflow runs reported failure with no job records exposed; no cause or test result is inferred. Flutter, Python and Blender checks remain unverified until the workflow returns job logs/results.
