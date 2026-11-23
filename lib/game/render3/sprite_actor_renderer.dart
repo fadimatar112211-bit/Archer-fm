@@ -56,7 +56,7 @@ class SpriteActorRenderer {
       pivotY: pivotY,
       targetHeight: targetHeight,
     );
-    final alpha = opacity.clamp(0.0, 1.0);
+    final alpha = opacity.clamp(0.0, 1.0).toDouble();
     final color = tint?.withValues(alpha: alpha) ??
         Color.fromRGBO(255, 255, 255, alpha);
     canvas.drawImageRect(
