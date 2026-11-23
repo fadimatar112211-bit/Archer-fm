@@ -1691,3 +1691,5 @@ Verification:
 - All 64 state/direction manifest entries now resolve to the approved shared PNG and the correct direction-specific metadata. This is the accepted interim art mapping, not a claim that Shadow's attack/skill/dodge/hit/death visuals are finished.
 - Increased only Shadow's isolated 3D review scale from 1.04× to 1.07× after CI measured 297.48px against the 300px minimum. Other heroes remain unchanged.
 - Commits: `f260380` and `2c7780f`. New CI must confirm these corrections.
+
+- Updated the cross-hero manifest test to encode Shadow's explicitly documented interim state: idle uses one approved frame, walk/run use the four distinct user-authored frames, and attack/skill/dodge/hit/death hold the approved first pose until dedicated action artwork exists. The test still requires all clip IDs to exist in their exact atlas metadata, positive timing, and at least two frames for non-idle clips; all other heroes retain unique-frame requirements.
