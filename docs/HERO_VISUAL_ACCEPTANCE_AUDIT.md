@@ -1,54 +1,63 @@
 # Hero Visual Acceptance Audit
 
-Date: 2026-11-21  
+Date: 2026-11-23  
 Branch: `ranger-reference-work`  
 Canonical visual reference: `assets/references/approved_all/hero_roster_concept.jpg`
 
-## Production rule
+## Current approved production direction
 
-**Final production target:** all four heroes are reference-faithful, fully skinned 3D chibi models in the arena, with readable faces, recognizable signature weapons, rigged bones and coherent real-time animations. GLB/Blender is the production character pipeline; 2D/2.5D atlases are legacy/review assets and must not replace the 3D heroes in the final match.
+The approved project plan is **four reference-faithful 2D/2.5D sprite heroes inside a lightweight 3D arena**. The heroes are camera-facing sprite actors; the environment is the real 3D world. This approved direction supersedes older notes in this audit that described live GLB characters as the final runtime target.
 
-**Temporary migration state:** Ranger, Flame and Storm currently use the GLB route; Shadow remains on the previously approved 2.5D sprite pilot until its real 3D model passes visual acceptance. This is an incomplete migration, not the final target. Keep rejected atlases disabled and do not treat a GLB file, rig validation, animation count, or sprite manifest as proof of visual acceptance.
+The original GLB/Blender sources may be retained as source material and animation inputs. They are not the final in-match character renderer. Never promote a generated atlas just because it has 64 clips or passes a packer; inspect its actual pixels and compare it with the approved roster sheet first.
 
-Do not generate substitute character art or silently promote an atlas because it has a manifest. A hero is accepted only after its actual 3D front/side/back views, gameplay-facing orientations, idle and action animations, foot contact, face/weapon readability, and in-game captures are reviewed against the canonical reference.
+## Canonical roster
 
-## Current roster evidence
+Exactly four playable heroes exist:
 
-| Hero | Current checked-in sprite evidence | Reference comparison | Production route |
-|---|---|---|---|
-| Ranger | `assets/heroes/ranger_new/renders/ranger_new_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Rendered atlas depicts a detailed green ranger, but this audit does not approve all views/actions against the reference | GLB route active; 3D visual acceptance still open |
-| Flame | `assets/heroes/flame/renders/flame_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Front atlas is a simplified brown-haired fighter with a small flame/torch; canonical reference is a red-spiky-haired knight with gold armor and a large sword. Back/side views exist but do not resolve the identity/detail mismatch | Temporary GLB route; sprite atlas rejected |
-| Shadow | `assets/heroes/shadow/renders/shadow_manifest.json`: 64 clips, 8 states, 8 directions; uses the user-supplied `shadow_walk_8dir_4frames_FINAL.png` | Approved hooded purple character source. Walk has four genuine frames per direction. Idle holds the first approved frame. Run currently reuses the walk cycle at a faster cadence. Attack/skill/dodge/hit/death temporarily hold the approved pose while preserving event timing; these are safe placeholders, not final action animation | Temporary sprite fallback only; migrate to the existing 3D GLB and pass the same 3D acceptance gate |
-| Storm | `assets/heroes/storm/renders/storm_manifest.json`: 64 declared clips, 8 states, 8 directions | Inspected idle/walk atlases in S/N/W directions: they are solid blue tiles with no character pixels. A populated manifest is not valid art evidence | GLB route active; 3D visual acceptance still open; sprite atlas rejected |
+- Ranger — `ranger_new` only. The retired `ranger` character ID and its assets have been deleted.
+- Flame — `flame`.
+- Shadow — `shadow`.
+- Storm — `storm`.
 
-## Source assets retained
+Unknown hero IDs must fail explicitly; they must never silently fall back to another hero.
 
-- Ranger: `assets/heroes/ranger_new/ranger_animated.glb` and related source/merged GLBs.
-- Flame: `assets/heroes/flame/model/flame_animated.glb`, `assets/heroes/flame/source/flame_source.blend`.
-- Shadow: preserve the approved user sprite atlas under `assets/heroes/shadow/renders/atlases/` as a temporary fallback; inspect and use the existing 3D source/model under `assets/heroes/shadow/` for production migration.
-- Storm: `assets/heroes/storm/model/storm_animated.glb` and original `assets/heroes/storm/storm.glb`.
+## Current evidence and route status
 
-Keep these source assets intact while producing and reviewing replacement sprite sheets.
+| Hero | Current evidence | Status |
+|---|---|---|
+| Ranger | Original playable source: `assets/heroes/ranger_new/ranger_animated.glb`; generated sprite pack: `assets/heroes/ranger_new/renders/ranger_new_manifest.json` | Canonical hero identity is `ranger_new`. Sprite atlas is not visually accepted; earlier captures showed face/hood/bow readability problems. Keep the safe transitional route until its approved 2.5D pack passes visual review. |
+| Flame | Source scene and generated manifest under `assets/heroes/flame/` | Sprite appearance has not passed reference review; the earlier front render simplified the reference and the weapon obscured the face. |
+| Shadow | User-approved walk sheet: `assets/heroes/shadow/renders/atlases/shadow_walk_8dir_4frames_FINAL.png` | Temporary sprite pilot only. Walk source is approved; attack/skill/dodge/hit/death remain held-frame placeholders and are not accepted final animations. |
+| Storm | Source/model and generated manifest under `assets/heroes/storm/` | Sprite atlas remains rejected; prior inspected idle/walk sheets were blank blue tiles. |
 
-## Acceptance checklist per hero
+The manifests currently present in the repository are structural data, not visual approval. A valid manifest does not prove that the face, costume, weapon, animation or in-game scale matches the approved reference.
 
-- [ ] Front face and facial expression are legible and match the canonical reference.
-- [ ] Hair silhouette, hood/helmet, armor palette, signature weapon and proportions match.
-- [ ] Eight directional views are genuinely rendered; no direction reuses an unrelated view.
-- [ ] Idle, walk, run, attack, skill, dodge, hit and death are visually coherent.
-- [ ] Action events (weapon release/impact/skill burst) still align with the authored frames.
-- [ ] Feet remain grounded across every frame; pivot and shadow remain stable.
-- [ ] Atlas dimensions, alpha channel, frame rectangles and metadata agree.
-- [ ] In-game 16:9 captures at production scale are readable.
-- [ ] A reviewer compares captures directly against the canonical reference before route promotion.
+## Acceptance gate for each hero
 
-## Next work
+- [ ] Preserve the approved face, hair/hood silhouette, costume layers, palette and signature weapon.
+- [ ] All eight directions are genuine views of the same character; no unrelated view reuse.
+- [ ] Idle, walk, run, attack, skill, dodge, hit and death are coherent and visually distinct.
+- [ ] Weapon-release / impact / skill events align with their authored frames.
+- [ ] Feet, pivot, character scale and alpha edges remain stable across frames.
+- [ ] Atlas image dimensions, metadata, frame rectangles and manifest agree.
+- [ ] Character is recognizable at the actual 16:9 gameplay camera scale.
+- [ ] In-game captures are compared directly with the approved hero sheet before enabling the pack in production.
 
-1. Complete Shadow's migration from the temporary sprite fallback to its existing 3D source/model in the shared GLB renderer; keep the fallback only until the 3D model is accepted.
-2. Flame: correct the oversized/foreground weapon presentation so the red hair, face, gold armor and greatsword remain readable from the gameplay camera.
-3. Storm: inspect the source rig's idle pose and front axis; correct the apparent reclined/sideways presentation only after confirming the rig and animation basis.
-4. Ranger: preserve the reference-quality green identity while validating face, hood, bow and cape readability at actual gameplay scale.
-5. After each hero passes the 3D visual checklist, update `HeroRenderPolicy` and add a regression test for the accepted GLB route. Do not switch multiple heroes at once.
+## Immediate hero priorities
+
+1. Complete Shadow's approved walk pilot and replace its held-frame action placeholders with real source-faithful animations.
+2. Review Ranger New's face, hood, bow and cape against the approved sheet; correct readability without changing its identity.
+3. Correct Flame's reference mismatch and oversized foreground weapon presentation.
+4. Rebuild Storm's blank/rejected sprite views from its retained source and verify the front-facing pose.
+5. Enable each hero's sprite runtime route only after its own visual acceptance gate passes.
+
+## Legacy Ranger retirement
+
+- Deleted all files under `assets/heroes/ranger/`; the folder is absent from the active branch.
+- Removed the legacy Ranger catalog definition, pubspec asset declarations, generic Blender profile and Ranger-only workflow.
+- The only playable Ranger is `ranger_new`; the shared Flame/Shadow/Storm render config now lives at `assets/heroes/render_pipeline_config.json`.
+- CI-only sprite bundles are staged under `assets/heroes/_sprite_bundles/`, never under a hero's runtime asset directory.
+
 
 
 ## 2026-11-21 — Review actual in-game GLB captures and bind-pose fix
