@@ -1737,3 +1737,11 @@ Verification:
 - Added pixel fingerprints to the capture helper and assertions that all four isolated archetypes and all eight attack directions produce distinct rendered images. This turns off-screen/identical captures into a test failure instead of silently uploading misleading evidence.
 - Commits: `870bce2a399ec231723fce903497518a4163a57c` and `104653732738b85fde793a7f92c96d45be3ed175`.
 - Verification is pending on the latest test commit. The previous Android workflow attempt was cancelled by a newer push before it produced a result; do not treat its artifact as visual acceptance. Inspect the next successful artifact before approving monster visuals.
+
+
+## 2026-11-23 — Confirm four-hero sprite pipeline result (artifact build, not visual approval)
+
+- Rechecked four-hero matrix run `45071916513` on source commit `49337955eead15176249f750bf6a3278a209d82f`: all four jobs completed successfully — playable Ranger-new, Flame, Shadow and Storm. Each job passed source rig/action validation, eight-direction/eight-state rendering, frame/motion validation, atlas packing/manifest validation and artifact upload.
+- This confirms that the render/pack pipeline can produce all four sprite packs. It does **not** approve the art, faces, weapon readability, or in-game appearance. The earlier inspected Ranger artifact still has a downward/partly obscured front face; Flame's earlier in-game captures are weapon-dominated; Shadow/Storm need direct face and gameplay-scale review. Do not change `HeroRenderPolicy` based on CI success alone.
+- The latest monster-capture correction remains under Flutter/Android verification in run `45141740087`. At the latest check, `flutter analyze` had passed; the full Flutter test step and emulator boot were still running, and no new capture artifact had been uploaded yet.
+- Map logic is covered by randomized tests for four castle anchors, eight mines, four shuffled biomes, river/tributary bridges, dry full-speed crossings, water slowdown, collision sliding, and pickup/obstacle clearance. These are logic checks, not a substitute for reviewing a full 16:9 in-game map capture.
