@@ -1864,3 +1864,11 @@ Verification:
 - Reduced the compact-landscape home header and action-button footprint, hid the nonessential page indicator in this short-height mode, and reduced the page carousel height while preserving all controls and normal-height layout.
 - Added a bounded extra route-transition pump to the integration smoke test before checking the army-selection title.
 - Code change: `79821f43de517eca55075963c81ebabec90568bc`; smoke-test timing update is being committed separately. The responsive fix is not yet verified; await the next Android CI run.
+
+
+## 2026-11-23 — Hero face/source investigation
+
+- Inspected `tools/blender/build_ranger_source.py` and `tools/blender/hero_profiles.py` after the earlier in-game captures showed face readability problems.
+- Confirmed the shared procedural face builder already creates layered eye, iris, pupil, lash, brow, ear, nose and mouth geometry. The problem must be evaluated in the actual GLB/camera/skin pipeline; it is not safe to assume facial features are absent.
+- Recorded hero-specific source risks in `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md`: Shadow's hood opening/cowl, Flame's foreground greatsword, Storm's orientation/rest pose, and Ranger's hood/collar/bow.
+- No speculative face, weapon, yaw, rig or render-policy changes were made. Awaiting fresh captures and Android smoke evidence before modifying hero geometry.
