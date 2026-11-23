@@ -55,7 +55,7 @@ void main() {
 
       final sheet = await loader.loadSheet(manifest, 'walk_$direction');
       sharedImage ??= sheet;
-      expect(identical(sheet.image, sharedImage!.image), isTrue,
+      expect(identical(sheet.image, sharedImage.image), isTrue,
           reason: 'all directional clips must share one decoded GPU image');
       expect(sheet.width, 768);
       expect(sheet.height, 1536);

@@ -383,6 +383,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -524,6 +532,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -665,6 +681,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -806,6 +830,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -947,6 +979,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -1088,6 +1128,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -1229,6 +1277,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },
@@ -1370,6 +1426,14 @@
         {
           "frame": 3,
           "name": "melee_impact"
+        },
+        {
+          "frame": 4,
+          "name": "twin_fangs_hit_2"
+        },
+        {
+          "frame": 5,
+          "name": "twin_fangs_hit_3"
         }
       ]
     },

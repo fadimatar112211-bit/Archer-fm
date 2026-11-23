@@ -80,9 +80,9 @@
     },
     "pivot_margin": 0.02,
     "ground_anchor": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "samples": 12
   },
@@ -227,6 +227,14 @@
           {
             "frame": 13,
             "name": "melee_impact"
+          },
+          {
+            "frame": 17,
+            "name": "twin_fangs_hit_2"
+          },
+          {
+            "frame": 21,
+            "name": "twin_fangs_hit_3"
           }
         ],
         "skill": [

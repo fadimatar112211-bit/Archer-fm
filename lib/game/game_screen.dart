@@ -665,6 +665,16 @@ class _GameScreenState extends State<GameScreen>
     if (eventName == null) return const [];
     final duration = hero3d.model.model.clips[state]?.durationMs ?? 0;
     if (duration <= 0) return const [];
+    // Shadow's three dagger strikes are separate combat events. The sprite
+    // manifest uses exact frame events; this transitional GLB fallback spaces
+    // the same three events across the active attack motion.
+    if (state == 'attack' && kit.heroId == 'shadow') {
+      return [
+        MapEntry(duration * 0.46, 'melee_impact'),
+        MapEntry(duration * 0.62, 'twin_fangs_hit_2'),
+        MapEntry(duration * 0.78, 'twin_fangs_hit_3'),
+      ];
+    }
     // Keep the fallback release in the active part of the authored motion,
     // not at clip end. Manifest-driven packs continue to use exact frame events.
     return [MapEntry(duration * 0.46, eventName)];
@@ -762,6 +772,9 @@ class _GameScreenState extends State<GameScreen>
         } else {
           world.releaseArrow();
         }
+      case 'twin_fangs_hit_2':
+      case 'twin_fangs_hit_3':
+        world.releaseTwinFangsFollowUp();
       case 'volley_release':
       case 'inferno_burst':
       case 'shadow_burst':

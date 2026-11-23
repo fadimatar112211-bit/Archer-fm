@@ -665,7 +665,7 @@ void main() {
   });
 
   group('Shadow dagger combat', () {
-    test('twin_fangs strikes three times at 80% each', () {
+    test('twin_fangs applies one 80% hit per animation event', () {
       final world = GameWorld(
         kit: shadowKit,
         random: math.Random(3),
@@ -681,11 +681,36 @@ void main() {
       );
       expect(world.useAbility('twin_fangs'), isNotNull);
       world.releaseWeaponPayload(volley: false);
-      // 3 × 80% on a lone target.
+
+      // The first impact event applies only the first dagger hit.
+      expect(
+        100 - lone.hp,
+        closeTo(shadowKit.baseDamage * 0.8, 0.01),
+      );
+
+      // Follow-ups retain the cast's original position and facing, even if
+      // the hero moves before the later animation frames are dispatched.
+      final energyAfterFirstHit = world.player.energy;
+      world.player.position += const Offset(250, 0);
+      world.releaseTwinFangsFollowUp();
+      expect(
+        100 - lone.hp,
+        closeTo(shadowKit.baseDamage * 0.8 * 2, 0.01),
+      );
+      world.releaseTwinFangsFollowUp();
       expect(
         100 - lone.hp,
         closeTo(shadowKit.baseDamage * 0.8 * 3, 0.01),
       );
+      expect(world.player.energy, energyAfterFirstHit);
+
+      // Extra/stale events after the three-hit cast cannot add more damage.
+      world.releaseTwinFangsFollowUp();
+      expect(
+        100 - lone.hp,
+        closeTo(shadowKit.baseDamage * 0.8 * 3, 0.01),
+      );
+      expect(world.player.energy, energyAfterFirstHit);
     });
 
     test('shadow_veil grants 4 seconds of immunity and a speed boost', () {

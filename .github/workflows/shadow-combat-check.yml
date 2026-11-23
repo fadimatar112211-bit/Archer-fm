@@ -1,0 +1,62 @@
+name: Shadow Combat Checks
+
+concurrency:
+  group: shadow-combat-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - shadow-twin-fangs-frame-events
+    paths:
+      - 'lib/game/game_screen.dart'
+      - 'lib/game/world/game_world.dart'
+      - 'assets/heroes/shadow/renders/shadow_manifest.json'
+      - 'test/**'
+      - '.github/workflows/shadow-combat-check.yml'
+  pull_request:
+    branches:
+      - ranger-reference-work
+    paths:
+      - 'lib/game/game_screen.dart'
+      - 'lib/game/world/game_world.dart'
+      - 'assets/heroes/shadow/renders/shadow_manifest.json'
+      - 'test/**'
+
+permissions:
+  contents: read
+
+jobs:
+  shadow-combat:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Format changed Dart sources
+        run: dart format lib/game/game_screen.dart lib/game/world/game_world.dart test/game_world_test.dart test/shadow_manifest_events_test.dart
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib/game/game_screen.dart lib/game/world/game_world.dart test/game_world_test.dart test/shadow_manifest_events_test.dart
+      - name: Upload formatted Dart sources for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-formatted-dart-sources
+          path: |
+            lib/game/game_screen.dart
+            lib/game/world/game_world.dart
+            test/game_world_test.dart
+            test/shadow_manifest_events_test.dart
+          if-no-files-found: error
+          retention-days: 7
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Run focused combat and animation tests
+        run: flutter test --reporter expanded test/game_world_test.dart test/shadow_manifest_events_test.dart test/all_hero_render_manifest_test.dart test/hero_manifest_test.dart test/sprite_player_test.dart test/sprite_actor_clip_resolver_test.dart test/sprite_actor_renderer_test.dart
