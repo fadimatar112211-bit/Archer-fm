@@ -1693,3 +1693,10 @@ Verification:
 - Commits: `f260380` and `2c7780f`. New CI must confirm these corrections.
 
 - Updated the cross-hero manifest test to encode Shadow's explicitly documented interim state: idle uses one approved frame, walk/run use the four distinct user-authored frames, and attack/skill/dodge/hit/death hold the approved first pose until dedicated action artwork exists. The test still requires all clip IDs to exist in their exact atlas metadata, positive timing, and at least two frames for non-idle clips; all other heroes retain unique-frame requirements.
+
+
+## Android emulator stability adjustment — 2026-11-23
+
+- The integration smoke reached the home screen, hero GLB preview and army selection, then ADB reported the emulator offline immediately after tapping Start. Its diagnostics showed the emulator process had exited; the prior AVD was running a 1080×1920 display with 2 GiB guest RAM and 2 CPU cores.
+- Reduced the virtual display to 720×1280 and raised emulator resources to 4 GiB/4 cores to reduce GPU/render pressure during arena startup. This is a CI-only test-device adjustment; it does not change the game's target resolution or production rendering.
+- Saved in commit `5c472f2`; the next Android smoke run will verify whether this resolves the device-offline failure.
