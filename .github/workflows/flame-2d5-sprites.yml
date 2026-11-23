@@ -10,7 +10,7 @@ on:
       - 'tools/pack_hero_atlases.py'
       - 'tools/validate_hero_assets.py'
       - 'tools/tests/**'
-      - 'assets/heroes/ranger/source/render_config.json'
+      - 'assets/heroes/render_pipeline_config.json'
       - 'assets/heroes/ranger_new/source/render_config.json'
       - '.github/workflows/flame-2d5-sprites.yml'
 
@@ -47,7 +47,7 @@ jobs:
           HERO: ${{ matrix.hero }}
         run: |
           echo "$HERO" > tools/blender/active_hero.txt
-          case "$HERO" in ranger|flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
+          case "$HERO" in flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
           xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
           BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
@@ -63,7 +63,7 @@ jobs:
       - name: Render eight directions and all authored states
         run: |
           export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/ranger/source/render_config.json
+          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/render_pipeline_config.json
 
       - name: Validate transparent frames, alignment and motion
         run: |
@@ -81,7 +81,7 @@ jobs:
         with:
           name: archer-fm-${{ matrix.hero }}-2d5-sprite-pack
           path: |
-            assets/heroes/ranger/renders/_bundle/${{ matrix.hero }}/
+            assets/heroes/_sprite_bundles/${{ matrix.hero }}/renders/
             assets/heroes/${{ matrix.hero }}/source/${{ matrix.hero }}_source.blend
           if-no-files-found: error
           retention-days: 30
@@ -139,7 +139,7 @@ jobs:
         with:
           name: archer-fm-ranger-new-2d5-sprite-pack
           path: |
-            assets/heroes/ranger/renders/_bundle/ranger_new/
+            assets/heroes/_sprite_bundles/ranger_new/renders/
             assets/heroes/ranger_new/source/ranger_new_source.blend
           if-no-files-found: error
           retention-days: 30
