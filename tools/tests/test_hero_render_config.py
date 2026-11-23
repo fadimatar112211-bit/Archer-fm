@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = ROOT / "assets/heroes/ranger/source/render_config.json"
+CONFIG_PATH = ROOT / "assets/heroes/render_pipeline_config.json"
 HEROES = ("flame", "shadow", "storm")
 STATES = ("idle", "walk", "run", "attack", "skill", "dodge", "hit", "death")
 
