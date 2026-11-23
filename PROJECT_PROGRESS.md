@@ -1926,3 +1926,28 @@ Verification:
 - Latest Android run `45170295329` on `4d7664e8`: release job has completed Flutter setup, release signing configuration, dependency install and analyze; full Flutter tests are running. Emulator job has completed Flutter setup and is still booting the Android emulator. Neither job has a final result yet.
 - The two immediately preceding push-triggered runs on documentation-only commits failed before creating jobs; the current run was created with two active jobs. Do not confuse those zero-job workflow failures with app build or runtime test failures.
 - Next: finish current Android run; create clean full-frame gameplay captures and projected-size diagnostics; then use the exact four hero source models and canonical sheet for per-hero fixes. Continue keeping the four monster prototypes out of production until they pass silhouette/weapon review.
+
+## 2026-11-23 — Large hero/monster production checkpoint (truthful readiness gate)
+
+### Changes in this batch
+- Corrected the stale and contradictory section in `docs/monsters/MONSTER_PRODUCTION_SPEC.md`: the final monster target is now four genuinely 3D skinned actors, not 2.5D sprite actors. Required states are idle, locomotion, attack, hit and death; the current Canvas art remains a temporary fallback; rejected prototype GLBs remain review-only. Commit: `915c6f367b2b4e627edc58ebe20fb78fdcaf7293`.
+- The preceding monster audit decision in `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` remains authoritative: exact user-approved silhouettes/weapons, one-at-a-time acceptance, no changes to gameplay stats or roles.
+- Re-checked the hero audit and repository tree. All four source GLBs are present: Ranger `assets/heroes/ranger_new/ranger_animated.glb`, Flame `assets/heroes/flame/model/flame_animated.glb`, Shadow `assets/heroes/shadow/model/shadow_animated.glb`, Storm `assets/heroes/storm/model/storm_animated.glb`. Source files being present does not mean the models pass visual acceptance.
+- Hero runtime migration is still incomplete: Ranger, Flame and Storm use GLB routes; Shadow remains on a temporary sprite fallback. Face/weapon readability and reference matching remain open for all four. Do not switch Shadow to GLB or mark any hero accepted without fresh captures and visual review.
+- No production monster model files or `assets/monsters/` runtime asset directory are checked in. Runtime still draws monsters with Canvas. The current Blender prototype generator has already produced four rejected generic low-poly previews; do not wire them into the game.
+- Existing hero workflows in `.github/workflows/flame-2d5-sprites.yml` are sprite/atlas workflows and are not evidence of the requested final 3D runtime art. Do not call their successful renders final 3D completion.
+
+### Verification in progress
+- Monster prototype workflow run `45171270213` on commit `17efa51a` is still in progress at the `Install Blender` step. This workflow generates review-only low-poly prototypes; even if it passes, it cannot close the monster art gate.
+- The latest Android run `45170714416` has not been confirmed successful; earlier it showed Flutter tests passed while APK build and emulator smoke were still running. Re-poll before reporting a final APK/smoke result.
+- The zero-job push run `45171268016` failed before creating a job; it is not an app compile/test failure.
+
+### Blocking work before calling heroes/monsters complete
+1. Produce clean close-up and gameplay-scale 3D captures for each hero from the four checked-in GLBs; compare face, headgear, hair, armor, weapon, front/side/back and gameplay-facing views against `assets/references/approved_all/hero_roster_concept.jpg`.
+2. Diagnose any remaining fragmentation from GLB node transforms/inverse binds and facial overlay depth before making per-hero mesh edits. Preserve the reference design; no arbitrary eye/head/yaw changes.
+3. Migrate Shadow to the shared GLB runtime only after the same acceptance gate passes.
+4. Locate or create source-quality monster Blender models matching `assets/references/approved_all/archer_fm_monsters_reference.png`. No production sources currently exist in the tree; stop rather than invent generic substitutes.
+5. Implement a real 3D monster runtime renderer/asset loader and animation integration, then promote each monster one at a time with Canvas fallback retained.
+6. Run full Flutter tests, Android release APK verification, emulator match smoke, and capture review after code/assets land.
+
+**Readiness at this checkpoint:** heroes = partially integrated / visual acceptance open; monsters = not production-ready; Android release/smoke = not yet confirmed. No claim of full completion is made.
