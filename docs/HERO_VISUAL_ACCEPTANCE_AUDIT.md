@@ -148,3 +148,24 @@ Source-level risks recorded for the next visual capture pass:
 - Ranger's hood/collar, hair and bow need a front gameplay-facing capture after the bind-pose correction; do not change the shared face geometry for one hero until that comparison is available.
 
 No GLB, rig, facial geometry, weapon, yaw, or hero render-policy changes were made in this source audit. The next safe action is to regenerate the four heroes' front/side/back and gameplay-yaw captures from the corrected rest-pose renderer, then make only evidence-backed per-hero corrections.
+
+## 2026-11-23 — Confirm four-hero Ultimate design contract
+
+Source review of `lib/game/combat/hero_kit.dart` and the committed contract tests confirms that the four special/Ultimate abilities are separate from the five-hit manual normal-attack combo. Every hero has four distinct abilities unlocked at levels **1, 10, 20 and 30**; the normal combo remains five taps/hits with multipliers 100%, 110%, 120%, 135% and 155%.
+
+Current ability names in the game data:
+
+| Hero | Level 1 | Level 10 | Level 20 | Level 30 |
+|---|---|---|---|---|
+| Ranger | وابل متعدد | سهم ثاقب | مطر السهام | اندفاع الرياح |
+| Flame | ضربة اللهب | موجة النار | انفجار الجحيم | هياج اللهب |
+| Shadow | أنياب التوأم | حجاب الظل | معطف السم | إعدام الظل |
+| Storm | طعنة الصاعقة | برق متسلسل | حقل السكون | هيجان العاصفة |
+
+Evidence:
+- `test/ultimate_kit_contract_test.dart` checks all four kits, the exact unlock thresholds, four unique ability IDs/names, and the independent five-hit combo.
+- `test/hero_kit_progression_test.dart` also checks the unlock boundaries, three weapons per hero, equal base HP and distinct movement speeds.
+- `test/xp_progression_test.dart` checks that abilities are persisted when XP reaches the required level.
+- `test/special_abilities_capture_test.dart` attempts in-game-state captures for all four heroes' ability effects.
+
+This confirms the design/data contract exists in source and tests; it does not by itself certify balance, animation quality, visual readability, or successful Android runtime execution. Keep those checks separate.
