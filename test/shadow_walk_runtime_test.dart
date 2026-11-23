@@ -1,3 +1,6 @@
+import 'dart:ui' show Offset;
+
+import 'package:archer_fm/game/render3/sprite_actor_clip_resolver.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
 import 'package:archer_fm/hero/sprite_player.dart';
@@ -21,6 +24,16 @@ void main() {
 
     // Source atlas row order differs from clockwise world-octant order.
     const directions = ['s', 'se', 'e', 'ne', 'n', 'nw', 'w', 'sw'];
+    const facingByDirection = <String, Offset>{
+      'e': Offset(1, 0),
+      'se': Offset(0.7071, 0.7071),
+      's': Offset(0, 1),
+      'sw': Offset(-0.7071, 0.7071),
+      'w': Offset(-1, 0),
+      'nw': Offset(-0.7071, -0.7071),
+      'n': Offset(0, -1),
+      'ne': Offset(0.7071, -0.7071),
+    };
     AtlasSheet? sharedImage;
     final seenFrameIds = <String>{};
 
@@ -31,6 +44,14 @@ void main() {
       expect(clip!.loop, isTrue);
       expect(clip.frames, hasLength(4));
       expect(clip.frames.toSet(), hasLength(4));
+      expect(
+        SpriteActorClipResolver.clipFor(
+          manifest,
+          'walk',
+          facingByDirection[direction]!,
+        ),
+        same(clip),
+      );
 
       final sheet = await loader.loadSheet(manifest, 'walk_$direction');
       sharedImage ??= sheet;
