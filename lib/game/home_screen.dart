@@ -364,10 +364,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         ),
       );
 
-  Widget _card({required Key key, required Widget child}) => Container(
+  Widget _card({required Key key, required Widget child}) {
+    final compactLandscape = MediaQuery.sizeOf(context).height < 320;
+    return Container(
         key: key,
-        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        padding: const EdgeInsets.all(12),
+        margin: EdgeInsets.symmetric(
+          horizontal: 6,
+          vertical: compactLandscape ? 2 : 4,
+        ),
+        padding: EdgeInsets.all(compactLandscape ? 6 : 12),
         decoration: BoxDecoration(
           color: const Color(0xCC0E1B12),
           borderRadius: BorderRadius.circular(18),
@@ -375,6 +380,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         ),
         child: child,
       );
+  }
 
   Widget _shopPage() => _card(
         key: const ValueKey('home_shop_page'),
@@ -437,6 +443,17 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
           side: BorderSide(color: _hero.theme.accent),
+          minimumSize: Size(0, MediaQuery.sizeOf(context).height < 320 ? 30 : 40),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: MediaQuery.sizeOf(context).height < 320 ? 2 : 8,
+          ),
+          visualDensity: MediaQuery.sizeOf(context).height < 320
+              ? VisualDensity.compact
+              : VisualDensity.standard,
+          tapTargetSize: MediaQuery.sizeOf(context).height < 320
+              ? MaterialTapTargetSize.shrinkWrap
+              : MaterialTapTargetSize.padded,
         ),
         child: Text(label, style: const TextStyle(fontSize: 11)),
       );
@@ -446,10 +463,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('الأبطال',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
+            Text(
+              'الأبطال',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.sizeOf(context).height < 320 ? 13 : 14,
+              ),
+            ),
+            SizedBox(height: MediaQuery.sizeOf(context).height < 320 ? 2 : 6),
             Expanded(
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -465,6 +487,13 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     label: Text(hero.nameAr,
                         style: const TextStyle(fontSize: 11)),
                     selected: hero.id == _hero.id,
+                    visualDensity: MediaQuery.sizeOf(context).height < 320
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                    materialTapTargetSize:
+                        MediaQuery.sizeOf(context).height < 320
+                            ? MaterialTapTargetSize.shrinkWrap
+                            : MaterialTapTargetSize.padded,
                     onSelected: (_) => _selectHero(hero),
                   );
                 },
@@ -473,6 +502,22 @@ class _MainMenuScreenState extends State<MainMenuScreen>
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size(
+                    0,
+                    MediaQuery.sizeOf(context).height < 320 ? 22 : 36,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: MediaQuery.sizeOf(context).height < 320 ? 0 : 6,
+                  ),
+                  visualDensity: MediaQuery.sizeOf(context).height < 320
+                      ? VisualDensity.compact
+                      : VisualDensity.standard,
+                  tapTargetSize: MediaQuery.sizeOf(context).height < 320
+                      ? MaterialTapTargetSize.shrinkWrap
+                      : MaterialTapTargetSize.padded,
+                ),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => Directionality(
@@ -511,6 +556,20 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: _hero.theme.accent,
+                  minimumSize: Size(
+                    0,
+                    MediaQuery.sizeOf(context).height < 320 ? 30 : 40,
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: MediaQuery.sizeOf(context).height < 320 ? 2 : 8,
+                  ),
+                  visualDensity: MediaQuery.sizeOf(context).height < 320
+                      ? VisualDensity.compact
+                      : VisualDensity.standard,
+                  tapTargetSize: MediaQuery.sizeOf(context).height < 320
+                      ? MaterialTapTargetSize.shrinkWrap
+                      : MaterialTapTargetSize.padded,
                 ),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
