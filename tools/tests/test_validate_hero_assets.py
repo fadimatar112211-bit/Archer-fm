@@ -62,6 +62,47 @@ class HeroAssetValidatorTests(unittest.TestCase):
             self.assertEqual(validate(root / "manifest.json"), [])
             self.assertTrue(validate(root / "manifest.json", require_motion=True))
 
+    def test_rejects_reused_action_frame_sequence(self):
+        """A walk atlas must not be reused as the idle animation."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "atlas.png").write_bytes(png_header(64, 64))
+            (root / "atlas.json").write_text(json.dumps({
+                "frames": {
+                    "shadow_walk_sw_000": {
+                        "frame": {"x": 0, "y": 0, "w": 32, "h": 32},
+                        "rotated": False,
+                        "sourceSize": {"w": 32, "h": 32}
+                    }
+                },
+                "meta": {"size": {"w": 64, "h": 64}}
+            }), encoding="utf-8")
+            (root / "manifest.json").write_text(json.dumps({
+                "schema_version": 1,
+                "hero_id": "shadow",
+                "frame_size": {"width": 32, "height": 32},
+                "pivot": {"x": 0.5, "y": 0.86},
+                "atlases": [{"image": "atlas.png", "meta": "atlas.json"}],
+                "animations": {
+                    "idle_sw": {
+                        "loop": True,
+                        "frame_duration_ms": 140,
+                        "frames": ["shadow_walk_sw_000"]
+                    },
+                    "walk_sw": {
+                        "loop": True,
+                        "frame_duration_ms": 100,
+                        "frames": ["shadow_walk_sw_000"]
+                    }
+                }
+            }), encoding="utf-8")
+
+            errors = validate(root / "manifest.json")
+            self.assertTrue(
+                any("reuses the exact frame sequence" in error for error in errors),
+                f"Expected reused-action sequence error, got: {errors}"
+            )
+
     def test_rejects_missing_frame_reference(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
