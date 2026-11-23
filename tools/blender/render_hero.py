@@ -2,7 +2,7 @@
 
 Run with:
   blender -b ranger_source.blend --python tools/blender/render_hero.py -- \
-    --config assets/heroes/ranger/source/render_config.json
+    --config assets/heroes/render_pipeline_config.json
 
 The source .blend must contain a rigged hero, named Actions, and a camera-ready
 scene. This script intentionally fails on missing production inputs; it never
@@ -253,7 +253,7 @@ def main():
     args = arguments()
     config_path = Path(args.config).resolve()
     config = load_config(config_path)
-    root = config_path.parents[4]
+    root = Path(__file__).resolve().parents[2]
     hero_id = config["hero_id"]
     resolution = int(config["resolution"])
     fps = int(config["fps"])
