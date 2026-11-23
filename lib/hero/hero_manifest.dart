@@ -92,6 +92,28 @@ class HeroManifest {
       atlases.add(AtlasEntry(animation: animation, image: image, meta: meta));
     }
 
+    final atlasAnimations = <String>{};
+    for (final atlas in atlases) {
+      if (!clips.containsKey(atlas.animation)) {
+        throw FormatException(
+          'atlas mapping references unknown animation ${atlas.animation}',
+        );
+      }
+      if (!atlasAnimations.add(atlas.animation)) {
+        throw FormatException(
+          'duplicate atlas mapping for animation ${atlas.animation}',
+        );
+      }
+    }
+    final missingAtlases = clips.keys
+        .where((animation) => !atlasAnimations.contains(animation))
+        .toList(growable: false);
+    if (missingAtlases.isNotEmpty) {
+      throw FormatException(
+        'animations missing atlas mappings: ${missingAtlases.join(', ')}',
+      );
+    }
+
     return HeroManifest(
       heroId: heroId,
       frameWidth: frameWidth,
