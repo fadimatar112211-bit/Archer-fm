@@ -1899,3 +1899,11 @@ Verification:
 - Parameterized the existing test harness viewport size so the compact-layout case uses the same injected world, hero loader, and real `GameScreen` widget as the existing combat tests.
 - This test supplements the Android smoke test and directly guards the mine/castle wrapping layout against future regressions. It has been committed but has **not yet run in CI**; do not treat the overflow fix as verified until the test and Android smoke both pass.
 - Test commit: `4c0f4e76288cf68d82f0d279af779e7be5437917`.
+
+
+## 2026-11-23 — Prevent stale Android CI runs from blocking the latest branch
+
+- Found the Android release workflow's concurrency policy was `cancel-in-progress: false`. An older emulator/build run remained in progress while multiple newer commits queued; the latest smoke run therefore never started.
+- Changed `.github/workflows/flutter-android.yml` to cancel superseded runs for the same branch/ref so the newest branch head gets the single active verification slot.
+- This is CI scheduling only; it does not change game runtime or test behavior. The compact-landscape HUD regression test and Android smoke still need a successful fresh run before the layout fix is accepted.
+- Workflow policy commit: `e0fe4d2e8884d2829e86a85311fa672b1ed74738`.
