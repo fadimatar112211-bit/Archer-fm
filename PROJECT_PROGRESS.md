@@ -9,7 +9,7 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Current approved production direction (confirmed 2026-11-23): **all four heroes must ship as reference-faithful, fully skinned 3D GLB characters in the arena**, with readable faces, signature weapons, bones and coherent animations. All four monsters must also reach reference-faithful production visuals; the current Canvas monsters and Blender prototypes are placeholders/review work, not accepted final assets.
+- Current binding production direction (approved 2026-11-21 in `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`): **all four heroes and all four existing monster roles ship as reference-faithful 2D sprite actors with a polished 2.5D appearance, inside a lightweight 3D arena/world**. GLB/Blender sources may be retained as source/rig/animation inputs and diagnostics, but live GLB characters are not the final in-match presentation. Current GLB routes and Canvas monster painters are transitional fallbacks until their approved 2.5D replacements pass the plan's visual, animation, runtime and performance gates.
 - Production character visuals must follow the user's approved reference sheets and preserved source assets. Never silently promote a substitute or unreviewed prototype.
 - Hero migration status: Ranger, Flame and Storm use the GLB route; Shadow remains on a temporary sprite fallback until its GLB route passes the same visual acceptance gate. This is an incomplete migration, not the final target. Rejected sprite atlases and monster prototypes must remain out of production.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
@@ -1993,3 +1993,20 @@ Verification:
 6. Preserve all completed combat, progression, Ultimate, XP, map and economy systems; no such systems were reimplemented or changed in this batch.
 
 **Readiness:** analyze/tests/release APK = passed for commit `f1557a4`; Android match smoke = failed due ADB device disconnect; heroes = GLB-integrated but visual acceptance open; monsters = Canvas fallback only / production 3D not ready.
+
+
+## 2026-11-23 — Binding final-objective correction against the approved visual plan
+
+The final visual objectives are governed by the approved decision at the top of `VISUAL_DIRECTION_PLAN.md` and the full implementation gates in `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` (decision date 2026-11-21). These documents supersede later contradictory checkpoint wording that described fully 3D GLB heroes or monsters as the final runtime target.
+
+**Final character presentation**
+- Heroes: Ranger, Flame, Shadow and Storm are 2D sprite actors with a polished 2.5D appearance.
+- Monsters: only the four approved existing roles are 2D sprite actors with the same polished 2.5D treatment.
+- World: a lightweight 3D arena/environment; characters are camera-facing sprite/billboard actors positioned, grounded and depth-sorted in that world.
+- Use only the exact approved hero and monster reference images for character appearance. Do not invent, generate, recolour or substitute character art.
+- GLB/Blender files may remain as preserved source/rig/animation inputs and diagnostic assets; they are not the final live character renderer.
+- Keep safe current render fallbacks until each replacement passes the conversion plan's acceptance gates. Do not enable rejected atlases or prototypes.
+
+**Gameplay invariants:** this is a presentation/assets migration only. Preserve four-player free-for-all, four heroes, four monster roles, seven crystals per player, eight mines, starting army of 20, existing economy and match rules, manual one-press/one-attack, five-hit combo, four separate Ultimates at levels 1/10/20/30, three weapons per hero, level cap 40, XP/progression/save rules, multiplayer requirements, landscape orientation, Arabic-first UI and no ads.
+
+**Status remains evidence-based:** the current hero GLB routes and Canvas monster painters are transitional implementation state, not completion of the final art objective. The 2.5D sprite pipeline, all-four-hero conversion, four-monster conversion and lightweight 3D world integration must pass the gates in the conversion plan before being marked complete. Historical 2026-11-23 notes describing a 3D-only final target are retained as history but are superseded by this correction.
