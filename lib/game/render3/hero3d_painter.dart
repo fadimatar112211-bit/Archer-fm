@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 /// model's embedded base-colour texture and per-vertex lambert shading.
 class Hero3DModel {
   Hero3DModel(this.model, {String? heroId})
-      : scaleMultiplier = heroId == 'shadow' ? 1.04 : 1.0,
+      : scaleMultiplier = heroId == 'shadow' ? 1.07 : 1.0,
         poser = Poser(model),
         _skinned = Float32List(model.vertexCount * 3),
         _skinnedNormals = Float32List(model.vertexCount * 3),
