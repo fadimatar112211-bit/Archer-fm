@@ -1660,3 +1660,10 @@ Verification:
 - Added a small per-hero 3D review-scale calibration: Shadow receives 1.04× the shared isolated-capture scale because its shorter standing silhouette measured 290.98px against the 300px minimum; other heroes retain the shared 0.79 calibration. This affects presentation only, not movement/collision.
 - Runtime `GameScreen` and the four-hero capture test both pass the hero ID into the model calibration, so the same scale is used in-game and in evidence captures.
 - Changes saved through commit `00a7aef`. The Flutter Android workflow for this head is pending in GitHub Actions; no green test result or APK is claimed yet.
+
+
+## Bridge test alignment correction — 2026-11-23
+
+- Refined the bridge dry approach to match the regression's actual bank-to-bank path: the test starts 20 world units beyond each deck edge, so the dry corridor now extends 22 units past the deck on both sides (with a small margin). The previous corridor used only the river half-width and could leave those test endpoints in water, explaining the 0.9368 average-speed failure.
+- This only changes water-speed classification along the bridge axis; bridge rendering, deck size, and collision geometry remain unchanged.
+- Saved as commit `3c6c2b1`; awaiting a non-cancelled CI run.
