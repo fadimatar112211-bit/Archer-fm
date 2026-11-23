@@ -66,7 +66,11 @@ class SpriteActorRenderer {
     if (!opacity.isFinite) {
       throw ArgumentError.value(opacity, 'opacity', 'Must be finite');
     }
-    if (sourceRect.isEmpty ||
+    if (!sourceRect.left.isFinite ||
+        !sourceRect.top.isFinite ||
+        !sourceRect.right.isFinite ||
+        !sourceRect.bottom.isFinite ||
+        sourceRect.isEmpty ||
         sourceRect.left < 0 ||
         sourceRect.top < 0 ||
         sourceRect.right > image.width ||
