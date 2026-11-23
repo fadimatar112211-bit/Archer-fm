@@ -1820,3 +1820,10 @@ Verification:
 - Updated `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` with this verified status and the safe production gate. Audit commit: `8e45b043044fe6d17385e4db323a9f07b0e3d39e`.
 - Updated `.github/workflows/monster-reference-prototypes.yml` so changes to monster runtime/models, hero render policy, and the monster audit also trigger the review-only Blender prototype build. Workflow commit: `7c718a6af88e141136f56a555e3d383ad59b4215`.
 - The audit update should trigger the monster prototype review workflow. Its output must be inspected before any model is accepted or integrated.
+
+## 2026-11-23 — Remove remaining 2.5D hero acceptance contradictions
+
+- Re-read the full hero acceptance audit and found stale table/next-step wording that still described 2.5D sprite acceptance as a final goal, despite the production rule already being 3D-only.
+- Corrected all four roster entries: GLB route/migration is the production path; visual acceptance remains open; Shadow's sprite is only a temporary fallback.
+- No hero rendering route, geometry, rig, animation, or gameplay behavior was changed.
+- Audit correction commit: `9e9ca9c970f59ac6afc78f3295bdf6d92008a2c9`.
