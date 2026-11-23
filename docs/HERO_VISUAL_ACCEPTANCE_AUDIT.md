@@ -16,16 +16,16 @@ Do not generate substitute character art or silently promote an atlas because it
 
 | Hero | Current checked-in sprite evidence | Reference comparison | Production route |
 |---|---|---|---|
-| Ranger | `assets/heroes/ranger_new/renders/ranger_new_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Rendered atlas depicts a detailed green ranger, but this audit does not approve all views/actions against the reference | Temporary GLB route; final 2.5D sprite acceptance open |
+| Ranger | `assets/heroes/ranger_new/renders/ranger_new_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Rendered atlas depicts a detailed green ranger, but this audit does not approve all views/actions against the reference | GLB route active; 3D visual acceptance still open |
 | Flame | `assets/heroes/flame/renders/flame_manifest.json`: 64 clips, 8 states, 8 directions; atlases contain 496 declared frames | Front atlas is a simplified brown-haired fighter with a small flame/torch; canonical reference is a red-spiky-haired knight with gold armor and a large sword. Back/side views exist but do not resolve the identity/detail mismatch | Temporary GLB route; sprite atlas rejected |
-| Shadow | `assets/heroes/shadow/renders/shadow_manifest.json`: 64 clips, 8 states, 8 directions; uses the user-supplied `shadow_walk_8dir_4frames_FINAL.png` | Approved hooded purple character source. Walk has four genuine frames per direction. Idle holds the first approved frame. Run currently reuses the walk cycle at a faster cadence. Attack/skill/dodge/hit/death temporarily hold the approved pose while preserving event timing; these are safe placeholders, not final action animation | Only currently approved 2.5D pilot; action-art completion still open |
-| Storm | `assets/heroes/storm/renders/storm_manifest.json`: 64 declared clips, 8 states, 8 directions | Inspected idle/walk atlases in S/N/W directions: they are solid blue tiles with no character pixels. A populated manifest is not valid art evidence | GLB primary; sprite atlas rejected as placeholder |
+| Shadow | `assets/heroes/shadow/renders/shadow_manifest.json`: 64 clips, 8 states, 8 directions; uses the user-supplied `shadow_walk_8dir_4frames_FINAL.png` | Approved hooded purple character source. Walk has four genuine frames per direction. Idle holds the first approved frame. Run currently reuses the walk cycle at a faster cadence. Attack/skill/dodge/hit/death temporarily hold the approved pose while preserving event timing; these are safe placeholders, not final action animation | Temporary sprite fallback only; migrate to the existing 3D GLB and pass the same 3D acceptance gate |
+| Storm | `assets/heroes/storm/renders/storm_manifest.json`: 64 declared clips, 8 states, 8 directions | Inspected idle/walk atlases in S/N/W directions: they are solid blue tiles with no character pixels. A populated manifest is not valid art evidence | GLB route active; 3D visual acceptance still open; sprite atlas rejected |
 
 ## Source assets retained
 
 - Ranger: `assets/heroes/ranger_new/ranger_animated.glb` and related source/merged GLBs.
 - Flame: `assets/heroes/flame/model/flame_animated.glb`, `assets/heroes/flame/source/flame_source.blend`.
-- Shadow: approved user sprite atlas under `assets/heroes/shadow/renders/atlases/`.
+- Shadow: preserve the approved user sprite atlas under `assets/heroes/shadow/renders/atlases/` as a temporary fallback; inspect and use the existing 3D source/model under `assets/heroes/shadow/` for production migration.
 - Storm: `assets/heroes/storm/model/storm_animated.glb` and original `assets/heroes/storm/storm.glb`.
 
 Keep these source assets intact while producing and reviewing replacement sprite sheets.
@@ -44,7 +44,7 @@ Keep these source assets intact while producing and reviewing replacement sprite
 
 ## Next work
 
-1. Bring Shadow's real 3D model into the same production GLB renderer used by the other heroes; keep its sprite pilot only as a temporary fallback until the 3D model is accepted.
+1. Complete Shadow's migration from the temporary sprite fallback to its existing 3D source/model in the shared GLB renderer; keep the fallback only until the 3D model is accepted.
 2. Flame: correct the oversized/foreground weapon presentation so the red hair, face, gold armor and greatsword remain readable from the gameplay camera.
 3. Storm: inspect the source rig's idle pose and front axis; correct the apparent reclined/sideways presentation only after confirming the rig and animation basis.
 4. Ranger: preserve the reference-quality green identity while validating face, hood, bow and cape readability at actual gameplay scale.
@@ -127,3 +127,10 @@ These are pipeline integrity checks, not proof that the resulting faces, armor, 
 - Inspected a contact sheet of all eight idle directions and sampled first/middle/last frames for idle, walk, run, attack, skill, dodge, hit and death. The frames are populated and the eight direction folders are present; the sampled walk/run/attack/skill/dodge/death frames show pose changes rather than empty blue placeholders.
 - Visual review is **not accepted yet**: the face is angled downward/partly obscured in the sampled front-facing view, and several views are mostly profile/back. The contact sheet alone does not establish face likeness, fine detail match to the canonical roster sheet, or readable gameplay-scale presentation. Some sampled action poses also need a closer event/weapon review. Keep Ranger on its existing temporary GLB runtime route until a direct reference comparison and in-game 16:9 capture pass.
 - This is a successful pipeline/artifact result on the stated source commit, not proof that the current branch-head matrix run has completed and not a final art approval.
+
+
+## 2026-11-23 — Clarify 3D-only final acceptance
+
+- Removed stale table wording that implied 2.5D sprite acceptance was still a final production goal.
+- All four heroes are now consistently described as GLB-route or GLB-migration work with 3D visual acceptance still open. Shadow's sprite remains a temporary fallback, not an approved final visual.
+- No hero route, model, geometry, or animation was changed in this documentation correction.
