@@ -1811,3 +1811,12 @@ Verification:
 - Recorded hero-specific evidence-led priorities: Flame's weapon occlusion, Storm's idle/front-axis pose, Ranger's face/hood/bow readability, and Shadow's 3D migration. No model orientation or geometry was guessed or changed in this documentation pass.
 - Documentation commit: `d8051d51256f17c4e5dc140f076bb844390b9e9c`.
 - Next: complete the compact-landscape CI verification; then inspect source rig/front-axis and close-up captures before making per-hero model corrections. All four heroes remain unapproved for final visual sign-off.
+
+## 2026-11-23 — Monster 3D pipeline audit and review trigger
+
+- Confirmed the live arena still paints all four monsters with procedural Flutter Canvas shapes in `lib/game/arena_painter.dart`; this is placeholder art, not production 3D.
+- Confirmed `tools/monsters/generate_monsters_blender.py` creates low-poly rigged review prototypes only. They are not integrated and are not accepted against the canonical reference sheet. No placeholder/prototype was promoted.
+- Kept the gameplay mapping and balance unchanged: runner = goblin sword, stalker = skeleton dual blade, tank = horned mace brute, ranged = violet hooded masked fighter.
+- Updated `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` with this verified status and the safe production gate. Audit commit: `8e45b043044fe6d17385e4db323a9f07b0e3d39e`.
+- Updated `.github/workflows/monster-reference-prototypes.yml` so changes to monster runtime/models, hero render policy, and the monster audit also trigger the review-only Blender prototype build. Workflow commit: `7c718a6af88e141136f56a555e3d383ad59b4215`.
+- The audit update should trigger the monster prototype review workflow. Its output must be inspected before any model is accepted or integrated.
