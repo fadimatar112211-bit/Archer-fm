@@ -9,9 +9,9 @@
 - Current working branch: `ranger-reference-work`.
 - Do not confuse this project with the legacy `Archero_fm` repository.
 - Do not switch to or modify `main` unless explicitly requested.
-- Current approved production direction (2026-11-21): **all four heroes and all four monster types must ship as reference-faithful 2D/2.5D sprite actors** in a lightweight 3D arena. This supersedes older full-3D hero-rendering notes below; GLB and Blender sources are retained as source/animation inputs for generating and validating the 2.5D sprite packs, not as the final in-match character renderer.
-- Production character visuals may use only the user's approved reference/source images. Never invent, generate, or substitute character artwork.
-- Migration status (not the target): Shadow is the only currently approved 2.5D production sprite route. Ranger, Flame and Storm still need reference-approved 2.5D packs; rejected placeholder atlases must remain disabled. Do not confuse this temporary migration state with the final all-four-hero 2.5D requirement.
+- Current approved production direction (confirmed 2026-11-23): **all four heroes must ship as reference-faithful, fully skinned 3D GLB characters in the arena**, with readable faces, signature weapons, bones and coherent animations. All four monsters must also reach reference-faithful production visuals; the current Canvas monsters and Blender prototypes are placeholders/review work, not accepted final assets.
+- Production character visuals must follow the user's approved reference sheets and preserved source assets. Never silently promote a substitute or unreviewed prototype.
+- Hero migration status: Ranger, Flame and Storm use the GLB route; Shadow remains on a temporary sprite fallback until its GLB route passes the same visual acceptance gate. This is an incomplete migration, not the final target. Rejected sprite atlases and monster prototypes must remain out of production.
 - Never report an item as complete without file/build/test/visual evidence. Distinguish automated render coverage from actual visual quality review.
 - Prefer large coherent implementation batches, then run the full relevant test/build workflow.
 - Keep game UI Arabic-first.
@@ -1872,3 +1872,13 @@ Verification:
 - Confirmed the shared procedural face builder already creates layered eye, iris, pupil, lash, brow, ear, nose and mouth geometry. The problem must be evaluated in the actual GLB/camera/skin pipeline; it is not safe to assume facial features are absent.
 - Recorded hero-specific source risks in `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md`: Shadow's hood opening/cowl, Flame's foreground greatsword, Storm's orientation/rest pose, and Ranger's hood/collar/bow.
 - No speculative face, weapon, yaw, rig or render-policy changes were made. Awaiting fresh captures and Android smoke evidence before modifying hero geometry.
+
+
+## 2026-11-23 — Review Android visual capture artifact and current smoke run
+
+- Android workflow run `45167493378` is testing commit `79821f43de517eca55075963c81ebabec90568bc`. At the latest poll, Flutter analyze and all unit/widget tests had passed; release APK build and Android emulator smoke were still in progress. No pass/fail claim is made yet.
+- The run uploaded `archer-fm-visual-review-captures` (artifact `14815086980`). Inspected the arena, hero, monster, world/fog and minimap captures. The gameplay screenshots are useful for layout/map review but do not provide sufficient isolated, front-facing, gameplay-scale evidence to approve hero faces against the roster reference. Some hero views are small or obscured by large circular overlays/effects; keep all hero visual acceptance open.
+- The minimap capture shows the biome regions and bridge markers, but the current Android workflow is still needed to validate the latest minimap code on the branch head.
+- The four isolated monster review images still depict the existing simple placeholder actors, not approved reference-faithful production models. Keep all four monster prototypes rejected and do not integrate them.
+- This was a visual audit only: no hero models, monster models, combat stats, map generation, collision or runtime rendering policies were changed.
+- Next: finish the Android smoke run, inspect its job logs and any updated captures, then generate isolated front/side/back plus actual gameplay-facing GLB captures for each hero. Redesign monster silhouettes from the canonical reference before another prototype batch.
