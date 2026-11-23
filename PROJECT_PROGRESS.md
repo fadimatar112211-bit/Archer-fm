@@ -2142,3 +2142,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Removed the retired generic `ranger` profile from the shared Blender config and render-profile registry; the three matrix-built heroes remain Flame, Shadow and Storm, while playable Ranger continues using its dedicated `ranger_new` source job.
 - Removed `ranger` from the renderer's supported hero IDs; the default active marker now resolves to `ranger_new`.
 - Flutter/Python tests and Blender workflows have not been executed in this session. These edits are committed source changes, not a claim of a green pipeline.
+
+
+## 2026-11-23 — Remove the final legacy Ranger folder dependency
+
+- Moved the shared Flame/Shadow/Storm Blender render configuration to `assets/heroes/render_pipeline_config.json`; the retired `assets/heroes/ranger/` folder is no longer needed for shared pipeline settings.
+- Updated the Blender renderer, Python config regression test and GitHub Actions workflow to use the shared config location.
+- Moved generated CI-only sprite bundles to `assets/heroes/_sprite_bundles/<hero>/renders`, so the pipeline no longer writes artifacts beneath the retired Ranger folder.
+- Updated the source builder to write each matrix hero directly to its own source folder and bundle location. The playable Ranger remains sourced only from `ranger_new`.
+- The old Ranger folder is now ready for complete removal, including its former shared config file. Tests/Blender/CI remain unexecuted in this session.
