@@ -27,7 +27,7 @@ Unknown hero IDs must fail explicitly; they must never silently fall back to ano
 |---|---|---|
 | Ranger | Original playable source: `assets/heroes/ranger_new/ranger_animated.glb`; generated sprite pack: `assets/heroes/ranger_new/renders/ranger_new_manifest.json` | Canonical hero identity is `ranger_new`. Sprite atlas is not visually accepted; earlier captures showed face/hood/bow readability problems. Keep the safe transitional route until its approved 2.5D pack passes visual review. |
 | Flame | Source scene and generated manifest under `assets/heroes/flame/` | Sprite appearance has not passed reference review; the earlier front render simplified the reference and the weapon obscured the face. |
-| Shadow | User-approved walk sheet: `assets/heroes/shadow/renders/atlases/shadow_walk_8dir_4frames_FINAL.png` | Temporary sprite pilot only. Walk source is approved; attack/skill/dodge/hit/death remain held-frame placeholders and are not accepted final animations. |
+| Shadow | User-approved walk sheet: `assets/heroes/shadow/renders/atlases/shadow_walk_8dir_4frames_FINAL.png` | Temporary sprite pilot. The user-approved walk atlas remains the walk source; attack/skill/dodge/hit/death/run/idle now route to their own directional source atlases after a manifest mapping correction. These action atlases still require visual review and are not yet accepted final animations. |
 | Storm | Source/model and generated manifest under `assets/heroes/storm/` | Sprite atlas remains rejected; prior inspected idle/walk sheets were blank blue tiles. |
 
 The manifests currently present in the repository are structural data, not visual approval. A valid manifest does not prove that the face, costume, weapon, animation or in-game scale matches the approved reference.
@@ -240,3 +240,16 @@ or enlarge faces globally to compensate for model-specific occlusion.
 - Added checks that weapon selection preserves the hero's HP, movement speed, five-hit combo and four Ultimate definitions.
 - Added coverage for weapon mastery (+2% damage per level, capped at level 10) and for unknown weapon IDs leaving the kit unchanged.
 - These are source-level test additions; report them as verified only after the queued Flutter CI run executes successfully.
+
+
+## 2026-11-23 — Restore Shadow's authored directional action atlas mappings
+
+A runtime manifest defect was confirmed: all non-walk Shadow clips (including attack, skill, dodge, hit, death, idle and run) referenced the user walk sheet and repeated its first frame. Directional action atlas PNG/JSON files already existed for these states, but production never selected them.
+
+Correction committed:
+- Rewired all 56 non-walk directional clips (7 states × 8 directions) to their matching `<state>_<direction>.png` atlas and JSON metadata.
+- Replaced repeated walk-frame IDs with the ordered frame IDs present in each corresponding atlas metadata: idle 5, run 9, attack 7, skill 9, dodge 9, hit 5, death 9.
+- Preserved the user's approved 8×4 walk sheet and its exact per-direction metadata unchanged.
+- Added `test/shadow_action_atlas_mapping_test.dart` to assert state/direction isolation, unique frame IDs, metadata resolution and the unchanged user-walk mapping; added it to the hero-runtime CI workflow.
+
+This fixes manifest routing, not art quality. The actual action atlas pixels still need inspection in contact sheets and the in-game camera before visual acceptance. Do not treat this mapping regression test as a visual animation pass.
