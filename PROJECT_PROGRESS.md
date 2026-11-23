@@ -1761,3 +1761,12 @@ Verification:
 - Reviewed actual captures from failed verification artifact `14802956098`: world/castle captures are valid and show the river crossing, bridge, crystals, castle structures and units. However, the camera/test composition crops parts of the arena at the frame edges and large unexplored fog blocks dominate the view; this is not yet a polished full-map acceptance capture.
 - The minimap capture correctly communicates the river, explored biomes, four castle sites, mine markers and player marker, but at the current 156×92 size it reads as a sparse tactical diagram. Revisit its size/contrast/legend only after comparing against the approved gameplay screenshot and live HUD composition; do not change it from an isolated capture alone.
 - Latest directional-capture assertion fix is committed. Android workflow `45142398925` is queued because the previous run's emulator smoke job `137581730985` remains active; its companion test/build job in `45141740087` failed only at the earlier brittle pixel-direction assertion. No successful full test or APK result is claimed yet.
+
+
+## 2026-11-23 — Fix compact-landscape HUD overflows from Android smoke evidence
+
+- The previously blocked Android emulator job completed and exposed two real responsive-layout defects when opening a match on the 720×1280 emulator skin in landscape: the home menu column overflowed vertically by 26 px (`home_screen.dart`), and the in-match army/upgrade row overflowed horizontally by 96 px (`game_screen.dart`). The smoke test correctly failed when it detected the rendering exceptions.
+- Home menu now reduces its carousel-card height and vertical gaps when logical landscape height is below 320 px.
+- Match HUD now wraps the army panel and monster-upgrade action, and the army panel itself wraps its contents instead of forcing a single long row.
+- Fix commits: `c3d7318a` (home) and `a53344b9` (battle HUD). These are code fixes only; the new Android workflow must pass before claiming the smoke test is resolved.
+- The prior unit-test run also exposed the old directional pixel-hash assertion (`runner attack direction 1`), while the current branch replaces that assertion with the pure geometry/mirror-state check. Awaiting the queued verification run.
