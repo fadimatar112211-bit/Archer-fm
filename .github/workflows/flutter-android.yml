@@ -133,7 +133,7 @@ jobs:
           AVDMANAGER="$(find "$SDK/cmdline-tools" -type f -name avdmanager | sort -V | tail -1)"
           test -x "$SDKMANAGER"
           test -x "$AVDMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null
+          "$SDKMANAGER" --licenses < <(yes) >/dev/null
           "$SDKMANAGER" --install "platform-tools" "emulator" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
           echo "no" | "$AVDMANAGER" create avd --force -n archer_fm_api30 -k "system-images;android-30;google_apis;x86_64" -d pixel_2
           "$SDK/emulator/emulator" -avd archer_fm_api30 -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-metrics -wipe-data -skin 540x960 -memory 6144 -cores 4 > /tmp/archer-emulator.log 2>&1 &
