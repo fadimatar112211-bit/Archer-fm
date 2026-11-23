@@ -2207,3 +2207,11 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Expanded the hero-runtime workflow path filters to include `lib/game/combat/**` and the canonical roster spec, so combat-kit and weapon changes trigger the focused validation.
 - Added `test/ultimate_kit_contract_test.dart` to the hero-runtime validation command so the four Ultimate unlock levels, five-hit combo independence, canonical hero IDs and three weapons per hero are checked in CI.
 - Workflow changes are committed. Existing cancelled runs remain cancelled; new workflow runs must finish before test/build success can be reported.
+
+
+## 2026-11-23 — Shadow action atlas runtime routing correction
+- Fixed a real manifest bug: all non-walk Shadow clips previously pointed at the approved walk atlas and repeated the same walk frame. The matching directional atlas PNG/JSON files were already present but unused.
+- Rewired 56 directional clips across idle/run/attack/skill/dodge/hit/death to their own authored atlases and frame IDs.
+- Kept the approved user-supplied 8-direction × 4-frame walk atlas untouched.
+- Added `test/shadow_action_atlas_mapping_test.dart` and included it in the hero-runtime workflow.
+- Visual status remains pending: the test proves correct runtime asset routing and metadata, not that the action poses look good. Inspect the actual atlas pixels and in-game captures before approval.
