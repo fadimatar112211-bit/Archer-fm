@@ -94,3 +94,28 @@ This decision supersedes the older, conflicting paragraph in `docs/monsters/MONS
 - Do not change monster stats, targeting, purchase prices, army composition, XP, or the existing four gameplay roles during the art migration.
 
 The renderer/import implementation must be chosen to support these approved 3D actors; do not force the final assets through an 8-direction sprite-atlas requirement. This audit decision is the current monster visual authority until the older production-spec wording is corrected.
+
+
+## 2026-11-23 — Current in-game monster capture review (run 45194460668)
+
+Reviewed `20_monster_lineup.png` and the four
+`24_monster_*_isolated_review.png` images from visual artifact
+`14827820391`. The images are produced by the current `ArenaPainter`
+monster painters; they are **not** GLB actors and do not close the 3D asset gate.
+
+Observed at the isolated review scale:
+- Runner: simple green upright figure with a small sword; it does not reproduce
+  the approved goblin's head/face, clothing and sword silhouette in enough detail.
+- Stalker: simple ivory skeleton with two narrow blades; the anatomy and blade
+  shape remain generic compared with the approved skeleton reference.
+- Tank: generic grey/blue body with round shoulders and a small mace-like
+  weapon; it does not read as the large horned armored brute with oversized
+  spiked mace.
+- Ranged: purple hooded body and two violet blades are recognizable by palette,
+  but the hood/mask silhouette and energy blades remain simplified placeholders.
+
+The lineup capture also confirms that all four units are still rendered by the
+procedural 2D Canvas path at gameplay scale. Keep the four current painters as
+the safe fallback; do not promote them as final art and do not wire the rejected
+low-poly prototype GLBs into runtime. No monster combat stats, roles, prices,
+targeting, XP or army composition changed.

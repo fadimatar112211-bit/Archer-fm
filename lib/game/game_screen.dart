@@ -34,11 +34,10 @@ const int _stepMs = 16;
 /// The live battle screen: joystick movement, manual bow attacks, the five-hit
 /// combo chain, the four Ranger abilities, enemy waves and the HUD.
 ///
-/// The hero sprite comes from the same production atlas pipeline as the viewer
-/// (`ranger_new` face-welded renders). The sprite layer forwards the exact
-/// weapon frames (`bow_draw`, `projectile_release`, `volley_charge`,
-/// `volley_release`) to the simulation, so arrows always leave the bow on the
-/// frame the animation releases the string.
+/// The active hero uses the shared skinned 3D GLB renderer when its model is
+/// available. Shadow retains a temporary approved sprite fallback while its
+/// 3D model passes the same visual-acceptance gate. Animation events continue
+/// to drive weapon release and ability timing in the simulation.
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -340,19 +339,18 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  /// Temporary migration fallback: loads a retained GLB source while a
-  /// reference-approved 2.5D sprite pack is being completed for this hero.
-  /// The final roster renderer is sprite-based for Ranger, Flame, Shadow and
-  /// Storm; do not treat this transitional GLB route as the art target.
+  /// Loads the final 3D GLB character route. Shadow may temporarily use the
+  /// approved sprite fallback until its GLB passes the same visual gate.
+  /// A successful GLB load is technical evidence, not visual acceptance.
   Future<void> _loadHero3D() async {
-    // Shadow is currently the only approved sprite pilot. This is a temporary
-    // migration gate only: all four heroes must move to approved 2.5D packs.
+    // Shadow is the only temporary sprite fallback. All four heroes must
+    // ultimately pass reference-faithful 3D acceptance.
     // Never expose an unapproved atlas just to avoid loading a retained GLB.
     if (HeroRenderPolicy.routeFor(widget.hero.id) ==
             HeroVisualRoute.approvedSpritePilot &&
         widget.hero3dController == null &&
         widget.hero3dBytes == null) {
-      debugPrint('Shadow 2.5D pilot: using sprite atlas renderer');
+      debugPrint('Shadow temporary sprite fallback: using approved atlas renderer');
       return;
     }
     if (widget.hero3dController != null) {

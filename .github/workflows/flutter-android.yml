@@ -216,12 +216,30 @@ jobs:
               {
                 echo "===== $(date -Is) ====="
                 ps -eo pid,ppid,rss,vsz,stat,comm,args --sort=-rss | head -18
+                echo "--- emulator process status ---"
+                if [ -r "/proc/$EMULATOR_PID/status" ]; then
+                  grep -E '^(Name|State|VmRSS|VmSize|Threads):' "/proc/$EMULATOR_PID/status" || true
+                fi
+                echo "--- adb device state ---"
+                timeout 3s adb devices -l 2>&1 || true
+                echo "--- adb server processes ---"
+                pgrep -af 'adb.*server|/platform-tools/adb' || true
                 echo "--- host memory ---"
                 grep -E 'MemAvailable|MemFree|SwapFree' /proc/meminfo || true
-                echo "--- cgroup memory events ---"
-                cat /sys/fs/cgroup/memory.events 2>/dev/null || true
-                echo "--- cgroup memory current/max ---"
-                cat /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.max 2>/dev/null || true
+                echo "--- cgroup v2 memory events/current/max ---"
+                for file in /sys/fs/cgroup/memory.events /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.max; do
+                  if [ -r "$file" ]; then
+                    echo "$file"
+                    cat "$file" || true
+                  fi
+                done
+                echo "--- cgroup v1 memory events/usage/limit ---"
+                for file in /sys/fs/cgroup/memory/memory.oom_control /sys/fs/cgroup/memory/memory.usage_in_bytes /sys/fs/cgroup/memory/memory.limit_in_bytes; do
+                  if [ -r "$file" ]; then
+                    echo "$file"
+                    cat "$file" || true
+                  fi
+                done
               } >> /tmp/archer-emulator-watch.log
               sleep 1
             done
@@ -230,9 +248,95 @@ jobs:
           WATCH_PID=$!
           timeout 25m flutter test --reporter expanded integration_test/app_smoke_test.dart
           TEST_STATUS=$?
+          echo "ANDROID_SMOKE_EXIT_CODE=$TEST_STATUS"
+          # Keep the watcher alive after Flutter returns. This distinguishes
+          # an ADB disconnect with a still-running QEMU process from an actual
+          # emulator exit, and records the final seconds before runner cleanup.
+          for attempt in $(seq 1 30); do
+            if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
+              echo "QEMU process no longer exists after smoke test." >> /tmp/archer-emulator-watch.log
+              break
+            fi
+            if timeout 3s adb devices 2>/dev/null | grep -qE '^emulator-[0-9]+[[:space:]]+device
+      - name: Capture Android emulator diagnostics
+        if: always()
+        run: |
+          mkdir -p build/android-emulator-diagnostics
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -n "$SDK" ]; then export PATH="$SDK/platform-tools:$PATH"; fi
+          timeout 8s adb devices -l > build/android-emulator-diagnostics/adb-devices.txt 2>&1 || true
+          timeout 12s adb logcat -d -v threadtime > build/android-emulator-diagnostics/logcat.txt 2>&1 || true
+          free -h > build/android-emulator-diagnostics/host-memory.txt 2>&1 || true
+          dmesg | tail -100 > build/android-emulator-diagnostics/kernel-tail.txt 2>&1 || true
+          if [ -f /tmp/archer-emulator.log ]; then
+            cp /tmp/archer-emulator.log build/android-emulator-diagnostics/emulator.log
+          fi
+          if [ -f /tmp/archer-emulator-watch.log ]; then
+            cp /tmp/archer-emulator-watch.log build/android-emulator-diagnostics/emulator-watch.log
+          fi
+          if [ -f /sys/fs/cgroup/memory.events ]; then
+            cp /sys/fs/cgroup/memory.events build/android-emulator-diagnostics/cgroup-memory-events.txt
+          fi
+          if [ -f /tmp/archer-emulator.pid ]; then
+            PID="$(cat /tmp/archer-emulator.pid)"
+            timeout 5s ps -fp "$PID" > build/android-emulator-diagnostics/emulator-process.txt 2>&1 || true
+            if [ -r "/proc/$PID/status" ]; then
+              cp "/proc/$PID/status" build/android-emulator-diagnostics/emulator-proc-status.txt || true
+            fi
+          fi
+          pgrep -af 'qemu-system|/emulator/emulator|adb.*server' > build/android-emulator-diagnostics/emulator-and-adb-processes.txt 2>&1 || true
+          timeout 5s adb version > build/android-emulator-diagnostics/adb-version.txt 2>&1 || true
+
+      - name: Upload Android emulator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-android-emulator-diagnostics
+          path: build/android-emulator-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # Legacy disabled job retained for reference. The approved production direction
+  # is reference-faithful rigged 3D monsters; the separate review workflow owns
+  # prototype generation until those models pass visual acceptance.
+  generate-monster-glbs:
+    if: ${{ false }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install free Blender runtime
+        run: |
+          sudo timeout 10m apt-get update
+          sudo timeout 18m apt-get install -y --no-install-recommends blender python3-numpy xvfb
+
+      - name: Generate four rigged monster models
+        run: |
+          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
+          ARCHER_MONSTER_PREVIEWS=1 timeout 20m xvfb-run -a blender --background --factory-startup --python tools/monsters/generate_monsters_blender.py -- --output build/monster-glb
+          python3 tools/validate_monster_glb.py --root build/monster-glb
+
+      - name: Upload generated monster GLBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-rigged-monster-glbs
+          path: build/monster-glb/
+          if-no-files-found: error
+          retention-days: 30
+; then
+              echo "ADB remained online after smoke test at $(date -Is)." >> /tmp/archer-emulator-watch.log
+            else
+              echo "ADB unavailable while QEMU process still exists at $(date -Is)." >> /tmp/archer-emulator-watch.log
+            fi
+            sleep 1
+          done
+          if kill -0 "$EMULATOR_PID" 2>/dev/null; then
+            echo "QEMU process survived the 30-second post-test observation window." >> /tmp/archer-emulator-watch.log
+          fi
           kill "$WATCH_PID" 2>/dev/null || true
           wait "$WATCH_PID" 2>/dev/null || true
-          echo "ANDROID_SMOKE_EXIT_CODE=$TEST_STATUS"
           exit "$TEST_STATUS"
 
       - name: Capture Android emulator diagnostics

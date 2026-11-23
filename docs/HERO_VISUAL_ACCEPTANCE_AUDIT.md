@@ -187,3 +187,41 @@ Required next evidence:
 4. Correct one hero at a time. Do not globally enlarge heads/eyes or rotate all hero rigs to compensate for a possibly cropped capture.
 
 No model, camera, face geometry, lighting, or combat code was changed based on these screenshots alone.
+
+
+## 2026-11-23 — Four-hero GLB close-up review (run 45194460668)
+
+Reviewed the actual 800×800 isolated yaw captures in artifact
+`archer-fm-visual-review-captures` (artifact ID `14827820391`), alongside
+the 800×450 in-game captures. This is a visual review of the current checked-in
+GLBs, not a review of a new mesh revision.
+
+Observed evidence:
+- **Ranger:** the face is identifiable in some yaw samples (notably the
+  front-facing half of the sweep), but the oversized cape/bow silhouette
+  dominates or intersects the body in several other views. This is not yet a
+  clean all-direction production presentation.
+- **Flame:** the front-facing close-up shows a large circular foreground
+  weapon/guard-like assembly covering much of the torso and reducing the face
+  to a small upper detail. The canonical Flame reference is a red/orange-haired
+  knight with a prominent flaming sword; the current capture does not establish
+  that weapon silhouette.
+- **Shadow:** the GLB close-ups show the purple hooded silhouette, but the
+  face/eyes remain difficult to read under the hood/mask. Shadow is still not
+  the production GLB route; these images are source-review evidence only.
+- **Storm:** the sampled yaw sweep remains dominated by rear/side armor,
+  pale hair and limbs; no sampled view gives a consistently clear face plus
+  signature lightning weapon. The pose/orientation/weapon occlusion source is
+  not proven by screenshots alone and must be traced in the source rig and
+  animation before changing yaw or geometry.
+
+The capture test currently proves that triangles are emitted and projected
+bounds are large enough. It does **not** measure face-pixel coverage, detect
+weapon occlusion, or compare the render against the approved image. Keep the
+four heroes **NOT VISUALLY ACCEPTED** until a human-reviewed front,
+three-quarter and gameplay-facing set passes those checks.
+
+No GLB binary, rig, mesh, face, weapon, yaw, lighting, or combat values were
+changed in this review. Next model pass must inspect the exact Blender source
+and node/skin transforms for one hero at a time; do not rotate all four rigs
+or enlarge faces globally to compensate for model-specific occlusion.

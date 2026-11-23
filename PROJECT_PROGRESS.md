@@ -1951,3 +1951,45 @@ Verification:
 6. Run full Flutter tests, Android release APK verification, emulator match smoke, and capture review after code/assets land.
 
 **Readiness at this checkpoint:** heroes = partially integrated / visual acceptance open; monsters = not production-ready; Android release/smoke = not yet confirmed. No claim of full completion is made.
+
+
+## 2026-11-23 — Large batch: Android release verified, emulator failure isolated further, hero/monster visuals reviewed
+
+### Repository and CI evidence
+- Working branch: `ranger-reference-work`.
+- Commit under verification: `f1557a45b08214ea377e9d3b3b7d26747fe4af22`.
+- Android workflow run: [45194460668](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45194460668).
+- Flutter analyze: **passed**.
+- Full Flutter test suite: **passed**.
+- Release APK build: **passed**; APK signature verification: **passed**; Actions APK artifact uploaded; GitHub Release published.
+- Android emulator boot: **passed**.
+- Android integration smoke: **failed** after the test opened home, loaded Flame GLB, opened army selection, tapped Start Match, then received `adb: device offline` about nine seconds later. Flutter reported exit code 79 / “No tests were found” because the device connection disappeared. This is not an application assertion or Dart stack trace.
+
+### What the new diagnostics actually show
+- The emulator process was alive in the per-second watcher immediately before the failure, with QEMU RSS around 5.6 GB; host `MemAvailable` was about 8.8 GB and swap remained available. This does not support a simple host-wide memory exhaustion explanation.
+- After the ADB disconnect, the final diagnostic snapshot found no attached device and no surviving emulator process. The captured emulator log contains normal SwiftShader initialization and a completed boot, but no fatal QEMU error.
+- The cgroup memory files were empty/unavailable in the uploaded snapshot; `dmesg` access was denied; Android logcat could not be read because ADB was already disconnected. Therefore an OOM kill, QEMU crash, graphics-driver issue, and app-triggered device failure are **not yet distinguished**.
+- The prior watcher stopped as soon as Flutter returned, leaving the last seconds before runner cleanup unobserved. The next workflow patch keeps observing for 30 seconds after the test returns and records ADB state, QEMU process status, both cgroup layouts and ADB-server processes.
+
+### Visual review
+- Downloaded and inspected artifact `archer-fm-visual-review-captures` (ID `14827820391`, approximately 48.2 MB). The hero yaw close-ups reveal per-model face/weapon occlusion concerns; none of the four heroes is visually accepted yet.
+- Flame's front view is dominated by a large circular foreground assembly; Storm has no consistently clear face/weapon view in the sampled yaw sweep; Shadow's GLB face remains obscured and Shadow still uses its temporary sprite fallback; Ranger's face appears only in part of the yaw sweep while cape/bow dominate other views.
+- The four monster review images are still procedural Canvas actors. Their silhouettes and signature weapons do not match the approved goblin, skeleton dual-blade, horned mace brute and violet hooded fighter closely enough. All four remain **NOT READY** for production 3D.
+
+### Files changed in this batch
+- `.github/workflows/flutter-android.yml`: extend post-test emulator/ADB observation so the next failure captures the final process/device state rather than stopping the watcher at the first Flutter exit.
+- `lib/game/game_screen.dart`: remove stale comments claiming 2.5D sprite atlases are the final hero renderer; clarify that 3D GLB is the final target and Shadow's atlas is temporary.
+- `test/hero_render_policy_test.dart`: align test descriptions with the temporary-fallback / final-3D policy; no assertions or routing changed.
+- `docs/HERO_VISUAL_ACCEPTANCE_AUDIT.md`: record the four-hero visual evidence and specific unresolved face/weapon issues.
+- `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md`: record that current in-game monster captures are Canvas placeholders and reject them as final art.
+- `PROJECT_PROGRESS.md`: preserve this complete CI, artifact and blocker checkpoint.
+
+### Exact next batch
+1. Re-run the Android workflow with the longer post-test watcher; compare ADB disconnect time with QEMU exit time and inspect the process/cgroup evidence.
+2. Trace Flame's large foreground geometry to its exact source mesh/material/node and inspect its hand/weapon attachment before any geometry edits.
+3. Inspect Storm's source rest pose, root orientation and weapon attachment; do not apply a blanket yaw correction.
+4. Review Ranger and Shadow one at a time against the approved roster sheet; keep Shadow's fallback until its GLB passes the same gate.
+5. Find or build exact-reference monster source meshes; do not reuse the rejected low-poly prototypes. Implement a real skinned 3D monster runtime only after source assets pass visual review.
+6. Preserve all completed combat, progression, Ultimate, XP, map and economy systems; no such systems were reimplemented or changed in this batch.
+
+**Readiness:** analyze/tests/release APK = passed for commit `f1557a4`; Android match smoke = failed due ADB device disconnect; heroes = GLB-integrated but visual acceptance open; monsters = Canvas fallback only / production 3D not ready.
