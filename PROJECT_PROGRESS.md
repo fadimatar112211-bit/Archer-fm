@@ -1848,3 +1848,10 @@ Verification:
 - Rejected all four for production use. No prototype GLB was copied into game assets or runtime. The existing arena painter remains the fallback.
 - Updated `docs/MONSTER_VISUAL_ACCEPTANCE_AUDIT.md` with per-monster review evidence and rejection decisions. Audit commit: `d75d41905a4c7296c1dfefb69397b13ce6888a14`.
 - Next: redesign base silhouettes and signature gear directly against the canonical reference before spending time on additional animation polish.
+
+## 2026-11-23 — Minimap terrain and bridge readability pass
+
+- Updated `lib/game/minimap.dart` so unexplored cells retain fog darkness but show a very subdued biome tint. This keeps the fog-of-war rule while making the overall terrain layout easier to read.
+- Added compact timber-deck markers for every generated river bridge, using the bridge's actual center, width, depth and angle rather than guessed screen positions.
+- No map generation, collision, river slowdown, bridge walkability, castle placement, or fog reveal rules changed.
+- Code commit: `b4344ab9fe62f4ac8a6f4d0c0950f7dde0123279`. Await Flutter analyze/tests and visual capture before treating the minimap change as verified.
