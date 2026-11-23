@@ -3,10 +3,12 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:archer_fm/game/arena_camera.dart';
 import 'package:archer_fm/game/arena_painter.dart';
 import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
 import 'package:archer_fm/game/monsters/monster_telegraph_geometry.dart';
+import 'package:archer_fm/game/world/arena_projection.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
@@ -132,6 +134,16 @@ void main() {
             timeMs: world.nowMs,
             comboText: null,
           ),
+          // Keep normal gameplay captures at the default camera scale, but
+          // zoom isolated review shots so monster faces/armor are legible.
+          config: frameId.startsWith('monster_isolated_')
+              ? const ArenaCameraConfig(
+                  projection: ArenaWorldProjection(
+                    groundScaleY: 0.82,
+                    scale: 2.4,
+                  ),
+                )
+              : defaultArenaCameraConfig,
         );
         final recorder = ui.PictureRecorder();
         final canvas = Canvas(recorder);
@@ -250,7 +262,7 @@ void main() {
         world.corpses.clear();
         final fingerprint = await _save(
           '24_monster_${type.name}_isolated_review',
-          capture('ranger_new_idle_e_000'),
+          capture('monster_isolated_review'),
         );
         expect(
           isolatedFingerprints.add(fingerprint),
