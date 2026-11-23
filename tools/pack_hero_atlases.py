@@ -455,9 +455,6 @@ def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
     be referenced by the game.
     """
     hero_id = manifest["hero_id"]
-    if hero_id == "ranger":
-        print("BUNDLE_SKIP ranger already lives in the uploaded directory")
-        return None
     root = Path(__file__).resolve().parents[1]
     bundle = (root / "assets/heroes/_sprite_bundles" / hero_id
               / "renders")
