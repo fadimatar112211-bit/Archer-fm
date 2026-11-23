@@ -7,6 +7,7 @@ import '../hero/hero_assets.dart';
 import 'combat/hero_kit.dart';
 import 'monsters/monster_models.dart';
 import 'render3/hero3d_controller.dart';
+import 'render3/sprite_actor_renderer.dart';
 import 'arena_camera.dart';
 import 'world/arena_map.dart';
 import 'world/arena_projection.dart';
@@ -3163,35 +3164,24 @@ class ArenaPainter extends CustomPainter {
       return;
     }
 
-    // Keep the 2.5D sprite at the same 120 logical-pixel draw height used
-    // by the approved arena composition; the full 800×450 capture confirms
-    // this gives Shadow a readable on-screen size without crowding crystals.
-    const drawHeight = 120.0;
-    final drawWidth = drawHeight *
-        presentation.frameWidth /
-        presentation.frameHeight;
-    final anchor = player.position;
-    final dst = Rect.fromLTWH(
-      anchor.dx - drawWidth * presentation.pivotX,
-      anchor.dy - drawHeight * presentation.pivotY,
-      drawWidth,
-      drawHeight,
-    );
-    canvas.drawImageRect(
-      image,
-      rect,
-      dst,
-      Paint()
-        ..filterQuality = FilterQuality.medium
-        ..color = player.dead
-            ? const Color(0xFF888888)
-            // Shadow's veil: the hero renders translucent while hidden.
-            : Color.fromRGBO(
-                255,
-                255,
-                255,
-                world.player.speedBoostUntilMs > world.nowMs ? 0.55 : 1,
-              ),
+    // Shared pivot-aware billboard renderer. The same geometry contract is
+    // used by future approved monster sprite packs; visuals never resize hitboxes.
+    SpriteActorRenderer.paint(
+      canvas,
+      image: image,
+      sourceRect: rect,
+      groundAnchor: player.position,
+      frameSize: Size(
+        presentation.frameWidth.toDouble(),
+        presentation.frameHeight.toDouble(),
+      ),
+      pivotX: presentation.pivotX,
+      pivotY: presentation.pivotY,
+      targetHeight: 120,
+      opacity: player.dead
+          ? 1
+          : (player.speedBoostUntilMs > world.nowMs ? 0.55 : 1),
+      tint: player.dead ? const Color(0xFF888888) : null,
     );
   }
 
