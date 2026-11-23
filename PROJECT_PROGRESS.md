@@ -2198,3 +2198,12 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Extended the Ultimate contract tests to verify only the four canonical kit IDs are accepted and each hero has exactly three distinct weapons unlocked at levels 1/10/20.
 - Rewrote the stale 2026-11-15 roster document to reflect the approved 2.5D reference-only direction, current Ranger ID, real hero stats/speeds, the five-hit combo, four separately unlocked Ultimates and three weapons per hero. It also explicitly records that the present atlas files have not all passed visual review.
 - Changes are committed; the current GitHub Actions Android/runtime validation workflows are still queued/pending and no test pass is claimed yet.
+
+
+
+## 2026-11-23 — Keep validation runs alive and cover combat-kit contracts
+
+- Found why recent GitHub validation runs were repeatedly cancelled: both Android and hero-runtime workflows used `cancel-in-progress: true`, so each rapid commit cancelled the previous run. Changed both concurrency groups to queue the latest validation instead of cancelling in-progress jobs.
+- Expanded the hero-runtime workflow path filters to include `lib/game/combat/**` and the canonical roster spec, so combat-kit and weapon changes trigger the focused validation.
+- Added `test/ultimate_kit_contract_test.dart` to the hero-runtime validation command so the four Ultimate unlock levels, five-hit combo independence, canonical hero IDs and three weapons per hero are checked in CI.
+- Workflow changes are committed. Existing cancelled runs remain cancelled; new workflow runs must finish before test/build success can be reported.
