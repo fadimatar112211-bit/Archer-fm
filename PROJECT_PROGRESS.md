@@ -1786,3 +1786,12 @@ Verification:
 - The gameplay-scale `face_idle` captures also show all four heroes too small for a face-quality sign-off. These assets are not visually approved against the reference sheet. Do not mark hero completion based on successful atlas rendering alone.
 - Required next art pass: verify each model's true front axis and camera-facing pose; make the face/eyes readable at gameplay scale; reduce weapon/hood occlusion without changing the approved color/armor identity; regenerate the close-up and gameplay-scale evidence before acceptance.
 - This is an evidence/audit finding only; no production hero model or camera was changed in this pass.
+
+
+## 2026-11-23 — Latest verification queue and hero-art gate
+
+- Confirmed branch head `a46864783ac3a4403231403ac086cd0146b9751d` on `ranger-reference-work`.
+- Android workflow `45143016657` is still running on its parent code commit `0e35f5e040f754ab58e8ec33c7c7be998d7320ff`. In its release job, Flutter Analyze and the complete Flutter test suite have both passed; APK packaging is still running. The Android emulator smoke test is also still running, so neither release nor emulator acceptance is claimed.
+- The newest workflow `45144126658`, triggered by the current branch head `a468647`, is pending/queued. This is the run that must verify the latest monster capture changes (spawn-relative placement, 2.4× isolated review zoom and direction/mirror assertions) together with the current branch.
+- The latest completed visual audit remains unchanged: four hero GLB close-ups show face/weapon/orientation readability problems. No production camera, yaw, model, or sprite route was changed based on an unverified guess. Keep all four heroes blocked from visual sign-off until the true front axis is confirmed from the close-up set and the face/weapon silhouette is corrected at gameplay scale.
+- Next: wait for run `45144126658` to complete; inspect its new monster/map/hero capture artifact; then make a targeted per-hero correction only where the image evidence identifies the correct front/weapon/hood adjustment. Do not promote any rejected atlas or report a visual pass from pipeline success alone.
