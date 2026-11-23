@@ -28,6 +28,11 @@ void main() {
           expect(animations.containsKey(name), isTrue, reason: '$hero/$name');
           final clip = animations[name] as Map<String, dynamic>;
           final frameIds = (clip['frames'] as List).cast<String>();
+          expect(
+            frameIds.every((id) => id.startsWith('${hero}_${name}_')),
+            isTrue,
+            reason: '$hero/$name must reference its own rendered atlas frames',
+          );
           final frameCount = frameIds.length;
           if (state != 'idle') {
             expect(
