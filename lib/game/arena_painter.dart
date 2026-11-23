@@ -502,6 +502,48 @@ class ArenaPainter extends CustomPainter {
       if (length < 1) continue;
       final direction = delta / length;
       final perpendicular = Offset(-direction.dy, direction.dx);
+
+      // A worn stone approach gives the castle-to-crossing route one
+      // continuous readable silhouette beneath the individual pavers. It is
+      // paint-only decoration: no navigation, collision or map coordinates
+      // are changed, and the depth-sorted bridge/actors still draw above it.
+      final pathControl = castle + delta * 0.5 +
+          perpendicular * math.sin(castleIndex * 1.37 + 0.4) * 22;
+      final approach = Path()
+        ..moveTo(castle.dx, castle.dy)
+        ..quadraticBezierTo(
+          pathControl.dx,
+          pathControl.dy,
+          nearest.center.dx,
+          nearest.center.dy,
+        );
+      canvas.drawPath(
+        approach,
+        Paint()
+          ..color = const Color(0x55271F18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 34
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+      canvas.drawPath(
+        approach,
+        Paint()
+          ..color = const Color(0x997C7869)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 27
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+      canvas.drawPath(
+        approach,
+        Paint()
+          ..color = const Color(0x557E8A7A)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round,
+      );
+
       final paverCount = (length / 28).floor();
       for (var i = 5; i < paverCount; i++) {
         final t = i / paverCount;
