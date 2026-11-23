@@ -2008,3 +2008,26 @@ No game-design objectives or acceptance targets were changed in this checkpoint.
 - Kept all four procedural monster drawings as fallback only. No invented monster artwork or rejected prototype was promoted.
 
 **Verification limitation:** these are committed tests and code changes, not a passing test report. No CI workflow run was returned for the latest commits, so Flutter analyze, the new tests, Android build/smoke and visual capture review remain unverified on this checkpoint. Do not mark Shadow Phase 1, the hero roster, monster conversion or 3D-world integration complete until their plan-defined gates have actual evidence.
+
+
+## 2026-11-23 — Shadow Phase 1 runtime wiring and shared sprite direction pass
+
+This batch follows the existing approved conversion plan without changing its objectives, gameplay invariants, references or phase gates.
+
+### Implemented
+- Added `lib/game/render3/sprite_actor_clip_resolver.dart` as the shared mapping from the existing world-space eight-way facing convention to directional sprite clips.
+- Wired `GameScreen` normal sprite clip selection through that resolver. The existing direction-lock behavior for one-shot actions is preserved; the GLB fallback routes for Ranger, Flame and Storm are unchanged.
+- Added `test/sprite_actor_clip_resolver_test.dart` for all eight directions and the zero-vector south-facing fallback.
+- Added `test/shadow_walk_runtime_test.dart`, which loads Shadow through the production `BundleHeroAssetLoader`, checks all 32 frames across the eight directional clips, verifies the supplied atlas row order (which differs from clockwise game-octant order), checks 192×192 rectangles and 768×1536 dimensions, confirms the eight clips share one decoded image, and advances the real `SpritePlayer` through a full four-frame loop.
+- The runtime test also resolves each directional clip using the same production `SpriteActorClipResolver` now used by `GameScreen`.
+
+### Preserved
+- Shadow remains the only sprite pilot; its walk proof does not imply idle/attack/hit/death/five-hit-combo/Ultimate visual acceptance.
+- Ranger, Flame and Storm retain their safe GLB transitional route until their own reference-matched sprite packs pass the gates.
+- The four monster roles remain on their current procedural fallback; no unapproved replacement art was created or promoted.
+- Map generation, four biomes, eight mines, rivers/bridges, castle/crystal rules, touch mapping, combat, XP, economy and progression were not changed.
+
+### Verification status
+- Source and test files are committed on `ranger-reference-work`.
+- No current GitHub Actions run was returned for this checkpoint. Flutter formatting, analyze, the complete test suite, Android release build, emulator match smoke and visual capture review have **not** been verified for these latest commits.
+- Phase 1 remains open until the test suite runs and eight-direction gameplay captures demonstrate correct facing, ground contact, no clipping and no identity drift. This batch strengthens the runtime asset proof; it does not claim the phase is complete.
