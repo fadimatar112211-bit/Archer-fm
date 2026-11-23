@@ -79,3 +79,18 @@ Visual inspection of the four generated previews found:
 | ranged / violet hooded blades | Purple palette and two hand-held shapes are present, but there is no convincing hood/mask silhouette and the weapons do not read as violet energy blades | **REJECT — redesign hood, mask and energy blades** |
 
 All four prototypes remain review-only and must not be copied into production assets or runtime routing. The current Canvas painters remain the safe gameplay fallback. Next iteration must prioritize matching the approved reference's distinct silhouette and signature gear before adding more animation polish.
+
+## 2026-11-23 — Resolve conflicting monster runtime-art direction
+
+The authoritative user-approved reference record at `docs/references/USER_APPROVED_VISUAL_REFERENCES.md` explicitly requires **actual 3D assets with real geometry/materials**, followed by rigging and animation only after the base models match the approved monster sheet. The 2026-11-20 consolidated reference set is the latest visual authority.
+
+This decision supersedes the older, conflicting paragraph in `docs/monsters/MONSTER_PRODUCTION_SPEC.md` titled “Final runtime art direction — 2.5D”, which incorrectly says the final monsters should be sprite actors rendered from GLB sources. The final production target is now unambiguous:
+
+- Four reference-faithful, genuinely 3D skinned monster actors in the arena: green goblin sword, ivory skeleton dual blades, horned armored mace brute, and purple hooded masked fighter with violet energy blades.
+- Use the actual approved reference image for geometry, proportions, face/headgear, armor/clothing, colors and signature weapons. Do not substitute generated generic designs.
+- Required genuine clips: idle, walk/locomotion, attack, hit and death; preserve gameplay timing and events in simulation.
+- Keep the existing Flutter Canvas monsters as a temporary safe fallback until each 3D actor passes source, rig, animation, face/weapon silhouette, gameplay-scale and in-game review.
+- The rejected low-poly prototype GLBs remain review-only and must not be wired into runtime.
+- Do not change monster stats, targeting, purchase prices, army composition, XP, or the existing four gameplay roles during the art migration.
+
+The renderer/import implementation must be chosen to support these approved 3D actors; do not force the final assets through an 8-direction sprite-atlas requirement. This audit decision is the current monster visual authority until the older production-spec wording is corrected.
