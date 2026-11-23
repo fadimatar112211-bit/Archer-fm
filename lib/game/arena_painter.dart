@@ -1987,6 +1987,9 @@ class ArenaPainter extends CustomPainter {
     );
   }
 
+  /// Temporary procedural fallback for the four existing monster roles.
+  /// This painter keeps matches playable while reference-matched 2.5D sprite
+  /// packs are prepared; it is not a final-art acceptance path.
   void _paintMonster(Canvas canvas, EnemyState monster) {
     final def = MonsterCatalog.def(monster.type);
     final now = world.nowMs;
