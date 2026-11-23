@@ -2167,3 +2167,10 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Added `test/all_hero_runtime_bundle_test.dart`: loads Ranger New, Flame, Shadow and Storm through the exact `BundleHeroAssetLoader` used in matches, checks each 64-clip/64-atlas manifest and all eight directions/states, then decodes representative walk/attack/skill atlas pages and verifies every referenced frame rectangle is inside the image.
 - Hardened `BundleHeroAssetLoader.loadManifest()` so a manifest stored under one hero's folder cannot silently identify itself as another hero. A mismatch now fails with a clear `FormatException`.
 - This is runtime test coverage added to source; it has not yet been executed. The current Android workflow was still running on an earlier commit when checked, and the sprite pipeline was queued. No pass is claimed.
+
+
+## 2026-11-23 — Gate hero art generation behind approved reference acceptance
+
+- Replaced the previous four-pack Blender generation workflow with a focused Flutter runtime-contract workflow. It verifies the four checked-in manifests/bundles and the Shadow pilot/renderer tests; it does not procedurally invent or mass-generate hero art.
+- This follows the approved plan's rule: Phase 1 Shadow walk proof and reference-only art acceptance come before mass conversion. Flame/Shadow/Storm generated geometry from the previous matrix is not approved production art and must not be promoted merely because a render pipeline completes.
+- The older queued run `45253566534` was created against an earlier workflow revision and was still queued at the last check; this new workflow revision prevents future push-triggered mass generation. No claim is made that the older queued run was cancelled.
