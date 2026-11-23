@@ -1,17 +1,3 @@
-# SUPERSEDING FINAL RUNTIME ART DIRECTION — 2.5D sprites in a lightweight 3D world (2026-11-23)
-
-The final monster target is **four reference-faithful 2D sprite actors with a polished 2.5D appearance**, placed as camera-facing billboard actors in a lightweight 3D arena/world. This follows the approved `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` (2026-11-21). It supersedes the fully-3D runtime-art section and any 3D-only pipeline steps below.
-
-- Preserve exactly the four approved reference designs and their existing gameplay-role mapping.
-- Produce the animation states required by the conversion plan; animation never applies gameplay damage.
-- Keep the current Canvas painter as a safe temporary fallback until each 2.5D sprite actor passes visual, manifest, runtime and performance acceptance.
-- Blender/GLB files may be retained as source/diagnostic inputs; they are not the final live monster renderer.
-- Do not wire rejected low-poly prototypes into production or change monster stats, targeting, prices, army composition, XP or progression.
-
-The remaining sections are historical production notes unless they are consistent with this superseding direction. The conversion plan is the implementation authority.
-
----
-
 > **2026-11-21 VISUAL AUTHORITY:** Use only the approved four-monster reference sheet at `assets/references/approved_all/archer_fm_monsters_reference.png` and the pointer document `docs/references/USER_APPROVED_VISUAL_REFERENCES.md`. The exact visual-to-gameplay mapping is: green sword goblin = Runner; ivory skeleton with paired swords = Stalker; horned heavy armored mace brute = Tank; purple masked infiltrator with violet energy blades = Ranged. This is a visual mapping only: preserve each existing gameplay role, stats, targeting, attack range, economy and progression. In particular, Ranged must continue to use its existing projectile attack even though its reference silhouette carries violet blades; do not silently convert it to melee.
 
 ---
