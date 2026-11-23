@@ -1708,3 +1708,13 @@ Verification:
 - Ranger's yaw-180 close-up has a clearly readable face and green bow silhouette. Flame's available close-ups are dominated by a large circular foreground weapon/shield that obscures most of the face; this needs a model/weapon presentation review. Shadow's current captures show mostly rear/side views; its yaw-180 close-up was not produced because the 297.48px height assertion stopped that test, so its face is not yet accepted. Storm close-ups were not generated because the hero capture loop stopped at Shadow. Do not mark all four hero faces visually complete.
 - Monster captures currently show the four procedural Canvas silhouettes at ordinary arena zoom; they are too small for a reliable face/weapon review. The approved GLB prototypes remain review-only and are not integrated. A dedicated monster close-up capture pass is still required before visual acceptance.
 - This audit is based on run `45139009990` and predates the Shadow atlas/scale corrections now queued for verification.
+
+
+## 2026-11-23 — Isolated monster visual-review captures
+
+- Extended `test/monster_capture_test.dart` with four dedicated isolated captures, one for each procedural archetype: Runner, Tank, Stalker and Ranged.
+- Each review capture removes surrounding army/enemy clutter and enlarges only the test actor to a 28-unit review radius so face, armor silhouette and weapon details are easier to inspect. Production monster radii, stats and combat behaviour are unchanged.
+- New capture names: `24_monster_runner_isolated_review.png`, `24_monster_tank_isolated_review.png`, `24_monster_stalker_isolated_review.png`, and `24_monster_ranged_isolated_review.png`.
+- Source/test commit: `dffd452dbe4c0193fd8b80f9953068f754f28e14`. The new capture test is awaiting its own Flutter CI run; no visual acceptance is claimed until the artifact is inspected.
+- Existing run `45140104935` had Analyze and all Flutter tests passing, Android emulator boot successful, Android integration smoke still running, and release APK build in progress at the last check.
+- Next: inspect the four isolated captures, compare each silhouette to the approved monster reference, then correct only demonstrated art defects. Continue hero face/weapon review and confirm Android smoke + APK verification.
