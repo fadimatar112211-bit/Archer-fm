@@ -1,17 +1,3 @@
-## SUPERSEDING FINAL DIRECTION — 2.5D sprite actors (2026-11-23)
-
-The binding final presentation is **all four heroes as reference-faithful 2D sprite actors with a polished 2.5D appearance inside a lightweight 3D world**, per `VISUAL_DIRECTION_PLAN.md` and `docs/2D_5D_SPRITE_CONVERSION_PLAN.md` (approved 2026-11-21). This supersedes the 3D-only production rule and 3D acceptance steps in the historical audit text below.
-
-- Preserve each hero's exact appearance from `assets/references/approved_all/hero_roster_concept.jpg`.
-- Required final direction coverage, states, five distinct combo steps and four hero-specific Ultimates are defined by the conversion plan.
-- GLBs and Blender sources remain preserved source/diagnostic inputs; live GLB rendering is not the final in-match route.
-- Current GLB integrations and Shadow's temporary sprite fallback are transitional. Do not mark any hero complete until its final 2.5D sprite pack and actual in-game capture pass the conversion plan's gates.
-- Do not enable rejected Flame or Storm atlases, and do not invent replacement art.
-
-Historical 3D-only paragraphs and checklists below are retained for traceability only; where they conflict with the approved conversion plan, this superseding decision wins.
-
----
-
 # Hero Visual Acceptance Audit
 
 Date: 2026-11-21  
