@@ -414,7 +414,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               'قوة الحساب ${_shop?.accountPower ?? 1}',
               style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
-            const Spacer(),
+            SizedBox(height: MediaQuery.sizeOf(context).height < 320 ? 1 : 8),
             Row(
               children: [
                 Expanded(
@@ -460,10 +460,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
           side: BorderSide(color: _hero.theme.accent),
-          minimumSize: Size(0, MediaQuery.sizeOf(context).height < 320 ? 30 : 40),
+          minimumSize: Size(0, MediaQuery.sizeOf(context).height < 320 ? 22 : 40),
           padding: EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: MediaQuery.sizeOf(context).height < 320 ? 2 : 8,
+            horizontal: 5,
+            vertical: MediaQuery.sizeOf(context).height < 320 ? 0 : 8,
           ),
           visualDensity: MediaQuery.sizeOf(context).height < 320
               ? VisualDensity.compact
@@ -472,7 +472,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               ? MaterialTapTargetSize.shrinkWrap
               : MaterialTapTargetSize.padded,
         ),
-        child: Text(label, style: const TextStyle(fontSize: 11)),
+        child: Text(label, style: TextStyle(
+          fontSize: MediaQuery.sizeOf(context).height < 320 ? 9 : 11,
+        )),
       );
 
   Widget _heroesPage() => _card(
@@ -567,7 +569,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
               'المعدات ${_progress.equipment.length}',
               style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
-            const Spacer(),
+            SizedBox(height: MediaQuery.sizeOf(context).height < 320 ? 1 : 8),
             Align(
               alignment: Alignment.centerLeft,
               child: FilledButton(
@@ -575,11 +577,11 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                   backgroundColor: _hero.theme.accent,
                   minimumSize: Size(
                     0,
-                    MediaQuery.sizeOf(context).height < 320 ? 30 : 40,
+                    MediaQuery.sizeOf(context).height < 320 ? 22 : 40,
                   ),
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: MediaQuery.sizeOf(context).height < 320 ? 2 : 8,
+                    horizontal: 8,
+                    vertical: MediaQuery.sizeOf(context).height < 320 ? 0 : 8,
                   ),
                   visualDensity: MediaQuery.sizeOf(context).height < 320
                       ? VisualDensity.compact
@@ -599,8 +601,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     ),
                   ),
                 ),
-                child: const Text('افتح مركز التطوير',
-                    style: TextStyle(fontSize: 11)),
+                child: Text('افتح مركز التطوير',
+                    style: TextStyle(fontSize:
+                      MediaQuery.sizeOf(context).height < 320 ? 9 : 11)),
               ),
             ),
           ],
