@@ -72,7 +72,7 @@ class Hero3DModel {
     // Empirical 0.885 factor: perspective + the depth extent of the body make
     // the drawn height overshoot the planar estimate.
     return pixelHeight /
-        (standing * math.cos(_tiltRadians) * sBar) * 0.885;
+        (standing * math.cos(_tiltRadians) * sBar) * 0.82;
   }
 
   /// Measures the idle pose once so [scaleForPixelHeight] is accurate.

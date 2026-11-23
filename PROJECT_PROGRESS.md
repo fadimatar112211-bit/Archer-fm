@@ -1607,3 +1607,10 @@ Verification:
 - Added a 40-seed arena regression test ensuring every match contains all four distinct biome types and each of the four castle quadrants is covered by its corresponding nearest biome patch.
 - This protects the forest/desert/snow/volcanic regional layout while allowing the biome-to-quadrant assignment to shuffle between matches.
 - No map generation or runtime rendering behaviour was changed.
+
+## 2026-11-23 — Fix overlapping river bridge surfaces and zero-distance movement
+
+- Corrected water classification at river/tributary intersections: a point covered by any bridge deck is now globally dry, even if another channel's water polyline overlaps that deck.
+- Zero-distance movement segments now return the neutral movement factor (1.0) instead of inheriting a water penalty from the stationary point.
+- Reduced isolated 3D hero close-up calibration slightly so tall production models fit the review framing rather than clipping at the top.
+- These changes address observed CI failures; the full suite must confirm the remaining arena and capture cases.

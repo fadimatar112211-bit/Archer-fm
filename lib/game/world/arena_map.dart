@@ -222,10 +222,11 @@ class ArenaMap {
 
   /// True for river water that is not covered by a bridge.
   bool isWater(Offset point) {
-    for (final river in rivers) {
-      if (river.contains(point) && !river.bridgeAt(point)) return true;
-    }
-    return false;
+    // A bridge deck is a shared dry surface. At a river/tributary junction a
+    // point can belong to two channels; checking each channel independently
+    // incorrectly lets the second channel re-classify the deck as water.
+    if (isBridge(point)) return false;
+    return rivers.any((river) => river.contains(point));
   }
 
   bool isBridge(Offset point) => rivers.any((r) => r.bridgeAt(point));
@@ -241,6 +242,7 @@ class ArenaMap {
   /// samples remain dry through [movementFactorAt].
   double movementFactorAlong(Offset from, Offset displacement) {
     final distance = displacement.distance;
+    if (distance <= 0.0001) return 1.0;
     // Keep spatial sampling finer than narrow river edges so a fast movement
     // step cannot jump across a short water strip between two dry samples.
     const sampleSpacing = 8.0;
