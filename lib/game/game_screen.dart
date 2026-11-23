@@ -928,11 +928,13 @@ class _GameScreenState extends State<GameScreen>
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        spacing: 6,
+                        runSpacing: 6,
                         children: [
                           _minePanel(theme),
-                          const SizedBox(width: 6),
                           _castlePanel(theme),
                         ],
                       ),
