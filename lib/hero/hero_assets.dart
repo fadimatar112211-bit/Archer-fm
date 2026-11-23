@@ -83,7 +83,13 @@ class BundleHeroAssetLoader implements HeroAssetLoader {
     if (decoded is! Map<String, dynamic>) {
       throw FormatException('${hero.id} manifest root must be an object');
     }
-    return _manifestCache = HeroManifest.fromJson(decoded);
+    final manifest = HeroManifest.fromJson(decoded);
+    if (manifest.heroId != hero.id) {
+      throw FormatException(
+        'Manifest hero_id ${manifest.heroId} does not match loader hero ${hero.id}',
+      );
+    }
+    return _manifestCache = manifest;
   }
 
   @override
