@@ -2082,3 +2082,10 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - Commits: `0d6e0cd2e7db4d5ff3c94d7db3b3b72648784ad7`, `c644518b0574b32b552e389990498b47faa0852e`, `794b71036817be2192b2cceab11ee6392593041f`.
 - The latest commit lookup returned no associated workflow runs. These are committed tests, not a passing test report; Flutter format, analyze, tests, Android build/smoke and visual capture review remain unverified.
 - Shadow Phase 1 is still open until its full plan-defined animation and visual gates pass. Ranger, Flame and Storm remain on their safe transitional route; monster sprites and lightweight 3D-world integration remain outstanding.
+
+
+### Follow-up — Shadow manifest-to-atlas linkage
+- Extended `test/shadow_walk_atlas_acceptance_test.dart` to validate the runtime `shadow_manifest.json` itself: all eight `walk_<direction>` clips must contain exactly four frame IDs in the expected order, and each clip must point to its matching directional metadata JSON and the approved shared atlas image.
+- This closes the gap between checking that eight metadata files exist and checking that the game manifest actually selects those files.
+- Commit: `f18799b3d81639fb36b86ec093338974ff621abe`.
+- Still unverified by Flutter execution; no workflow run was returned for the latest commit.
