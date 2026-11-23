@@ -1891,3 +1891,11 @@ Verification:
 - Replaced only the mine/castle status-panel `Row` with a wrapping layout using the same panel widgets, order, spacing, and actions. On narrow landscape widths the panels can now move to a second line rather than overflow.
 - Code commit: `8c8756cadb3fb8cfaebfe6ec5c84753e214df407`.
 - No gameplay state, resource values, mine/castle behavior, controls, map generation, or combat logic changed. Await the next Android analyze/test/APK/smoke run before calling the fix verified.
+
+
+## 2026-11-23 — Add compact-landscape match HUD regression coverage
+
+- Added a focused widget test in `test/game_screen_test.dart` that mounts the live match screen at 960×540 logical pixels and asserts that Flutter reports no layout exception/overflow.
+- Parameterized the existing test harness viewport size so the compact-layout case uses the same injected world, hero loader, and real `GameScreen` widget as the existing combat tests.
+- This test supplements the Android smoke test and directly guards the mine/castle wrapping layout against future regressions. It has been committed but has **not yet run in CI**; do not treat the overflow fix as verified until the test and Android smoke both pass.
+- Test commit: `4c0f4e76288cf68d82f0d279af779e7be5437917`.
