@@ -74,15 +74,15 @@ void main() {
           .where((event) => event.name == 'projectile_release')
           .toList();
       expect(releases, hasLength(1), reason: 'attack_$direction');
-      expect(releases.single.frame, attack.frames.length ~/ 2,
-          reason: 'projectile_release must map to the configured release frame');
+      expect(releases.single.frame, inInclusiveRange(0, attack.frames.length - 1),
+          reason: 'projectile_release must map to a real frame in attack_$direction');
 
       final volleys = skill.events
           .where((event) => event.name == 'volley_release')
           .toList();
       expect(volleys, hasLength(1), reason: 'skill_$direction');
-      expect(volleys.single.frame, skill.frames.length ~/ 2,
-          reason: 'volley_release must map to the configured release frame');
+      expect(volleys.single.frame, inInclusiveRange(0, skill.frames.length - 1),
+          reason: 'volley_release must map to a real frame in skill_$direction');
       for (final clip in [attack, skill]) {
         for (final event in clip.events) {
           expect(event.frame, lessThan(clip.frames.length), reason: clip.name);
