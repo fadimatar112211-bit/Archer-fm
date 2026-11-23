@@ -13,8 +13,9 @@ import 'package:flutter/material.dart';
 /// divide → backface cull → depth buckets → `Canvas.drawVertices` with the
 /// model's embedded base-colour texture and per-vertex lambert shading.
 class Hero3DModel {
-  Hero3DModel(this.model)
-      : poser = Poser(model),
+  Hero3DModel(this.model, {String? heroId})
+      : scaleMultiplier = heroId == 'shadow' ? 1.04 : 1.0,
+        poser = Poser(model),
         _skinned = Float32List(model.vertexCount * 3),
         _skinnedNormals = Float32List(model.vertexCount * 3),
         _restBbox = _bboxOf(model.positions) {
@@ -33,6 +34,10 @@ class Hero3DModel {
 
   final GlbModel model;
   final Poser poser;
+
+  /// Small per-hero review calibration; gameplay collision and world scale
+  /// remain unchanged. Shadow's source rig has a shorter standing silhouette.
+  final double scaleMultiplier;
 
   final Float32List _skinned;
   final Float32List _skinnedNormals;
@@ -73,7 +78,7 @@ class Hero3DModel {
     // Ranger at 718.5px with a 700px target at 0.82; 0.79 provides a small
     // safety margin for pose/yaw variation without changing world collision.
     return pixelHeight /
-        (standing * math.cos(_tiltRadians) * sBar) * 0.79;
+        (standing * math.cos(_tiltRadians) * sBar) * 0.79 * scaleMultiplier;
   }
 
   /// Measures the idle pose once so [scaleForPixelHeight] is accurate.
