@@ -150,4 +150,67 @@ void main() {
     }
   });
 
+
+  test('manifest rejects duplicate atlas mappings for one animation', () {
+    final json = _minimalManifest();
+    json['atlases'] = [
+      {'animation': 'idle_s', 'image': 'idle.png', 'meta': 'idle.json'},
+      {'animation': 'idle_s', 'image': 'idle-copy.png', 'meta': 'idle-copy.json'},
+    ];
+
+    expect(
+      () => HeroManifest.fromJson(json),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('manifest rejects clips without atlas mappings', () {
+    final json = _minimalManifest();
+    json['animations'] = {
+      'idle_s': {
+        'loop': true,
+        'frame_duration_ms': 100,
+        'frames': ['idle_0'],
+      },
+      'walk_s': {
+        'loop': true,
+        'frame_duration_ms': 100,
+        'frames': ['walk_0'],
+      },
+    };
+
+    expect(
+      () => HeroManifest.fromJson(json),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test('manifest rejects atlas mappings to unknown clips', () {
+    final json = _minimalManifest();
+    json['atlases'] = [
+      {'animation': 'attack_s', 'image': 'attack.png', 'meta': 'attack.json'},
+    ];
+
+    expect(
+      () => HeroManifest.fromJson(json),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
 }
+
+Map<String, dynamic> _minimalManifest() => {
+  'hero_id': 'test_hero',
+  'frame_size': {'width': 64, 'height': 64},
+  'pivot': {'x': 0.5, 'y': 1.0},
+  'animations': {
+    'idle_s': {
+      'loop': true,
+      'frame_duration_ms': 100,
+      'frames': ['idle_0'],
+    },
+  },
+  'atlases': [
+    {'animation': 'idle_s', 'image': 'idle.png', 'meta': 'idle.json'},
+  ],
+};
