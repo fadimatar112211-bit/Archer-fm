@@ -233,6 +233,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
+    final compactLandscape = size.height < 320;
     return Scaffold(
       body: Stack(
         children: [
@@ -262,7 +263,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 const Spacer(),
                 _pageIndicator(),
                 SizedBox(
-                  height: 132,
+                  height: compactLandscape ? 96 : 132,
                   child: PageView(
                     key: const ValueKey('home_page_view'),
                     controller: _pages,
@@ -275,9 +276,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: compactLandscape ? 4 : 10),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: compactLandscape ? 6 : 12),
                   child: FilledButton.icon(
                     key: const ValueKey('home_play'),
                     onPressed: _openArmySelection,
