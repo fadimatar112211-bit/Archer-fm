@@ -1855,3 +1855,12 @@ Verification:
 - Added compact timber-deck markers for every generated river bridge, using the bridge's actual center, width, depth and angle rather than guessed screen positions.
 - No map generation, collision, river slowdown, bridge walkability, castle placement, or fog reveal rules changed.
 - Code commit: `b4344ab9fe62f4ac8a6f4d0c0950f7dde0123279`. Await Flutter analyze/tests and visual capture before treating the minimap change as verified.
+
+
+## 2026-11-23 — Fix compact-landscape home menu overflow found by Android smoke
+
+- Latest Android run `45147414157` completed Flutter analyze, all unit/widget tests, release APK build, APK signature verification, and artifact upload successfully; the emulator smoke job failed before entering army selection.
+- The smoke log identifies a real UI issue at `lib/game/home_screen.dart:260`: the home menu's vertical `Column` overflowed by 46 logical pixels on the compact landscape emulator (available body height about 182 px). The following title lookup consequently failed; this is a layout/navigation-test failure, not evidence of an emulator crash.
+- Reduced the compact-landscape home header and action-button footprint, hid the nonessential page indicator in this short-height mode, and reduced the page carousel height while preserving all controls and normal-height layout.
+- Added a bounded extra route-transition pump to the integration smoke test before checking the army-selection title.
+- Code change: `79821f43de517eca55075963c81ebabec90568bc`; smoke-test timing update is being committed separately. The responsive fix is not yet verified; await the next Android CI run.
