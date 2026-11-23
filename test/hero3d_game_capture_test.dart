@@ -182,7 +182,7 @@ void main() {
       for (final entry in heroes) {
         final bytes = File(entry[0]).readAsBytesSync();
         final model = await GlbModel.load(Uint8List.fromList(bytes));
-        final hero3d = Hero3DController(Hero3DModel(model, heroId: entry[1] as String));
+        final hero3d = Hero3DController(Hero3DModel(model, heroId: entry[1]));
         hero3d.model.calibrate();
         expect(model.jointNames.length, greaterThan(0), reason: entry[1]);
         expect(model.clips.keys, containsAll([
