@@ -2031,3 +2031,9 @@ This batch follows the existing approved conversion plan without changing its ob
 - Source and test files are committed on `ranger-reference-work`.
 - No current GitHub Actions run was returned for this checkpoint. Flutter formatting, analyze, the complete test suite, Android release build, emulator match smoke and visual capture review have **not** been verified for these latest commits.
 - Phase 1 remains open until the test suite runs and eight-direction gameplay captures demonstrate correct facing, ground contact, no clipping and no identity drift. This batch strengthens the runtime asset proof; it does not claim the phase is complete.
+
+
+### Additional Shadow visual-capture coverage
+- Added `test/shadow_walk_capture_test.dart`. It decodes the supplied 8×4 atlas once, loads each of the eight original directional metadata files, and renders all 32 poses through the production `ArenaPainter` at the normal 800×450 gameplay capture size.
+- The test writes 32 PNGs under `build/arena-captures/shadow-walk/` for visual inspection by the existing capture-artifact workflow. It verifies each frame resolves to a real source rectangle and each rendered PNG is non-empty.
+- This is a capture-generation test only; no fresh capture artifact exists until CI runs it and uploads the output.
