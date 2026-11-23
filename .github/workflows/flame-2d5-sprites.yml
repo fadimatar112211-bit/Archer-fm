@@ -1,7 +1,7 @@
-name: Build All Four Hero 2.5D Sprite Packs
+name: Validate Four Hero Sprite Runtime Bundles
 
 concurrency:
-  group: archer-fm-hero-sprites-${{ github.ref }}
+  group: archer-fm-hero-runtime-contracts-${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -10,140 +10,49 @@ on:
     branches:
       - ranger-reference-work
     paths:
-      - 'tools/blender/**'
-      - 'tools/pack_hero_atlases.py'
-      - 'tools/validate_hero_assets.py'
-      - 'tools/tests/**'
-      - 'assets/heroes/render_pipeline_config.json'
-      - 'assets/heroes/ranger_new/source/render_config.json'
+      - 'lib/hero/**'
+      - 'lib/game/render3/**'
+      - 'test/**'
+      - 'assets/heroes/**/renders/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
       - '.github/workflows/flame-2d5-sprites.yml'
 
 permissions:
   contents: read
 
 jobs:
-  render-hero:
-    name: Build ${{ matrix.hero }} sprites
+  hero-runtime-contracts:
+    name: Verify approved hero sprite runtime contracts
     runs-on: ubuntu-22.04
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        hero: [flame, shadow, storm]
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Blender and image validation tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3-pil xvfb libegl1 libgl1
-          curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
-          sudo tar -xJf /tmp/blender.tar.xz -C /opt
-          echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
-          /opt/blender-3.6.13-linux-x64/blender --version
-
-      - name: Run sprite pipeline Python regression tests
-        run: python3 -m unittest discover -s tools/tests -p 'test_*.py' -v
-
-      - name: Select hero and build its dedicated source scene
-        env:
-          HERO: ${{ matrix.hero }}
-        run: |
-          echo "$HERO" > tools/blender/active_hero.txt
-          case "$HERO" in flame|shadow|storm) ;; *) echo "Unsupported hero: $HERO"; exit 1 ;; esac
-          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background --factory-startup --python tools/blender/build_ranger_source.py
-          BLEND="assets/heroes/$HERO/source/${HERO}_source.blend"
-          test -s "$BLEND"
-          echo "BLEND=$BLEND" >> "$GITHUB_ENV"
-          echo "RENDER_ROOT=assets/heroes/$HERO/renders" >> "$GITHUB_ENV"
-          echo "MANIFEST=assets/heroes/$HERO/renders/${HERO}_manifest.json" >> "$GITHUB_ENV"
-
-      - name: Validate source rig and authored animations
-        run: |
-          "$BLENDER" --background "$BLEND" --python tools/blender/validate_ranger_source.py
-
-      - name: Render eight directions and all authored states
-        run: |
-          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/render_pipeline_config.json
-
-      - name: Validate transparent frames, alignment and motion
-        run: |
-          test -s "$MANIFEST"
-          python3 tools/blender/validate_rendered_frames.py --root "$RENDER_ROOT" --resolution 192
-
-      - name: Pack atlases and validate final sprite manifest
-        run: |
-          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
-          python3 tools/validate_hero_assets.py "$MANIFEST" --require-motion
-
-      - name: Upload generated hero source and sprite bundle
-        uses: actions/upload-artifact@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          name: archer-fm-${{ matrix.hero }}-2d5-sprite-pack
-          path: |
-            assets/heroes/_sprite_bundles/${{ matrix.hero }}/renders/
-            assets/heroes/${{ matrix.hero }}/source/${{ matrix.hero }}_source.blend
-          if-no-files-found: error
-          retention-days: 30
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
 
-  build-ranger-new:
-    name: Build playable Ranger sprites
-    runs-on: ubuntu-22.04
-    timeout-minutes: 90
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Install Blender and image validation tools
+      - name: Verify four production manifests and runtime bundles
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3-pil xvfb libegl1 libgl1
-          curl -L --fail --retry 3 https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz -o /tmp/blender.tar.xz
-          sudo tar -xJf /tmp/blender.tar.xz -C /opt
-          echo "BLENDER=/opt/blender-3.6.13-linux-x64/blender" >> "$GITHUB_ENV"
-          /opt/blender-3.6.13-linux-x64/blender --version
+          flutter test --reporter expanded \
+            test/all_hero_render_manifest_test.dart \
+            test/all_hero_runtime_bundle_test.dart \
+            test/hero_catalog_test.dart \
+            test/hero_render_policy_test.dart \
+            test/hero_manifest_test.dart
 
-      - name: Run hero render and frame-quality regression tests
-        run: python3 -m unittest tools.tests.test_hero_render_config tools.tests.test_rendered_frame_quality -v
-
-      - name: Select the actual playable Ranger
+      - name: Verify Shadow pilot and shared sprite renderer
         run: |
-          echo "ranger_new" > tools/blender/active_hero.txt
-          test -s assets/heroes/ranger_new/source/ranger_new_source.blend
-          echo "BLEND=assets/heroes/ranger_new/source/ranger_new_source.blend" >> "$GITHUB_ENV"
-          echo "RENDER_ROOT=assets/heroes/ranger_new/renders" >> "$GITHUB_ENV"
-          echo "MANIFEST=assets/heroes/ranger_new/renders/ranger_new_manifest.json" >> "$GITHUB_ENV"
-
-      - name: Validate original Ranger rig and authored actions
-        run: |
-          "$BLENDER" --background "$BLEND" --python tools/blender/validate_ranger_new_source.py
-
-      - name: Render Ranger in eight directions and all states
-        run: |
-          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/render_hero.py -- --config assets/heroes/ranger_new/source/render_config.json
-
-      - name: Validate Ranger frames and motion
-        run: |
-          test -s "$MANIFEST"
-          python3 tools/blender/validate_rendered_frames.py --root "$RENDER_ROOT" --resolution 192
-
-      - name: Pack and validate playable Ranger atlases
-        run: |
-          export PYTHONPATH="/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"
-          xvfb-run -a "$BLENDER" --background "$BLEND" --python tools/blender/pack_hero_atlases.py -- --manifest "$MANIFEST"
-          python3 tools/validate_hero_assets.py "$MANIFEST"
-
-      - name: Upload playable Ranger source and sprite bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: archer-fm-ranger-new-2d5-sprite-pack
-          path: |
-            assets/heroes/_sprite_bundles/ranger_new/renders/
-            assets/heroes/ranger_new/source/ranger_new_source.blend
-          if-no-files-found: error
-          retention-days: 30
+          flutter test --reporter expanded \
+            test/shadow_walk_atlas_acceptance_test.dart \
+            test/shadow_walk_runtime_test.dart \
+            test/sprite_actor_renderer_test.dart \
+            test/sprite_actor_clip_resolver_test.dart
