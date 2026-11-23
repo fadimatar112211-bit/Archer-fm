@@ -20,7 +20,7 @@ on:
       - 'test/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   shadow-combat:
@@ -37,9 +37,22 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
-      - name: Check formatting
+      - name: Format changed Dart sources
+        run: dart format lib/game/game_screen.dart lib/game/world/game_world.dart test/game_world_test.dart test/shadow_manifest_events_test.dart
+      - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed lib/game/game_screen.dart lib/game/world/game_world.dart test/game_world_test.dart test/shadow_manifest_events_test.dart
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Run focused combat and animation tests
         run: flutter test --reporter expanded test/game_world_test.dart test/shadow_manifest_events_test.dart test/sprite_player_test.dart
+
+      - name: Commit formatter output on branch pushes
+        if: success() && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/game/game_screen.dart lib/game/world/game_world.dart test/game_world_test.dart test/shadow_manifest_events_test.dart
+          if ! git diff --cached --quiet; then
+            git commit -m "Format Shadow Twin Fangs implementation"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
