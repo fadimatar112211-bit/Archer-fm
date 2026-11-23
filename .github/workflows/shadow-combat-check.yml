@@ -1,5 +1,9 @@
 name: Shadow Combat Checks
 
+concurrency:
+  group: shadow-combat-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -47,7 +51,7 @@ jobs:
         run: flutter test --reporter expanded test/game_world_test.dart test/shadow_manifest_events_test.dart test/all_hero_render_manifest_test.dart test/hero_manifest_test.dart test/sprite_player_test.dart test/sprite_actor_clip_resolver_test.dart test/sprite_actor_renderer_test.dart
 
       - name: Commit formatter output on branch pushes
-        if: success() && github.event_name == 'push'
+        if: always() && github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
