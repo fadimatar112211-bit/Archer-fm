@@ -12,11 +12,13 @@
 
 ## Scope lock
 
-## Final runtime art direction — fully 3D
+## Final runtime art direction — reference-faithful 2D/2.5D sprites
 
-All four monster types must ship as reference-faithful, genuinely 3D skinned actors inside the lightweight 3D arena. Their geometry, materials, proportions, face/headgear, armor/clothing, signature weapons and effects must match the exact user-approved monster reference sheet. Do not use the procedural low-poly prototype GLBs as final art; those outputs are review-only and were rejected in visual review.
+All four monster types ship as camera-facing sprite actors in the lightweight 3D arena. Their rendered frames must preserve the exact approved reference designs: head/face, anatomy, armor/clothing, proportions, signature weapons, palette and effects. The sprites must read as dimensional 2.5D artwork at the actual gameplay camera scale; do not substitute generic recolored bodies or the rejected low-poly GLB previews.
 
-The final runtime actors require real rigs and coherent idle, walk/locomotion, attack, hit and death animations. Preserve existing gameplay timing/events in the simulation; animation must not independently apply damage. Do not impose an eight-direction sprite-atlas requirement on the final 3D actors. Keep the current procedural Canvas renderer as a temporary safe fallback until each 3D monster passes source/rig validation, reference silhouette and weapon review, animation/deformation review, gameplay-scale capture, and actual in-game review. Promote one monster at a time only after acceptance.
+The production pack must cover the directions and states required by the game's actual facing/animation system. Required states are idle, locomotion, attack, hit and death; Runner also needs a readable fast-run treatment, and Ranged needs a clear cast/release pose while retaining its projectile gameplay. Keep damage, projectile release and other combat events owned by the simulation. Validate frame bounds, alpha, pivots, scale, animation continuity and gameplay-distance readability. Keep the procedural Canvas renderer as a safe fallback until each monster's sprite pack passes visual and technical review. Promote one monster at a time only after acceptance.
+
+Blender/GLB sources may be retained for source inspection or offline sprite rendering, but are not live runtime actors.
 
 
 - Keep exactly four types: Runner, Tank, Stalker, Ranged.
@@ -36,10 +38,10 @@ The final runtime actors require real rigs and coherent idle, walk/locomotion, a
 - Current procedural visual capture test: `test/monster_capture_test.dart`.
 
 ### Current visual pipeline
-- Heroes use GLB models, but monsters are still drawn procedurally with Flutter Canvas.
-- The repository tree contains no dedicated monster GLB/BLEND production assets or monster rig/animation manifests.
+- The approved target for both heroes and monsters is 2D/2.5D sprite actors; the current monster production route still draws procedural placeholders with Flutter Canvas.
+- The repository tree has no accepted monster sprite production packs. Any Blender/GLB prototype is review/source material only and must not be mistaken for a runtime-ready sprite pack.
 - The capture test creates all four friendly and hostile types, a walking pose, an attacking pose and a corpse. However, the current Android workflow artifact from run 44465905653 contains hero/arena captures only; it does not provide fresh monster close-ups for visual acceptance.
-- The current painter has basic silhouettes, colors, eyes, weapons, team rings, hit flash, burning indicator and HP bars. These are a useful fallback, not evidence of reference-quality 3D monsters.
+- The current painter has basic silhouettes, colors, eyes, weapons, team rings, hit flash, burning indicator and HP bars. These are gameplay placeholders, not reference-approved 2D/2.5D art.
 
 ## Approved four-role visual brief (steps 2–4)
 
@@ -65,16 +67,16 @@ The final runtime actors require real rigs and coherent idle, walk/locomotion, a
 - Preserve the existing ranged projectile behavior, projectile timing and attack distance. The blades define the character's approved appearance; they do not authorize changing the unit into a melee attacker.
 - Projectile launch and impact must remain visually distinct from melee strikes and be visible in gameplay captures.
 
-## Shared model and animation requirements (step 5 source gate)
+## Shared sprite and animation requirements (step 5 production gate)
 
-Each final monster asset must provide:
-- A clean, centered, ground-aligned mesh with consistent scale and readable face/weapon.
-- A usable skeleton/rig (or a documented animation-ready equivalent).
-- Embedded or correctly referenced materials/textures with no missing-texture fallback.
-- Gameplay clips: idle, walk, attack, hit and death. A run/dash clip is additionally required for Runner; a ranged cast/release pose is required for Ranged.
-- Stable facing/orientation and feet contact with the arena ground.
-- No mesh self-intersection, detached weapon, floating feet, or broken deformation at key poses.
-- A manifest mapping gameplay states to clip names and timing/events, plus a validated fallback.
+Each final monster sprite pack must provide:
+- A transparent atlas (or clearly documented set of directional frame images) with stable frame dimensions and consistent character scale.
+- Readable face, silhouette and signature weapon at actual gameplay size.
+- The genuine directions required by the runtime facing system; do not fake missing directions by mirroring unless the source and design are truly symmetric and the visual review approves it.
+- Idle, locomotion, attack, hit and death states; Runner's fast movement and Ranged's projectile cast/release must be visually distinct.
+- Stable ground pivot, feet contact, alpha edges and frame-to-frame placement.
+- A manifest mapping each runtime state/direction to its actual source frames, with no blank, unrelated or placeholder frames.
+- A validated Canvas fallback retained until the sprite pack is accepted.
 
 ### Asset source decision and prototype status
 - The free Blender generator has been revised to direct the four prototype silhouettes and palettes toward the approved reference: Runner/green sword goblin, Tank/horned mace brute, Stalker/ivory skeleton with paired blades, and Ranged/purple masked infiltrator. These are procedural prototype changes, not a guarantee of reference fidelity.
@@ -128,16 +130,16 @@ The new CI preview must be reviewed before any runtime integration.
 ### Evidence limitations
 - Existing test coverage proves mechanics and renderer execution, not final art quality.
 - No monster visual capture was included in the latest run 44465905653 artifact.
-- No new monster model has been produced or integrated in batch 1.
+- No reference-approved monster sprite pack has been produced or integrated in batch 1.
 - Therefore batch 1 is an audit/specification completion, not a claim that the monsters are visually finished.
 
 ## Next batch: prototype validation and acceptance
 
-1. Complete the Blender-to-GLB build and validate all four exported files, skeletons, embedded materials and required animation clips.
-2. Review the four preview renders side-by-side against the approved reference sheet; reject any face, silhouette, color or weapon mismatch.
-3. Inspect gameplay-distance captures at the actual arena camera scale, including friendly/enemy colors, health bars and projectile effects.
-4. Fix any deformations, detached weapons, floating feet, animation clipping or unreadable faces; rebuild and revalidate.
-5. Only after explicit visual acceptance, prepare runtime asset integration while retaining the procedural Canvas renderer as a fallback.
+1. Inventory and preserve any original monster source art, meshes, Blender scenes and animation inputs; do not overwrite approved references.
+2. Build the green goblin Runner sprite pack first from the exact approved reference and verified source material; stop rather than invent geometry if the required source is unavailable.
+3. Validate atlas dimensions, alpha, frame rectangles, pivots, direction coverage and state mapping automatically.
+4. Capture the sprites beside the hero in the real 16:9 arena and compare them directly with the approved monster reference at gameplay scale.
+5. Promote only the individually accepted sprite pack; keep the procedural Canvas fallback for every unaccepted monster.
 
 Do not proceed to runtime replacement based on structural validation alone. Keep the Canvas renderer available as fallback.
 
