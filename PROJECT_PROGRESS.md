@@ -2107,3 +2107,19 @@ This is a test-hardening continuation of the first sprite migration batch. No vi
 - This strengthens the Phase 2 reusable-renderer gate without inventing or promoting any character artwork, changing gameplay, or enabling an unapproved hero pack.
 - Commit: `f9adbb8320afe72ab971b7eae6c5f80bc3d8793d`.
 - Verification limitation: the test has been added but has **not** been executed in Flutter in this session. No passing-test or CI claim is made. Shadow Phase 1, all hero/monster visual acceptance, and the lightweight 3D-world integration remain open.
+
+
+## 2026-11-23 — Strict hero manifest atlas coverage
+
+### Implemented
+- Hardened `HeroManifest.fromJson` to reject duplicate atlas entries for one animation, atlas entries that point to unknown clips, and animation clips with no atlas mapping.
+- Added focused regression tests for all three malformed-manifest cases in `test/hero_manifest_test.dart`.
+- Audited the five checked-in hero manifests on this branch (Ranger, Flame, Ranger New, Storm and Shadow): each currently declares 64 animation clips and 64 atlas mappings, with no missing, unknown or duplicate animation mapping. This is a structural audit only; it is not visual acceptance of the atlases or their animation content.
+- Commits:
+  - `54b52ad44368cd97884529115d3e193c2bb362e7` — parser validation.
+  - `0b22acd9a40c229e5649c01ba36d705ed0d848f2` — regression tests.
+
+### Verification and limitations
+- Source files and test additions are committed. Flutter tests/analyze/format/build have not been executed in this session, and no CI success is claimed.
+- Existing manifests passed the read-only structural comparison described above; the runtime parser's new rejection tests still require execution.
+- This change does not approve any hero artwork, does not convert the three transitional heroes, and does not turn Shadow's held-frame attack/skill/hit/death placeholders into accepted animations. Monster art and lightweight 3D-world integration remain outstanding.
