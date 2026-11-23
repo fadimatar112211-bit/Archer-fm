@@ -1,0 +1,2103 @@
+{
+  "files_inspected": [
+    {
+      "movement": "idle",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/idle/e",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/idle/n",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/idle/ne",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/idle/nw",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/idle/s",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/idle/se",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/idle/sw",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "idle",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/idle/w",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/walk/e",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/walk/n",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/walk/ne",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/walk/nw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/walk/s",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/walk/se",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/walk/sw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "walk",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/walk/w",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/run/e",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/run/n",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/run/ne",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/run/nw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/run/s",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/run/se",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/run/sw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "run",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/run/w",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/attack/e",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/attack/n",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/attack/ne",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/attack/nw",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/attack/s",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/attack/se",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/attack/sw",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "attack",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/attack/w",
+      "expected_count": 7,
+      "actual_count": 7,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/skill/e",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/skill/n",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/skill/ne",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/skill/nw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/skill/s",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/skill/se",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/skill/sw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "skill",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/skill/w",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/dodge/e",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/dodge/n",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/dodge/ne",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/dodge/nw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/dodge/s",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/dodge/se",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/dodge/sw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "dodge",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/dodge/w",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/hit/e",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/hit/n",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/hit/ne",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/hit/nw",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/hit/s",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/hit/se",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/hit/sw",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "hit",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/hit/w",
+      "expected_count": 5,
+      "actual_count": 5,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "e",
+      "path": "assets/heroes/shadow/renders/death/e",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "n",
+      "path": "assets/heroes/shadow/renders/death/n",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "ne",
+      "path": "assets/heroes/shadow/renders/death/ne",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "nw",
+      "path": "assets/heroes/shadow/renders/death/nw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "s",
+      "path": "assets/heroes/shadow/renders/death/s",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "se",
+      "path": "assets/heroes/shadow/renders/death/se",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "sw",
+      "path": "assets/heroes/shadow/renders/death/sw",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    },
+    {
+      "movement": "death",
+      "direction": "w",
+      "path": "assets/heroes/shadow/renders/death/w",
+      "expected_count": 9,
+      "actual_count": 9,
+      "count_match": true
+    }
+  ],
+  "png_tests": [],
+  "atlas_tests": [],
+  "manifest_tests": [
+    {
+      "test": "manifest الهيكل العام",
+      "passed": true,
+      "detail": "جميع الحقول الأساسية صحيحة"
+    }
+  ],
+  "blender_tests": [
+    {
+      "test": "وجود Armature",
+      "passed": true,
+      "detail": "1 Armature(s)"
+    },
+    {
+      "test": "وجود Keyframes/Actions",
+      "passed": true,
+      "detail": "8 Action(s)"
+    },
+    {
+      "test": "ربط الميش بالعظام",
+      "passed": true,
+      "detail": "154 ميش مرتبط"
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "png_total": 560,
+    "png_passed": 560,
+    "png_failed": 0,
+    "atlas_total": 128,
+    "atlas_passed": 128,
+    "atlas_failed": 0,
+    "manifest_errors": 0,
+    "blender_available": true,
+    "blender_inspected": true,
+    "contact_sheets_created": 9,
+    "errors_count": 0,
+    "warnings_count": 0
+  },
+  "blender": {
+    "available": true,
+    "file_exists": true,
+    "inspected": true,
+    "details": {
+      "armature_count": 1,
+      "armature_names": [
+        "Shadow_Rig"
+      ],
+      "armature_Shadow_Rig_bones": 30,
+      "armature_Shadow_Rig_bone_names": [
+        "root",
+        "hips",
+        "spine",
+        "chest",
+        "neck",
+        "head",
+        "shoulder.L",
+        "upper_arm.L",
+        "forearm.L",
+        "hand.L",
+        "bow",
+        "string_rest",
+        "string_drawn",
+        "fx",
+        "fx_draw",
+        "shoulder.R",
+        "upper_arm.R",
+        "forearm.R",
+        "hand.R",
+        "cloak_a",
+        "cloak_b",
+        "cloak_c",
+        "quiver",
+        "thigh.L",
+        "shin.L",
+        "foot.L",
+        "thigh.R",
+        "shin.R",
+        "foot.R",
+        "aura"
+      ],
+      "mesh_count": 154,
+      "mesh_names": [
+        "Aura_Flame_0",
+        "Aura_Flame_1",
+        "Aura_Flame_2",
+        "Aura_Flame_3",
+        "Aura_Flame_4",
+        "Aura_Flame_5",
+        "Aura_Flame_6",
+        "Aura_Flame_7",
+        "Aura_Ring",
+        "Back_Scabbard",
+        "Belt",
+        "Blade_Flame_0",
+        "Blade_Flame_1",
+        "Blade_Flame_2",
+        "Blade_Flame_3",
+        "Boot_Cuff_L",
+        "Boot_Cuff_R",
+        "Boot_Foot_L",
+        "Boot_Foot_R",
+        "Boot_Shaft_L",
+        "Boot_Shaft_R",
+        "Boot_Strap_L",
+        "Boot_Strap_R",
+        "Bracer_Buckle_L",
+        "Bracer_Buckle_R",
+        "Bracer_L",
+        "Bracer_R",
+        "Bracer_Strap_L_0",
+        "Bracer_Strap_L_1",
+        "Bracer_Strap_R_0",
+        "Bracer_Strap_R_1",
+        "Brow_L",
+        "Brow_R",
+        "Buckle",
+        "Buckle_Pin",
+        "Chest_Band_0",
+        "Chest_Band_1",
+        "Chest_Band_2",
+        "Chest_Band_3",
+        "Chest_Center_Plate",
+        "Chest_Center_Trim",
+        "Chest_Strap_0",
+        "Chest_Strap_1",
+        "Chest_Strap_Ring",
+        "Chest_Stud_0",
+        "Chest_Stud_1",
+        "Chest_Stud_2",
+        "Chest_Stud_3",
+        "Chest_Trim_0",
+        "Chest_Trim_1",
+        "Chest_Trim_2",
+        "Chest_Trim_3",
+        "Cloak_0",
+        "Cloak_1",
+        "Cloak_Clasp",
+        "Cloak_Gem",
+        "Collar",
+        "Dagger_Blade_L",
+        "Dagger_Blade_R",
+        "Dagger_Edge_L",
+        "Dagger_Edge_R",
+        "Dagger_Grip_L",
+        "Dagger_Grip_R",
+        "Dagger_Guard_L",
+        "Dagger_Guard_R",
+        "Dagger_Pommel_L",
+        "Dagger_Pommel_R",
+        "Ear_Inner_L",
+        "Ear_Inner_R",
+        "Ear_L",
+        "Ear_R",
+        "Eye_Glint_L",
+        "Eye_Glint_R",
+        "Eye_Glint_Small_L",
+        "Eye_Glint_Small_R",
+        "Eye_Iris_L",
+        "Eye_Iris_Low_L",
+        "Eye_Iris_Low_R",
+        "Eye_Iris_R",
+        "Eye_Lash_L",
+        "Eye_Lash_R",
+        "Eye_Pupil_L",
+        "Eye_Pupil_R",
+        "Eye_White_L",
+        "Eye_White_R",
+        "Face_Head",
+        "Glove_Cuff_L",
+        "Glove_Cuff_R",
+        "Glove_L",
+        "Glove_R",
+        "Hip_Plate_L",
+        "Hip_Plate_R",
+        "Hip_Pouch_Flap_L",
+        "Hip_Pouch_Flap_R",
+        "Hip_Pouch_L",
+        "Hip_Pouch_R",
+        "Hip_Trim_L",
+        "Hip_Trim_R",
+        "Hood_Down",
+        "Knee_Cap_L",
+        "Knee_Cap_R",
+        "Knee_Plate_L",
+        "Knee_Plate_R",
+        "Mouth",
+        "Nose",
+        "Pauldron_Inset_L",
+        "Pauldron_Inset_R",
+        "Pauldron_L_0",
+        "Pauldron_L_1",
+        "Pauldron_L_2",
+        "Pauldron_R_0",
+        "Pauldron_R_1",
+        "Pauldron_R_2",
+        "Pauldron_Rim_L",
+        "Pauldron_Rim_R",
+        "Pelvis",
+        "Shadow_Core",
+        "Shadow_Cowl_L",
+        "Shadow_Cowl_R",
+        "Shadow_Hood",
+        "Shadow_Hood_Brim",
+        "Shadow_Hood_Peak",
+        "Shadow_Hood_Point",
+        "Shadow_Mask",
+        "Shadow_Mask_Edge",
+        "Shadow_Pauldron_L",
+        "Shadow_Pauldron_R",
+        "Shadow_Vambrace_L",
+        "Shadow_Vambrace_L_2",
+        "Shadow_Vambrace_R",
+        "Shadow_Vambrace_R_2",
+        "Shadow_Vortex",
+        "Shadow_Wisp_0",
+        "Shadow_Wisp_1",
+        "Shadow_Wisp_2",
+        "Shadow_Wisp_3",
+        "Shadow_Wisp_4",
+        "Shadow_Wisp_5",
+        "Shin_Plate_L",
+        "Shin_Plate_R",
+        "Shoulder_Mantle_L",
+        "Shoulder_Mantle_R",
+        "Sleeve_L",
+        "Sleeve_R",
+        "Sole_L",
+        "Sole_R",
+        "Thigh_L",
+        "Thigh_R",
+        "Thumb_L",
+        "Thumb_R",
+        "Toe_Cap_L",
+        "Toe_Cap_R",
+        "Torso_Lower",
+        "Torso_Upper"
+      ],
+      "mesh_Aura_Flame_0_has_armature_modifier": true,
+      "mesh_Aura_Flame_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_0_vertex_groups": 1,
+      "mesh_Aura_Flame_0_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_1_has_armature_modifier": true,
+      "mesh_Aura_Flame_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_1_vertex_groups": 1,
+      "mesh_Aura_Flame_1_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_2_has_armature_modifier": true,
+      "mesh_Aura_Flame_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_2_vertex_groups": 1,
+      "mesh_Aura_Flame_2_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_3_has_armature_modifier": true,
+      "mesh_Aura_Flame_3_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_3_vertex_groups": 1,
+      "mesh_Aura_Flame_3_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_4_has_armature_modifier": true,
+      "mesh_Aura_Flame_4_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_4_vertex_groups": 1,
+      "mesh_Aura_Flame_4_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_5_has_armature_modifier": true,
+      "mesh_Aura_Flame_5_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_5_vertex_groups": 1,
+      "mesh_Aura_Flame_5_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_6_has_armature_modifier": true,
+      "mesh_Aura_Flame_6_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_6_vertex_groups": 1,
+      "mesh_Aura_Flame_6_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Flame_7_has_armature_modifier": true,
+      "mesh_Aura_Flame_7_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Flame_7_vertex_groups": 1,
+      "mesh_Aura_Flame_7_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Aura_Ring_has_armature_modifier": true,
+      "mesh_Aura_Ring_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Aura_Ring_vertex_groups": 1,
+      "mesh_Aura_Ring_vertex_group_names": [
+        "aura"
+      ],
+      "mesh_Back_Scabbard_has_armature_modifier": true,
+      "mesh_Back_Scabbard_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Back_Scabbard_vertex_groups": 1,
+      "mesh_Back_Scabbard_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Belt_has_armature_modifier": true,
+      "mesh_Belt_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Belt_vertex_groups": 1,
+      "mesh_Belt_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Blade_Flame_0_has_armature_modifier": true,
+      "mesh_Blade_Flame_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Blade_Flame_0_vertex_groups": 1,
+      "mesh_Blade_Flame_0_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Blade_Flame_1_has_armature_modifier": true,
+      "mesh_Blade_Flame_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Blade_Flame_1_vertex_groups": 1,
+      "mesh_Blade_Flame_1_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Blade_Flame_2_has_armature_modifier": true,
+      "mesh_Blade_Flame_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Blade_Flame_2_vertex_groups": 1,
+      "mesh_Blade_Flame_2_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Blade_Flame_3_has_armature_modifier": true,
+      "mesh_Blade_Flame_3_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Blade_Flame_3_vertex_groups": 1,
+      "mesh_Blade_Flame_3_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Boot_Cuff_L_has_armature_modifier": true,
+      "mesh_Boot_Cuff_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Cuff_L_vertex_groups": 1,
+      "mesh_Boot_Cuff_L_vertex_group_names": [
+        "shin.L"
+      ],
+      "mesh_Boot_Cuff_R_has_armature_modifier": true,
+      "mesh_Boot_Cuff_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Cuff_R_vertex_groups": 1,
+      "mesh_Boot_Cuff_R_vertex_group_names": [
+        "shin.R"
+      ],
+      "mesh_Boot_Foot_L_has_armature_modifier": true,
+      "mesh_Boot_Foot_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Foot_L_vertex_groups": 1,
+      "mesh_Boot_Foot_L_vertex_group_names": [
+        "foot.L"
+      ],
+      "mesh_Boot_Foot_R_has_armature_modifier": true,
+      "mesh_Boot_Foot_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Foot_R_vertex_groups": 1,
+      "mesh_Boot_Foot_R_vertex_group_names": [
+        "foot.R"
+      ],
+      "mesh_Boot_Shaft_L_has_armature_modifier": true,
+      "mesh_Boot_Shaft_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Shaft_L_vertex_groups": 1,
+      "mesh_Boot_Shaft_L_vertex_group_names": [
+        "shin.L"
+      ],
+      "mesh_Boot_Shaft_R_has_armature_modifier": true,
+      "mesh_Boot_Shaft_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Shaft_R_vertex_groups": 1,
+      "mesh_Boot_Shaft_R_vertex_group_names": [
+        "shin.R"
+      ],
+      "mesh_Boot_Strap_L_has_armature_modifier": true,
+      "mesh_Boot_Strap_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Strap_L_vertex_groups": 1,
+      "mesh_Boot_Strap_L_vertex_group_names": [
+        "shin.L"
+      ],
+      "mesh_Boot_Strap_R_has_armature_modifier": true,
+      "mesh_Boot_Strap_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Boot_Strap_R_vertex_groups": 1,
+      "mesh_Boot_Strap_R_vertex_group_names": [
+        "shin.R"
+      ],
+      "mesh_Bracer_Buckle_L_has_armature_modifier": true,
+      "mesh_Bracer_Buckle_L_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Buckle_L_vertex_groups": 1,
+      "mesh_Bracer_Buckle_L_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Bracer_Buckle_R_has_armature_modifier": true,
+      "mesh_Bracer_Buckle_R_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Buckle_R_vertex_groups": 1,
+      "mesh_Bracer_Buckle_R_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Bracer_L_has_armature_modifier": true,
+      "mesh_Bracer_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_L_vertex_groups": 1,
+      "mesh_Bracer_L_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Bracer_R_has_armature_modifier": true,
+      "mesh_Bracer_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_R_vertex_groups": 1,
+      "mesh_Bracer_R_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Bracer_Strap_L_0_has_armature_modifier": true,
+      "mesh_Bracer_Strap_L_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Strap_L_0_vertex_groups": 1,
+      "mesh_Bracer_Strap_L_0_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Bracer_Strap_L_1_has_armature_modifier": true,
+      "mesh_Bracer_Strap_L_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Strap_L_1_vertex_groups": 1,
+      "mesh_Bracer_Strap_L_1_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Bracer_Strap_R_0_has_armature_modifier": true,
+      "mesh_Bracer_Strap_R_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Strap_R_0_vertex_groups": 1,
+      "mesh_Bracer_Strap_R_0_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Bracer_Strap_R_1_has_armature_modifier": true,
+      "mesh_Bracer_Strap_R_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Bracer_Strap_R_1_vertex_groups": 1,
+      "mesh_Bracer_Strap_R_1_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Brow_L_has_armature_modifier": true,
+      "mesh_Brow_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Brow_L_vertex_groups": 1,
+      "mesh_Brow_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Brow_R_has_armature_modifier": true,
+      "mesh_Brow_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Brow_R_vertex_groups": 1,
+      "mesh_Brow_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Buckle_has_armature_modifier": true,
+      "mesh_Buckle_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Buckle_vertex_groups": 1,
+      "mesh_Buckle_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Buckle_Pin_has_armature_modifier": true,
+      "mesh_Buckle_Pin_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Buckle_Pin_vertex_groups": 1,
+      "mesh_Buckle_Pin_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Chest_Band_0_has_armature_modifier": true,
+      "mesh_Chest_Band_0_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Band_0_vertex_groups": 1,
+      "mesh_Chest_Band_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Band_1_has_armature_modifier": true,
+      "mesh_Chest_Band_1_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Band_1_vertex_groups": 1,
+      "mesh_Chest_Band_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Band_2_has_armature_modifier": true,
+      "mesh_Chest_Band_2_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Band_2_vertex_groups": 1,
+      "mesh_Chest_Band_2_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Band_3_has_armature_modifier": true,
+      "mesh_Chest_Band_3_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Band_3_vertex_groups": 1,
+      "mesh_Chest_Band_3_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Center_Plate_has_armature_modifier": true,
+      "mesh_Chest_Center_Plate_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Center_Plate_vertex_groups": 1,
+      "mesh_Chest_Center_Plate_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Center_Trim_has_armature_modifier": true,
+      "mesh_Chest_Center_Trim_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Center_Trim_vertex_groups": 1,
+      "mesh_Chest_Center_Trim_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Strap_0_has_armature_modifier": true,
+      "mesh_Chest_Strap_0_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Strap_0_vertex_groups": 1,
+      "mesh_Chest_Strap_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Strap_1_has_armature_modifier": true,
+      "mesh_Chest_Strap_1_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Strap_1_vertex_groups": 1,
+      "mesh_Chest_Strap_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Strap_Ring_has_armature_modifier": true,
+      "mesh_Chest_Strap_Ring_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Chest_Strap_Ring_vertex_groups": 1,
+      "mesh_Chest_Strap_Ring_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Stud_0_has_armature_modifier": true,
+      "mesh_Chest_Stud_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Chest_Stud_0_vertex_groups": 1,
+      "mesh_Chest_Stud_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Stud_1_has_armature_modifier": true,
+      "mesh_Chest_Stud_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Chest_Stud_1_vertex_groups": 1,
+      "mesh_Chest_Stud_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Stud_2_has_armature_modifier": true,
+      "mesh_Chest_Stud_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Chest_Stud_2_vertex_groups": 1,
+      "mesh_Chest_Stud_2_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Stud_3_has_armature_modifier": true,
+      "mesh_Chest_Stud_3_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Chest_Stud_3_vertex_groups": 1,
+      "mesh_Chest_Stud_3_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Trim_0_has_armature_modifier": true,
+      "mesh_Chest_Trim_0_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Trim_0_vertex_groups": 1,
+      "mesh_Chest_Trim_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Trim_1_has_armature_modifier": true,
+      "mesh_Chest_Trim_1_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Trim_1_vertex_groups": 1,
+      "mesh_Chest_Trim_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Trim_2_has_armature_modifier": true,
+      "mesh_Chest_Trim_2_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Trim_2_vertex_groups": 1,
+      "mesh_Chest_Trim_2_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Chest_Trim_3_has_armature_modifier": true,
+      "mesh_Chest_Trim_3_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Chest_Trim_3_vertex_groups": 1,
+      "mesh_Chest_Trim_3_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Cloak_0_has_armature_modifier": true,
+      "mesh_Cloak_0_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Cloak_0_vertex_groups": 1,
+      "mesh_Cloak_0_vertex_group_names": [
+        "cloak_a"
+      ],
+      "mesh_Cloak_1_has_armature_modifier": true,
+      "mesh_Cloak_1_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Cloak_1_vertex_groups": 1,
+      "mesh_Cloak_1_vertex_group_names": [
+        "cloak_b"
+      ],
+      "mesh_Cloak_Clasp_has_armature_modifier": true,
+      "mesh_Cloak_Clasp_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Cloak_Clasp_vertex_groups": 1,
+      "mesh_Cloak_Clasp_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Cloak_Gem_has_armature_modifier": true,
+      "mesh_Cloak_Gem_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Cloak_Gem_vertex_groups": 1,
+      "mesh_Cloak_Gem_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Collar_has_armature_modifier": true,
+      "mesh_Collar_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Collar_vertex_groups": 1,
+      "mesh_Collar_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Dagger_Blade_L_has_armature_modifier": true,
+      "mesh_Dagger_Blade_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Blade_L_vertex_groups": 1,
+      "mesh_Dagger_Blade_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Dagger_Blade_R_has_armature_modifier": true,
+      "mesh_Dagger_Blade_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Blade_R_vertex_groups": 1,
+      "mesh_Dagger_Blade_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Dagger_Edge_L_has_armature_modifier": true,
+      "mesh_Dagger_Edge_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Edge_L_vertex_groups": 1,
+      "mesh_Dagger_Edge_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Dagger_Edge_R_has_armature_modifier": true,
+      "mesh_Dagger_Edge_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Edge_R_vertex_groups": 1,
+      "mesh_Dagger_Edge_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Dagger_Grip_L_has_armature_modifier": true,
+      "mesh_Dagger_Grip_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Grip_L_vertex_groups": 1,
+      "mesh_Dagger_Grip_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Dagger_Grip_R_has_armature_modifier": true,
+      "mesh_Dagger_Grip_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Grip_R_vertex_groups": 1,
+      "mesh_Dagger_Grip_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Dagger_Guard_L_has_armature_modifier": true,
+      "mesh_Dagger_Guard_L_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Guard_L_vertex_groups": 1,
+      "mesh_Dagger_Guard_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Dagger_Guard_R_has_armature_modifier": true,
+      "mesh_Dagger_Guard_R_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Guard_R_vertex_groups": 1,
+      "mesh_Dagger_Guard_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Dagger_Pommel_L_has_armature_modifier": true,
+      "mesh_Dagger_Pommel_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Pommel_L_vertex_groups": 1,
+      "mesh_Dagger_Pommel_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Dagger_Pommel_R_has_armature_modifier": true,
+      "mesh_Dagger_Pommel_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Dagger_Pommel_R_vertex_groups": 1,
+      "mesh_Dagger_Pommel_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Ear_Inner_L_has_armature_modifier": true,
+      "mesh_Ear_Inner_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Ear_Inner_L_vertex_groups": 1,
+      "mesh_Ear_Inner_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Ear_Inner_R_has_armature_modifier": true,
+      "mesh_Ear_Inner_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Ear_Inner_R_vertex_groups": 1,
+      "mesh_Ear_Inner_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Ear_L_has_armature_modifier": true,
+      "mesh_Ear_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Ear_L_vertex_groups": 1,
+      "mesh_Ear_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Ear_R_has_armature_modifier": true,
+      "mesh_Ear_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Ear_R_vertex_groups": 1,
+      "mesh_Ear_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Glint_L_has_armature_modifier": true,
+      "mesh_Eye_Glint_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Glint_L_vertex_groups": 1,
+      "mesh_Eye_Glint_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Glint_R_has_armature_modifier": true,
+      "mesh_Eye_Glint_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Glint_R_vertex_groups": 1,
+      "mesh_Eye_Glint_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Glint_Small_L_has_armature_modifier": true,
+      "mesh_Eye_Glint_Small_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Glint_Small_L_vertex_groups": 1,
+      "mesh_Eye_Glint_Small_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Glint_Small_R_has_armature_modifier": true,
+      "mesh_Eye_Glint_Small_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Glint_Small_R_vertex_groups": 1,
+      "mesh_Eye_Glint_Small_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Iris_L_has_armature_modifier": true,
+      "mesh_Eye_Iris_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Iris_L_vertex_groups": 1,
+      "mesh_Eye_Iris_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Iris_Low_L_has_armature_modifier": true,
+      "mesh_Eye_Iris_Low_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Iris_Low_L_vertex_groups": 1,
+      "mesh_Eye_Iris_Low_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Iris_Low_R_has_armature_modifier": true,
+      "mesh_Eye_Iris_Low_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Iris_Low_R_vertex_groups": 1,
+      "mesh_Eye_Iris_Low_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Iris_R_has_armature_modifier": true,
+      "mesh_Eye_Iris_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Iris_R_vertex_groups": 1,
+      "mesh_Eye_Iris_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Lash_L_has_armature_modifier": true,
+      "mesh_Eye_Lash_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Eye_Lash_L_vertex_groups": 1,
+      "mesh_Eye_Lash_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Lash_R_has_armature_modifier": true,
+      "mesh_Eye_Lash_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Eye_Lash_R_vertex_groups": 1,
+      "mesh_Eye_Lash_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Pupil_L_has_armature_modifier": true,
+      "mesh_Eye_Pupil_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Pupil_L_vertex_groups": 1,
+      "mesh_Eye_Pupil_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_Pupil_R_has_armature_modifier": true,
+      "mesh_Eye_Pupil_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_Pupil_R_vertex_groups": 1,
+      "mesh_Eye_Pupil_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_White_L_has_armature_modifier": true,
+      "mesh_Eye_White_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_White_L_vertex_groups": 1,
+      "mesh_Eye_White_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Eye_White_R_has_armature_modifier": true,
+      "mesh_Eye_White_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Eye_White_R_vertex_groups": 1,
+      "mesh_Eye_White_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Face_Head_has_armature_modifier": true,
+      "mesh_Face_Head_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Face_Head_vertex_groups": 1,
+      "mesh_Face_Head_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Glove_Cuff_L_has_armature_modifier": true,
+      "mesh_Glove_Cuff_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Glove_Cuff_L_vertex_groups": 1,
+      "mesh_Glove_Cuff_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Glove_Cuff_R_has_armature_modifier": true,
+      "mesh_Glove_Cuff_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Glove_Cuff_R_vertex_groups": 1,
+      "mesh_Glove_Cuff_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Glove_L_has_armature_modifier": true,
+      "mesh_Glove_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Glove_L_vertex_groups": 1,
+      "mesh_Glove_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Glove_R_has_armature_modifier": true,
+      "mesh_Glove_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Glove_R_vertex_groups": 1,
+      "mesh_Glove_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Hip_Plate_L_has_armature_modifier": true,
+      "mesh_Hip_Plate_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Plate_L_vertex_groups": 1,
+      "mesh_Hip_Plate_L_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Plate_R_has_armature_modifier": true,
+      "mesh_Hip_Plate_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Plate_R_vertex_groups": 1,
+      "mesh_Hip_Plate_R_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Pouch_Flap_L_has_armature_modifier": true,
+      "mesh_Hip_Pouch_Flap_L_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Pouch_Flap_L_vertex_groups": 1,
+      "mesh_Hip_Pouch_Flap_L_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Pouch_Flap_R_has_armature_modifier": true,
+      "mesh_Hip_Pouch_Flap_R_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Pouch_Flap_R_vertex_groups": 1,
+      "mesh_Hip_Pouch_Flap_R_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Pouch_L_has_armature_modifier": true,
+      "mesh_Hip_Pouch_L_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Pouch_L_vertex_groups": 1,
+      "mesh_Hip_Pouch_L_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Pouch_R_has_armature_modifier": true,
+      "mesh_Hip_Pouch_R_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Pouch_R_vertex_groups": 1,
+      "mesh_Hip_Pouch_R_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Trim_L_has_armature_modifier": true,
+      "mesh_Hip_Trim_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Trim_L_vertex_groups": 1,
+      "mesh_Hip_Trim_L_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hip_Trim_R_has_armature_modifier": true,
+      "mesh_Hip_Trim_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Hip_Trim_R_vertex_groups": 1,
+      "mesh_Hip_Trim_R_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Hood_Down_has_armature_modifier": true,
+      "mesh_Hood_Down_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Hood_Down_vertex_groups": 1,
+      "mesh_Hood_Down_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Knee_Cap_L_has_armature_modifier": true,
+      "mesh_Knee_Cap_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Knee_Cap_L_vertex_groups": 1,
+      "mesh_Knee_Cap_L_vertex_group_names": [
+        "thigh.L"
+      ],
+      "mesh_Knee_Cap_R_has_armature_modifier": true,
+      "mesh_Knee_Cap_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Knee_Cap_R_vertex_groups": 1,
+      "mesh_Knee_Cap_R_vertex_group_names": [
+        "thigh.R"
+      ],
+      "mesh_Knee_Plate_L_has_armature_modifier": true,
+      "mesh_Knee_Plate_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Knee_Plate_L_vertex_groups": 1,
+      "mesh_Knee_Plate_L_vertex_group_names": [
+        "thigh.L"
+      ],
+      "mesh_Knee_Plate_R_has_armature_modifier": true,
+      "mesh_Knee_Plate_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Knee_Plate_R_vertex_groups": 1,
+      "mesh_Knee_Plate_R_vertex_group_names": [
+        "thigh.R"
+      ],
+      "mesh_Mouth_has_armature_modifier": true,
+      "mesh_Mouth_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Mouth_vertex_groups": 1,
+      "mesh_Mouth_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Nose_has_armature_modifier": true,
+      "mesh_Nose_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Nose_vertex_groups": 1,
+      "mesh_Nose_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Pauldron_Inset_L_has_armature_modifier": true,
+      "mesh_Pauldron_Inset_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_Inset_L_vertex_groups": 1,
+      "mesh_Pauldron_Inset_L_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_Inset_R_has_armature_modifier": true,
+      "mesh_Pauldron_Inset_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_Inset_R_vertex_groups": 1,
+      "mesh_Pauldron_Inset_R_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_L_0_has_armature_modifier": true,
+      "mesh_Pauldron_L_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_L_0_vertex_groups": 1,
+      "mesh_Pauldron_L_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_L_1_has_armature_modifier": true,
+      "mesh_Pauldron_L_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_L_1_vertex_groups": 1,
+      "mesh_Pauldron_L_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_L_2_has_armature_modifier": true,
+      "mesh_Pauldron_L_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_L_2_vertex_groups": 1,
+      "mesh_Pauldron_L_2_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_R_0_has_armature_modifier": true,
+      "mesh_Pauldron_R_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_R_0_vertex_groups": 1,
+      "mesh_Pauldron_R_0_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_R_1_has_armature_modifier": true,
+      "mesh_Pauldron_R_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_R_1_vertex_groups": 1,
+      "mesh_Pauldron_R_1_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_R_2_has_armature_modifier": true,
+      "mesh_Pauldron_R_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_R_2_vertex_groups": 1,
+      "mesh_Pauldron_R_2_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_Rim_L_has_armature_modifier": true,
+      "mesh_Pauldron_Rim_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_Rim_L_vertex_groups": 1,
+      "mesh_Pauldron_Rim_L_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pauldron_Rim_R_has_armature_modifier": true,
+      "mesh_Pauldron_Rim_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pauldron_Rim_R_vertex_groups": 1,
+      "mesh_Pauldron_Rim_R_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Pelvis_has_armature_modifier": true,
+      "mesh_Pelvis_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Pelvis_vertex_groups": 1,
+      "mesh_Pelvis_vertex_group_names": [
+        "hips"
+      ],
+      "mesh_Shadow_Core_has_armature_modifier": true,
+      "mesh_Shadow_Core_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Core_vertex_groups": 1,
+      "mesh_Shadow_Core_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Cowl_L_has_armature_modifier": true,
+      "mesh_Shadow_Cowl_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Cowl_L_vertex_groups": 1,
+      "mesh_Shadow_Cowl_L_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Cowl_R_has_armature_modifier": true,
+      "mesh_Shadow_Cowl_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Cowl_R_vertex_groups": 1,
+      "mesh_Shadow_Cowl_R_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Hood_has_armature_modifier": true,
+      "mesh_Shadow_Hood_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Hood_vertex_groups": 1,
+      "mesh_Shadow_Hood_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Hood_Brim_has_armature_modifier": true,
+      "mesh_Shadow_Hood_Brim_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Hood_Brim_vertex_groups": 1,
+      "mesh_Shadow_Hood_Brim_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Hood_Peak_has_armature_modifier": true,
+      "mesh_Shadow_Hood_Peak_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Hood_Peak_vertex_groups": 1,
+      "mesh_Shadow_Hood_Peak_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Hood_Point_has_armature_modifier": true,
+      "mesh_Shadow_Hood_Point_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Hood_Point_vertex_groups": 1,
+      "mesh_Shadow_Hood_Point_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Mask_has_armature_modifier": true,
+      "mesh_Shadow_Mask_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Mask_vertex_groups": 1,
+      "mesh_Shadow_Mask_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Mask_Edge_has_armature_modifier": true,
+      "mesh_Shadow_Mask_Edge_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Mask_Edge_vertex_groups": 1,
+      "mesh_Shadow_Mask_Edge_vertex_group_names": [
+        "head"
+      ],
+      "mesh_Shadow_Pauldron_L_has_armature_modifier": true,
+      "mesh_Shadow_Pauldron_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Pauldron_L_vertex_groups": 1,
+      "mesh_Shadow_Pauldron_L_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Shadow_Pauldron_R_has_armature_modifier": true,
+      "mesh_Shadow_Pauldron_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Pauldron_R_vertex_groups": 1,
+      "mesh_Shadow_Pauldron_R_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Shadow_Vambrace_L_has_armature_modifier": true,
+      "mesh_Shadow_Vambrace_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Vambrace_L_vertex_groups": 1,
+      "mesh_Shadow_Vambrace_L_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Shadow_Vambrace_L_2_has_armature_modifier": true,
+      "mesh_Shadow_Vambrace_L_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Vambrace_L_2_vertex_groups": 1,
+      "mesh_Shadow_Vambrace_L_2_vertex_group_names": [
+        "forearm.L"
+      ],
+      "mesh_Shadow_Vambrace_R_has_armature_modifier": true,
+      "mesh_Shadow_Vambrace_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Vambrace_R_vertex_groups": 1,
+      "mesh_Shadow_Vambrace_R_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Shadow_Vambrace_R_2_has_armature_modifier": true,
+      "mesh_Shadow_Vambrace_R_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Vambrace_R_2_vertex_groups": 1,
+      "mesh_Shadow_Vambrace_R_2_vertex_group_names": [
+        "forearm.R"
+      ],
+      "mesh_Shadow_Vortex_has_armature_modifier": true,
+      "mesh_Shadow_Vortex_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Vortex_vertex_groups": 1,
+      "mesh_Shadow_Vortex_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_0_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_0_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_0_vertex_groups": 1,
+      "mesh_Shadow_Wisp_0_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_1_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_1_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_1_vertex_groups": 1,
+      "mesh_Shadow_Wisp_1_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_2_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_2_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_2_vertex_groups": 1,
+      "mesh_Shadow_Wisp_2_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_3_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_3_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_3_vertex_groups": 1,
+      "mesh_Shadow_Wisp_3_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_4_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_4_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_4_vertex_groups": 1,
+      "mesh_Shadow_Wisp_4_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shadow_Wisp_5_has_armature_modifier": true,
+      "mesh_Shadow_Wisp_5_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Shadow_Wisp_5_vertex_groups": 1,
+      "mesh_Shadow_Wisp_5_vertex_group_names": [
+        "fx"
+      ],
+      "mesh_Shin_Plate_L_has_armature_modifier": true,
+      "mesh_Shin_Plate_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shin_Plate_L_vertex_groups": 1,
+      "mesh_Shin_Plate_L_vertex_group_names": [
+        "shin.L"
+      ],
+      "mesh_Shin_Plate_R_has_armature_modifier": true,
+      "mesh_Shin_Plate_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shin_Plate_R_vertex_groups": 1,
+      "mesh_Shin_Plate_R_vertex_group_names": [
+        "shin.R"
+      ],
+      "mesh_Shoulder_Mantle_L_has_armature_modifier": true,
+      "mesh_Shoulder_Mantle_L_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shoulder_Mantle_L_vertex_groups": 1,
+      "mesh_Shoulder_Mantle_L_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Shoulder_Mantle_R_has_armature_modifier": true,
+      "mesh_Shoulder_Mantle_R_modifiers": [
+        "SOLIDIFY",
+        "ARMATURE"
+      ],
+      "mesh_Shoulder_Mantle_R_vertex_groups": 1,
+      "mesh_Shoulder_Mantle_R_vertex_group_names": [
+        "chest"
+      ],
+      "mesh_Sleeve_L_has_armature_modifier": true,
+      "mesh_Sleeve_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Sleeve_L_vertex_groups": 1,
+      "mesh_Sleeve_L_vertex_group_names": [
+        "upper_arm.L"
+      ],
+      "mesh_Sleeve_R_has_armature_modifier": true,
+      "mesh_Sleeve_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Sleeve_R_vertex_groups": 1,
+      "mesh_Sleeve_R_vertex_group_names": [
+        "upper_arm.R"
+      ],
+      "mesh_Sole_L_has_armature_modifier": true,
+      "mesh_Sole_L_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Sole_L_vertex_groups": 1,
+      "mesh_Sole_L_vertex_group_names": [
+        "foot.L"
+      ],
+      "mesh_Sole_R_has_armature_modifier": true,
+      "mesh_Sole_R_modifiers": [
+        "BEVEL",
+        "ARMATURE"
+      ],
+      "mesh_Sole_R_vertex_groups": 1,
+      "mesh_Sole_R_vertex_group_names": [
+        "foot.R"
+      ],
+      "mesh_Thigh_L_has_armature_modifier": true,
+      "mesh_Thigh_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Thigh_L_vertex_groups": 1,
+      "mesh_Thigh_L_vertex_group_names": [
+        "thigh.L"
+      ],
+      "mesh_Thigh_R_has_armature_modifier": true,
+      "mesh_Thigh_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Thigh_R_vertex_groups": 1,
+      "mesh_Thigh_R_vertex_group_names": [
+        "thigh.R"
+      ],
+      "mesh_Thumb_L_has_armature_modifier": true,
+      "mesh_Thumb_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Thumb_L_vertex_groups": 1,
+      "mesh_Thumb_L_vertex_group_names": [
+        "hand.L"
+      ],
+      "mesh_Thumb_R_has_armature_modifier": true,
+      "mesh_Thumb_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Thumb_R_vertex_groups": 1,
+      "mesh_Thumb_R_vertex_group_names": [
+        "hand.R"
+      ],
+      "mesh_Toe_Cap_L_has_armature_modifier": true,
+      "mesh_Toe_Cap_L_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Toe_Cap_L_vertex_groups": 1,
+      "mesh_Toe_Cap_L_vertex_group_names": [
+        "foot.L"
+      ],
+      "mesh_Toe_Cap_R_has_armature_modifier": true,
+      "mesh_Toe_Cap_R_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Toe_Cap_R_vertex_groups": 1,
+      "mesh_Toe_Cap_R_vertex_group_names": [
+        "foot.R"
+      ],
+      "mesh_Torso_Lower_has_armature_modifier": true,
+      "mesh_Torso_Lower_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Torso_Lower_vertex_groups": 1,
+      "mesh_Torso_Lower_vertex_group_names": [
+        "spine"
+      ],
+      "mesh_Torso_Upper_has_armature_modifier": true,
+      "mesh_Torso_Upper_modifiers": [
+        "ARMATURE"
+      ],
+      "mesh_Torso_Upper_vertex_groups": 1,
+      "mesh_Torso_Upper_vertex_group_names": [
+        "chest"
+      ],
+      "action_count": 8,
+      "action_names": [
+        "Shadow_Attack",
+        "Shadow_Death",
+        "Shadow_Dodge",
+        "Shadow_Hit",
+        "Shadow_Idle",
+        "Shadow_Run",
+        "Shadow_Skill",
+        "Shadow_Walk"
+      ],
+      "action_Shadow_Attack_frame_range": [
+        1.0,
+        25.0
+      ],
+      "action_Shadow_Attack_fcurves": 270,
+      "action_Shadow_Death_frame_range": [
+        1.0,
+        33.0
+      ],
+      "action_Shadow_Death_fcurves": 270,
+      "action_Shadow_Dodge_frame_range": [
+        1.0,
+        17.0
+      ],
+      "action_Shadow_Dodge_fcurves": 270,
+      "action_Shadow_Hit_frame_range": [
+        1.0,
+        9.0
+      ],
+      "action_Shadow_Hit_fcurves": 270,
+      "action_Shadow_Idle_frame_range": [
+        1.0,
+        25.0
+      ],
+      "action_Shadow_Idle_fcurves": 270,
+      "action_Shadow_Run_frame_range": [
+        1.0,
+        25.0
+      ],
+      "action_Shadow_Run_fcurves": 270,
+      "action_Shadow_Skill_frame_range": [
+        1.0,
+        33.0
+      ],
+      "action_Shadow_Skill_fcurves": 270,
+      "action_Shadow_Walk_frame_range": [
+        1.0,
+        25.0
+      ],
+      "action_Shadow_Walk_fcurves": 270,
+      "camera_count": 1,
+      "camera_names": [
+        "Hero_Orthographic_Camera"
+      ]
+    }
+  },
+  "contact_sheets": [
+    "QA_shadow_audit/contact_sheets/contact_sheet_idle.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_walk.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_run.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_attack.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_skill.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_dodge.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_hit.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_death.png",
+    "QA_shadow_audit/contact_sheets/contact_sheet_all_shadow.png"
+  ]
+}
