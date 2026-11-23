@@ -324,6 +324,8 @@ void main() {
         equipped: {'helmet': 'a'},
         capacityLevel: 5,
         heroUpgradeLevel: 6,
+        weaponLevels: {'swift_bow': 5, 'heavy_bow': 10},
+        unlockedWeaponIds: ['energy_bow', 'swift_bow', 'heavy_bow'],
       );
       await store.save('ranger_new', saved);
       final loaded = await store.load('ranger_new');
@@ -340,6 +342,11 @@ void main() {
       expect(loaded.equipped['helmet'], 'a');
       expect(loaded.capacityLevel, 5);
       expect(loaded.heroUpgradeLevel, 6);
+      expect(loaded.weaponLevels, {'swift_bow': 5, 'heavy_bow': 10});
+      expect(
+        loaded.unlockedWeaponIds,
+        ['energy_bow', 'swift_bow', 'heavy_bow'],
+      );
     });
 
     test('old saves without progression fields still load', () async {
