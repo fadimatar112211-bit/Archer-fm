@@ -1795,3 +1795,11 @@ Verification:
 - The newest workflow `45144126658`, triggered by the current branch head `a468647`, is pending/queued. This is the run that must verify the latest monster capture changes (spawn-relative placement, 2.4× isolated review zoom and direction/mirror assertions) together with the current branch.
 - The latest completed visual audit remains unchanged: four hero GLB close-ups show face/weapon/orientation readability problems. No production camera, yaw, model, or sprite route was changed based on an unverified guess. Keep all four heroes blocked from visual sign-off until the true front axis is confirmed from the close-up set and the face/weapon silhouette is corrected at gameplay scale.
 - Next: wait for run `45144126658` to complete; inspect its new monster/map/hero capture artifact; then make a targeted per-hero correction only where the image evidence identifies the correct front/weapon/hood adjustment. Do not promote any rejected atlas or report a visual pass from pipeline success alone.
+
+## 2026-11-23 — Compact landscape home cards follow-up
+
+- Latest Android smoke run `45144451649` confirmed that the compact 720×1280 landscape menu still overflowed in all three carousel pages: shop by 30 px, heroes by 13 px, and progression by 24 px. The app reached army selection and the Start tap; ADB then reported `device offline`, so the smoke test did not complete the match transition.
+- Reduced compact-landscape card margins/padding and applied compact sizing, density and tap-target settings to shop upgrade buttons, hero chips/gallery button, and progression action. Normal-height layouts retain their original spacing and button sizing.
+- Code commit: `00e2fae515df7171ccde3ff76feaa31529a0f0c8` (`Fix compact landscape home card overflows`). The fix is not yet verified; wait for the new Android workflow and inspect its rendering logs before marking the overflow resolved.
+- APK packaging, Flutter Analyze and the full Flutter test suite passed on the pre-fix head `da38bdf`; emulator smoke remains blocked by both the confirmed menu overflow and the ADB-offline event.
+- Next: verify this responsive fix on the new CI run; if menu layout passes but ADB still drops offline after Start, isolate the emulator/runtime transition separately. Then resume evidence-led four-hero face/weapon correction and monster 3D replacement work.
