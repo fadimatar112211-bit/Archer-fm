@@ -450,17 +450,16 @@ def publish_bundle(manifest_path: Path, manifest: dict) -> Path | None:
     """Stage a non-Ranger hero's validated render pack for its CI artifact.
 
     Each matrix job has an isolated checkout and uploads this bundle together
-    with the hero-specific source scene. The bundle is staged beneath Ranger's
-    render directory only to keep generated artifacts out of tracked hero
-    folders; it is not a runtime asset path. `_bundle` is gitignored and must
-    never be referenced by the game.
+    with the hero-specific source scene. The bundle is staged beneath the shared hero assets directory, outside
+    each hero's runtime folder. It is not a runtime asset path and must never
+    be referenced by the game.
     """
     hero_id = manifest["hero_id"]
     if hero_id == "ranger":
         print("BUNDLE_SKIP ranger already lives in the uploaded directory")
         return None
-    root = manifest_path.resolve().parents[4]
-    bundle = (root / "assets/heroes/ranger/renders/_bundle" / hero_id
+    root = Path(__file__).resolve().parents[1]
+    bundle = (root / "assets/heroes/_sprite_bundles" / hero_id
               / "renders")
     if bundle.exists():
         shutil.rmtree(bundle)
