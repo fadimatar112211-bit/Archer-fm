@@ -14,7 +14,7 @@ void main() {
     );
     expect(rect, const Rect.fromLTWH(240, 316.8, 120, 120));
     expect(rect.center.dx, 300);
-    expect(rect.bottom, closeTo(420 - 120 * 0.86 + 120, 420));
+    expect(rect.bottom, closeTo(436.8, 1e-9));
   });
 
   test('sprite destination preserves source aspect ratio for wide frames', () {
