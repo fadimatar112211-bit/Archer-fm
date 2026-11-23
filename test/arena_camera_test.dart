@@ -581,8 +581,12 @@ void main() {
         final visible = transform.visibleWorldRect;
         final heroScreen = transform.worldToLocal(world.player.position);
 
-        expect(heroScreen.dx, inInclusiveRange(0, viewport.width), reason: '$edge edge clips hero horizontally');
-        expect(heroScreen.dy, inInclusiveRange(0, viewport.height), reason: '$edge edge clips hero vertically');
+        // Projection/inverse-projection can differ by a few billionths at
+        // exact map edges; allow sub-micropixel floating-point noise.
+        expect(heroScreen.dx, greaterThanOrEqualTo(-1e-6), reason: '$edge edge clips hero horizontally');
+        expect(heroScreen.dx, lessThanOrEqualTo(viewport.width + 1e-6), reason: '$edge edge clips hero horizontally');
+        expect(heroScreen.dy, greaterThanOrEqualTo(-1e-6), reason: '$edge edge clips hero vertically');
+        expect(heroScreen.dy, lessThanOrEqualTo(viewport.height + 1e-6), reason: '$edge edge clips hero vertically');
         switch (edge) {
           case 'left':
             expect(visible.left, closeTo(0, 1e-5));
