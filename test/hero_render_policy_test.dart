@@ -30,7 +30,7 @@ void main() {
     }
   });
 
-  test('Ranger, Flame and Storm retain GLB routing while final 3D visual acceptance remains open', () {
+  test('Ranger, Flame and Storm retain safe transitional GLB routes until sprite acceptance', () {
     for (final heroId in ['ranger_new', 'flame', 'storm']) {
       expect(
         HeroRenderPolicy.routeFor(heroId),
