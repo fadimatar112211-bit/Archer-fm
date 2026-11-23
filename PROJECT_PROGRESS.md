@@ -1994,3 +1994,17 @@ Verification:
 
 **Readiness:** analyze/tests/release APK = passed for commit `f1557a4`; Android match smoke = failed due ADB device disconnect; heroes = GLB-integrated but visual acceptance open; monsters = Canvas fallback only / production 3D not ready.
 
+
+
+## 2026-11-23 — Sprite-pipeline continuation (implementation checkpoint only)
+
+No game-design objectives or acceptance targets were changed in this checkpoint. Work continued within the approved `docs/2D_5D_SPRITE_CONVERSION_PLAN.md`:
+
+- Added `lib/game/render3/sprite_actor_renderer.dart`, a shared camera-facing sprite/billboard drawing primitive with normalized pivot, aspect-ratio preservation, opacity and tint. The hero sprite path now uses this shared primitive; the same geometry contract is available for approved monster sprite packs when those assets are ready.
+- Added `test/sprite_actor_renderer_test.dart` for normalized pivot placement, aspect ratio and invalid geometry.
+- Added `test/shadow_walk_atlas_acceptance_test.dart`: decodes the checked-in user-approved Shadow atlas, checks 768×1536 dimensions, real alpha transparency, visible pixels in every one of the 32 cells, 192×192 untrimmed frame rectangles, the approved pivot and the actual 8-row ordering.
+- Added eight-way direction mapping tests in `test/game_world_test.dart` against the existing screen-space octant convention. This guards the mapping from game movement to the user-approved Shadow atlas rows.
+- Continued the map presentation pass with the earlier worn-stone castle-to-bridge approach detail; this is paint-only and does not modify map generation, navigation, collision or economy.
+- Kept all four procedural monster drawings as fallback only. No invented monster artwork or rejected prototype was promoted.
+
+**Verification limitation:** these are committed tests and code changes, not a passing test report. No CI workflow run was returned for the latest commits, so Flutter analyze, the new tests, Android build/smoke and visual capture review remain unverified on this checkpoint. Do not mark Shadow Phase 1, the hero roster, monster conversion or 3D-world integration complete until their plan-defined gates have actual evidence.
