@@ -1,5 +1,6 @@
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
+import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -60,4 +61,40 @@ void main() {
       }
     });
   }
+  test('asset loader rejects another hero manifest before reading its atlas', () async {
+    final loader = BundleHeroAssetLoader(heroById('ranger_new'));
+    final foreignManifest = HeroManifest(
+      heroId: 'flame',
+      frameWidth: 192,
+      frameHeight: 192,
+      pivotX: 0.5,
+      pivotY: 0.86,
+      clips: {
+        'walk_s': AnimationClip(
+          name: 'walk_s',
+          loop: true,
+          frameDurationMs: 100,
+          frames: ['frame_0'],
+          events: const [],
+        ),
+      },
+      atlases: const [
+        AtlasEntry(
+          animation: 'walk_s',
+          image: 'atlases/walk_s.png',
+          meta: 'atlases/walk_s.json',
+        ),
+      ],
+      fps: 12,
+    );
+    try {
+      await expectLater(
+        loader.loadSheet(foreignManifest, 'walk_s'),
+        throwsA(isA<FormatException>()),
+      );
+    } finally {
+      loader.dispose();
+    }
+  });
+
 }
