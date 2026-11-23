@@ -567,6 +567,12 @@ class GameWorld {
   /// Ability queued by [useAbility], released by the matching weapon event.
   String? pendingAbilityId;
 
+  /// Snapshot and follow-up state for Shadow's three frame-timed dagger hits.
+  Offset? _twinFangsOrigin;
+  Offset _twinFangsFacing = const Offset(0, 1);
+  int _twinFangsFollowUpsRemaining = 0;
+  bool _twinFangsEnergyAwarded = false;
+
   int attackReadyAtMs = 0;
   final Map<String, int> abilityReadyAtMs = {};
 
@@ -1027,43 +1033,67 @@ class GameWorld {
     }
   }
 
-  /// Three rapid dagger stabs in the wide dagger arc: 80% each, so a lone
-  /// target takes 240% while a crowd gets spread across up to three hits.
+  /// Starts the first of three 80% dagger hits. The remaining hits are
+  /// released by explicit animation events in Shadow's attack manifest; this
+  /// keeps damage on authored frames instead of applying all three at once.
   void _twinFangsStrike() {
+    _twinFangsOrigin = player.position;
+    _twinFangsFacing = player.facing;
+    _twinFangsFollowUpsRemaining = 2;
+    _twinFangsEnergyAwarded = false;
+    _applyTwinFangsHit();
+  }
+
+  /// Called by the second and third Twin Fangs animation events.
+  /// It is intentionally a no-op if no cast is awaiting a follow-up hit.
+  void releaseTwinFangsFollowUp() {
+    if (kit.heroId != 'shadow' || _twinFangsFollowUpsRemaining <= 0) return;
+    _twinFangsFollowUpsRemaining--;
+    _applyTwinFangsHit();
+  }
+
+  void _applyTwinFangsHit() {
+    final origin = _twinFangsOrigin;
+    if (origin == null) return;
+    final facing = _twinFangsFacing;
     final range = currentMeleeRange();
     final halfArc = kit.meleeArcRadians;
     var hits = 0;
-    for (var i = 0; i < 3; i++) {
-      for (final enemy in enemies) {
-        if (enemy.hp <= 0) continue;
-        final delta = enemy.position - player.position;
-        final dist = delta.distance;
-        if (dist > range + 18) continue;
-        if (dist > 1) {
-          final facingDot =
-              (delta.dx * player.facing.dx + delta.dy * player.facing.dy) /
-                  dist;
-          if (facingDot < math.cos(halfArc)) continue;
-        }
-        hits++;
-        _damageEnemy(enemy, kit.baseDamage * 0.8 * currentDamageMult());
-        if (enemy.hp > 0 && player.buffUntilMs > nowMs) {
-          _applyDoT(enemy, ticks: 2, tickDamage: kit.baseDamage * 0.15);
-        }
+    for (final enemy in enemies) {
+      if (enemy.hp <= 0) continue;
+      final delta = enemy.position - origin;
+      final dist = delta.distance;
+      if (dist > range + 18) continue;
+      if (dist > 1) {
+        final facingDot = (delta.dx * facing.dx + delta.dy * facing.dy) / dist;
+        if (facingDot < math.cos(halfArc)) continue;
+      }
+      hits++;
+      _damageEnemy(enemy, kit.baseDamage * 0.8 * currentDamageMult());
+      if (enemy.hp > 0 && player.buffUntilMs > nowMs) {
+        _applyDoT(
+          enemy,
+          ticks: 2,
+          tickDamage: kit.baseDamage * 0.15 * currentDamageMult(),
+        );
       }
     }
     fx.add(
       GameFx(
         kind: 'slash',
-        position: player.position,
-        facing: player.facing,
+        position: origin,
+        facing: facing,
         radius: range,
         bornAtMs: nowMs,
         color: kit.accentColor,
       ),
     );
-    if (hits > 0) {
+    if (hits > 0 && !_twinFangsEnergyAwarded) {
       player.energy = _clampD(player.energy + 3, 0, kit.baseMaxEnergy);
+      _twinFangsEnergyAwarded = true;
+    }
+    if (_twinFangsFollowUpsRemaining == 0) {
+      _twinFangsOrigin = null;
     }
   }
 
