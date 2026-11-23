@@ -50,10 +50,8 @@ if ACTIVE_HERO not in hero_profiles.PROFILES:
     raise SystemExit(f"Unknown active hero in active_hero.txt: {ACTIVE_HERO}")
 PROFILE = hero_profiles.PROFILES[ACTIVE_HERO]
 
-# The workflow renders whatever this fixed path holds, and the artifact upload
-# only collects the ranger paths. Each hero is therefore written to the fixed
-# CI path, to its own repo path, and into the bundle directory the artifact
-# picks up so the downloaded hero survives the read-only CI checkout.
+# Each matrix hero is written directly to its own source folder. The CI-only
+# bundle keeps the source scene and packed atlases together for artifact review.
 HERO_OUT = ROOT / f"assets/heroes/{ACTIVE_HERO}/source/{ACTIVE_HERO}_source.blend"
 BUNDLE = ROOT / f"assets/heroes/_sprite_bundles/{ACTIVE_HERO}"
 
@@ -2014,7 +2012,7 @@ def main():
     bundle_source.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(HERO_OUT, bundle_source)
     print(f"Saved {ACTIVE_HERO} source: {HERO_OUT}")
-    print(f"Hero source copy: {HERO_OUT}")
+    print(f"Source scene ready for {ACTIVE_HERO}: {HERO_OUT}")
     print(f"Bundled source: {bundle_source}")
 
 
