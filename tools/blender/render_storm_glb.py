@@ -32,6 +32,22 @@ FRAMES = Path("/tmp/archer_storm_frames")
 def fail(message):
     raise RuntimeError(message)
 
+def reset_pose(armature):
+    """Clear channels not keyed by the next Action to prevent pose leakage."""
+    for bone in armature.pose.bones:
+        bone.rotation_mode = "XYZ"
+        bone.location = (0.0, 0.0, 0.0)
+        bone.rotation_euler = (0.0, 0.0, 0.0)
+        bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+        bone.scale = (1.0, 1.0, 1.0)
+
+def evaluate_pose(armature, action, frame):
+    reset_pose(armature)
+    armature.animation_data_create()
+    armature.animation_data.action = action
+    bpy.context.scene.frame_set(frame)
+    bpy.context.view_layer.update()
+
 def action_for(state):
     matches = [a for a in bpy.data.actions if state in re.sub(r"[^a-z]", "", a.name.lower())]
     if not matches:
@@ -135,8 +151,7 @@ def main():
         if len(set(pose_samples)) != count:
             fail(f"Storm action {action.name} is too short for {count} distinct frames: {pose_samples}")
         for sample in pose_samples:
-            rig.animation_data.action = action
-            scene.frame_set(sample)
+            evaluate_pose(rig, action, sample)
             pose_low, pose_high = bounds_of_meshes(meshes)
             overall_low = pose_low if overall_low is None else Vector((
                 min(overall_low.x, pose_low.x),
@@ -186,10 +201,7 @@ def main():
             look_at(camera, target)
             frames = []
             for index, frame in enumerate(samples):
-                rig.animation_data.action = action
-                # Preserve authored pose channels; evaluate the selected action directly.
-                scene.frame_set(frame)
-                bpy.context.view_layer.update()
+                evaluate_pose(rig, action, frame)
                 frame_id = f"storm_{state}_{direction}_{index:03d}"
                 path = FRAMES / f"{frame_id}.png"
                 scene.render.filepath = str(path)
