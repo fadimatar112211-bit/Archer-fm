@@ -70,9 +70,9 @@ jobs:
           from pathlib import Path
           path = Path("pubspec.yaml")
           text = path.read_text(encoding="utf-8")
-          anchor = "    - assets/heroes/shadow/renders/atlases/\\n"
+          anchor = "    - assets/heroes/shadow/renders/atlases/\n"
           models = "".join(
-              f"    - assets/heroes/{hero}/model/{hero}_animated.glb\\n"
+              f"    - assets/heroes/{hero}/model/{hero}_animated.glb\n"
               for hero in ("ranger", "flame", "shadow", "storm")
           )
           if "assets/heroes/ranger/model/ranger_animated.glb" not in text:
