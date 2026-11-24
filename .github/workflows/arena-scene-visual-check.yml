@@ -42,6 +42,9 @@ jobs:
       - name: Run unified arena render test
         run: flutter test --reporter expanded test/arena_scene_integration_test.dart
 
+      - name: Run complete hero and gameplay regression suite
+        run: flutter test --reporter expanded test/
+
       - name: Upload unified arena capture
         if: always()
         uses: actions/upload-artifact@v4
