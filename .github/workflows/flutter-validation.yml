@@ -40,9 +40,9 @@ jobs:
       - name: Install Blender and atlas packer
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender python3-pil python3-numpy
+          sudo apt-get install -y blender python3-pil python3-numpy libegl1 libegl-mesa0 libgl1 libglx-mesa0 libgles2
       - name: Render all Storm states and directions
-        run: PYTHONPATH=/usr/lib/python3/dist-packages blender -b --python tools/blender/render_storm_glb.py
+        run: LIBGL_ALWAYS_SOFTWARE=1 PYTHONPATH=/usr/lib/python3/dist-packages blender -b --python tools/blender/render_storm_glb.py
       - name: Pack and validate all 64 Storm atlases
         run: /usr/bin/python3 tools/blender/pack_storm_atlases.py
       - name: Upload Storm render artifacts
