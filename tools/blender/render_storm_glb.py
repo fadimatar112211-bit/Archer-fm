@@ -145,6 +145,8 @@ def main():
             fail(f"Storm action {action.name} has invalid frame range {action.frame_range}")
         count = COUNTS[state]
         samples = [round(start + (end - start) * i / (count - 1)) for i in range(count)]
+        if len(set(samples)) != count:
+            fail(f\"Storm action {action.name} is too short for {count} distinct rendered frames: {samples}\")
         for direction in DIRECTIONS:
             radians = math.radians(direction_angles[direction])
             offset = Vector((math.sin(radians) * 4.2, -math.cos(radians) * 4.2, 1.45))
