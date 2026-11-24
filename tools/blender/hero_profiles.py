@@ -464,6 +464,44 @@ def flame_armour(m):
                   0.064, 0.030, "bronze_light", f"forearm.{side}")
         m.ring_at(f"Flame_Vambrace_Trim_{side}", elbow, wrist, 0.72,
                   0.052, 0.024, "gold", f"forearm.{side}")
+        # Articulated gold greaves and thigh plates keep the knight identity
+        # readable in side, rear-three-quarter and isometric gameplay views.
+        thigh_centre = m.Vector((0.205 * sign, -0.105, 1.035))
+        m.sphere(f"Flame_Thigh_Underplate_{side}", thigh_centre,
+                 (0.142, 0.058, 0.205), "leather_dark",
+                 f"thigh.{side}", 24, 14)
+        m.sphere(f"Flame_Thigh_Goldplate_{side}",
+                 thigh_centre + m.Vector((0.0, -0.040, 0.008)),
+                 (0.116, 0.046, 0.174), "bronze_light",
+                 f"thigh.{side}", 24, 14)
+        m.sweep(f"Flame_Thigh_Ridge_{side}", [
+            m.Vector((0.205 * sign, -0.192, 1.185)),
+            m.Vector((0.205 * sign, -0.202, 1.065)),
+            m.Vector((0.205 * sign, -0.190, 0.925))],
+            [0.024, 0.030, 0.006], "gold", f"thigh.{side}", sides=5,
+            thickness=[0.012, 0.014, 0.004], tip=True)
+        shin_centre = m.Vector((0.210 * sign, -0.105, 0.570))
+        m.sphere(f"Flame_Greave_Underplate_{side}", shin_centre,
+                 (0.132, 0.058, 0.205), "leather_dark",
+                 f"shin.{side}", 24, 14)
+        m.sphere(f"Flame_Greave_Goldplate_{side}",
+                 shin_centre + m.Vector((0.0, -0.044, 0.0)),
+                 (0.108, 0.048, 0.176), "bronze_light",
+                 f"shin.{side}", 24, 14)
+        m.sweep(f"Flame_Greave_Ridge_{side}", [
+            m.Vector((0.210 * sign, -0.195, 0.715)),
+            m.Vector((0.210 * sign, -0.205, 0.570)),
+            m.Vector((0.210 * sign, -0.190, 0.425))],
+            [0.020, 0.028, 0.004], "gold", f"shin.{side}", sides=5,
+            thickness=[0.010, 0.013, 0.003], tip=True)
+        m.torus(f"Flame_Knee_Gold_Rim_{side}",
+                (0.20 * sign, -0.075, 0.812), 0.132, 0.020,
+                "gold", f"thigh.{side}", scale=(1.0, 1.0, 0.82),
+                major_segments=28)
+        m.sphere(f"Flame_Boot_Toe_Guard_{side}",
+                 (0.21 * sign, -0.292, 0.112),
+                 (0.105, 0.040, 0.052), "bronze_light",
+                 f"foot.{side}", 18, 10)
 
 
 def shadow_armour(m):
@@ -658,12 +696,21 @@ def flame_sword(m):
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sphere(f"Sword_Quillon_{side}", (cx + 0.205 * sign, cy, 1.505),
                  (0.038, 0.048, 0.038), "bronze_light", "bow", 16, 10)
+    # Broad flame-forged blade: a fuller and bright inner core remain visible
+    # at 192px, while the warm orange edge follows the reference sword.
     diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 2.760,
-                  [0.170, 0.156, 0.108, 0.005],
-                  [0.040, 0.034, 0.022, 0.003], "energy", "bow")
+                  [0.205, 0.190, 0.132, 0.005],
+                  [0.052, 0.044, 0.026, 0.003], "energy", "bow")
     diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 2.700,
-                  [0.096, 0.088, 0.060, 0.004],
-                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow")
+                  [0.112, 0.102, 0.070, 0.004],
+                  [0.050, 0.044, 0.028, 0.003], "energy_core", "bow")
+    m.sweep("Sword_Fuller", [
+        m.Vector((cx, cy - 0.032, 1.620)),
+        m.Vector((cx, cy - 0.034, 2.020)),
+        m.Vector((cx, cy - 0.030, 2.420)),
+        m.Vector((cx, cy - 0.020, 2.665))],
+        [0.030, 0.034, 0.022, 0.003], "gold", "bow", sides=5,
+        thickness=[0.010, 0.012, 0.008, 0.002], tip=True)
     m.sweep("Sword_Flame_Aura", [
         m.Vector((cx, cy + 0.010, 1.56)),
         m.Vector((cx, cy + 0.014, 1.95)),
