@@ -1,4 +1,4 @@
-name: Build four reference-faithful hero sprite packs
+name: Build four reference-faithful hero sprite packs # rerun after Storm action-name normalization
 
 on:
   push:
