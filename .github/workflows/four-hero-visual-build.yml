@@ -72,7 +72,12 @@ jobs:
 
       - name: Render eight states in eight directions from the approved Blender source
         run: |
-          blender -b "${{ matrix.source }}" \
+          if [[ "${{ matrix.hero }}" == "storm" ]]; then
+            render_source="/tmp/storm_render_source.blend"
+          else
+            render_source="${{ matrix.source }}"
+          fi
+          blender -b "$render_source" \
             --python tools/blender/render_hero.py -- \
             --config "${{ matrix.config }}"
 
