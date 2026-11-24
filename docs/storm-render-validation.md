@@ -10,3 +10,5 @@ Expected runtime output:
 - 192 × 192 frames with 4-column packed atlas metadata
 
 Generated assets are committed to this branch by the validation workflow only after the render and atlas checks succeed.
+
+CI also installs NumPy into Blender's Python import path for the bundled glTF importer.
