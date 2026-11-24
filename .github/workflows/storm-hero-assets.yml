@@ -75,6 +75,25 @@ jobs:
               --hero "${hero}" --model "assets/heroes/${hero}/model/${hero}_animated.glb"
           done
 
+      - name: Register the four GLB models in Flutter assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("pubspec.yaml")
+          text = path.read_text(encoding="utf-8")
+          anchor = "    - assets/heroes/shadow/renders/atlases/\\n"
+          models = "".join(
+              f"    - assets/heroes/{hero}/model/{hero}_animated.glb\\n"
+              for hero in ("ranger", "flame", "shadow", "storm")
+          )
+          if "assets/heroes/ranger/model/ranger_animated.glb" not in text:
+              if anchor not in text:
+                  raise SystemExit("Could not locate Flutter asset insertion point")
+              text = text.replace(anchor, anchor + models)
+              path.write_text(text, encoding="utf-8")
+          print("REGISTERED_FOUR_HERO_GLBS")
+          PY
+
       - name: Render eight real animation states in eight directions
         run: |
           blender --background --python-exit-code 1 --python tools/blender/render_storm_glb.py
@@ -105,7 +124,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
+          git add pubspec.yaml assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
           if git diff --cached --quiet; then
             echo "No generated Storm asset changes to commit."
           else
