@@ -118,7 +118,7 @@ void main() {
         expect(rect['y'], greaterThanOrEqualTo(0), reason: frameId);
         expect(rect['w'], 192, reason: frameId);
         expect(rect['h'], 192, reason: frameId);
-        expect(rect['x'] + rect['w'], lessThanOrEqualTo(768), reason: frameId);
+        expect(rect['x'] + rect['w'], lessThanOrEqualTo(image.width), reason: frameId);
         expect(rect['y'] + rect['h'], lessThanOrEqualTo(1536), reason: frameId);
       }
       final events = clip['events'] as List<dynamic>? ?? const [];
