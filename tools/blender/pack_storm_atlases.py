@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pack rendered Storm frames into the runtime's 4-column atlas contract."""
 import json
+import hashlib
 from pathlib import Path
 from PIL import Image
 
@@ -31,8 +32,8 @@ for animation, clip in manifest["animations"].items():
                 raise SystemExit(f"Wrong frame size {src}: {image.size}")
             if image.getbbox() is None:
                 raise SystemExit(f"Transparent/empty frame: {src}")
-            digest = image.tobytes()
-            hashes.add(hash(digest))
+            digest = hashlib.sha256(image.tobytes()).hexdigest()
+            hashes.add(digest)
             x = (i % columns) * cell + 2
             y = (i // columns) * cell + 2
             atlas.paste(image, (x, y), image)
