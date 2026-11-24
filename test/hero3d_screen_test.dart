@@ -281,7 +281,7 @@ void main() {
                   EnemyState(
                     id: 'live_$heroId',
                     kind: 'slime',
-                    position: created.player.position + Offset(distance, 0),
+                    position: created.player.position + Offset(0, distance),
                     maxHp: 1200,
                     speed: 0,
                     contactDamage: 8,
