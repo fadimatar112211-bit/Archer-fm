@@ -180,4 +180,9 @@ def main():
     print("STORM_RENDER_COMPLETE", len(manifest["animations"]), "clips", sum(len(v["frames"]) for v in manifest["animations"].values()), "frames")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
