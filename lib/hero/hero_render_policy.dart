@@ -1,9 +1,8 @@
-/// Temporary render routing during the approved 2.5D sprite migration.
+/// Production render routing for the four playable heroes.
 ///
-/// Shadow is the first sprite proof. The other heroes retain their last safe
-/// GLB route until their reference-matched sprite packs pass the conversion
-/// plan's visual and runtime gates. A missing GLB must never promote an
-/// unapproved atlas.
+/// All four heroes use their rigged GLB models in the live arena. The Shadow
+/// sprite atlas is only a partial walk-cycle proof; its held action poses are
+/// not production-ready, so it must not replace the complete animated GLB.
 enum HeroVisualRoute {
   approvedSpritePilot,
   glbPrimary,
@@ -12,17 +11,16 @@ enum HeroVisualRoute {
 class HeroRenderPolicy {
   HeroRenderPolicy._();
 
-  // Shadow is the first approved sprite-pipeline pilot. Its walk sheet is the
-  // source proof; action poses remain explicit safe holds until real art exists.
-  static const Set<String> _approvedSpritePilotIds = {'shadow'};
+  // No hero currently passes the full sprite-action acceptance gate.
+  static const Set<String> _approvedSpritePilotIds = {};
 
   static HeroVisualRoute routeFor(String heroId) =>
       _approvedSpritePilotIds.contains(heroId)
           ? HeroVisualRoute.approvedSpritePilot
           : HeroVisualRoute.glbPrimary;
 
-  /// True only for the explicitly approved Shadow sprite pilot during migration.
-  /// This does not imply that every required Shadow animation is complete.
+  /// True only for a hero whose complete sprite action set passed acceptance.
+  /// Keep false for Shadow until its held action poses are replaced.
   static bool allowsSpriteAtlas(String heroId) =>
       routeFor(heroId) == HeroVisualRoute.approvedSpritePilot;
 }
