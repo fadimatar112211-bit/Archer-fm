@@ -46,6 +46,7 @@ class HeroUltimate {
 class HeroCombatDefinition {
   const HeroCombatDefinition({
     required this.id,
+    required this.modelAssetPath,
     required this.nameAr,
     required this.roleAr,
     required this.baseHealth,
@@ -57,6 +58,7 @@ class HeroCombatDefinition {
     required this.ultimates,
   });
   final HeroId id;
+  final String modelAssetPath;
   final String nameAr;
   final String roleAr;
   final int baseHealth;
@@ -80,6 +82,7 @@ const List<int> ultimateUnlockLevels = [1, 10, 20, 30];
 const List<HeroCombatDefinition> archerFmHeroes = [
   HeroCombatDefinition(
     id: HeroId.ranger,
+    modelAssetPath: 'assets/heroes/ranger/model/ranger_animated.glb',
     nameAr: 'الرامي',
     roleAr: 'قتال بعيد المدى',
     baseHealth: 600,
@@ -101,6 +104,7 @@ const List<HeroCombatDefinition> archerFmHeroes = [
   ),
   HeroCombatDefinition(
     id: HeroId.flame,
+    modelAssetPath: 'assets/heroes/flame/model/flame_animated.glb',
     nameAr: 'فارس اللهب',
     roleAr: 'ضرر قريب وانفجارات',
     baseHealth: 600,
@@ -122,6 +126,7 @@ const List<HeroCombatDefinition> archerFmHeroes = [
   ),
   HeroCombatDefinition(
     id: HeroId.shadow,
+    modelAssetPath: 'assets/heroes/shadow/model/shadow_animated.glb',
     nameAr: 'ظل الليل',
     roleAr: 'اغتيال وسرعة',
     baseHealth: 600,
@@ -143,6 +148,7 @@ const List<HeroCombatDefinition> archerFmHeroes = [
   ),
   HeroCombatDefinition(
     id: HeroId.storm,
+    modelAssetPath: 'assets/heroes/storm/model/storm_animated.glb',
     nameAr: 'حامل العاصفة',
     roleAr: 'مدى متوسط وتحكم',
     baseHealth: 600,
