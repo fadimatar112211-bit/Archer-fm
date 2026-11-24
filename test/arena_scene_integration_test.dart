@@ -46,9 +46,8 @@ void main() {
       world.fog.reveal(localCastle.anchor, 900);
 
       // Four hostile roles are placed inside the explored combat area.
-      for (final entry in MonsterType.values.indexed) {
-        final type = entry.$1;
-        final index = entry.$2;
+      for (var index = 0; index < MonsterType.values.length; index++) {
+        final type = MonsterType.values[index];
         final stats = MonsterStats.of(type, 1);
         final enemy = EnemyState(
           id: 'scene_enemy_${type.name}',
@@ -131,7 +130,6 @@ void main() {
           .writeAsBytesSync(png.buffer.asUint8List());
 
       image.dispose();
-      hero3d.dispose();
     },
     timeout: const Timeout(Duration(minutes: 10)),
   );
