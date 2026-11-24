@@ -5,6 +5,8 @@ on:
     branches: [heroes-complete]
     paths:
       - "tools/blender/render_storm_glb.py"
+      - "tools/blender/export_hero_glb.py"
+      - "tools/blender/validate_hero_glb.py"
       - "tools/blender/pack_storm_atlases.py"
       - "tools/blender/validate_hero_assets.py"
       - ".github/workflows/storm-hero-assets.yml"
@@ -12,6 +14,7 @@ on:
       - "assets/heroes/flame/renders/**"
       - "assets/heroes/shadow/renders/**"
       - "assets/heroes/storm/renders/**"
+      - "assets/heroes/*/source/**"
   pull_request:
     branches: [main]
     paths:
@@ -46,6 +49,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y blender python3-pil
 
+      - name: Export Ranger, Flame and Shadow as animated GLB models
+        run: |
+          set -euo pipefail
+          for hero in ranger flame shadow; do
+            blender --background "assets/heroes/${hero}/source/${hero}_source.blend" \
+              --python-exit-code 1 --python tools/blender/export_hero_glb.py -- \
+              --hero "${hero}" --config assets/heroes/ranger/source/render_config.json
+          done
+
       - name: Fetch the rigged Storm GLB from the implementation branch
         run: |
           git fetch origin implementation/visual-systems-next-pass --depth=1
@@ -53,6 +65,15 @@ jobs:
           git show FETCH_HEAD:assets/heroes/storm/model/storm_animated.glb > assets/heroes/storm/model/storm_animated.glb
           test -s assets/heroes/storm/model/storm_animated.glb
           ls -lh assets/heroes/storm/model/storm_animated.glb
+
+      - name: Validate all four animated GLB models
+        run: |
+          set -euo pipefail
+          for hero in ranger flame shadow storm; do
+            blender --background --python-exit-code 1 \
+              --python tools/blender/validate_hero_glb.py -- \
+              --hero "${hero}" --model "assets/heroes/${hero}/model/${hero}_animated.glb"
+          done
 
       - name: Render eight real animation states in eight directions
         run: |
@@ -75,6 +96,7 @@ jobs:
           path: |
             assets/heroes/storm/renders/storm_manifest.json
             assets/heroes/storm/renders/atlases/
+            assets/heroes/*/model/*.glb
           if-no-files-found: warn
           retention-days: 14
 
@@ -83,7 +105,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
+          git add assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
           if git diff --cached --quiet; then
             echo "No generated Storm asset changes to commit."
           else
