@@ -52,14 +52,27 @@ def main():
     bpy.context.view_layer.objects.active=armature
     out=root/f"assets/heroes/{a.hero}/model/{a.hero}_animated.glb"
     out.parent.mkdir(parents=True,exist_ok=True)
-    result=bpy.ops.export_scene.gltf(
-        filepath=str(out),export_format="GLB",use_selection=True,
-        export_animations=True,export_nla_strips=True,
-        export_force_sampling=True,export_skins=True,
-        export_materials="EXPORT",export_image_format="AUTO",
-        export_yup=True,export_apply=False,export_texcoords=True,
-        export_normals=True,export_tangents=True,
-        export_frame_range=False,export_current_frame=False)
+    export_options = {
+        "filepath": str(out), "export_format": "GLB", "use_selection": True,
+        "export_animations": True, "export_nla_strips": True,
+        "export_force_sampling": True, "export_skins": True,
+        "export_materials": "EXPORT", "export_image_format": "AUTO",
+        "export_yup": True, "export_apply": False, "export_texcoords": True,
+        "export_normals": True, "export_tangents": True,
+        "export_frame_range": False, "export_current_frame": False,
+    }
+    operator = bpy.ops.export_scene.gltf
+    supported = set(operator.get_rna_type().properties.keys())
+    required = {"filepath", "export_format", "use_selection",
+                "export_animations", "export_nla_strips", "export_skins"}
+    missing = required - supported
+    if missing:
+        raise RuntimeError(f"Blender glTF exporter is missing required options: {sorted(missing)}")
+    ignored = sorted(set(export_options) - supported)
+    if ignored:
+        print(f"GLTF_EXPORT_OPTIONS_UNAVAILABLE {ignored}")
+    result = operator(**{key: value for key, value in export_options.items()
+                         if key in supported})
     if "FINISHED" not in result or not out.is_file() or out.stat().st_size<100_000:
         raise RuntimeError(f"{a.hero}: GLB export failed or output too small: {result}")
     print(f"HERO_GLB_EXPORTED hero={a.hero} path={out.relative_to(root)} bytes={out.stat().st_size} meshes={len(mesh_objects)} bones={len(armature.data.bones)} actions={len(required)}")
