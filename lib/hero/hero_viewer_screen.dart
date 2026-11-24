@@ -109,6 +109,28 @@ String _effectForEvent(String name) {
   }
 }
 
+String _ultimateEffectKind(String id) {
+  const effects = <String, String>{
+    'ranger_starfall': 'starfall',
+    'ranger_piercing': 'piercing',
+    'ranger_nature': 'nature',
+    'ranger_apex': 'apex',
+    'flame_eruption': 'eruption',
+    'flame_comet': 'comet',
+    'flame_brand': 'brand',
+    'flame_phoenix': 'phoenix',
+    'shadow_vanish': 'vanish',
+    'shadow_cross': 'cross',
+    'shadow_poison': 'poison',
+    'shadow_execution': 'execution',
+    'storm_bolt': 'thunder',
+    'storm_chain': 'chain',
+    'storm_field': 'field',
+    'storm_tempest': 'tempest',
+  };
+  return effects[id] ?? 'burst';
+}
+
 class HeroViewerScreen extends StatefulWidget {
   const HeroViewerScreen({
     super.key,
@@ -640,7 +662,13 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                           ? null
                           : () {
                               final result = combat.useUltimate(i);
-                              _select('skill', _direction, replay: true);
+                              if (result.accepted) {
+                                _effects.add(StageEffect(
+                                  kind: _ultimateEffectKind(combat.hero.ultimates[i].id),
+                                  startMs: _clock.value,
+                                ));
+                                _select('skill', _direction, replay: true);
+                              }
                               setState(() {
                                 _log.value = [
                                   '${result.messageAr} · ${result.damage} ضرر',
