@@ -57,8 +57,8 @@ FLAME_PALETTE = {
     "hair_mid": "#D8320F",
     "hair_light": "#FF6A28",
     "hair_shine": "#FFB347",
-    "eye_blue": "#FFB020",
-    "eye_light": "#FFE08A",
+    "eye_blue": "#A9271B",
+    "eye_light": "#F26A3D",
     "energy": "#FF4A18",
     "bow_glow": "#FF8A24",
     "bow_core": "#FFC24A",
@@ -223,29 +223,49 @@ def long_cape(m):
 
 
 def short_cape(m):
-    """Waist-length split cape with an angular hem (Flame's knight silhouette)."""
+    """Flame Knight's long, split crimson mantle with pointed fire-cut tails.
+
+    The approved roster image shows a knee-to-calf length red cape, not the
+    waist-length generic mantle used by the first procedural pass. Two
+    overlapping cloth panels preserve leg separation while keeping the broad
+    red silhouette visible from rear and three-quarter views.
+    """
     for index, (bone, v0, v1) in enumerate((
-            ("cloak_a", 0.0, 0.40), ("cloak_b", 0.38, 0.74))):
+            ("cloak_a", 0.0, 0.46), ("cloak_b", 0.42, 0.88))):
         rows = []
-        for i in range(12):
-            v = v0 + (v1 - v0) * i / 11.0
+        for i in range(15):
+            v = v0 + (v1 - v0) * i / 14.0
             row = []
-            for j in range(29):
-                u = -1.0 + 2.0 * j / 28.0
-                x = u * (0.40 + 0.20 * v)
-                y = 0.155 + 0.215 * v + 0.030 * math.sin(u * 8.0) * v
-                z = 2.075 - 1.02 * v
-                if i >= 9:  # angular, flame-cut hem
-                    z += 0.085 * (1.0 - abs(u)) * (i - 9) / 2.0
+            for j in range(33):
+                u = -1.0 + 2.0 * j / 32.0
+                x = u * (0.39 + 0.23 * v)
+                y = 0.155 + 0.245 * v + 0.038 * math.sin(u * 7.0) * v
+                z = 2.075 - 1.42 * v
+                if i >= 11:
+                    z += 0.115 * (1.0 - abs(u)) * (i - 10) / 4.0
                 row.append(m.Vector((x, y, z)))
             rows.append(row)
-        m.grid_sheet(f"Cloak_{index}", rows, ["green_deep", "green"], bone,
-                     solidify=(0.024, 1), recalc=False)
+        m.grid_sheet(f"Cloak_{index}", rows, ["green", "green_deep"], bone,
+                     solidify=(0.026, 1), recalc=False)
+    # Narrow front split leaves the dark trousers and gold knee armour readable.
     for side, sign in (("L", 1.0), ("R", -1.0)):
+        rows = []
+        for i in range(9):
+            v = i / 8.0
+            z = 1.34 - 0.76 * v
+            inner = 0.12 + 0.035 * v
+            outer = 0.30 + 0.10 * v
+            rows.append([
+                m.Vector((sign * inner, -0.205 - 0.025 * v, z)),
+                m.Vector((sign * outer, -0.175 + 0.025 * v, z - 0.025)),
+            ])
+        m.grid_sheet(f"Flame_Cape_Front_{side}", rows,
+                     ["green", "green_deep"], "hips",
+                     solidify=(0.022, 1), recalc=False)
         m.grid_sheet(f"Shoulder_Mantle_{side}",
-                     _mantle_rows(m, sign, reach=0.32, length=0.85),
+                     _mantle_rows(m, sign, reach=0.40, length=1.08),
                      ["green", "green_deep"], "chest",
-                     solidify=(0.020, 1), recalc=False)
+                     solidify=(0.024, 1), recalc=False)
     _collar(m)
 
 
@@ -409,6 +429,25 @@ def flame_armour(m):
         [0.115, 0.092, 0.062, 0.018], "green", "chest", sides=6,
         thickness=[0.030, 0.026, 0.020, 0.008], tip=True)
     for side, sign in (("L", 1.0), ("R", -1.0)):
+        # Layered gold shoulder plate: broad upper shell, dark under-rim and
+        # raised edge, matching the prominent asymmetric knight pauldrons.
+        m.grid_sheet(f"Flame_Pauldron_{side}", [
+            [m.Vector((x * sign, y, z)) for x, y, z in row] for row in (
+                [(0.145, -0.255, 2.155), (0.295, -0.220, 2.190),
+                 (0.445, -0.115, 2.145), (0.525, -0.015, 2.075)],
+                [(0.155, -0.245, 2.065), (0.305, -0.205, 2.095),
+                 (0.455, -0.105, 2.055), (0.535, -0.005, 1.985)],
+                [(0.165, -0.205, 1.985), (0.315, -0.165, 2.010),
+                 (0.465, -0.075, 1.975), (0.535, 0.015, 1.910)])],
+            ["bronze_light", "bronze"], "chest", solidify=(0.024, 0),
+            recalc=False)
+        m.sweep(f"Pauldron_Edge_{side}", [
+            m.Vector((0.150 * sign, -0.258, 2.155)),
+            m.Vector((0.300 * sign, -0.230, 2.205)),
+            m.Vector((0.455 * sign, -0.120, 2.160)),
+            m.Vector((0.535 * sign, -0.015, 2.075))],
+            [0.024, 0.026, 0.022, 0.012], "gold", "chest", sides=5,
+            thickness=[0.014, 0.015, 0.012, 0.008])
         m.sweep(f"Pauldron_Spike_{side}", [
             m.Vector((0.395 * sign, -0.02, 2.135)),
             m.Vector((0.475 * sign, -0.05, 2.235)),
@@ -418,6 +457,13 @@ def flame_armour(m):
         m.torus(f"Pauldron_Ring_{side}", (0.365 * sign, 0.0, 2.045),
                 0.230, 0.014, "gold", "chest",
                 scale=(1.0, 1.05, 0.62), major_segments=32)
+        # Gold forearm guards and a raised elbow cuff.
+        elbow = m.Vector((0.470 * sign, 0.0, 1.730))
+        wrist = m.Vector((0.545 * sign, -0.02, 1.450))
+        m.ring_at(f"Flame_Vambrace_{side}", elbow, wrist, 0.20,
+                  0.064, 0.030, "bronze_light", f"forearm.{side}")
+        m.ring_at(f"Flame_Vambrace_Trim_{side}", elbow, wrist, 0.72,
+                  0.052, 0.024, "gold", f"forearm.{side}")
 
 
 def shadow_armour(m):
