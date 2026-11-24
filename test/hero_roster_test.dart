@@ -5,8 +5,11 @@ void main() {
   group('Archer FM hero roster', () {
     test('contains all four heroes with three unique weapons each', () {
       expect(archerFmHeroes.map((hero) => hero.id).toSet(), HeroId.values.toSet());
+      expect(archerFmHeroes.map((hero) => hero.modelAssetPath).toSet(), hasLength(4));
       for (final hero in archerFmHeroes) {
         expect(hero.weapons, hasLength(3), reason: hero.id.name);
+        expect(hero.modelAssetPath, contains('/model/'));
+        expect(hero.modelAssetPath, endsWith('_animated.glb'));
         expect(hero.weapons.map((weapon) => weapon.id).toSet(), hasLength(3));
       }
     });
