@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: archer-fm-four-hero-visual-build-${{ github.ref }}
+  group: archer-fm-four-hero-visual-build-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
