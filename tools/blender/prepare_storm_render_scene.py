@@ -58,7 +58,12 @@ def main():
     )
     available = list(bpy.data.actions)
     for expected in required:
-        matches = [a for a in available if a.name == expected or a.name.endswith("|" + expected)]
+        matches = [
+            a for a in available
+            if a.name == expected
+            or a.name.endswith("|" + expected)
+            or a.name.startswith(expected + "_")
+        ]
         if len(matches) != 1:
             raise RuntimeError(
                 f"Expected exactly one imported action {expected}; "
