@@ -39,6 +39,21 @@ void main() {
       expect(runtime.useUltimate(0).accepted, isTrue);
     });
 
+    test('Ultimate is independent and does not consume the five-hit combo', () {
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger));
+      runtime.attack();
+      expect(runtime.comboIndex, 1);
+
+      runtime.advance(const Duration(milliseconds: 520));
+      expect(runtime.useUltimate(0).accepted, isTrue);
+      expect(runtime.comboIndex, 1);
+
+      runtime.advance(const Duration(milliseconds: 520));
+      final nextHit = runtime.attack();
+      expect(nextHit.accepted, isTrue);
+      expect(nextHit.comboIndex, 2);
+    });
+
     test('XP levels the hero and stops at level 40', () {
       final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm));
       expect(runtime.gainExperience(150), 1);
