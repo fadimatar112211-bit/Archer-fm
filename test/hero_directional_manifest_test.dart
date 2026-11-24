@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const heroes = ['ranger', 'flame', 'shadow'];
+  const heroes = ['ranger', 'flame', 'shadow', 'storm'];
   const states = [
     'idle', 'walk', 'run', 'attack', 'skill', 'dodge', 'hit', 'death',
   ];
@@ -40,6 +40,40 @@ void main() {
       }
     });
   }
+
+  test('Storm atlases contain unique, correctly packed frame rectangles', () async {
+    final source = await rootBundle.loadString(
+      'assets/heroes/storm/renders/storm_manifest.json',
+    );
+    final manifest = jsonDecode(source) as Map<String, dynamic>;
+    final atlases = manifest['atlases'] as List<dynamic>;
+    final animations = manifest['animations'] as Map<String, dynamic>;
+    expect(atlases, hasLength(64));
+    expect(animations, hasLength(64));
+
+    for (final entry in atlases) {
+      final atlas = entry as Map<String, dynamic>;
+      final animation = atlas['animation'] as String;
+      final imagePath = 'assets/heroes/storm/renders/${atlas['image']}';
+      final metaPath = 'assets/heroes/storm/renders/${atlas['meta']}';
+      final imageBytes = await rootBundle.load(imagePath);
+      expect(imageBytes.lengthInBytes, greaterThan(100), reason: imagePath);
+
+      final meta = jsonDecode(await rootBundle.loadString(metaPath))
+          as Map<String, dynamic>;
+      final frames = meta['frames'] as Map<String, dynamic>;
+      final clip = animations[animation] as Map<String, dynamic>;
+      final frameIds = clip['frames'] as List<dynamic>;
+      expect(frames.keys.toSet(), frameIds.toSet(), reason: animation);
+      final rects = frames.values.map((value) {
+        final rect = (value as Map<String, dynamic>)['frame']
+            as Map<String, dynamic>;
+        return '${rect['x']}:${rect['y']}';
+      }).toSet();
+      expect(rects, hasLength(frameIds.length), reason: animation);
+      expect(frameIds.every((id) => (id as String).startsWith('storm_')), isTrue);
+    }
+  });
 
   test('combat clips contain frame events for attack timing', () async {
     for (final hero in heroes) {
