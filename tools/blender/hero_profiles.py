@@ -42,6 +42,12 @@ import math
 # Shadow dark violet with a mask, Storm blue/gold with lightning.
 
 # Flame profile follows the user-approved Flame Knight roster reference (front/3q/back silhouette).
+FLAME_HAIR_SPIKES = (
+    (-8, 0.76, 24), (28, 0.66, 22), (-38, 0.70, 23),
+    (62, 0.54, 20), (-70, 0.56, 21),
+    (108, 0.46, 24), (-126, 0.44, 24), (176, 0.34, 28),
+)
+
 FLAME_PALETTE = {
     "green": "#A32A1B",
     "green_light": "#D04224",
