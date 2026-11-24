@@ -147,7 +147,7 @@ def main():
         samples = [round(start + (end - start) * i / (count - 1)) for i in range(count)]
         for direction in DIRECTIONS:
             radians = math.radians(direction_angles[direction])
-            offset = Vector((math.sin(radians) * 4.2, -math.cos(radians) * 4.2, 1.45))
+            offset = Vector((-math.sin(radians) * 4.2, -math.cos(radians) * 4.2, 1.45))
             camera.location = target + offset
             look_at(camera, target)
             frames = []
