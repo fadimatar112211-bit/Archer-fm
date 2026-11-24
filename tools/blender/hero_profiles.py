@@ -41,6 +41,7 @@ import math
 # are authored from the legacy identity sheets plus the brief: Flame red/gold,
 # Shadow dark violet with a mask, Storm blue/gold with lightning.
 
+# Flame profile follows the user-approved Flame Knight roster reference (front/3q/back silhouette).
 FLAME_PALETTE = {
     "green": "#A32A1B",
     "green_light": "#D04224",
