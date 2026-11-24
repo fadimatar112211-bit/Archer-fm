@@ -586,13 +586,16 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                   FilledButton.icon(
                     onPressed: combat.attackCooldownRemainingMs > 0
                         ? null
-                        : () => setState(() {
-                              final result = combat.attack();
+                        : () {
+                            final result = combat.attack();
+                            _select('attack', _direction);
+                            setState(() {
                               _log.value = <String>[
                                 '${result.messageAr} · ${result.damage} ضرر',
                                 ..._log.value,
                               ].take(6).toList(growable: false);
-                            }),
+                            });
+                          },
                     icon: const Icon(Icons.gps_fixed),
                     label: Text(combat.attackCooldownRemainingMs > 0
                         ? 'انتظر ${(combat.attackCooldownRemainingMs / 1000).toStringAsFixed(1)}ث'
@@ -635,13 +638,16 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                       onPressed: combat.level < combat.hero.ultimates[i].unlockLevel ||
                               combat.ultimateCooldowns[i] > 0
                           ? null
-                          : () => setState(() {
-                                final result = combat.useUltimate(i);
+                          : () {
+                              final result = combat.useUltimate(i);
+                              _select('skill', _direction);
+                              setState(() {
                                 _log.value = [
                                   '${result.messageAr} · ${result.damage} ضرر',
                                   ..._log.value,
                                 ].take(6).toList(growable: false);
-                              }),
+                              });
+                            },
                       child: Text(
                         '${combat.hero.ultimates[i].nameAr} · م${combat.hero.ultimates[i].unlockLevel}'
                         '${combat.level < combat.hero.ultimates[i].unlockLevel ? ' · مقفلة' : combat.ultimateCooldowns[i] > 0 ? ' · تبريد' : ''}',
