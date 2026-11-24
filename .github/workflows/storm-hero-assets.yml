@@ -69,6 +69,7 @@ jobs:
           test "$(find assets/heroes/flame/renders/atlases -maxdepth 1 -name '*.json' | wc -l)" -eq 64
           test -s assets/heroes/flame/model/flame_animated.glb
           echo "FLAME_2_5D_ASSETS_VALIDATED"
+          touch "$RUNNER_TEMP/flame-validation-ok"
 
       - name: Fetch the rigged Storm GLB from the implementation branch
         run: |
@@ -151,15 +152,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Commit generated hero assets to the current branch
-        if: success()
+      - name: Commit successfully generated hero assets
+        if: always()
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/flame/renders/atlases assets/heroes/flame/renders/flame_manifest.json assets/heroes/storm/renders
+          if [[ -f "$RUNNER_TEMP/flame-validation-ok" ]]; then
+            git add assets/heroes/flame/model/flame_animated.glb
+            git add assets/heroes/flame/renders/flame_manifest.json assets/heroes/flame/renders/atlases
+          fi
+          if [[ -s assets/heroes/ranger/model/ranger_animated.glb ]]; then git add assets/heroes/ranger/model/ranger_animated.glb; fi
+          if [[ -s assets/heroes/shadow/model/shadow_animated.glb ]]; then git add assets/heroes/shadow/model/shadow_animated.glb; fi
+          if [[ -s assets/heroes/storm/model/storm_animated.glb ]]; then git add assets/heroes/storm/model/storm_animated.glb; fi
+          if [[ -s assets/heroes/storm/renders/storm_manifest.json ]]; then
+            git add assets/heroes/storm/renders
+          fi
+          if [[ -f pubspec.yaml ]]; then git add pubspec.yaml; fi
           if git diff --cached --quiet; then
-            echo "No generated Storm asset changes to commit."
+            echo "No validated generated hero assets to commit."
           else
-            git commit -m "Generate Storm directional animation atlases"
+            git commit -m "Store validated generated hero assets"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
