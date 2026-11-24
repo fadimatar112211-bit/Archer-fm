@@ -6,13 +6,23 @@ on:
     paths:
       - "tools/blender/render_storm_glb.py"
       - "tools/blender/pack_storm_atlases.py"
+      - "tools/blender/validate_hero_assets.py"
       - ".github/workflows/storm-hero-assets.yml"
+      - "assets/heroes/ranger/renders/**"
+      - "assets/heroes/flame/renders/**"
+      - "assets/heroes/shadow/renders/**"
+      - "assets/heroes/storm/renders/**"
   pull_request:
     branches: [main]
     paths:
       - "tools/blender/render_storm_glb.py"
       - "tools/blender/pack_storm_atlases.py"
+      - "tools/blender/validate_hero_assets.py"
       - ".github/workflows/storm-hero-assets.yml"
+      - "assets/heroes/ranger/renders/**"
+      - "assets/heroes/flame/renders/**"
+      - "assets/heroes/shadow/renders/**"
+      - "assets/heroes/storm/renders/**"
 
 permissions:
   contents: write
@@ -46,7 +56,8 @@ jobs:
 
       - name: Render eight real animation states in eight directions
         run: |
-          blender --background --python tools/blender/render_storm_glb.py
+          blender --background --python-exit-code 1 --python tools/blender/render_storm_glb.py
+          test -s assets/heroes/storm/renders/storm_manifest.json
 
       - name: Pack and validate all Storm atlases
         run: |
@@ -54,6 +65,7 @@ jobs:
           test "$(find assets/heroes/storm/renders/atlases -maxdepth 1 -name '*.png' | wc -l)" -eq 64
           test "$(find assets/heroes/storm/renders/atlases -maxdepth 1 -name '*.json' | wc -l)" -eq 64
           echo "STORM_ATLAS_COUNT_OK=64"
+          /usr/bin/python3 tools/blender/validate_hero_assets.py
 
       - name: Upload generated Storm assets
         if: always()
