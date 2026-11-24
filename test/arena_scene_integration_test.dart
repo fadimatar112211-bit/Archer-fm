@@ -8,6 +8,7 @@ import 'package:archer_fm/game/combat/hero_kit.dart';
 import 'package:archer_fm/game/monsters/monster_models.dart';
 import 'package:archer_fm/game/render3/glb.dart';
 import 'package:archer_fm/game/render3/hero3d_controller.dart';
+import 'package:archer_fm/game/render3/hero3d_painter.dart';
 import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
