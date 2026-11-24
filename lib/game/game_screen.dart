@@ -336,19 +336,10 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  /// Loads the retained GLB fallback for heroes whose 2.5D sprite replacement
-  /// has not passed acceptance. Shadow is the first sprite pilot and therefore
-  /// skips this fallback unless a test explicitly injects a controller/bytes.
+  /// Loads the production rigged GLB used by this hero during live combat.
   Future<void> _loadHero3D() async {
-    // All four production heroes use rigged GLB models. Never expose a
-    // partial/held-pose atlas as a fallback if a required model fails to load.
-    if (HeroRenderPolicy.routeFor(widget.hero.id) ==
-            HeroVisualRoute.approvedSpritePilot &&
-        widget.hero3dController == null &&
-        widget.hero3dBytes == null) {
-      debugPrint('Shadow temporary sprite fallback: using approved atlas renderer');
-      return;
-    }
+    // All four production heroes require their rigged GLB. The sprite atlas is
+    // not a silent fallback for missing production models.
     if (widget.hero3dController != null) {
       _hero3d = widget.hero3dController;
       return;
@@ -371,7 +362,11 @@ class _GameScreenState extends State<GameScreen>
     } catch (_) {
       bytes = null;
     }
-    if (!mounted || bytes == null) return; // atlas fallback stays active
+    if (!mounted) return;
+    if (bytes == null) {
+      _showToast('تعذّر تحميل نموذج البطل ثلاثي الأبعاد');
+      return;
+    }
     try {
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
@@ -687,9 +682,8 @@ class _GameScreenState extends State<GameScreen>
         SpriteActorClipResolver.directionFor(world.player.facing);
     final name = '${state}_$dir';
 
-    // Transitional GLB fallback: pose the retained model while this hero's
-    // sprite pack is not yet accepted. When no sprite manifest exists, keep
-    // weapon-release timing functional using the authored clip duration.
+    // Production GLB animation path. When no sprite manifest exists, synthesize
+    // the weapon-release event from the authored clip duration.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final loop = _stateIsLooping(state);
