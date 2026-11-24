@@ -1,0 +1,111 @@
+name: Build four reference-faithful hero sprite packs
+
+on:
+  push:
+    branches: [arena-scene-integration]
+    paths:
+      - '.github/workflows/four-hero-visual-build.yml'
+      - 'assets/heroes/**/source/**'
+      - 'assets/heroes/render_pipeline_config.json'
+      - 'tools/blender/**'
+      - 'tools/pack_hero_atlases.py'
+      - 'tools/tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archer-fm-four-hero-visual-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    name: Render and validate ${{ matrix.hero }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - hero: ranger_new
+            source: assets/heroes/ranger_new/source/ranger_new_source.blend
+            config: assets/heroes/ranger_new/source/render_config.json
+          - hero: flame
+            source: assets/heroes/flame/source/flame_source.blend
+            config: assets/heroes/render_pipeline_config.json
+          - hero: shadow
+            source: assets/heroes/shadow/source/shadow_source.blend
+            config: assets/heroes/render_pipeline_config.json
+          - hero: storm
+            source: assets/heroes/storm/source/storm_source.blend
+            config: assets/heroes/render_pipeline_config.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Blender and image validation dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-pil
+          blender --version
+          python3 -c "from PIL import Image; print('Pillow ready')"
+
+      - name: Select isolated hero profile
+        run: |
+          printf '%s\n' "${{ matrix.hero }}" > tools/blender/active_hero.txt
+          test -s "${{ matrix.source }}"
+          test -s "${{ matrix.config }}"
+
+      - name: Validate original Ranger source
+        if: matrix.hero == 'ranger_new'
+        run: |
+          blender -b "${{ matrix.source }}" --python tools/blender/validate_ranger_new_source.py
+
+      - name: Render eight states in eight directions from the approved Blender source
+        run: |
+          blender -b "${{ matrix.source }}" \
+            --python tools/blender/render_hero.py -- \
+            --config "${{ matrix.config }}"
+
+      - name: Validate every rendered frame, silhouette, direction and motion
+        run: |
+          python3 tools/blender/validate_rendered_frames.py \
+            --root "assets/heroes/${{ matrix.hero }}/renders" --resolution 192
+
+      - name: Pack atlases and stage the source-faithful review bundle
+        run: |
+          python3 tools/pack_hero_atlases.py \
+            --manifest "assets/heroes/${{ matrix.hero }}/renders/${{ matrix.hero }}_manifest.json"
+          test -s "assets/heroes/_sprite_bundles/${{ matrix.hero }}/renders/atlases"
+
+      - name: Upload complete hero review bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-${{ matrix.hero }}-reference-sprite-pack
+          path: assets/heroes/_sprite_bundles/${{ matrix.hero }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  roster-contracts:
+    name: Verify roster and Ultimate contracts
+    runs-on: ubuntu-24.04
+    needs: render
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: |
+          flutter test --reporter expanded \
+            test/all_hero_render_manifest_test.dart \
+            test/all_hero_runtime_bundle_test.dart \
+            test/hero_catalog_test.dart \
+            test/hero_render_policy_test.dart \
+            test/hero_manifest_test.dart \
+            test/ultimate_kit_contract_test.dart \
+            test/hero_kit_progression_test.dart
