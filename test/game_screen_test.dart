@@ -261,7 +261,13 @@ void main() {
         // the remaining attack cooldown, still inside the 1800 ms window.
         await pumpFor(tester, 1150);
         final landed = 500 - enemy.hp >= total + base * multipliers[hit] - 0.01;
-        expect(landed, isTrue, reason: 'hit ${hit + 1} never landed');
+        expect(
+          landed,
+          isTrue,
+          reason: 'hit ${hit + 1} never landed; projectiles=${world.projectiles.length}, '
+              'combo=${world.combo.chainLength}, now=${world.nowMs}, '
+              'facing=${world.player.facing}, enemy=${enemy.position}',
+        );
         total = 500 - enemy.hp;
       }
       expect(
@@ -297,7 +303,12 @@ void main() {
       () => harness.world!.projectiles.where((p) => !p.fromEnemy).length == 5,
       timeoutMs: 1500,
     );
-    expect(fired, isTrue);
+    expect(
+      fired,
+      isTrue,
+      reason: 'volley did not release; pending=${harness.world!.pendingAbilityId}, '
+          'projectiles=${harness.world!.projectiles.length}, now=${harness.world!.nowMs}',
+    );
     final volley = harness.world!.projectiles
         .where((p) => !p.fromEnemy)
         .toList();
