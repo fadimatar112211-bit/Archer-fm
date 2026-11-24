@@ -103,7 +103,7 @@ void main() {
     for (final entry in atlasByAnimation.entries) {
       final animation = entry.key;
       final atlas = entry.value;
-      final metaPath = '$_root/${atlas['meta']}';
+      final metaPath = 'assets/heroes/shadow/renders/${atlas['meta']}';
       final meta = jsonDecode(await rootBundle.loadString(metaPath))
           as Map<String, dynamic>;
       final frames = meta['frames'] as Map<String, dynamic>;
