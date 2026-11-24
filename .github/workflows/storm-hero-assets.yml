@@ -1,0 +1,45 @@
+name: Build Storm directional hero assets
+
+on:
+  push:
+    branches: [heroes-complete]
+    paths:
+      - "tools/blender/render_storm_glb.py"
+      - "tools/blender/pack_storm_atlases.py"
+      - ".github/workflows/storm-hero-assets.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render-storm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: heroes-complete
+      - name: Fetch the existing animated Storm GLB
+        run: |
+          git fetch origin implementation/visual-systems-next-pass --depth=1
+          mkdir -p assets/heroes/storm/model
+          git show FETCH_HEAD:assets/heroes/storm/model/storm_animated.glb > assets/heroes/storm/model/storm_animated.glb
+          test -s assets/heroes/storm/model/storm_animated.glb
+      - name: Install Blender and atlas packer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-pil
+      - name: Render all 8 states in all 8 directions
+        run: blender -b --python tools/blender/render_storm_glb.py
+      - name: Pack and validate the 64 atlases
+        run: /usr/bin/python3 tools/blender/pack_storm_atlases.py
+      - name: Commit generated Storm runtime assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders/
+          git diff --cached --quiet && exit 0
+          git commit -m "Build Storm eight-direction animated runtime assets"
+          git push origin HEAD:heroes-complete
