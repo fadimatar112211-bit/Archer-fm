@@ -178,6 +178,9 @@ class _Harness {
             hero: heroById(heroId),
             kit: kit,
             loaderFactory: _CombatFakeLoader.new,
+            // Keep combat simulation tests deterministic; the real GLB path
+            // is exercised separately for all four heroes in hero3d_screen_test.
+            hero3dBytes: (_) async => null,
             store: store,
             settingsStore: settingsStore ?? MemorySettingsStore(),
             worldFactory: (kit) {
