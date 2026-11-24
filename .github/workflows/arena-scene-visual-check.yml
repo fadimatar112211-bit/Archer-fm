@@ -50,6 +50,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: archer-fm-unified-arena-scene
-          path: build/arena-captures/unified_arena_scene.png
+          path: build/arena-captures/
           if-no-files-found: warn
           retention-days: 14
