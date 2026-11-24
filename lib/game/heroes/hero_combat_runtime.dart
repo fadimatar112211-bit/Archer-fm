@@ -133,7 +133,6 @@ class HeroCombatRuntime {
     final damage = (hero.damageAt(level) * ultimate.damageMultiplier).round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
     _ultimateCooldowns[index] = ultimate.cooldownMs;
-    comboIndex = 0;
     return CombatActionResult(
       accepted: true,
       messageAr: 'تم تنفيذ ${ultimate.nameAr}',
