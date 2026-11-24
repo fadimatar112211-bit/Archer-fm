@@ -62,10 +62,10 @@ class HeroCombatRuntime {
     final milliseconds = elapsed.inMilliseconds;
     if (milliseconds <= 0) return;
     attackCooldownRemainingMs =
-        (attackCooldownRemainingMs - milliseconds).clamp(0, 1 << 30);
+        (attackCooldownRemainingMs - milliseconds).clamp(0, 1 << 30).toInt();
     for (var i = 0; i < _ultimateCooldowns.length; i++) {
       _ultimateCooldowns[i] =
-          (_ultimateCooldowns[i] - milliseconds).clamp(0, 1 << 30);
+          (_ultimateCooldowns[i] - milliseconds).clamp(0, 1 << 30).toInt();
     }
   }
 
@@ -96,7 +96,7 @@ class HeroCombatRuntime {
         selectedWeapon.damageMultiplier *
         const [1.0, 1.05, 1.1, 1.2, 1.55][currentHit];
     final damage = raw.round();
-    targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth);
+    targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
     comboIndex = (comboIndex + 1) % comboHitCount;
     attackCooldownRemainingMs = selectedWeapon.cooldownMs;
     return CombatActionResult(
