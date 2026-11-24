@@ -48,7 +48,7 @@ jobs:
       - name: Install Blender and image validation dependency
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender python3-pil
+          sudo apt-get install -y blender python3-pil libegl1 libgl1 libx11-6 libxext6 libxrender1
           blender --version
           python3 -c "from PIL import Image; print('Pillow ready')"
 
