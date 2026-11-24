@@ -15,17 +15,6 @@ on:
       - "assets/heroes/shadow/renders/**"
       - "assets/heroes/storm/renders/**"
       - "assets/heroes/*/source/**"
-  pull_request:
-    branches: [main]
-    paths:
-      - "tools/blender/render_storm_glb.py"
-      - "tools/blender/pack_storm_atlases.py"
-      - "tools/blender/validate_hero_assets.py"
-      - ".github/workflows/storm-hero-assets.yml"
-      - "assets/heroes/ranger/renders/**"
-      - "assets/heroes/flame/renders/**"
-      - "assets/heroes/shadow/renders/**"
-      - "assets/heroes/storm/renders/**"
 
 permissions:
   contents: write
