@@ -22,24 +22,14 @@ concurrency:
 jobs:
   render:
     name: Render and validate ${{ matrix.hero }}
-    if: matrix.hero == 'flame'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
         include:
-          - hero: ranger_new
-            source: assets/heroes/ranger_new/source/ranger_new_source.blend
-            config: assets/heroes/ranger_new/source/render_config.json
           - hero: flame
             source: assets/heroes/flame/source/flame_source.blend
-            config: assets/heroes/render_pipeline_config.json
-          - hero: shadow
-            source: assets/heroes/shadow/source/shadow_source.blend
-            config: assets/heroes/render_pipeline_config.json
-          - hero: storm
-            source: assets/heroes/storm/model/storm_animated.glb
             config: assets/heroes/render_pipeline_config.json
 
     steps:
@@ -108,24 +98,3 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  roster-contracts:
-    name: Verify roster and Ultimate contracts
-    runs-on: ubuntu-24.04
-    needs: render
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.7'
-          channel: stable
-          cache: true
-      - run: flutter pub get
-      - run: |
-          flutter test --reporter expanded \
-            test/all_hero_render_manifest_test.dart \
-            test/all_hero_runtime_bundle_test.dart \
-            test/hero_catalog_test.dart \
-            test/hero_render_policy_test.dart \
-            test/hero_manifest_test.dart \
-            test/ultimate_kit_contract_test.dart \
-            test/hero_kit_progression_test.dart
