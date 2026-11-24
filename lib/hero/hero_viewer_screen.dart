@@ -236,10 +236,10 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     await _loadManifest();
   }
 
-  Future<void> _select(String state, String direction) async {
+  Future<void> _select(String state, String direction, {bool replay = false}) async {
     final manifest = _manifest;
     if (manifest == null) return;
-    if (state == _state && direction == _direction && _player != null) return;
+    if (!replay && state == _state && direction == _direction && _player != null) return;
     final name = '${state}_$direction';
     final clip = manifest.clipFor(state, direction);
     if (clip == null) {
@@ -588,7 +588,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                         ? null
                         : () {
                             final result = combat.attack();
-                            _select('attack', _direction);
+                            _select('attack', _direction, replay: true);
                             setState(() {
                               _log.value = <String>[
                                 '${result.messageAr} · ${result.damage} ضرر',
@@ -640,7 +640,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                           ? null
                           : () {
                               final result = combat.useUltimate(i);
-                              _select('skill', _direction);
+                              _select('skill', _direction, replay: true);
                               setState(() {
                                 _log.value = [
                                   '${result.messageAr} · ${result.damage} ضرر',
