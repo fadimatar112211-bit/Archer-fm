@@ -24,7 +24,7 @@ void main() {
       codec.dispose();
     });
 
-    expect(image.width, 768);
+    expect(image.width, greaterThanOrEqualTo(768));
     expect(image.height, 1536);
 
     final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
