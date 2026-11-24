@@ -38,7 +38,7 @@ jobs:
             source: assets/heroes/shadow/source/shadow_source.blend
             config: assets/heroes/render_pipeline_config.json
           - hero: storm
-            source: assets/heroes/storm/source/storm_source.blend
+            source: assets/heroes/storm/model/storm_animated.glb
             config: assets/heroes/render_pipeline_config.json
 
     steps:
@@ -57,6 +57,13 @@ jobs:
           printf '%s\n' "${{ matrix.hero }}" > tools/blender/active_hero.txt
           test -s "${{ matrix.source }}"
           test -s "${{ matrix.config }}"
+
+      - name: Prepare Storm render scene from the shipped animated GLB
+        if: matrix.hero == 'storm'
+        run: |
+          blender -b --python tools/blender/prepare_storm_render_scene.py -- \
+            --input "${{ matrix.source }}" \
+            --output /tmp/storm_render_source.blend
 
       - name: Validate original Ranger source
         if: matrix.hero == 'ranger_new'
