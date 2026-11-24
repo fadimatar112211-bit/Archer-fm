@@ -58,7 +58,7 @@ def main():
         export_force_sampling=True,export_skins=True,
         export_materials="EXPORT",export_image_format="AUTO",
         export_yup=True,export_apply=False,export_texcoords=True,
-        export_normals=True,export_tangents=True,export_colors=True,
+        export_normals=True,export_tangents=True,
         export_frame_range=False,export_current_frame=False)
     if "FINISHED" not in result or not out.is_file() or out.stat().st_size<100_000:
         raise RuntimeError(f"{a.hero}: GLB export failed or output too small: {result}")
