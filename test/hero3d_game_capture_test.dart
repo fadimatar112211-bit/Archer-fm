@@ -147,7 +147,7 @@ void main() {
         [
           'assets/heroes/ranger_new/ranger_animated.glb',
           'ranger_new',
-          'ranger',
+          'ranger_new',
         ],
         [
           'assets/heroes/flame/model/flame_animated.glb',
