@@ -1170,6 +1170,7 @@ PROFILES = {
         "palette": FLAME_PALETTE,
         "hair": "spiky",
         "hair_style": "flame",
+        "hair_spikes": FLAME_HAIR_SPIKES,
         "build_cape": short_cape,
         "build_armour": flame_armour,
         "build_headgear": None,
