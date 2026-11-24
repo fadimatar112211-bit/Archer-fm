@@ -252,7 +252,7 @@ void main() {
       (tester) async {
         final hero = heroById(heroId);
         final kit = kitForHero(heroId);
-        final controller = await _buildHero3DFor(tester, hero);
+        final controller = (await _buildHero3DFor(tester, hero))!;
         GameWorld? world;
         tester.view.physicalSize = const Size(1280, 720);
         tester.view.devicePixelRatio = 1;
@@ -299,7 +299,7 @@ void main() {
         final painter = _arenaPainter(tester);
         expect(painter, isNotNull, reason: heroId);
         expect(painter!.presentation.hero3d, same(controller), reason: heroId);
-        expect(controller!.model.model.jointNames, isNotEmpty, reason: heroId);
+        expect(controller.model.model.jointNames, isNotEmpty, reason: heroId);
         expect(
           controller.model.model.clips.keys,
           containsAll(['idle', 'attack', 'skill', 'hit', 'death']),
@@ -317,6 +317,12 @@ void main() {
           timeoutMs: 4000,
         );
         expect(attackReleased, isTrue, reason: '$heroId normal attack must release');
+        final attackFinished = await pumpUntil(
+          tester,
+          () => controller.clipState == 'idle',
+          timeoutMs: 3000,
+        );
+        expect(attackFinished, isTrue, reason: '$heroId attack must return to idle');
 
         final hpBeforeAbility = enemy.hp;
         final projectilesBeforeAbility =
