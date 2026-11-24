@@ -13,7 +13,6 @@ on:
       - "assets/heroes/ranger/renders/**"
       - "assets/heroes/flame/renders/**"
       - "assets/heroes/shadow/renders/**"
-      - "assets/heroes/storm/renders/**"
       - "assets/heroes/*/source/**"
 
 permissions:
