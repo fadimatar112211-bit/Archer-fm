@@ -25,8 +25,8 @@ void main() {
     }
   });
 
-  test('Ranger, Flame and Storm retain safe transitional GLB routes until sprite acceptance', () {
-    for (final heroId in ['ranger_new', 'flame', 'storm']) {
+  test('all production heroes remain on GLB until complete sprite acceptance', () {
+    for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
       expect(
         HeroRenderPolicy.routeFor(heroId),
         HeroVisualRoute.glbPrimary,
