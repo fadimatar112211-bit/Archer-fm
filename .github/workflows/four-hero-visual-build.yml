@@ -22,6 +22,7 @@ concurrency:
 jobs:
   render:
     name: Render and validate ${{ matrix.hero }}
+    if: matrix.hero == 'flame'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     strategy:
