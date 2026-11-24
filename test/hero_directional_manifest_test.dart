@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../lib/hero/hero_manifest.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -19,6 +21,10 @@ void main() {
       final json = jsonDecode(source) as Map<String, dynamic>;
       expect(json['hero_id'], hero);
       expect(json['frame_size'], {'width': 192, 'height': 192});
+      final parsed = HeroManifest.fromJson(json);
+      expect(parsed.heroId, hero);
+      expect(parsed.clips, hasLength(64));
+      expect(parsed.atlases, hasLength(64));
 
       final animations = json['animations'] as Map<String, dynamic>;
       final atlases = json['atlases'] as List<dynamic>;
