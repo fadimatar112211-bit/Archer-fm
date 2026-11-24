@@ -370,7 +370,14 @@ class _GameScreenState extends State<GameScreen>
     try {
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
-      setState(() => _hero3d = Hero3DController(Hero3DModel(model, heroId: widget.hero.id)));
+      final controller = Hero3DController(
+        Hero3DModel(model, heroId: widget.hero.id),
+      );
+      // Calibrate from the real idle pose so every hero gets a consistent
+      // on-screen height despite different source-rig proportions.
+      controller.model.calibrate();
+      if (!mounted) return;
+      setState(() => _hero3d = controller);
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
