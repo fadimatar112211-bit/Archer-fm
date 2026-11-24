@@ -10,6 +10,7 @@ on:
       - "tools/blender/pack_storm_atlases.py"
       - "tools/blender/validate_hero_assets.py"
       - ".github/workflows/storm-hero-assets.yml"
+      - "docs/heroes/2_5d_visual_contract.md"
       - "assets/heroes/ranger/renders/**"
       - "assets/heroes/flame/renders/**"
       - "assets/heroes/shadow/renders/**"
