@@ -9,7 +9,7 @@ on:
       - 'lib/game/**'
       - 'lib/hero/**'
       - 'assets/heroes/ranger_new/**'
-      - 'test/arena_scene_integration_test.dart'
+      - 'test/**'
       - '.github/workflows/arena-scene-visual-check.yml'
       - 'pubspec.yaml'
       - 'pubspec.lock'
