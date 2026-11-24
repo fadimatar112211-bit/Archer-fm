@@ -36,6 +36,11 @@ def atlas_entries(manifest, hero):
             frames = clip.get("frames")
             require(isinstance(frames, list) and len(frames) >= 2,
                     f"{hero}/{name}: needs at least two frames")
+            require(len(frames) == len(set(frames)),
+                    f"{hero}/{name}: duplicate frame IDs")
+            require(all(isinstance(fid, str) and fid.startswith(hero + "_")
+                        for fid in frames),
+                    f"{hero}/{name}: frame ID has wrong hero prefix")
             result[name] = (frames, by_name[name].get("image"), by_name[name].get("meta"))
         return result
 
