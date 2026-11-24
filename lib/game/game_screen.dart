@@ -32,13 +32,10 @@ import 'world/mine_system.dart';
 /// Fixed simulation step of the game loop.
 const int _stepMs = 16;
 
-/// The live battle screen: joystick movement, manual bow attacks, the five-hit
-/// combo chain, the four Ranger abilities, enemy waves and the HUD.
-///
-/// Shadow is the first 2.5D sprite-pipeline pilot. Other heroes retain their
-/// current safe GLB route during migration; those GLBs are transitional, not
-/// the final in-match presentation. Animation events continue to drive weapon
-/// release and ability timing in the simulation.
+/// The live battle screen: joystick movement, manual weapon attacks, the
+/// five-hit combo chain, each hero's four special abilities, enemy waves and
+/// the HUD. All four playable heroes render from their rigged GLB models;
+/// animation events drive weapon release and ability timing in the simulation.
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -151,8 +148,7 @@ class _GameScreenState extends State<GameScreen>
   SpritePlayer? _player;
   String? _clipName;
 
-  /// In-game 3D hero controller; null until the GLB loads, in which case the
-  /// atlas sprite path is used instead.
+  /// In-game 3D hero controller; null until the required production GLB loads.
   Hero3DController? _hero3d;
 
   /// Clip currently authored as non-looping and still playing out.
@@ -344,9 +340,8 @@ class _GameScreenState extends State<GameScreen>
   /// has not passed acceptance. Shadow is the first sprite pilot and therefore
   /// skips this fallback unless a test explicitly injects a controller/bytes.
   Future<void> _loadHero3D() async {
-    // Shadow is the first sprite-pipeline pilot. Other heroes keep their safe
-    // existing GLB route until their approved sprite packs pass acceptance.
-    // Never expose an unapproved atlas just because a retained GLB fails.
+    // All four production heroes use rigged GLB models. Never expose a
+    // partial/held-pose atlas as a fallback if a required model fails to load.
     if (HeroRenderPolicy.routeFor(widget.hero.id) ==
             HeroVisualRoute.approvedSpritePilot &&
         widget.hero3dController == null &&
@@ -595,8 +590,8 @@ class _GameScreenState extends State<GameScreen>
     final m = manifest;
     final player = world.player;
 
-    // Transitional GLB fallback: keep its authored clip timing while the
-    // reference-matched sprite conversion for this hero is still pending.
+    // Production GLB path: keep the authored clip timing and fire combat events
+    // from the model's manifest-aligned action schedule.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final busy = _busyClip != null && !hero3d.completed;
