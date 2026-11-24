@@ -745,7 +745,17 @@ class _GameScreenState extends State<GameScreen>
     final clip = directionLocked == null
         ? SpriteActorClipResolver.clipFor(m, state, world.player.facing)
         : m.clipFor(state, dir);
-    if (clip == null) return;
+    if (clip == null) {
+      assert(() {
+        debugPrint('Hero clip missing: hero=${widget.hero.id} state=$state direction=$dir available=${m.clips.keys.where((key) => key.startsWith('${state}_')).join(',')}');
+        return true;
+      }());
+      return;
+    }
+    assert(() {
+      debugPrint('Hero clip start: hero=${widget.hero.id} name=$name events=${clip.events.map((event) => '${event.frame}:${event.name}').join(',')}');
+      return true;
+    }());
     final player = _player;
     if (player == null || _clipName != name) {
       final fresh = SpritePlayer(
@@ -772,6 +782,10 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _handleSpriteEvent(AnimationEvent event) {
+    assert(() {
+      debugPrint('Hero sprite event: hero=${widget.hero.id} frame=${event.frame} name=${event.name}');
+      return true;
+    }());
     _handleCombatEvent(event.name);
   }
 
