@@ -19,3 +19,41 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
+
+  render-storm-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: heroes-complete
+      - name: Fetch the existing animated Storm GLB
+        run: |
+          git fetch origin implementation/visual-systems-next-pass --depth=1
+          mkdir -p assets/heroes/storm/model
+          git show FETCH_HEAD:assets/heroes/storm/model/storm_animated.glb > assets/heroes/storm/model/storm_animated.glb
+          test -s assets/heroes/storm/model/storm_animated.glb
+      - name: Install Blender and atlas packer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-pil
+      - name: Render all Storm states and directions
+        run: blender -b --python tools/blender/render_storm_glb.py
+      - name: Pack and validate all 64 Storm atlases
+        run: /usr/bin/python3 tools/blender/pack_storm_atlases.py
+      - name: Upload Storm render artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: storm-directional-assets
+          path: assets/heroes/storm/renders/
+          if-no-files-found: error
+      - name: Commit generated Storm assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/heroes-complete'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders/
+          git diff --cached --quiet && exit 0
+          git commit -m "Build Storm eight-direction animated runtime assets"
+          git push origin HEAD:heroes-complete
