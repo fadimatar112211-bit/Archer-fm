@@ -117,13 +117,45 @@ def main():
     camera.data.type = "ORTHO"
     scene.camera = camera
 
-    # Determine framing from the rest pose, with feet pinned at 86% of frame.
+    # Fit the camera to the union of every authored animation pose, not just
+    # the rest pose. This keeps weapons, attack swings, dodges and death poses
+    # inside the same sprite frame instead of clipping them at runtime.
     rig.animation_data_create()
     rig.animation_data.action = None
     scene.frame_set(0)
-    low, high = bounds_of_meshes(meshes)
+    overall_low = None
+    overall_high = None
+    for state in STATES:
+        action = actions[state]
+        start, end = [float(x) for x in action.frame_range]
+        if end <= start:
+            fail(f"Storm action {action.name} has invalid frame range {action.frame_range}")
+        count = COUNTS[state]
+        pose_samples = [round(start + (end - start) * i / (count - 1)) for i in range(count)]
+        if len(set(pose_samples)) != count:
+            fail(f"Storm action {action.name} is too short for {count} distinct frames: {pose_samples}")
+        for sample in pose_samples:
+            rig.animation_data.action = action
+            scene.frame_set(sample)
+            pose_low, pose_high = bounds_of_meshes(meshes)
+            overall_low = pose_low if overall_low is None else Vector((
+                min(overall_low.x, pose_low.x),
+                min(overall_low.y, pose_low.y),
+                min(overall_low.z, pose_low.z),
+            ))
+            overall_high = pose_high if overall_high is None else Vector((
+                max(overall_high.x, pose_high.x),
+                max(overall_high.y, pose_high.y),
+                max(overall_high.z, pose_high.z),
+            ))
+    low, high = overall_low, overall_high
+    if low is None or high is None:
+        fail("Storm animation bounds could not be measured")
+    rig.animation_data.action = None
+    scene.frame_set(0)
     center = (low + high) * 0.5
     height = max(0.5, high.z - low.z)
+    print("STORM_ANIMATION_BOUNDS", tuple(round(v, 3) for v in low), tuple(round(v, 3) for v in high))
     target = Vector((center.x, center.y, low.z + height * 0.46))
     camera.data.ortho_scale = max(height * 1.42, (high.x-low.x) * 1.35, (high.y-low.y) * 1.35, 1.0)
     FRAMES.mkdir(parents=True, exist_ok=True)
