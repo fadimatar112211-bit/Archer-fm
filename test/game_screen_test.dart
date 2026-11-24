@@ -178,9 +178,6 @@ class _Harness {
             hero: heroById(heroId),
             kit: kit,
             loaderFactory: _CombatFakeLoader.new,
-            // These tests exercise deterministic sprite/event simulation;
-            // production GLB loading is covered by hero3d_screen_test.dart.
-            hero3dBytes: (_) async => null,
             store: store,
             settingsStore: settingsStore ?? MemorySettingsStore(),
             worldFactory: (kit) {
