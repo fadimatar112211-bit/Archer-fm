@@ -377,7 +377,20 @@ class _GameScreenState extends State<GameScreen>
       // on-screen height despite different source-rig proportions.
       controller.model.calibrate();
       if (!mounted) return;
-      setState(() => _hero3d = controller);
+
+      // The 3D asset can finish loading after the first input. Carry the
+      // current state into the new controller instead of leaving an in-flight
+      // attack/skill marked busy on a controller that has never started it.
+      _hero3d = controller;
+      final activeClip = _busyClip;
+      final activeState = activeClip == null
+          ? _desiredState()
+          : activeClip.split('_').first;
+      _playClip(
+        activeState,
+        pace: activeClip == null ? 1.0 : world.currentAttackRate(),
+      );
+      if (mounted) setState(() {});
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
