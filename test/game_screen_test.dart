@@ -88,12 +88,15 @@ Map<String, dynamic> _combatManifest(String heroId) {
     'frame_size': {'width': 192, 'height': 192},
     'pivot': {'x': 0.5, 'y': 0.86},
     'source': {'fps': 12},
+    // HeroManifest validates that every directional clip has an atlas.
+    // The harness shares one generated image, but still declares each clip.
     'atlases': [
-      {
-        'animation': 'idle_s',
-        'image': 'atlases/idle_s.png',
-        'meta': 'atlases/idle_s.json',
-      },
+      for (final name in animations.keys)
+        {
+          'animation': name,
+          'image': 'atlases/${name}.png',
+          'meta': 'atlases/${name}.json',
+        },
     ],
     'animations': animations,
   };
