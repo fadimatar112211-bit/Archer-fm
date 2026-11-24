@@ -1,6 +1,7 @@
 name: Storm hero assets
 
 on:
+  workflow_dispatch:
   push:
     branches: [heroes-complete]
     paths:
@@ -26,6 +27,7 @@ concurrency:
 jobs:
   render-storm:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Check out Archer FM
         uses: actions/checkout@v4
@@ -37,6 +39,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y blender python3-pil
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Export Ranger, Flame and Shadow as animated GLB models
         run: |
@@ -102,6 +108,16 @@ jobs:
           print("REGISTERED_ALL_FOUR_HERO_MODELS_AND_STORM_ATLASES")
           PY
 
+      - name: Run Flutter analysis and tests against the complete four-hero bundle
+        run: |
+          set -euo pipefail
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+
       - name: Upload generated Storm assets
         if: always()
         uses: actions/upload-artifact@v4
@@ -111,6 +127,7 @@ jobs:
             assets/heroes/storm/renders/storm_manifest.json
             assets/heroes/storm/renders/atlases/
             assets/heroes/*/model/*.glb
+            build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: warn
           retention-days: 14
 
