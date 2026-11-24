@@ -155,13 +155,7 @@ def main():
             frames = []
             for index, frame in enumerate(samples):
                 rig.animation_data.action = action
-                for bone in rig.pose.bones:
-                    if bone.rotation_mode == "QUATERNION":
-                        bone.rotation_quaternion = (1, 0, 0, 0)
-                    else:
-                        bone.rotation_euler = (0, 0, 0)
-                    bone.location = (0, 0, 0)
-                    bone.scale = (1, 1, 1)
+                # Preserve authored pose channels; evaluate the selected action directly.
                 scene.frame_set(frame)
                 bpy.context.view_layer.update()
                 frame_id = f"storm_{state}_{direction}_{index:03d}"
