@@ -7,6 +7,12 @@ on:
       - "tools/blender/render_storm_glb.py"
       - "tools/blender/pack_storm_atlases.py"
       - ".github/workflows/storm-hero-assets.yml"
+  pull_request:
+    branches: [heroes-complete]
+    paths:
+      - "tools/blender/render_storm_glb.py"
+      - "tools/blender/pack_storm_atlases.py"
+      - ".github/workflows/storm-hero-assets.yml"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +41,14 @@ jobs:
         run: blender -b --python tools/blender/render_storm_glb.py
       - name: Pack and validate the 64 atlases
         run: /usr/bin/python3 tools/blender/pack_storm_atlases.py
+      - name: Upload rendered Storm asset preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: storm-directional-assets
+          path: assets/heroes/storm/renders/
+          if-no-files-found: error
       - name: Commit generated Storm runtime assets
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
