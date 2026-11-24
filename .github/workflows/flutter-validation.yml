@@ -9,9 +9,12 @@ on:
 
 jobs:
   analyze-and-test:
+    needs: render-storm-assets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || 'heroes-complete' }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
