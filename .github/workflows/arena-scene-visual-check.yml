@@ -1,0 +1,61 @@
+name: Arena scene visual integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena-scene-integration
+    paths:
+      - 'lib/game/**'
+      - 'lib/hero/**'
+      - 'assets/heroes/ranger_new/**'
+      - 'assets/heroes/flame/**'
+      - 'assets/heroes/shadow/**'
+      - 'assets/heroes/storm/**'
+      - 'test/**'
+      - '.github/workflows/arena-scene-visual-check.yml'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arena-scene-visual-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render-unified-arena:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run unified arena render test
+        run: flutter test --reporter expanded test/arena_scene_integration_test.dart
+
+      - name: Run all four live hero GLB combat tests
+        run: flutter test --reporter expanded test/hero3d_screen_test.dart
+
+      - name: Run complete hero and gameplay regression suite
+        run: flutter test --reporter expanded test/
+
+      - name: Upload unified arena capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archer-fm-unified-arena-scene
+          path: build/arena-captures/
+          if-no-files-found: warn
+          retention-days: 14

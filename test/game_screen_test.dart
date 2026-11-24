@@ -88,12 +88,15 @@ Map<String, dynamic> _combatManifest(String heroId) {
     'frame_size': {'width': 192, 'height': 192},
     'pivot': {'x': 0.5, 'y': 0.86},
     'source': {'fps': 12},
+    // HeroManifest validates that every directional clip has an atlas.
+    // The harness shares one generated image, but still declares each clip.
     'atlases': [
-      {
-        'animation': 'idle_s',
-        'image': 'atlases/idle_s.png',
-        'meta': 'atlases/idle_s.json',
-      },
+      for (final name in animations.keys)
+        {
+          'animation': name,
+          'image': 'atlases/${name}.png',
+          'meta': 'atlases/${name}.json',
+        },
     ],
     'animations': animations,
   };
@@ -178,6 +181,9 @@ class _Harness {
             hero: heroById(heroId),
             kit: kit,
             loaderFactory: _CombatFakeLoader.new,
+            // Keep combat simulation tests deterministic; the real GLB path
+            // is exercised separately for all four heroes in hero3d_screen_test.
+            hero3dBytes: (_) async => null,
             store: store,
             settingsStore: settingsStore ?? MemorySettingsStore(),
             worldFactory: (kit) {
@@ -258,7 +264,13 @@ void main() {
         // the remaining attack cooldown, still inside the 1800 ms window.
         await pumpFor(tester, 1150);
         final landed = 500 - enemy.hp >= total + base * multipliers[hit] - 0.01;
-        expect(landed, isTrue, reason: 'hit ${hit + 1} never landed');
+        expect(
+          landed,
+          isTrue,
+          reason: 'hit ${hit + 1} never landed; projectiles=${world.projectiles.length}, '
+              'combo=${world.combo.chainLength}, now=${world.nowMs}, '
+              'facing=${world.player.facing}, enemy=${enemy.position}',
+        );
         total = 500 - enemy.hp;
       }
       expect(
@@ -294,7 +306,12 @@ void main() {
       () => harness.world!.projectiles.where((p) => !p.fromEnemy).length == 5,
       timeoutMs: 1500,
     );
-    expect(fired, isTrue);
+    expect(
+      fired,
+      isTrue,
+      reason: 'volley did not release; pending=${harness.world!.pendingAbilityId}, '
+          'projectiles=${harness.world!.projectiles.length}, now=${harness.world!.nowMs}',
+    );
     final volley = harness.world!.projectiles
         .where((p) => !p.fromEnemy)
         .toList();

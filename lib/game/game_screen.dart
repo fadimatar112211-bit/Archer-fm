@@ -32,13 +32,10 @@ import 'world/mine_system.dart';
 /// Fixed simulation step of the game loop.
 const int _stepMs = 16;
 
-/// The live battle screen: joystick movement, manual bow attacks, the five-hit
-/// combo chain, the four Ranger abilities, enemy waves and the HUD.
-///
-/// Shadow is the first 2.5D sprite-pipeline pilot. Other heroes retain their
-/// current safe GLB route during migration; those GLBs are transitional, not
-/// the final in-match presentation. Animation events continue to drive weapon
-/// release and ability timing in the simulation.
+/// The live battle screen: joystick movement, manual weapon attacks, the
+/// five-hit combo chain, each hero's four special abilities, enemy waves and
+/// the HUD. All four playable heroes render from their rigged GLB models;
+/// animation events drive weapon release and ability timing in the simulation.
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -151,8 +148,7 @@ class _GameScreenState extends State<GameScreen>
   SpritePlayer? _player;
   String? _clipName;
 
-  /// In-game 3D hero controller; null until the GLB loads, in which case the
-  /// atlas sprite path is used instead.
+  /// In-game 3D hero controller; null until the required production GLB loads.
   Hero3DController? _hero3d;
 
   /// Clip currently authored as non-looping and still playing out.
@@ -335,25 +331,27 @@ class _GameScreenState extends State<GameScreen>
       final loaded = await loader.loadManifest();
       if (!mounted) return;
       setState(() => manifest = loaded);
+
+      // If the player acted before the manifest finished loading, start that
+      // queued action now. The GLB loader performs the same hand-off if it wins
+      // the race instead.
+      final activeClip = _busyClip;
+      final state = activeClip == null
+          ? _desiredState()
+          : activeClip.split('_').first;
+      _playClip(
+        state,
+        pace: activeClip == null ? 1.0 : world.currentAttackRate(),
+      );
     } catch (error) {
       _showToast('تعذّر تحميل ملفات البطل: $error');
     }
   }
 
-  /// Loads the retained GLB fallback for heroes whose 2.5D sprite replacement
-  /// has not passed acceptance. Shadow is the first sprite pilot and therefore
-  /// skips this fallback unless a test explicitly injects a controller/bytes.
+  /// Loads the production rigged GLB used by this hero during live combat.
   Future<void> _loadHero3D() async {
-    // Shadow is the first sprite-pipeline pilot. Other heroes keep their safe
-    // existing GLB route until their approved sprite packs pass acceptance.
-    // Never expose an unapproved atlas just because a retained GLB fails.
-    if (HeroRenderPolicy.routeFor(widget.hero.id) ==
-            HeroVisualRoute.approvedSpritePilot &&
-        widget.hero3dController == null &&
-        widget.hero3dBytes == null) {
-      debugPrint('Shadow temporary sprite fallback: using approved atlas renderer');
-      return;
-    }
+    // All four production heroes require their rigged GLB. The sprite atlas is
+    // not a silent fallback for missing production models.
     if (widget.hero3dController != null) {
       _hero3d = widget.hero3dController;
       return;
@@ -376,11 +374,35 @@ class _GameScreenState extends State<GameScreen>
     } catch (_) {
       bytes = null;
     }
-    if (!mounted || bytes == null) return; // atlas fallback stays active
+    if (!mounted) return;
+    if (bytes == null) {
+      _showToast('تعذّر تحميل نموذج البطل ثلاثي الأبعاد');
+      return;
+    }
     try {
       final model = await GlbModel.load(bytes);
       if (!mounted) return;
-      setState(() => _hero3d = Hero3DController(Hero3DModel(model, heroId: widget.hero.id)));
+      final controller = Hero3DController(
+        Hero3DModel(model, heroId: widget.hero.id),
+      );
+      // Calibrate from the real idle pose so every hero gets a consistent
+      // on-screen height despite different source-rig proportions.
+      controller.model.calibrate();
+      if (!mounted) return;
+
+      // The 3D asset can finish loading after the first input. Carry the
+      // current state into the new controller instead of leaving an in-flight
+      // attack/skill marked busy on a controller that has never started it.
+      _hero3d = controller;
+      final activeClip = _busyClip;
+      final activeState = activeClip == null
+          ? _desiredState()
+          : activeClip.split('_').first;
+      _playClip(
+        activeState,
+        pace: activeClip == null ? 1.0 : world.currentAttackRate(),
+      );
+      if (mounted) setState(() {});
     } catch (error) {
       debugPrint('hero3d load failed: $error');
     }
@@ -562,7 +584,7 @@ class _GameScreenState extends State<GameScreen>
   // ---- Input ------------------------------------------------------------------
 
   void _tryAttack() {
-    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
+    if (_busyClip != null) return;
     if (!world.requestAttack()) return;
     widget.onNetworkAttack?.call();
     _audio.play(SoundCue.attack);
@@ -570,7 +592,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _onAbilityTap(String abilityId) {
-    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
+    if (_busyClip != null) return;
     final def = kit.abilityById(abilityId);
     if (def == null) return;
     final accepted = world.useAbility(abilityId);
@@ -595,8 +617,8 @@ class _GameScreenState extends State<GameScreen>
     final m = manifest;
     final player = world.player;
 
-    // Transitional GLB fallback: keep its authored clip timing while the
-    // reference-matched sprite conversion for this hero is still pending.
+    // Production GLB path: keep the authored clip timing and fire combat events
+    // from the model's manifest-aligned action schedule.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final busy = _busyClip != null && !hero3d.completed;
@@ -692,9 +714,8 @@ class _GameScreenState extends State<GameScreen>
         SpriteActorClipResolver.directionFor(world.player.facing);
     final name = '${state}_$dir';
 
-    // Transitional GLB fallback: pose the retained model while this hero's
-    // sprite pack is not yet accepted. When no sprite manifest exists, keep
-    // weapon-release timing functional using the authored clip duration.
+    // Production GLB animation path. When no sprite manifest exists, synthesize
+    // the weapon-release event from the authored clip duration.
     final hero3d = _hero3d;
     if (hero3d != null) {
       final loop = _stateIsLooping(state);
@@ -714,11 +735,27 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
 
-    if (m == null) return;
+    if (m == null) {
+      // Keep an input queued while both visual assets are still loading. The
+      // first loader to finish will replay this clip with its real event data.
+      _clipName = name;
+      if (!_stateIsLooping(state)) _busyClip = name;
+      return;
+    }
     final clip = directionLocked == null
         ? SpriteActorClipResolver.clipFor(m, state, world.player.facing)
         : m.clipFor(state, dir);
-    if (clip == null) return;
+    if (clip == null) {
+      assert(() {
+        debugPrint('Hero clip missing: hero=${widget.hero.id} state=$state direction=$dir available=${m.clips.keys.where((key) => key.startsWith('${state}_')).join(',')}');
+        return true;
+      }());
+      return;
+    }
+    assert(() {
+      debugPrint('Hero clip start: hero=${widget.hero.id} name=$name events=${clip.events.map((event) => '${event.frame}:${event.name}').join(',')}');
+      return true;
+    }());
     final player = _player;
     if (player == null || _clipName != name) {
       final fresh = SpritePlayer(
@@ -745,6 +782,10 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _handleSpriteEvent(AnimationEvent event) {
+    assert(() {
+      debugPrint('Hero sprite event: hero=${widget.hero.id} frame=${event.frame} name=${event.name}');
+      return true;
+    }());
     _handleCombatEvent(event.name);
   }
 

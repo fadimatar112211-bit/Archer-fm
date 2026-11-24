@@ -2,23 +2,18 @@ import 'package:archer_fm/hero/hero_render_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Shadow is the only temporary sprite fallback', () {
-    expect(
-      HeroRenderPolicy.routeFor('shadow'),
-      HeroVisualRoute.approvedSpritePilot,
-    );
-  });
-
-  test('only Shadow may use the temporary sprite fallback', () {
-    expect(HeroRenderPolicy.allowsSpriteAtlas('shadow'), isTrue);
-    for (final heroId in ['ranger_new', 'flame', 'storm']) {
+  test('all four playable heroes use their rigged GLB models in combat', () {
+    for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
       expect(
-        HeroRenderPolicy.allowsSpriteAtlas(heroId),
-        isFalse,
-        reason: '$heroId atlas has not passed visual acceptance',
+        HeroRenderPolicy.routeFor(heroId),
+        HeroVisualRoute.glbPrimary,
+        reason: '$heroId must use its complete rigged GLB action set',
       );
+      expect(HeroRenderPolicy.allowsSpriteAtlas(heroId), isFalse);
     }
   });
+
+  
 
   test('all four hero routes are explicitly defined', () {
     for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
@@ -30,8 +25,8 @@ void main() {
     }
   });
 
-  test('Ranger, Flame and Storm retain safe transitional GLB routes until sprite acceptance', () {
-    for (final heroId in ['ranger_new', 'flame', 'storm']) {
+  test('all production heroes remain on GLB until complete sprite acceptance', () {
+    for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
       expect(
         HeroRenderPolicy.routeFor(heroId),
         HeroVisualRoute.glbPrimary,

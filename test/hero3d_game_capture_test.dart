@@ -147,7 +147,7 @@ void main() {
         [
           'assets/heroes/ranger_new/ranger_animated.glb',
           'ranger_new',
-          'ranger',
+          'ranger_new',
         ],
         [
           'assets/heroes/flame/model/flame_animated.glb',
@@ -305,6 +305,18 @@ void main() {
               .writeAsBytesSync(stateData!.buffer.asUint8List());
           stateImage.dispose();
         }
+
+        // The state sweep above ends on the death clip. Reset to a real
+        // standing idle pose before the isolated review views; otherwise the
+        // files labelled close-up would actually capture the death animation.
+        hero3d.playClip(
+          'idle',
+          loop: true,
+          pace: 1.0,
+          nowMs: world.nowMs,
+          events: const [],
+        );
+        hero3d.advance(world.nowMs + 180, onEvent: (_) {});
 
         // Isolated close-ups use the exact runtime Hero3DController painter,
         // but remove the arena camera/map scale from the review. Eight yaw

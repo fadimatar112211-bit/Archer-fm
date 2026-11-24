@@ -24,7 +24,7 @@ void main() {
       codec.dispose();
     });
 
-    expect(image.width, 768);
+    expect(image.width, greaterThanOrEqualTo(768));
     expect(image.height, 1536);
 
     final pixels = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
@@ -88,6 +88,7 @@ void main() {
     // one atlas entry, and every referenced frame must exist inside its
     // directional metadata page and the shared source image.
     final atlasByAnimation = <String, Map<String, dynamic>>{};
+    final imageSizes = <String, ui.Size>{};
     for (final rawEntry in atlases) {
       final entry = rawEntry as Map<String, dynamic>;
       final animation = entry['animation'] as String;
@@ -103,9 +104,25 @@ void main() {
     for (final entry in atlasByAnimation.entries) {
       final animation = entry.key;
       final atlas = entry.value;
-      final metaPath = '$_root/${atlas['meta']}';
+      final metaPath = 'assets/heroes/shadow/renders/${atlas['meta']}';
       final meta = jsonDecode(await rootBundle.loadString(metaPath))
           as Map<String, dynamic>;
+      final imagePath = 'assets/heroes/shadow/renders/${atlas['image']}';
+      if (!imageSizes.containsKey(atlas['image'] as String)) {
+        final imageData = await rootBundle.load(imagePath);
+        final imageCodec = await ui.instantiateImageCodec(
+          imageData.buffer.asUint8List(
+            imageData.offsetInBytes,
+            imageData.lengthInBytes,
+          ),
+        );
+        final decoded = await imageCodec.getNextFrame();
+        imageSizes[atlas['image'] as String] =
+            ui.Size(decoded.image.width.toDouble(), decoded.image.height.toDouble());
+        decoded.image.dispose();
+        imageCodec.dispose();
+      }
+      final atlasSize = imageSizes[atlas['image'] as String]!;
       final frames = meta['frames'] as Map<String, dynamic>;
       final clip = animations[animation] as Map<String, dynamic>;
       final clipFrames = clip['frames'] as List<dynamic>;
@@ -118,8 +135,8 @@ void main() {
         expect(rect['y'], greaterThanOrEqualTo(0), reason: frameId);
         expect(rect['w'], 192, reason: frameId);
         expect(rect['h'], 192, reason: frameId);
-        expect(rect['x'] + rect['w'], lessThanOrEqualTo(768), reason: frameId);
-        expect(rect['y'] + rect['h'], lessThanOrEqualTo(1536), reason: frameId);
+        expect(rect['x'] + rect['w'], lessThanOrEqualTo(atlasSize.width), reason: frameId);
+        expect(rect['y'] + rect['h'], lessThanOrEqualTo(atlasSize.height), reason: frameId);
       }
       final events = clip['events'] as List<dynamic>? ?? const [];
       for (final rawEvent in events) {

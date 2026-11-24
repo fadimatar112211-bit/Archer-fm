@@ -79,13 +79,29 @@ HeroManifest _combatManifest() {
 Future<Hero3DController?> _buildHero3D(
   WidgetTester tester,
   HeroDefinition hero,
+) =>
+    _buildHero3DFor(tester, hero);
+
+Future<Hero3DController?> _buildHero3DFor(
+  WidgetTester tester,
+  HeroDefinition hero,
 ) async {
-  final bytes = File('assets/heroes/ranger_new/ranger_animated.glb')
-      .readAsBytesSync();
+  final path = switch (hero.id) {
+    'ranger_new' => 'assets/heroes/ranger_new/ranger_animated.glb',
+    'flame' => 'assets/heroes/flame/model/flame_animated.glb',
+    'shadow' => 'assets/heroes/shadow/model/shadow_animated.glb',
+    'storm' => 'assets/heroes/storm/model/storm_animated.glb',
+    _ => throw ArgumentError.value(hero.id, 'hero.id', 'Unknown production hero'),
+  };
+  final bytes = File(path).readAsBytesSync();
   final model = await tester.runAsync(
     () => GlbModel.load(Uint8List.fromList(bytes)),
   );
-  return Hero3DController(Hero3DModel(model!));
+  final controller = Hero3DController(
+    Hero3DModel(model!, heroId: hero.id),
+  );
+  controller.model.calibrate();
+  return controller;
 }
 
 ArenaPainter? _arenaPainter(WidgetTester tester) {
@@ -230,6 +246,108 @@ void main() {
     await pumpFor(tester, 300);
     expect(hero3d.clipState, 'death');
   });
+  for (final heroId in ['ranger_new', 'flame', 'shadow', 'storm']) {
+    testWidgets(
+      '$heroId production GLB drives attacks inside the live GameScreen',
+      (tester) async {
+        final hero = heroById(heroId);
+        final kit = kitForHero(heroId);
+        final controller = (await _buildHero3DFor(tester, hero))!;
+        GameWorld? world;
+        tester.view.physicalSize = const Size(1280, 720);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GameScreen(
+              hero: hero,
+              kit: kit,
+              loaderFactory: BundleHeroAssetLoader.new,
+              store: MemoryProgressStore(),
+              hero3dController: controller,
+              worldFactory: (activeKit) {
+                final created = GameWorld(
+                  kit: activeKit,
+                  random: math.Random(7),
+                  spawnWaves: false,
+                );
+                created.enemies.clear();
+                final distance = activeKit.attackStyle == AttackStyle.melee
+                    ? activeKit.meleeRange * 0.7
+                    : 150.0;
+                created.enemies.add(
+                  EnemyState(
+                    id: 'live_$heroId',
+                    kind: 'slime',
+                    position: created.player.position + Offset(0, distance),
+                    maxHp: 1200,
+                    speed: 0,
+                    contactDamage: 8,
+                    xpValue: 10,
+                  ),
+                );
+                world = created;
+                return created;
+              },
+            ),
+          ),
+        );
+        await pumpFor(tester, 250);
+
+        final painter = _arenaPainter(tester);
+        expect(painter, isNotNull, reason: heroId);
+        expect(painter!.presentation.hero3d, same(controller), reason: heroId);
+        expect(controller.model.model.jointNames, isNotEmpty, reason: heroId);
+        expect(
+          controller.model.model.clips.keys,
+          containsAll(['idle', 'attack', 'skill', 'hit', 'death']),
+          reason: heroId,
+        );
+        expect(controller.clipState, 'idle', reason: heroId);
+
+        final battle = world!;
+        final enemy = battle.enemies.single;
+        await tester.tap(find.byKey(const ValueKey('btn_attack')));
+        final attackReleased = await pumpUntil(
+          tester,
+          () => enemy.hp < enemy.maxHp ||
+              battle.projectiles.any((projectile) => !projectile.fromEnemy),
+          timeoutMs: 4000,
+        );
+        expect(attackReleased, isTrue, reason: '$heroId normal attack must release');
+        final attackFinished = await pumpUntil(
+          tester,
+          () => controller.clipState == 'idle',
+          timeoutMs: 3000,
+        );
+        expect(attackFinished, isTrue, reason: '$heroId attack must return to idle');
+
+        final hpBeforeAbility = enemy.hp;
+        final projectilesBeforeAbility =
+            battle.projectiles.where((projectile) => !projectile.fromEnemy).length;
+        await tester.tap(
+          find.byKey(ValueKey('ability_${kit.abilities.first.id}')),
+        );
+        final abilityReleased = await pumpUntil(
+          tester,
+          () => enemy.hp < hpBeforeAbility ||
+              battle.projectiles.where((projectile) => !projectile.fromEnemy)
+                      .length >
+                  projectilesBeforeAbility,
+          timeoutMs: 4500,
+        );
+        expect(
+          abilityReleased,
+          isTrue,
+          reason: '$heroId first special ability must release its real payload',
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 5)),
+    );
+  }
+
 }
 
 

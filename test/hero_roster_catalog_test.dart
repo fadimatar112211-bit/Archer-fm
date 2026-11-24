@@ -12,8 +12,8 @@ void main() {
     expect(heroCatalog.any((hero) => hero.id == 'ranger'), isFalse);
   });
 
-  test('legacy Ranger assets remain addressable but are not selectable', () {
-    expect(heroById('ranger').id, 'ranger');
+  test('legacy Ranger id is retired and the canonical Ranger remains selectable', () {
+    expect(() => heroById('ranger'), throwsArgumentError);
     expect(heroById('ranger_new').nameEn, 'Ranger');
     expect(heroCatalog.any((hero) => hero.id == 'ranger'), isFalse);
   });

@@ -292,13 +292,13 @@ class MonsterCorpse {
 }
 
 /// Formation offsets for the starting army / purchased reinforcements.
-/// The army gathers around its owner like a protective ring rather than
-/// stacking on a single point.
+/// Elliptical rings keep purchased units within their castle spawn radius
+/// while preserving a protective formation around the owner.
 Offset armyFormationOffset(int slot, int total) {
   final ring = slot ~/ 8;
   final inRing = slot % 8;
   final countInRing = (total - ring * 8).clamp(1, 8);
   final angle = (inRing / countInRing) * math.pi * 2 + ring * 0.4;
   final radius = 54.0 + ring * 34.0;
-  return Offset(math.cos(angle) * radius, math.sin(angle) * radius * 0.72);
+  return Offset(math.cos(angle) * radius, math.sin(angle) * radius * 0.78);
 }
