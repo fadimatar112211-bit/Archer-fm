@@ -119,6 +119,8 @@ def main():
     fill.data.size = height * 2.5
     look_at(fill, center)
 
+    if scene.world is None:
+        scene.world = bpy.data.worlds.new("Storm_RenderWorld")
     scene.world.color = (0.18, 0.18, 0.18)
     # The render script expects its feet at the shared world-space ground
     # anchor, so normalize the whole imported model to z=0.
