@@ -58,6 +58,12 @@ jobs:
           test -s "${{ matrix.source }}"
           test -s "${{ matrix.config }}"
 
+      - name: Rebuild Flame source from the approved Flame profile
+        if: matrix.hero == 'flame'
+        run: |
+          blender -b --python tools/blender/build_ranger_source.py
+          test -s assets/heroes/flame/source/flame_source.blend
+
       - name: Prepare Storm render scene from the shipped animated GLB
         if: matrix.hero == 'storm'
         run: |
