@@ -14,3 +14,5 @@ Generated assets are committed to this branch by the validation workflow only af
 CI also installs NumPy into Blender's Python import path for the bundled glTF importer.
 
 The headless runner installs Mesa EGL/OpenGL libraries and forces software rendering for EEVEE.
+
+Camera orbit uses the same clockwise eight-direction convention as the shipped Ranger/Flame/Shadow renderer.
