@@ -331,6 +331,18 @@ class _GameScreenState extends State<GameScreen>
       final loaded = await loader.loadManifest();
       if (!mounted) return;
       setState(() => manifest = loaded);
+
+      // If the player acted before the manifest finished loading, start that
+      // queued action now. The GLB loader performs the same hand-off if it wins
+      // the race instead.
+      final activeClip = _busyClip;
+      final state = activeClip == null
+          ? _desiredState()
+          : activeClip.split('_').first;
+      _playClip(
+        state,
+        pace: activeClip == null ? 1.0 : world.currentAttackRate(),
+      );
     } catch (error) {
       _showToast('تعذّر تحميل ملفات البطل: $error');
     }
@@ -572,7 +584,7 @@ class _GameScreenState extends State<GameScreen>
   // ---- Input ------------------------------------------------------------------
 
   void _tryAttack() {
-    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
+    if (_busyClip != null) return;
     if (!world.requestAttack()) return;
     widget.onNetworkAttack?.call();
     _audio.play(SoundCue.attack);
@@ -580,7 +592,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _onAbilityTap(String abilityId) {
-    if (_busyClip != null || (manifest == null && _hero3d == null)) return;
+    if (_busyClip != null) return;
     final def = kit.abilityById(abilityId);
     if (def == null) return;
     final accepted = world.useAbility(abilityId);
@@ -723,7 +735,13 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
 
-    if (m == null) return;
+    if (m == null) {
+      // Keep an input queued while both visual assets are still loading. The
+      // first loader to finish will replay this clip with its real event data.
+      _clipName = name;
+      if (!_stateIsLooping(state)) _busyClip = name;
+      return;
+    }
     final clip = directionLocked == null
         ? SpriteActorClipResolver.clipFor(m, state, world.player.facing)
         : m.clipFor(state, dir);
