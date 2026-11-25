@@ -54,49 +54,6 @@ jobs:
           blender --background assets/heroes/flame/source/flame_source.blend \
             --python-exit-code 1 --python tools/blender/validate_ranger_source.py
 
-      - name: Render high-resolution Flame review views
-        run: |
-          set -euo pipefail
-          export LIBGL_ALWAYS_SOFTWARE=1
-          for state in idle attack skill; do
-            blender --background assets/heroes/flame/source/flame_source.blend \
-              --python-exit-code 1 --python tools/blender/preview_hero.py -- \
-              --config assets/heroes/ranger/source/render_config.json \
-              --out-dir "$RUNNER_TEMP/flame-review/$state" \
-              --state "$state" --views s,sw,w,n --resolution 256 --samples 4
-          done
-
-      - name: Create a labeled Flame visual review sheet
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          from PIL import Image, ImageDraw
-          root = Path(__import__("os").environ["RUNNER_TEMP"]) / "flame-review"
-          states = ("idle", "attack", "skill")
-          directions = ("s", "sw", "w", "n")
-          tile = 512
-          label_h = 34
-          sheet = Image.new("RGB", (tile * 4, (tile + label_h) * 3), (22, 15, 13))
-          draw = ImageDraw.Draw(sheet)
-          for row, state in enumerate(states):
-              for col, direction in enumerate(directions):
-                  path = root / state / f"flame_{state}_{direction}.png"
-                  if not path.is_file():
-                      raise SystemExit(f"Missing Flame review render: {path}")
-                  image = Image.open(path).convert("RGBA")
-                  background = Image.new("RGBA", image.size, (22, 15, 13, 255))
-                  background.alpha_composite(image)
-                  x, y = col * tile, row * (tile + label_h)
-                  sheet.paste(background.convert("RGB"), (x, y))
-                  draw.text((x + 10, y + tile + 8), f"{state.upper()} / {direction.upper()}",
-                            fill=(255, 220, 170))
-          out = Path("assets/heroes/flame/review/flame_contact_sheet.png")
-          out.parent.mkdir(parents=True, exist_ok=True)
-          sheet.save(out, optimize=True)
-          print(f"FLAME_REVIEW_SHEET={out}")
-          PY
-
       - name: Render all eight Flame states in eight directions
         run: |
           set -euo pipefail
@@ -104,6 +61,45 @@ jobs:
             --python-exit-code 1 --python tools/blender/render_hero.py -- \
             --config assets/heroes/ranger/source/render_config.json
           test -s assets/heroes/ranger/renders/ranger_manifest.json
+
+      - name: Create a labeled Flame visual review sheet from production frames
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          root = Path("assets/heroes/ranger/renders")
+          items = [
+              ("idle", "s", 0), ("idle", "sw", 0),
+              ("idle", "w", 0), ("idle", "n", 0),
+              ("attack", "s", 3), ("skill", "s", 4),
+          ]
+          tile = 384
+          label_h = 38
+          cols = 3
+          rows = (len(items) + cols - 1) // cols
+          sheet = Image.new("RGB", (tile * cols, (tile + label_h) * rows),
+                            (22, 15, 13))
+          draw = ImageDraw.Draw(sheet)
+          for index, (state, direction, frame) in enumerate(items):
+              path = root / state / direction / (
+                  f"flame_{state}_{direction}_{frame:03d}.png")
+              if not path.is_file():
+                  raise SystemExit(f"Missing Flame production frame: {path}")
+              image = Image.open(path).convert("RGBA")
+              image = image.resize((tile, tile), Image.Resampling.LANCZOS)
+              background = Image.new("RGBA", image.size, (22, 15, 13, 255))
+              background.alpha_composite(image)
+              x, y = (index % cols) * tile, (index // cols) * (tile + label_h)
+              sheet.paste(background.convert("RGB"), (x, y))
+              draw.text((x + 10, y + tile + 9),
+                        f"{state.upper()} / {direction.upper()} / FRAME {frame}",
+                        fill=(255, 220, 170))
+          out = Path("assets/heroes/flame/review/flame_contact_sheet.png")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          sheet.save(out, optimize=True)
+          print(f"FLAME_REVIEW_SHEET={out}")
+          PY
 
       - name: Pack and publish the Flame directional atlases
         run: |
@@ -157,7 +153,6 @@ jobs:
             assets/heroes/flame/source/flame_source.blend
             assets/heroes/flame/model/flame_animated.glb
             assets/heroes/flame/renders/
-            ${{ runner.temp }}/flame-review/
             build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: warn
           retention-days: 14
