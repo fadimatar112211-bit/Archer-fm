@@ -51,7 +51,7 @@ jobs:
             echo "No task text was supplied after /oc or /opencode."
             exit 1
           fi
-          opencode run --standalone --model google/gemini-3.5-flash --auto \
+          opencode run --standalone --model google/gemini-2.5-flash --auto \
             "Work in this repository. Follow AGENTS.md and existing project instructions. Implement the user's task carefully, run relevant tests, and do not merge or deploy. User task: $PROMPT"
 
       - name: Commit and open pull request
