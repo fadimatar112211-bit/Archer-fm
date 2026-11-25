@@ -29,7 +29,7 @@ jobs:
       - name: Check out Flame work branch
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.ref_name }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Install Blender 3.6.13 and image validation tools
@@ -125,7 +125,7 @@ jobs:
             assets/heroes/flame/source/flame_source.blend
             assets/heroes/flame/model/flame_animated.glb
             assets/heroes/flame/renders/
-            \${{ runner.temp }}/flame-review/
+            ${{ runner.temp }}/flame-review/
             build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: warn
           retention-days: 14
@@ -142,4 +142,4 @@ jobs:
           git add assets/heroes/flame/renders
           git add test/flame_hero_acceptance_test.dart
           git commit -m "Finalize Flame hero model and directional animations"
-          git push origin "HEAD:\${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
