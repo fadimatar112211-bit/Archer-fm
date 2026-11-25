@@ -37,7 +37,7 @@ jobs:
 
       - name: Run OpenCode
         env:
-          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TASK_COMMENT: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
@@ -51,7 +51,7 @@ jobs:
             echo "No task text was supplied after /oc or /opencode."
             exit 1
           fi
-          opencode run --standalone --model google/gemini-3.8-flash --auto \
+          opencode run --standalone --model openrouter/recursive/flint-v1.0:free --auto \
             "Work in this repository. Follow AGENTS.md and existing project instructions. Implement the user's task carefully, run relevant tests, and do not merge or deploy. User task: $PROMPT"
 
       - name: Commit and open pull request
