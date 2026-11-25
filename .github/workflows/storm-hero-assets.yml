@@ -6,6 +6,9 @@ on:
     branches: [heroes-complete, flame-finalize]
     paths:
       - "tools/blender/render_storm_glb.py"
+      - "tools/blender/hero_profiles.py"
+      - "tools/blender/build_ranger_source.py"
+      - "assets/heroes/flame/REFERENCE_MATCH.md"
       - "tools/blender/export_hero_glb.py"
       - "tools/blender/validate_hero_glb.py"
       - "tools/blender/pack_storm_atlases.py"
@@ -58,6 +61,15 @@ jobs:
               --python-exit-code 1 --python tools/blender/export_hero_glb.py -- \
               --hero "${hero}" --config assets/heroes/ranger/source/render_config.json
           done
+
+      - name: Render Flame again from its source using the reference-tuned model
+        run: |
+          set -euo pipefail
+          echo flame > tools/blender/active_hero.txt
+          blender --background assets/heroes/flame/source/flame_source.blend \
+            --python-exit-code 1 --python tools/blender/render_hero.py -- \
+            --config assets/heroes/ranger/source/render_config.json
+          test -s assets/heroes/flame/renders/flame_manifest.json
 
       - name: Repack and validate Flame 2.5D atlases
         run: |
