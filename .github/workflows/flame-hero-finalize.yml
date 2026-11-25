@@ -174,4 +174,6 @@ jobs:
           git add assets/heroes/flame/review/flame_contact_sheet.png
           git add test/flame_hero_acceptance_test.dart
           git commit -m "Finalize Flame hero model and directional animations"
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
