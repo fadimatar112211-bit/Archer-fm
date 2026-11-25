@@ -202,7 +202,14 @@ def glow(name, base, strength, alpha=1.0):
     mat.diffuse_color = (*color, 1.0)
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     bsdf.inputs["Base Color"].default_value = (0.0, 0.0, 0.0, 1.0)
-    bsdf.inputs["Emission Color"].default_value = (*color, 1.0)
+    # Blender 3.6 names this Principled socket "Emission"; newer Blender
+    # releases renamed it to "Emission Color". Support both so the exact
+    # pinned CI Blender version can rebuild every hero source.
+    emission_socket = (bsdf.inputs.get("Emission Color")
+                      or bsdf.inputs.get("Emission"))
+    if emission_socket is None:
+        raise RuntimeError("Principled BSDF has no emission colour socket")
+    emission_socket.default_value = (*color, 1.0)
     bsdf.inputs["Emission Strength"].default_value = strength
     bsdf.inputs["Alpha"].default_value = alpha
     if alpha < 1.0:
