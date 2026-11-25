@@ -9,20 +9,24 @@ void main() {
 
   test('Flame ships all 64 directional animation clips and atlases', () async {
     final definition = heroById('flame');
-    final loader = BundleHeroAssetLoader(definition);
+    final manifestLoader = BundleHeroAssetLoader(definition);
+    late final manifest;
     try {
-      final manifest = await loader.loadManifest();
-      expect(manifest.heroId, 'flame');
-      expect(manifest.clips, hasLength(64));
-      expect(manifest.atlases, hasLength(64));
+      manifest = await manifestLoader.loadManifest();
+    } finally {
+      manifestLoader.dispose();
+    }
+    expect(manifest.heroId, 'flame');
+    expect(manifest.clips, hasLength(64));
+    expect(manifest.atlases, hasLength(64));
 
-      for (final entry in manifest.atlases) {
-        final clip = manifest.clipFor(
-          entry.animation.substring(0, entry.animation.lastIndexOf('_')),
-          entry.animation.substring(entry.animation.lastIndexOf('_') + 1),
-        );
-        expect(clip, isNotNull, reason: entry.animation);
-        final sheet = await loader.loadSheet(manifest, entry.animation);
+    // Decode one atlas at a time to keep test memory bounded on CI runners.
+    for (final entry in manifest.atlases) {
+      final clip = manifest.clips[entry.animation];
+      expect(clip, isNotNull, reason: entry.animation);
+      final sheetLoader = BundleHeroAssetLoader(definition);
+      try {
+        final sheet = await sheetLoader.loadSheet(manifest, entry.animation);
         expect(sheet.width, greaterThan(0), reason: entry.animation);
         expect(sheet.height, greaterThan(0), reason: entry.animation);
         for (final frameId in clip!.frames) {
@@ -31,9 +35,9 @@ void main() {
           expect(rect!.width, manifest.frameWidth.toDouble());
           expect(rect.height, manifest.frameHeight.toDouble());
         }
+      } finally {
+        sheetLoader.dispose();
       }
-    } finally {
-      loader.dispose();
     }
   });
 
