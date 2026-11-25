@@ -53,12 +53,12 @@ FLAME_PALETTE = {
     "bronze_light": "#F2C06A",
     "gold": "#EFC24E",
     "boot": "#2B1512",
-    "hair_dark": "#7A1508",
-    "hair_mid": "#D8320F",
-    "hair_light": "#FF6A28",
-    "hair_shine": "#FFB347",
-    "eye_blue": "#FFB020",
-    "eye_light": "#FFE08A",
+    "hair_dark": "#5C080D",
+    "hair_mid": "#D91E2B",
+    "hair_light": "#FF3D36",
+    "hair_shine": "#FF9C55",
+    "eye_blue": "#D91522",
+    "eye_light": "#FF6A5F",
     "energy": "#FF4A18",
     "bow_glow": "#FF8A24",
     "bow_core": "#FFC24A",
@@ -601,7 +601,9 @@ def storm_robe(m):
 
 def flame_sword(m):
     """Greatsword: glowing blade, gold crossguard, ember gem."""
-    cx, cy = 0.56, -0.06
+    # Match the reference: the greatsword is held on the viewer's left and
+    # points down-left from the hand, rather than floating upright on the right.
+    cx, cy = -0.56, -0.06
     m.sweep("Sword_Grip", [(cx, cy, 1.285), (cx, cy, 1.475)],
             [0.078, 0.070], "leather_dark", "bow", sides=12,
             thickness=[0.072, 0.066])
@@ -612,33 +614,36 @@ def flame_sword(m):
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sphere(f"Sword_Quillon_{side}", (cx + 0.205 * sign, cy, 1.505),
                  (0.038, 0.048, 0.038), "bronze_light", "bow", 16, 10)
-    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 2.760,
+    offsets = (0.0, -0.10, -0.24, -0.38)
+    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 0.18,
                   [0.170, 0.156, 0.108, 0.005],
-                  [0.040, 0.034, 0.022, 0.003], "energy", "bow")
-    diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 2.700,
+                  [0.040, 0.034, 0.022, 0.003], "energy", "bow",
+                  x_offsets=offsets)
+    diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 0.22,
                   [0.096, 0.088, 0.060, 0.004],
-                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow")
+                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow",
+                  x_offsets=offsets)
     m.sweep("Sword_Flame_Aura", [
         m.Vector((cx, cy + 0.010, 1.56)),
-        m.Vector((cx, cy + 0.014, 1.95)),
-        m.Vector((cx, cy + 0.010, 2.38)),
-        m.Vector((cx, cy + 0.004, 2.72))],
+        m.Vector((cx - 0.08, cy + 0.014, 1.12)),
+        m.Vector((cx - 0.22, cy + 0.010, 0.66)),
+        m.Vector((cx - 0.38, cy + 0.004, 0.16))],
         [0.230, 0.200, 0.135, 0.014], "energy_soft", "bow", sides=8,
         thickness=[0.085, 0.072, 0.048, 0.008], tip=True)
-    for index, (z, side) in enumerate(((1.88, 1.0), (2.14, -1.0),
-                                       (2.38, 1.0), (2.56, -1.0))):
+    for index, (z, side) in enumerate(((1.22, 1.0), (0.96, -1.0),
+                                       (0.68, 1.0), (0.42, -1.0))):
         m.sweep(f"Sword_Flame_Tongue_{index}", [
-            m.Vector((cx + 0.070 * side, cy, z)),
-            m.Vector((cx + 0.135 * side, cy - 0.020, z + 0.080)),
-            m.Vector((cx + 0.100 * side, cy - 0.010, z + 0.230))],
+            m.Vector((cx - 0.08 + 0.070 * side, cy, z)),
+            m.Vector((cx - 0.16 + 0.135 * side, cy - 0.020, z - 0.080)),
+            m.Vector((cx - 0.24 + 0.100 * side, cy - 0.010, z - 0.230))],
             [0.048, 0.030, 0.005], "energy", "bow", sides=5,
             thickness=[0.026, 0.016, 0.004], tip=True)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sweep(f"Sword_Edge_{side}", [
             (cx + 0.124 * sign, cy, 1.545),
-            (cx + 0.114 * sign, cy, 2.200),
-            (cx + 0.080 * sign, cy, 2.560),
-            (cx + 0.008 * sign, cy, 2.665)],
+            (cx - 0.10 + 0.114 * sign, cy, 1.00),
+            (cx - 0.24 + 0.080 * sign, cy, 0.52),
+            (cx - 0.38 + 0.008 * sign, cy, 0.18)],
             [0.022, 0.020, 0.013, 0.004], "energy", "bow", sides=5,
             thickness=[0.017, 0.015, 0.010, 0.003], tip=True)
     m.sphere("Sword_Gem", (cx, cy - 0.062, 1.500),
@@ -1098,7 +1103,7 @@ PROFILES = {
         "palette": FLAME_PALETTE,
         "hair": "spiky",
         "hair_style": "flame",
-        "build_cape": short_cape,
+        "build_cape": long_cape,
         "build_armour": flame_armour,
         "build_headgear": None,
         "build_weapon": flame_sword,
