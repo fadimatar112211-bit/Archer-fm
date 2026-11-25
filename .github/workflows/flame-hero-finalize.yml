@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y curl xz-utils python3-pil
+          sudo apt-get install -y curl xz-utils python3-pil libegl1 libgl1 libgl1-mesa-dri
           curl --fail --location --retry 3 \
             https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz \
             --output /tmp/blender-3.6.13-linux-x64.tar.xz
