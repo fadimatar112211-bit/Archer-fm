@@ -41,8 +41,11 @@ jobs:
           TASK_COMMENT: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          PROMPT="${TASK_COMMENT#\/oc}"
-          PROMPT="${PROMPT#\/opencode}"
+          case "$TASK_COMMENT" in
+            /opencode*) PROMPT="${TASK_COMMENT#/opencode}" ;;
+            /oc*)       PROMPT="${TASK_COMMENT#/oc}" ;;
+            *)          echo "Comment did not start with /oc or /opencode."; exit 1 ;;
+          esac
           PROMPT="$(printf '%s' "$PROMPT" | sed 's/^[[:space:]]*//')"
           if [ -z "$PROMPT" ]; then
             echo "No task text was supplied after /oc or /opencode."
