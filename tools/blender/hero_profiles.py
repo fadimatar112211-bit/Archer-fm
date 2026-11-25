@@ -113,21 +113,25 @@ STORM_PALETTE = {
 
 # ------------------------------------------------------------ geometry ------
 
-def diamond_blade(m, name, cx, cy, z0, z1, widths, thicks, material, bone):
+def diamond_blade(m, name, cx, cy, z0, z1, widths, thicks, material, bone,
+                  x_offsets=None):
     """Flat double-edged blade with a diamond cross-section.
 
-    A loft/sphere would read as a club. Four vertices per section give the
-    raised centre ridge that catches the toon rim light along one edge, which
-    is what makes a blade look forged instead of moulded.
+    Optional section offsets let a long blade follow a diagonal silhouette
+    without disconnecting it from the hand guard.
     """
     count = len(widths)
+    offsets = tuple(x_offsets or (0.0,) * count)
+    if len(offsets) != count or len(thicks) != count:
+        raise ValueError(f"{name}: widths, thicknesses and x offsets must align")
     verts = []
     for index in range(count):
         t = index / (count - 1)
         z = z0 + (z1 - z0) * t
+        x = cx + offsets[index]
         w, th = widths[index], thicks[index]
-        verts.extend(((cx + w, cy, z), (cx, cy + th, z),
-                      (cx - w, cy, z), (cx, cy - th, z)))
+        verts.extend(((x + w, cy, z), (x, cy + th, z),
+                      (x - w, cy, z), (x, cy - th, z)))
     faces = []
     for index in range(count - 1):
         a, b = index * 4, (index + 1) * 4
