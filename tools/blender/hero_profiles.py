@@ -42,26 +42,28 @@ import math
 # Shadow dark violet with a mask, Storm blue/gold with lightning.
 
 FLAME_PALETTE = {
-    "green": "#A32A1B",
-    "green_light": "#D04224",
-    "green_deep": "#57120F",
-    "green_bright": "#FF7A2A",
-    "trouser": "#2A1B1B",
-    "leather": "#5E2A22",
-    "leather_dark": "#24100F",
+    # Flame Knight reference: saturated scarlet armour, ember-orange highlights,
+    # blackened under-armor, warm gold trim, vivid red-orange hair and crimson eyes.
+    "green": "#C5261D",
+    "green_light": "#F0442A",
+    "green_deep": "#65110F",
+    "green_bright": "#FF6A2A",
+    "trouser": "#211414",
+    "leather": "#5A211B",
+    "leather_dark": "#170B0B",
     "bronze": "#B97832",
-    "bronze_light": "#F2C06A",
-    "gold": "#EFC24E",
-    "boot": "#2B1512",
-    "hair_dark": "#7A1508",
-    "hair_mid": "#D8320F",
-    "hair_light": "#FF6A28",
-    "hair_shine": "#FFB347",
-    "eye_blue": "#FFB020",
-    "eye_light": "#FFE08A",
-    "energy": "#FF4A18",
-    "bow_glow": "#FF8A24",
-    "bow_core": "#FFC24A",
+    "bronze_light": "#F5C36B",
+    "gold": "#F4C34F",
+    "boot": "#321711",
+    "hair_dark": "#76100D",
+    "hair_mid": "#F02A18",
+    "hair_light": "#FF5126",
+    "hair_shine": "#FFB15A",
+    "eye_blue": "#B90D1B",
+    "eye_light": "#FF6B55",
+    "energy": "#FF3B0A",
+    "bow_glow": "#FF6A1A",
+    "bow_core": "#FFE078",
 }
 
 SHADOW_PALETTE = {
@@ -113,21 +115,25 @@ STORM_PALETTE = {
 
 # ------------------------------------------------------------ geometry ------
 
-def diamond_blade(m, name, cx, cy, z0, z1, widths, thicks, material, bone):
+def diamond_blade(m, name, cx, cy, z0, z1, widths, thicks, material, bone,
+                  x_offsets=None):
     """Flat double-edged blade with a diamond cross-section.
 
-    A loft/sphere would read as a club. Four vertices per section give the
-    raised centre ridge that catches the toon rim light along one edge, which
-    is what makes a blade look forged instead of moulded.
+    Optional section offsets let a long blade follow a diagonal silhouette
+    without disconnecting it from the hand guard.
     """
     count = len(widths)
+    offsets = tuple(x_offsets or (0.0,) * count)
+    if len(offsets) != count or len(thicks) != count:
+        raise ValueError(f"{name}: widths, thicknesses and x offsets must align")
     verts = []
     for index in range(count):
         t = index / (count - 1)
         z = z0 + (z1 - z0) * t
+        x = cx + offsets[index]
         w, th = widths[index], thicks[index]
-        verts.extend(((cx + w, cy, z), (cx, cy + th, z),
-                      (cx - w, cy, z), (cx, cy - th, z)))
+        verts.extend(((x + w, cy, z), (x, cy + th, z),
+                      (x - w, cy, z), (x, cy - th, z)))
     faces = []
     for index in range(count - 1):
         a, b = index * 4, (index + 1) * 4
@@ -601,7 +607,9 @@ def storm_robe(m):
 
 def flame_sword(m):
     """Greatsword: glowing blade, gold crossguard, ember gem."""
-    cx, cy = 0.56, -0.06
+    # Match the reference: the greatsword is held on the viewer's left and
+    # points down-left from the hand, rather than floating upright on the right.
+    cx, cy = -0.56, -0.06
     m.sweep("Sword_Grip", [(cx, cy, 1.285), (cx, cy, 1.475)],
             [0.078, 0.070], "leather_dark", "bow", sides=12,
             thickness=[0.072, 0.066])
@@ -612,33 +620,36 @@ def flame_sword(m):
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sphere(f"Sword_Quillon_{side}", (cx + 0.205 * sign, cy, 1.505),
                  (0.038, 0.048, 0.038), "bronze_light", "bow", 16, 10)
-    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 2.760,
+    offsets = (0.0, -0.10, -0.24, -0.38)
+    diamond_blade(m, "Sword_Blade", cx, cy, 1.525, 0.18,
                   [0.170, 0.156, 0.108, 0.005],
-                  [0.040, 0.034, 0.022, 0.003], "energy", "bow")
-    diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 2.700,
+                  [0.040, 0.034, 0.022, 0.003], "energy", "bow",
+                  x_offsets=offsets)
+    diamond_blade(m, "Sword_Blade_Core", cx, cy, 1.545, 0.22,
                   [0.096, 0.088, 0.060, 0.004],
-                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow")
+                  [0.048, 0.042, 0.028, 0.003], "energy_core", "bow",
+                  x_offsets=offsets)
     m.sweep("Sword_Flame_Aura", [
         m.Vector((cx, cy + 0.010, 1.56)),
-        m.Vector((cx, cy + 0.014, 1.95)),
-        m.Vector((cx, cy + 0.010, 2.38)),
-        m.Vector((cx, cy + 0.004, 2.72))],
+        m.Vector((cx - 0.08, cy + 0.014, 1.12)),
+        m.Vector((cx - 0.22, cy + 0.010, 0.66)),
+        m.Vector((cx - 0.38, cy + 0.004, 0.16))],
         [0.230, 0.200, 0.135, 0.014], "energy_soft", "bow", sides=8,
         thickness=[0.085, 0.072, 0.048, 0.008], tip=True)
-    for index, (z, side) in enumerate(((1.88, 1.0), (2.14, -1.0),
-                                       (2.38, 1.0), (2.56, -1.0))):
+    for index, (z, side) in enumerate(((1.22, 1.0), (0.96, -1.0),
+                                       (0.68, 1.0), (0.42, -1.0))):
         m.sweep(f"Sword_Flame_Tongue_{index}", [
-            m.Vector((cx + 0.070 * side, cy, z)),
-            m.Vector((cx + 0.135 * side, cy - 0.020, z + 0.080)),
-            m.Vector((cx + 0.100 * side, cy - 0.010, z + 0.230))],
+            m.Vector((cx - 0.08 + 0.070 * side, cy, z)),
+            m.Vector((cx - 0.16 + 0.135 * side, cy - 0.020, z - 0.080)),
+            m.Vector((cx - 0.24 + 0.100 * side, cy - 0.010, z - 0.230))],
             [0.048, 0.030, 0.005], "energy", "bow", sides=5,
             thickness=[0.026, 0.016, 0.004], tip=True)
     for side, sign in (("L", 1.0), ("R", -1.0)):
         m.sweep(f"Sword_Edge_{side}", [
             (cx + 0.124 * sign, cy, 1.545),
-            (cx + 0.114 * sign, cy, 2.200),
-            (cx + 0.080 * sign, cy, 2.560),
-            (cx + 0.008 * sign, cy, 2.665)],
+            (cx - 0.10 + 0.114 * sign, cy, 1.00),
+            (cx - 0.24 + 0.080 * sign, cy, 0.52),
+            (cx - 0.38 + 0.008 * sign, cy, 0.18)],
             [0.022, 0.020, 0.013, 0.004], "energy", "bow", sides=5,
             thickness=[0.017, 0.015, 0.010, 0.003], tip=True)
     m.sphere("Sword_Gem", (cx, cy - 0.062, 1.500),
@@ -1098,7 +1109,7 @@ PROFILES = {
         "palette": FLAME_PALETTE,
         "hair": "spiky",
         "hair_style": "flame",
-        "build_cape": short_cape,
+        "build_cape": long_cape,
         "build_armour": flame_armour,
         "build_headgear": None,
         "build_weapon": flame_sword,

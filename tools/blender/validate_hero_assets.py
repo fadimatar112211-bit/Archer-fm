@@ -110,9 +110,16 @@ def validate(hero):
 
 
 def main():
-    for hero in HEROES:
+    import sys
+    heroes = tuple(sys.argv[1:]) or HEROES
+    unknown = sorted(set(heroes) - set(HEROES))
+    require(not unknown, f"unknown hero(s): {unknown}")
+    for hero in heroes:
         validate(hero)
-    print("ALL_FOUR_HEROES_VALIDATED")
+    if set(heroes) == set(HEROES):
+        print("ALL_FOUR_HEROES_VALIDATED")
+    else:
+        print("HERO_ASSET_VALIDATION_COMPLETE heroes=" + ",".join(heroes))
 
 
 if __name__ == "__main__":

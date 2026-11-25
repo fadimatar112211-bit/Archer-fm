@@ -1,0 +1,175 @@
+name: Flame hero finalization
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [flame-finalize]
+    paths:
+      - "tools/blender/hero_profiles.py"
+      - "tools/blender/build_ranger_source.py"
+      - "tools/blender/render_hero.py"
+      - "tools/blender/preview_hero.py"
+      - "tools/blender/validate_ranger_source.py"
+      - "tools/blender/export_hero_glb.py"
+      - "tools/blender/validate_hero_glb.py"
+      - "tools/blender/validate_hero_assets.py"
+      - "tools/pack_hero_atlases.py"
+      - "assets/heroes/ranger/source/render_config.json"
+      - "test/flame_hero_acceptance_test.dart"
+      - ".github/workflows/flame-hero-finalize.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-flame:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out Flame work branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Install Blender 3.6.13 and image validation tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y curl xz-utils python3-pil libegl1 libegl-mesa0 libgl1 libgl1-mesa-dri libxrender1 libxi6 libxxf86vm1 libxfixes3 libxkbcommon0 libsm6 libice6 libwayland-client0 libwayland-egl1 libegl1 libgl1 libgl1-mesa-dri
+          curl --fail --location --retry 3 \
+            https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz \
+            --output /tmp/blender-3.6.13-linux-x64.tar.xz
+          sudo tar -xJf /tmp/blender-3.6.13-linux-x64.tar.xz -C /opt
+          echo "/opt/blender-3.6.13-linux-x64" >> "$GITHUB_PATH"
+          /opt/blender-3.6.13-linux-x64/blender --background --python-expr \
+            "import bpy; print('FLAME_BLENDER_VERSION=' + bpy.app.version_string)"
+
+      - name: Build Flame source from the reference-aligned profile
+        run: |
+          set -euo pipefail
+          printf 'flame\n' > tools/blender/active_hero.txt
+          blender --background --python-exit-code 1 \
+            --python tools/blender/build_ranger_source.py
+          blender --background assets/heroes/flame/source/flame_source.blend \
+            --python-exit-code 1 --python tools/blender/validate_ranger_source.py
+
+      - name: Render all eight Flame states in eight directions
+        run: |
+          set -euo pipefail
+          blender --background assets/heroes/flame/source/flame_source.blend \
+            --python-exit-code 1 --python tools/blender/render_hero.py -- \
+            --config assets/heroes/ranger/source/render_config.json
+          test -s assets/heroes/ranger/renders/ranger_manifest.json
+
+      - name: Create a labeled Flame visual review sheet from production frames
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          root = Path("assets/heroes/ranger/renders")
+          items = [
+              ("idle", "s", 0), ("idle", "sw", 0),
+              ("idle", "w", 0), ("idle", "n", 0),
+              ("attack", "s", 3), ("skill", "s", 4),
+          ]
+          tile = 384
+          label_h = 38
+          cols = 3
+          rows = (len(items) + cols - 1) // cols
+          sheet = Image.new("RGB", (tile * cols, (tile + label_h) * rows),
+                            (22, 15, 13))
+          draw = ImageDraw.Draw(sheet)
+          for index, (state, direction, frame) in enumerate(items):
+              path = root / state / direction / (
+                  f"flame_{state}_{direction}_{frame:03d}.png")
+              if not path.is_file():
+                  raise SystemExit(f"Missing Flame production frame: {path}")
+              image = Image.open(path).convert("RGBA")
+              image = image.resize((tile, tile), Image.Resampling.LANCZOS)
+              background = Image.new("RGBA", image.size, (22, 15, 13, 255))
+              background.alpha_composite(image)
+              x, y = (index % cols) * tile, (index // cols) * (tile + label_h)
+              sheet.paste(background.convert("RGB"), (x, y))
+              draw.text((x + 10, y + tile + 9),
+                        f"{state.upper()} / {direction.upper()} / FRAME {frame}",
+                        fill=(255, 220, 170))
+          out = Path("assets/heroes/flame/review/flame_contact_sheet.png")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          sheet.save(out, optimize=True)
+          print(f"FLAME_REVIEW_SHEET={out}")
+          PY
+
+      - name: Pack and publish the Flame directional atlases
+        run: |
+          set -euo pipefail
+          python3 tools/pack_hero_atlases.py \
+            --manifest assets/heroes/ranger/renders/ranger_manifest.json
+          test -d assets/heroes/ranger/renders/_bundle/flame/renders
+          rm -rf assets/heroes/flame/renders
+          mkdir -p assets/heroes/flame
+          cp -a assets/heroes/ranger/renders/_bundle/flame/renders \
+            assets/heroes/flame/renders
+          cp -a assets/heroes/ranger/renders/_bundle/flame/source/flame_source.blend \
+            assets/heroes/flame/source/flame_source.blend
+          python3 tools/blender/validate_hero_assets.py flame
+
+      - name: Export and validate the animated Flame GLB
+        run: |
+          set -euo pipefail
+          blender --background assets/heroes/flame/source/flame_source.blend \
+            --python-exit-code 1 --python tools/blender/export_hero_glb.py -- \
+            --hero flame --config assets/heroes/ranger/source/render_config.json
+          blender --background --python-exit-code 1 \
+            --python tools/blender/validate_hero_glb.py -- \
+            --hero flame --model assets/heroes/flame/model/flame_animated.glb
+
+      - name: Restore the default hero marker
+        if: always()
+        run: printf 'ranger\n' > tools/blender/active_hero.txt
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Run Flutter analysis and all tests
+        run: |
+          set -euo pipefail
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+
+      - name: Upload Flame model, atlases, review renders and APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flame-hero-finalization
+          path: |
+            assets/heroes/flame/source/flame_source.blend
+            assets/heroes/flame/model/flame_animated.glb
+            assets/heroes/flame/renders/
+            build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit Flame assets only after every gate passes
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/blender/active_hero.txt
+          git add assets/heroes/flame/source/flame_source.blend
+          git add assets/heroes/flame/model/flame_animated.glb
+          git add assets/heroes/flame/renders
+          git add assets/heroes/flame/review/flame_contact_sheet.png
+          git add test/flame_hero_acceptance_test.dart
+          git commit -m "Finalize Flame hero model and directional animations"
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

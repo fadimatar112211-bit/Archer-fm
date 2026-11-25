@@ -3,13 +3,17 @@ name: Storm hero assets
 on:
   workflow_dispatch:
   push:
-    branches: [heroes-complete]
+    branches: [heroes-complete, flame-finalize]
     paths:
       - "tools/blender/render_storm_glb.py"
+      - "tools/blender/hero_profiles.py"
+      - "tools/blender/build_ranger_source.py"
+      - "assets/heroes/flame/REFERENCE_MATCH.md"
       - "tools/blender/export_hero_glb.py"
       - "tools/blender/validate_hero_glb.py"
       - "tools/blender/pack_storm_atlases.py"
       - "tools/blender/validate_hero_assets.py"
+      - "tools/pack_hero_atlases.py"
       - ".github/workflows/storm-hero-assets.yml"
       - "docs/heroes/2_5d_visual_contract.md"
       - "assets/heroes/ranger/renders/**"
@@ -29,17 +33,34 @@ jobs:
       - name: Check out Archer FM
         uses: actions/checkout@v4
         with:
-          ref: heroes-complete
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
-      - name: Install Blender and image tools
+      - name: Install Blender 3.6.13 and image tools
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y blender python3-pil
+          sudo apt-get install -y curl xz-utils python3-pil
+          curl --fail --location --retry 3 \
+            https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz \
+            --output /tmp/blender-3.6.13-linux-x64.tar.xz
+          sudo tar -xJf /tmp/blender-3.6.13-linux-x64.tar.xz -C /opt
+          echo "/opt/blender-3.6.13-linux-x64" >> "$GITHUB_PATH"
+          /opt/blender-3.6.13-linux-x64/blender --background --python-expr \
+            "import bpy; print('ARCHER_FM_BLENDER_VERSION=' + bpy.app.version_string)"
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
+      - name: Rebuild Flame source meshes and materials from the reference profile
+        run: |
+          set -euo pipefail
+          echo flame > tools/blender/active_hero.txt
+          blender --background --python-exit-code 1 \
+            --python tools/blender/build_ranger_source.py
+          test -s assets/heroes/flame/source/flame_source.blend
+          echo "FLAME_REFERENCE_PROFILE_BUILT"
 
       - name: Export Ranger, Flame and Shadow as animated GLB models
         run: |
@@ -49,6 +70,27 @@ jobs:
               --python-exit-code 1 --python tools/blender/export_hero_glb.py -- \
               --hero "${hero}" --config assets/heroes/ranger/source/render_config.json
           done
+
+      - name: Render Flame again from its source using the reference-tuned model
+        run: |
+          set -euo pipefail
+          echo flame > tools/blender/active_hero.txt
+          blender --background assets/heroes/flame/source/flame_source.blend \
+            --python-exit-code 1 --python tools/blender/render_hero.py -- \
+            --config assets/heroes/ranger/source/render_config.json
+          test -s assets/heroes/flame/renders/flame_manifest.json
+
+      - name: Repack and validate Flame 2.5D atlases
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tools/pack_hero_atlases.py \
+            --manifest assets/heroes/flame/renders/flame_manifest.json
+          /usr/bin/python3 tools/blender/validate_hero_assets.py flame
+          test "$(find assets/heroes/flame/renders/atlases -maxdepth 1 -name '*.png' | wc -l)" -eq 64
+          test "$(find assets/heroes/flame/renders/atlases -maxdepth 1 -name '*.json' | wc -l)" -eq 64
+          test -s assets/heroes/flame/model/flame_animated.glb
+          echo "FLAME_2_5D_ASSETS_VALIDATED"
+          touch "$RUNNER_TEMP/flame-validation-ok"
 
       - name: Fetch the rigged Storm GLB from the implementation branch
         run: |
@@ -115,12 +157,15 @@ jobs:
       - name: Build Android debug APK
         run: flutter build apk --debug
 
-      - name: Upload generated Storm assets
+      - name: Upload generated Flame and Storm assets
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: storm-directional-assets
           path: |
+            assets/heroes/flame/model/flame_animated.glb
+            assets/heroes/flame/renders/flame_manifest.json
+            assets/heroes/flame/renders/atlases/
             assets/heroes/storm/renders/storm_manifest.json
             assets/heroes/storm/renders/atlases/
             assets/heroes/*/model/*.glb
@@ -128,15 +173,29 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Commit generated assets to heroes-complete
-        if: github.event_name == 'push'
+      - name: Commit successfully generated hero assets
+        if: always()
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
+          if [[ -s assets/heroes/flame/source/flame_source.blend ]]; then
+            git add assets/heroes/flame/source/flame_source.blend
+          fi
+          if [[ -f "$RUNNER_TEMP/flame-validation-ok" ]]; then
+            git add assets/heroes/flame/model/flame_animated.glb
+            git add assets/heroes/flame/renders/flame_manifest.json assets/heroes/flame/renders/atlases
+          fi
+          if [[ -s assets/heroes/ranger/model/ranger_animated.glb ]]; then git add assets/heroes/ranger/model/ranger_animated.glb; fi
+          if [[ -s assets/heroes/shadow/model/shadow_animated.glb ]]; then git add assets/heroes/shadow/model/shadow_animated.glb; fi
+          if [[ -s assets/heroes/storm/model/storm_animated.glb ]]; then git add assets/heroes/storm/model/storm_animated.glb; fi
+          if [[ -s assets/heroes/storm/renders/storm_manifest.json ]]; then
+            git add assets/heroes/storm/renders
+          fi
+          if [[ -f pubspec.yaml ]]; then git add pubspec.yaml; fi
           if git diff --cached --quiet; then
-            echo "No generated Storm asset changes to commit."
+            echo "No validated generated hero assets to commit."
           else
-            git commit -m "Generate Storm directional animation atlases"
-            git push origin HEAD:heroes-complete
+            git commit -m "Store validated generated hero assets"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
