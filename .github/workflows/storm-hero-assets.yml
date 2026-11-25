@@ -53,6 +53,15 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Rebuild Flame source meshes and materials from the reference profile
+        run: |
+          set -euo pipefail
+          echo flame > tools/blender/active_hero.txt
+          blender --background --python-exit-code 1 \
+            --python tools/blender/build_ranger_source.py
+          test -s assets/heroes/flame/source/flame_source.blend
+          echo "FLAME_REFERENCE_PROFILE_BUILT"
+
       - name: Export Ranger, Flame and Shadow as animated GLB models
         run: |
           set -euo pipefail
@@ -170,6 +179,9 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -s assets/heroes/flame/source/flame_source.blend ]]; then
+            git add assets/heroes/flame/source/flame_source.blend
+          fi
           if [[ -f "$RUNNER_TEMP/flame-validation-ok" ]]; then
             git add assets/heroes/flame/model/flame_animated.glb
             git add assets/heroes/flame/renders/flame_manifest.json assets/heroes/flame/renders/atlases
