@@ -70,6 +70,37 @@ jobs:
               --state "$state" --views s,sw,w,n --resolution 512 --samples 16
           done
 
+      - name: Create a labeled Flame visual review sheet
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          root = Path(__import__("os").environ["RUNNER_TEMP"]) / "flame-review"
+          states = ("idle", "attack", "skill")
+          directions = ("s", "sw", "w", "n")
+          tile = 512
+          label_h = 34
+          sheet = Image.new("RGB", (tile * 4, (tile + label_h) * 3), (22, 15, 13))
+          draw = ImageDraw.Draw(sheet)
+          for row, state in enumerate(states):
+              for col, direction in enumerate(directions):
+                  path = root / state / f"flame_{state}_{direction}.png"
+                  if not path.is_file():
+                      raise SystemExit(f"Missing Flame review render: {path}")
+                  image = Image.open(path).convert("RGBA")
+                  background = Image.new("RGBA", image.size, (22, 15, 13, 255))
+                  background.alpha_composite(image)
+                  x, y = col * tile, row * (tile + label_h)
+                  sheet.paste(background.convert("RGB"), (x, y))
+                  draw.text((x + 10, y + tile + 8), f"{state.upper()} / {direction.upper()}",
+                            fill=(255, 220, 170))
+          out = Path("assets/heroes/flame/review/flame_contact_sheet.png")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          sheet.save(out, optimize=True)
+          print(f"FLAME_REVIEW_SHEET={out}")
+          PY
+
       - name: Render all eight Flame states in eight directions
         run: |
           set -euo pipefail
@@ -140,6 +171,7 @@ jobs:
           git add assets/heroes/flame/source/flame_source.blend
           git add assets/heroes/flame/model/flame_animated.glb
           git add assets/heroes/flame/renders
+          git add assets/heroes/flame/review/flame_contact_sheet.png
           git add test/flame_hero_acceptance_test.dart
           git commit -m "Finalize Flame hero model and directional animations"
           git push origin "HEAD:${GITHUB_REF_NAME}"
