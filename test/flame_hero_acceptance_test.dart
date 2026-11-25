@@ -2,6 +2,7 @@ import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/heroes/hero_combat_runtime.dart';
 import 'package:archer_fm/hero/hero_assets.dart';
 import 'package:archer_fm/hero/hero_catalog.dart';
+import 'package:archer_fm/hero/hero_manifest.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,7 +11,7 @@ void main() {
   test('Flame ships all 64 directional animation clips and atlases', () async {
     final definition = heroById('flame');
     final manifestLoader = BundleHeroAssetLoader(definition);
-    late final manifest;
+    late final HeroManifest manifest;
     try {
       manifest = await manifestLoader.loadManifest();
     } finally {
