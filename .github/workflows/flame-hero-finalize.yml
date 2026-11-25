@@ -63,7 +63,7 @@ jobs:
               --python-exit-code 1 --python tools/blender/preview_hero.py -- \
               --config assets/heroes/ranger/source/render_config.json \
               --out-dir "$RUNNER_TEMP/flame-review/$state" \
-              --state "$state" --views s,sw,w,n --resolution 512 --samples 16
+              --state "$state" --views s,sw,w,n --resolution 256 --samples 4
           done
 
       - name: Create a labeled Flame visual review sheet
