@@ -45,11 +45,6 @@ jobs:
           /opt/blender-3.6.13-linux-x64/blender --background --python-expr \
             "import bpy; print('FLAME_BLENDER_VERSION=' + bpy.app.version_string)"
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
       - name: Build Flame source from the reference-aligned profile
         run: |
           set -euo pipefail
@@ -136,6 +131,11 @@ jobs:
       - name: Restore the default hero marker
         if: always()
         run: printf 'ranger\n' > tools/blender/active_hero.txt
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Run Flutter analysis and all tests
         run: |
