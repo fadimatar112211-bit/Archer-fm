@@ -69,3 +69,22 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - Mine capture and production are advanced from the authoritative player-position map; only pickups touched by a player are added to that player's match wallet.
 - Crystal damage rejects friendly/unknown targets and updates the match's living-crystal tiebreak count. Rebuild attempts use the canonical territory, collision, seven-crystal cap and wallet checks.
 - Added unit coverage for player-to-castle mapping, crystal damage/friendly-fire rejection, mine capture/production, rebuild affordability, and session-to-match tiebreak synchronization. These tests are included in CI; the latest run must pass before treating the changes as validated.
+
+
+## Live combat integration — 2026-11-26
+
+- Added `MatchCombatAuthority` as the match-owned bridge over the existing `HeroCombatRuntime`, `MonsterArmy`, `MonsterMatchRuntime`, `MonsterMatchCombatLoop`, `MonsterCombatResolver`, and `MonsterExternalEntityAdapter`. It does not duplicate those combat rules.
+- A configured match creates four armies, each from that player's supplied `InitialArmySelection` of exactly 20 units. The catalog, unit stats/prices, projectile speed/capacity, and world-units-per-second conversion are injected by the trusted host; the integration deliberately does not invent the still-unapproved balance numbers.
+- Monster AI now receives live positioned adapters for all heroes and living crystals. Melee attacks and homing ranged projectiles apply damage to the actual hero health or canonical `CastleController` crystal HP. The match session synchronizes crystal counts back into standings after every combat tick.
+- Player commands now support normalized directional movement, one manual attack per command, Ultimate activation, and monster purchases. Movement distance is calculated from server tick duration, selected hero speed, host-provided world-unit conversion, and the map's water factor; the map's obstacle geometry is passed into monster steering.
+- Hero attacks resolve against live enemy heroes, monsters, and crystals, use the selected weapon's canonical damage multiplier/cooldown, and preserve the five-hit combo. Ultimate unlock/cooldown state remains in `HeroCombatRuntime`; the current adapter uses each Ultimate's configured radius around the selected target and does not reset combo progress.
+- Monster purchases debit the match wallet atomically using the catalog's price. The existing mine production/collection system remains the source of match resources.
+- Session snapshots now include hero health/weapon/combo/cooldowns, live and dying monsters, and active monster projectiles for a future HUD renderer.
+- Added integration tests for four 20-unit armies, monster-to-hero damage, hero-to-monster combo damage, Ultimate damage without combo reset, monster-to-crystal damage, speed-capped movement, and wallet-backed unit purchase.
+
+### Explicit integration boundaries still open
+
+- The development WebSocket server currently uses the lobby-only default factory. A trusted deployment must pass `combatConfiguration` through a configured `sessionFactory`; no unapproved monster balance values or arbitrary army composition have been silently selected.
+- The exact hit shapes/animations of line, chain, dash, persistent-damage and other hero Ultimates are not represented by the current `HeroUltimate` schema. The first integration uses the existing radius metadata as a generic target-centered area; each ability still needs its authored shape/effect implementation and 3D animation binding.
+- Hero ranged projectile visuals, hero death/respawn rules, kill scoring/rewards, monster permanent-level save loading, and the final mobile HUD/rendering hookup remain separate tasks.
+- The world-unit conversion and monster balance catalog must be supplied by the approved server configuration. The test fixture uses isolated synthetic values solely to verify integration behavior; they are not proposed production balance values.
