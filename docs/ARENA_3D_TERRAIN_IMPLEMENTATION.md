@@ -11,21 +11,24 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
 - Replaced circular rock icons with multi-face angular rock geometry and directional highlights.
 - Extruded castle ramparts into segmented vertical stone faces with top-edge lighting, keeping the existing castle and crystal gameplay data intact.
+- Extruded timber bridge decks with side faces, raised top edges and plank detail.
+- Added lower-body depth and side facets to crystals while preserving their existing health bars and glow state.
 - Kept all gameplay overlays (rivers, bridges, obstacles, pickups, mines, castles, fog, projectiles, minimap) in the existing world-coordinate pipeline and rendered after the terrain pass.
 - Preserved the 16:9 battlefield camera and all server-owned positions.
 
 ## Validation
 
-- Visual-capture workflow passed for commit `66305d0cd409bbb93d2584fee4e15b3d941f5743`, including Flutter test of the production battlefield widget at 960×540.
-- `flutter analyze --no-fatal-infos` passed on that same commit.
-- The rock and castle-wall mesh refinements are committed through `d126c6ba728cb899f81122ba32a9966b2cc01bc0`; the latest visual-capture, full test and Android workflows are queued/running and must pass before these refinements are called validated.
+- The visual-capture workflow passed on an earlier terrain commit, including a Flutter test of the production battlefield widget at 960×540.
+- Current continuous-ground, bridge and crystal changes are committed on the same feature branch; their latest visual capture, full test and Android validation runs must pass before they are called validated.
+- The latest Android emulator install/launch result has not yet been confirmed.
 
 ## Still required before calling the map fully 3D
 
 This is an initial mesh-based terrain pass, not completion of the final map art. Remaining work includes:
 - Connect the packaged 96×96 height-map asset to the live match renderer (the asset loader currently parses it separately from the procedural match-world snapshot), with terrain chunking and correct depth ordering.
-- Volumetric 3D castles, towers, walls, bridges, crystals and resource structures (not flat painter symbols).
-- Water surface geometry, river banks, waterfalls/ripples and material response.
+- Move the terrain from this Canvas-based mesh/2.5D pass to a true GPU 3D scene with camera, depth buffer, perspective, materials and real mesh geometry; current renderer still paints projected triangles.
+- Replace remaining flat castle cores, towers and resource structures with full 3D meshes; wall, bridge and crystal elements only have partial extrusion so far.
+- Upgrade river rendering to a 3D water surface with raised banks, waterfalls/ripples, reflections and material response.
 - More detailed biome-specific trees, rocks, snow, dunes, lava and vegetation.
 - Camera perspective, occlusion/depth sorting, lighting/shadows and mobile performance profiling.
 - Visual review of the final 16:9 capture and Android device/emulator launch.
