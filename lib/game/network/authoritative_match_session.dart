@@ -30,6 +30,23 @@ class AuthoritativeMatchSession implements GameServerSession {
         _random = random ?? Random.secure(),
         _canUseWeapon = canUseWeapon;
 
+  /// Creates the production-style room factory with an explicitly supplied
+  /// approved combat catalog and tuning. No provisional balance is selected
+  /// by the transport or this session.
+  static GameServerSessionFactory configuredFactory({
+    required MatchCombatConfiguration combatConfiguration,
+    bool Function(String playerId, String weaponId)? canUseWeapon,
+    ArenaMap Function()? mapFactory,
+  }) {
+    return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
+          roomCode,
+          message,
+          canUseWeapon: canUseWeapon,
+          mapFactory: mapFactory,
+          combatConfiguration: combatConfiguration,
+        );
+  }
+
   factory AuthoritativeMatchSession.fromCreateMessage(
     String roomCode,
     Map<String, dynamic> message, {
