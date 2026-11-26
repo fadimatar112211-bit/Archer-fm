@@ -342,7 +342,7 @@ class MatchCombatAuthority {
   CombatActionResult attack(String playerId, String targetId) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) return _rejected('البطل مهزوم');
-    if (hero.statusEffects.isActionDisabled) {
+    if ((_statusEffects[hero.entityId]?.isActionDisabled ?? false)) {
       return _rejected('البطل متوقف بتأثير حالة');
     }
     final target = _resolveTarget(targetId);
@@ -376,7 +376,7 @@ class MatchCombatAuthority {
   ) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) return _rejected('البطل مهزوم');
-    if (hero.statusEffects.isActionDisabled) {
+    if ((_statusEffects[hero.entityId]?.isActionDisabled ?? false)) {
       return _rejected('البطل متوقف بتأثير حالة');
     }
     final target = _resolveTarget(targetId);
