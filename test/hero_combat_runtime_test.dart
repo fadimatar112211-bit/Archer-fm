@@ -115,6 +115,34 @@ void main() {
       expect(nextHit.comboIndex, 2);
     });
 
+    test('trusted permanent weapon upgrades scale attacks and Ultimates', () {
+      final runtime = HeroCombatRuntime(
+        hero: heroCombatById(HeroId.ranger),
+        level: 10,
+        comboResetWindowMs: 1200,
+        maxEnergy: 100,
+        energyRegenerationPerSecond: 1,
+        ultimateEnergyCosts: _energyCosts(),
+        weaponUpgradeLevel: 2,
+        weaponUpgradeDamagePerLevel: 0.05,
+      );
+      final base = HeroCombatRuntime(
+        hero: heroCombatById(HeroId.ranger),
+        level: 10,
+        comboResetWindowMs: 1200,
+        maxEnergy: 100,
+        energyRegenerationPerSecond: 1,
+        ultimateEnergyCosts: _energyCosts(),
+      );
+      expect(runtime.attack().damage, (base.attack().damage * 1.1).round());
+      runtime.advance(const Duration(seconds: 2));
+      base.advance(const Duration(seconds: 2));
+      expect(
+        runtime.useUltimate(0).damage,
+        (base.useUltimate(0).damage * 1.1).round(),
+      );
+    });
+
     test('XP levels the hero and stops at level 40', () {
       final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm), comboResetWindowMs: 1200,
           maxEnergy: 100,
