@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../world/arena_map.dart' show enemyVisibleRadius;
+
 /// Snapshot-driven oblique arena projection.
 ///
 /// The server owns all world positions and map geometry. This widget only
@@ -169,7 +171,7 @@ class _ArenaPainter extends CustomPainter {
     _drawPickups(canvas, world, project);
     _drawMines(canvas, world, project);
     _drawCastles(canvas, world, project);
-    _drawMonsters(canvas, snapshot, project);
+    _drawMonsters(canvas, snapshot, world, project);
     _drawProjectiles(canvas, snapshot, project);
     _drawHeroes(canvas, snapshot, world, project);
     _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
@@ -412,9 +414,18 @@ class _ArenaPainter extends CustomPainter {
     }
   }
 
+  bool _enemyMonsterVisible(Offset point, Map world, String? ownerId) {
+    if (ownerId == localPlayerId) return true;
+    final positions = _map(world['playerPositions']);
+    final localPosition = _point(positions?[localPlayerId]);
+    return localPosition == null ||
+        (point - localPosition).distance <= enemyVisibleRadius;
+  }
+
   void _drawMonsters(
     Canvas canvas,
     Map<String, dynamic> state,
+    Map world,
     Offset Function(Offset) project,
   ) {
     final combat = _map(state['combat']);
@@ -422,7 +433,10 @@ class _ArenaPainter extends CustomPainter {
       final monster = _map(raw);
       if (monster == null) continue;
       final point = _point(monster);
-      if (point == null) continue;
+      if (point == null ||
+          !_enemyMonsterVisible(point, world, monster['ownerId']?.toString())) {
+        continue;
+      }
       final p = project(point);
       final color = _ownerColor(monster['ownerId']?.toString(), state);
       final radius = switch (monster['type']) {
@@ -524,8 +538,17 @@ class _ArenaPainter extends CustomPainter {
     }
     final combat = _map(state['combat']);
     for (final raw in _list(combat?['monsters'])) {
-      final point = _point(raw);
-      if (point == null) continue;
+      final monster = _map(raw);
+      final point = _point(monster);
+      if (monster == null ||
+          point == null ||
+          !_enemyMonsterVisible(
+            point,
+            world,
+            monster['ownerId']?.toString(),
+          )) {
+        continue;
+      }
       canvas.drawCircle(
         miniPoint(point),
         1.5,
