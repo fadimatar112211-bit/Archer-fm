@@ -161,8 +161,15 @@ void main() {
 
     final boundary = boundaryKey.currentContext!.findRenderObject()
         as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: 1);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    // Engine image readback is asynchronous and must run outside the widget
+    // test's fake-async zone (otherwise CI can stall until the test timeout).
+    final image = await tester.runAsync(
+      () => boundary.toImage(pixelRatio: 1),
+    );
+    expect(image, isNotNull);
+    final bytes = await tester.runAsync(
+      () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
+    );
     expect(bytes, isNotNull);
     final centerOffset = (image.width * (image.height ~/ 2) +
             (image.width ~/ 2)) *
@@ -179,7 +186,7 @@ void main() {
     expect(bytes.getUint8(minimapOffset), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 1), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 2), lessThan(40));
-    image.dispose();
+    image!.dispose();
   });
 
   testWidgets('shows a waiting label when no authoritative world exists',
