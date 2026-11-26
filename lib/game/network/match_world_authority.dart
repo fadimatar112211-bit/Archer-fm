@@ -55,6 +55,23 @@ class MatchWorldAuthority {
   int livingCrystals(String playerId) =>
       castles.castleOf(playerId)?.aliveCount ?? 0;
 
+  /// Atomic wallet debit used by authoritative unit purchases.
+  bool trySpendResources(String playerId, int amount) {
+    _requirePlayer(playerId);
+    if (amount < 0) throw ArgumentError.value(amount, 'amount');
+    final balance = _resources[playerId]!;
+    if (balance < amount) return false;
+    _resources[playerId] = balance - amount;
+    return true;
+  }
+
+  /// Trusted refund/production credit. Clients cannot call this directly.
+  void creditResources(String playerId, int amount) {
+    _requirePlayer(playerId);
+    if (amount < 0) throw ArgumentError.value(amount, 'amount');
+    _resources[playerId] = _resources[playerId]! + amount;
+  }
+
   /// Applies an authoritative movement result using the map's collision and
   /// shallow-water rules. Clients submit intent, never a trusted world pos.
   Offset movePlayer(String playerId, Offset desiredDelta, double radius) {
