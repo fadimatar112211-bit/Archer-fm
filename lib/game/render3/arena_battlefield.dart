@@ -251,8 +251,10 @@ class _ArenaPainter extends CustomPainter {
         final top1 = elevated(p1, heights.last);
         final foot0 = project(p0);
         final foot1 = project(p1);
-        final side = triangle(foot0, foot1, top1);
-        side
+        final side = Path()
+          ..moveTo(foot0.dx, foot0.dy)
+          ..lineTo(foot1.dx, foot1.dy)
+          ..lineTo(top1.dx, top1.dy)
           ..lineTo(top0.dx, top0.dy)
           ..close();
         final shade = i % 3 == 0 ? palette[2] : palette[1];
@@ -281,7 +283,7 @@ class _ArenaPainter extends CustomPainter {
           final c0 = vertex(a0, radii[ring + 1], heights[ring + 1]);
           final d = vertex(a1, radii[ring + 1], heights[ring + 1]);
           final tint = (i + ring * 2) % 5;
-          final faceColor = tint == 0 ? palette[0] : tint == 1 ? palette[1] : palette[0].withBlue((palette[0].blue + 8).clamp(0,255));
+          final faceColor = tint == 0 ? palette[0] : tint == 1 ? palette[1] : palette[0].withBlue((palette[0].blue + 8).clamp(0,255).toInt());
           canvas.drawPath(triangle(a, c0, d), Paint()..color = faceColor);
           canvas.drawPath(triangle(a, d, b), Paint()..color = palette[1].withAlpha(0xD8));
           canvas.drawPath(triangle(a, c0, d), Paint()
