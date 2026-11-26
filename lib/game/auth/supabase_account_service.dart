@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'player_account_data_service.dart';
+
 /// Mobile account/session adapter for Supabase Auth.
 ///
 /// The publishable key is safe for mobile distribution when Row Level Security
@@ -33,6 +35,8 @@ class SupabaseAccountService {
     _instance = service;
     return service;
   }
+
+  PlayerAccountDataService get playerData => PlayerAccountDataService(_client);
 
   User? get currentUser => _client.auth.currentUser;
   bool get isSignedIn => currentUser != null;
