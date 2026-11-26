@@ -445,7 +445,7 @@ void main() {
   test('Shadow basic attacks apply live poison ticks and preserve kill attribution', () {
     final session = _combatReadySession();
     final authority = session.combat!;
-    final shadow = session.players[2];
+    final shadow = session.players.elementAt(2);
     final target = authority.armies
         .firstWhere((army) => army.ownerId == 'p1')
         .units.first;
@@ -476,7 +476,7 @@ void main() {
       heroLevelForPlayer: (playerId, _) => playerId == 'p4' ? 30 : 1,
     );
     final authority = session.combat!;
-    final storm = session.players[3];
+    final storm = session.players.elementAt(3);
     final victim = session.players.first;
     final stormPosition = session.world!.playerPositions[storm.id]!;
     session.world!.setPlayerPosition(
