@@ -85,4 +85,35 @@ void main() {
     await gesture.cancel();
   });
 
+
+  testWidgets('movement sensitivity scales the input vector before normalization', (
+    tester,
+  ) async {
+    final sent = <Offset>[];
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: VirtualJoystick(
+            sensitivity: 0.5,
+            onMove: (direction) {
+              sent.add(direction);
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
+
+    final center = tester.getCenter(find.byType(VirtualJoystick));
+    final gesture = await tester.startGesture(center);
+    await gesture.moveTo(center + const Offset(50, 0));
+    await tester.pump(const Duration(milliseconds: 80));
+
+    expect(sent, isNotEmpty);
+    expect(sent.last.dx, closeTo(0.4167, 0.02));
+    expect(sent.last.dy, closeTo(0, 0.02));
+    await gesture.up();
+  });
+
 }
