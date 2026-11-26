@@ -7,6 +7,7 @@ import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/network/supabase_access_token_verifier.dart';
 import 'package:archer_fm/game/network/supabase_rest_client.dart';
 import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
+import 'package:archer_fm/game/progression/supabase_hero_progress_store.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 /// Production-oriented gateway entry point.
@@ -77,6 +78,7 @@ Future<void> main() async {
     serviceRoleKey: serviceRoleKey,
   );
   final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
+  final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
 
   final verifier = SupabaseAccessTokenVerifier(
     supabaseUrl: supabaseUrl,
@@ -88,6 +90,7 @@ Future<void> main() async {
     accessTokenVerifier: verifier.verify,
     sessionFactory: AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: combatConfiguration,
+      loadAccountHeroProgress: heroProgressStore.load,
       onMatchSettlement: ({
         required matchId,
         required accountId,
