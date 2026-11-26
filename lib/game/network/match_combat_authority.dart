@@ -41,7 +41,18 @@ class MatchCombatConfiguration {
         maxHeroEnergy <= 0 ||
         !energyRegenerationPerSecond.isFinite ||
         energyRegenerationPerSecond < 0) {
-      throw ArgumentError('Combat movement/projectile configuration is invalid.');
+      throw ArgumentError('Combat movement/projectile/energy configuration is invalid.');
+    }
+    final expectedUltimateIds = {
+      for (final hero in archerFmHeroes)
+        for (final ultimate in hero.ultimates) ultimate.id,
+    };
+    if (this.ultimateEnergyCosts.keys.toSet().difference(expectedUltimateIds).isNotEmpty ||
+        expectedUltimateIds.difference(this.ultimateEnergyCosts.keys.toSet()).isNotEmpty ||
+        this.ultimateEnergyCosts.values.any(
+          (cost) => cost <= 0 || cost > maxHeroEnergy,
+        )) {
+      throw ArgumentError('Energy costs must define all 16 Ultimates within maxHeroEnergy.');
     }
   }
 
