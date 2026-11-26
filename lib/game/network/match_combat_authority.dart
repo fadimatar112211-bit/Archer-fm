@@ -25,13 +25,15 @@ class MatchCombatConfiguration {
     required this.maxActiveProjectiles,
     required this.maxUnitsPerArmy,
     required this.worldUnitsPerSecond,
+    required this.comboResetWindowMs,
     Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
   }) : monsterProgressionByPlayer =
            Map.unmodifiable(monsterProgressionByPlayer) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0 ||
         maxActiveProjectiles <= 0 ||
         maxUnitsPerArmy < 20 ||
-        !worldUnitsPerSecond.isFinite || worldUnitsPerSecond <= 0) {
+        !worldUnitsPerSecond.isFinite || worldUnitsPerSecond <= 0 ||
+        comboResetWindowMs <= 0) {
       throw ArgumentError('Combat movement/projectile configuration is invalid.');
     }
   }
@@ -41,6 +43,8 @@ class MatchCombatConfiguration {
   final int maxActiveProjectiles;
   final int maxUnitsPerArmy;
   final double worldUnitsPerSecond;
+  /// Required approved time window for chaining the five manual attack taps.
+  final int comboResetWindowMs;
   /// Trusted, already-loaded permanent monster progression for each account.
   /// The host remains responsible for loading and saving each profile.
   final Map<String, MonsterProgression> monsterProgressionByPlayer;
@@ -53,7 +57,12 @@ class MatchHeroState {
     required this.weaponId,
     required this.spawnPosition,
     this.level = 1,
-  }) : combat = HeroCombatRuntime(hero: definition, level: level) {
+    required int comboResetWindowMs,
+  }) : combat = HeroCombatRuntime(
+          hero: definition,
+          level: level,
+          comboResetWindowMs: comboResetWindowMs,
+        ) {
     final index = definition.weapons.indexWhere((weapon) => weapon.id == weaponId);
     if (index < 0) throw ArgumentError.value(weaponId, 'weaponId');
     combat.selectWeapon(index);
@@ -80,6 +89,7 @@ class MatchHeroState {
     if (!amount.isFinite || amount <= 0 || !isAlive || isProtected) {
       return false;
     }
+    combat.resetCombo();
     health = math.max(0, health - amount).toDouble();
     if (health > 0) return false;
     respawnRemaining = const Duration(seconds: 10);
@@ -150,6 +160,7 @@ class MatchCombatAuthority {
         definition: hero,
         weaponId: weaponId,
         spawnPosition: world.playerPositions[playerId]!,
+        comboResetWindowMs: configuration.comboResetWindowMs,
       );
       _heroes[playerId] = heroState;
       armies.add(MonsterArmy(
