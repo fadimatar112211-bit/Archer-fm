@@ -37,10 +37,9 @@ class GameClient {
   /// Production identity must come from the account/authentication service.
   String? profileKey;
   final void Function(String key)? onProfile;
-  final Future<String?> Function()? accessTokenProvider;
-
   /// Supplies a fresh Supabase access token for each socket handshake,
   /// including reconnects. Omit only for local development hosts.
+  final Future<String?> Function()? accessTokenProvider;
 
   /// Persist the room code and resume token to support reconnect after app pause.
   final void Function(String code, String token)? onSession;
