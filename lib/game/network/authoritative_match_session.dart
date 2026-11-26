@@ -8,6 +8,7 @@ import '../match/match_rules.dart';
 import 'match_world_authority.dart';
 import 'match_combat_authority.dart';
 import '../../monsters/monster_models.dart';
+import '../../monsters/monster_army.dart';
 import 'websocket_game_host.dart';
 
 /// Concrete four-player match session used by [WebSocketGameHost].
@@ -145,11 +146,36 @@ class AuthoritativeMatchSession implements GameServerSession {
         current.heroId = heroId;
         current.weaponId = weaponId;
         return null;
+      case 'army_select':
+        if (_rules != null) return 'match_already_started';
+        final rawCounts = message['counts'];
+        if (rawCounts is! Map) return 'invalid_army_selection';
+        final counts = {for (final type in MonsterType.values) type: 0};
+        for (final entry in rawCounts.entries) {
+          if (entry.key is! String || entry.value is! int) {
+            return 'invalid_army_selection';
+          }
+          final type = MonsterType.values.where((item) => item.name == entry.key);
+          if (type.isEmpty || (entry.value as int) < 0) {
+            return 'invalid_army_selection';
+          }
+          counts[type.single] = entry.value as int;
+        }
+        try {
+          current.initialArmySelection = InitialArmySelection(counts);
+        } on ArgumentError {
+          return 'invalid_army_selection';
+        }
+        return null;
       case 'start':
         if (_rules != null) return 'match_already_started';
         if (_players.length != 4) return 'need_four_players';
         if (_players.any((item) => item.heroId == null || item.weaponId == null)) {
           return 'all_players_must_select';
+        }
+        if (_combatConfiguration != null &&
+            _players.any((item) => item.initialArmySelection == null)) {
+          return 'all_players_must_select_army';
         }
         world = MatchWorldAuthority(
           map: _mapFactory?.call() ?? ArenaMap.generate(_random),
@@ -168,6 +194,10 @@ class AuthoritativeMatchSession implements GameServerSession {
               },
               weaponIds: {
                 for (final item in _players) item.id: item.weaponId!,
+              },
+              initialArmies: {
+                for (final item in _players)
+                  item.id: item.initialArmySelection!,
               },
               configuration: config,
               random: _random,
@@ -378,6 +408,11 @@ class AuthoritativeMatchSession implements GameServerSession {
             'connected': player.connected,
             'heroId': player.heroId,
             'weaponId': player.weaponId,
+            if (player.initialArmySelection != null)
+              'initialArmy': {
+                for (final type in MonsterType.values)
+                  type.name: player.initialArmySelection!.counts[type] ?? 0,
+              },
             if (player.lastCombatAction != null)
               'lastCombatAction': player.lastCombatAction,
             if (player.lastPurchase != null) 'lastPurchase': player.lastPurchase,
@@ -542,6 +577,7 @@ class _MatchPlayer implements GameServerPlayer {
   bool connected = true;
   String? heroId;
   String? weaponId;
+  InitialArmySelection? initialArmySelection;
   double moveX = 0;
   double moveY = 0;
   Map<String, Object?>? lastCombatAction;
