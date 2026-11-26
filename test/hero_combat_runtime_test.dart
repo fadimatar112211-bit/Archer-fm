@@ -59,6 +59,32 @@ void main() {
       expect(heavy.cooldownRemainingMs, 820);
     });
 
+    test('all four Ultimates unlock at levels 1, 10, 20 and 30 for every hero', () {
+      for (final hero in archerFmHeroes) {
+        expect(
+          hero.ultimates.map((ultimate) => ultimate.unlockLevel).toList(),
+          [1, 10, 20, 30],
+          reason: '${hero.nameAr} must keep the four agreed unlock milestones.',
+        );
+        for (var index = 0; index < hero.ultimates.length; index++) {
+          final unlockLevel = hero.ultimates[index].unlockLevel;
+          final runtime = HeroCombatRuntime(
+            hero: heroCombatById(hero.id),
+            level: unlockLevel,
+            comboResetWindowMs: 1200,
+            maxEnergy: 100,
+            energyRegenerationPerSecond: 1,
+            ultimateEnergyCosts: _energyCosts(cost: 1),
+          );
+          expect(
+            runtime.useUltimate(index).accepted,
+            isTrue,
+            reason: '${hero.nameAr} Ultimate $index should unlock at level $unlockLevel.',
+          );
+        }
+      }
+    });
+
     test('Ultimate buttons enforce unlock level and independent cooldowns', () {
       final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.shadow), comboResetWindowMs: 1200,
           maxEnergy: 100,
