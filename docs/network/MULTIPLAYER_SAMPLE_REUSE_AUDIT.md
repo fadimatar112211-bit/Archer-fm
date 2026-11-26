@@ -32,7 +32,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - `MatchRulesEngine` is an isolated four-player match-result/clock rules foundation.
 - `GameClient` is a mobile WebSocket transport, not yet connected to a server or game HUD.
 - `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
-- `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. The authoritative server must supply costs and maximum levels.
+- `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; no ZIP sample prices are hardcoded.
 - Monsters and map integration remain owned by OpenCode and are not modified here.
 
 ## Not yet implemented
