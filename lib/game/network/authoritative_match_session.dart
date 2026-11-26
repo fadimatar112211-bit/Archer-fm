@@ -6,6 +6,8 @@ import '../world/arena_map.dart';
 import '../world/castle_system.dart';
 import '../match/match_rules.dart';
 import 'match_world_authority.dart';
+import 'match_combat_authority.dart';
+import '../../monsters/monster_models.dart';
 import 'websocket_game_host.dart';
 
 /// Concrete four-player match session used by [WebSocketGameHost].
@@ -20,7 +22,9 @@ class AuthoritativeMatchSession implements GameServerSession {
     Random? random,
     bool Function(String playerId, String weaponId)? canUseWeapon,
     ArenaMap Function()? mapFactory,
+    MatchCombatConfiguration? combatConfiguration,
   })  : _mapFactory = mapFactory,
+        _combatConfiguration = combatConfiguration,
         duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
         _canUseWeapon = canUseWeapon;
@@ -30,6 +34,7 @@ class AuthoritativeMatchSession implements GameServerSession {
     Map<String, dynamic> message, {
     bool Function(String playerId, String weaponId)? canUseWeapon,
     ArenaMap Function()? mapFactory,
+    MatchCombatConfiguration? combatConfiguration,
   }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
@@ -40,6 +45,7 @@ class AuthoritativeMatchSession implements GameServerSession {
       durationMinutes: requestedDuration as int? ?? 30,
       canUseWeapon: canUseWeapon,
       mapFactory: mapFactory,
+      combatConfiguration: combatConfiguration,
     );
   }
 
@@ -47,6 +53,8 @@ class AuthoritativeMatchSession implements GameServerSession {
   final String code;
   final MatchDuration duration;
   final ArenaMap Function()? _mapFactory;
+  final MatchCombatConfiguration? _combatConfiguration;
+  MatchCombatAuthority? combat;
   MatchWorldAuthority? world;
   int _worldNowMs = 0;
   final Random _random;
@@ -142,6 +150,27 @@ class AuthoritativeMatchSession implements GameServerSession {
           playerIds: [for (final item in _players) item.id],
           random: _random,
         );
+        if (_combatConfiguration case final config?) {
+          try {
+            combat = MatchCombatAuthority(
+              world: world!,
+              heroes: {
+                for (final item in _players)
+                  item.id: archerFmHeroes.firstWhere(
+                    (hero) => hero.id.name == item.heroId,
+                  ),
+              },
+              weaponIds: {
+                for (final item in _players) item.id: item.weaponId!,
+              },
+              configuration: config,
+              random: _random,
+            );
+          } on ArgumentError {
+            world = null;
+            return 'invalid_combat_configuration';
+          }
+        }
         _rules = MatchRulesEngine(
           duration: duration,
           participants: [
@@ -155,9 +184,64 @@ class AuthoritativeMatchSession implements GameServerSession {
         if (rules == null) return 'match_not_started';
         final result = rules.forfeit(current.id);
         return result.accepted ? null : 'forfeit_rejected';
+      case 'move':
+        final authority = combat;
+        final dx = message['dx'];
+        final dy = message['dy'];
+        if (authority == null) return 'combat_not_configured';
+        if (dx is! num || dy is! num ||
+            !dx.toDouble().isFinite || !dy.toDouble().isFinite ||
+            dx.toDouble() * dx.toDouble() + dy.toDouble() * dy.toDouble() > 1.000002) {
+          return 'invalid_movement';
+        }
+        current.moveX = dx.toDouble();
+        current.moveY = dy.toDouble();
+        return null;
+      case 'attack':
+        final authority = combat;
+        final targetId = message['targetId'];
+        if (authority == null) return 'combat_not_configured';
+        if (targetId is! String) return 'invalid_target';
+        final result = authority.attack(current.id, targetId);
+        current.lastCombatAction = {
+          'accepted': result.accepted,
+          'messageAr': result.messageAr,
+          'damage': result.damage,
+          'comboIndex': result.comboIndex,
+        };
+        _syncCrystalStandings();
+        return result.accepted ? null : 'attack_rejected';
+      case 'ultimate':
+        final authority = combat;
+        final targetId = message['targetId'];
+        final index = message['index'];
+        if (authority == null) return 'combat_not_configured';
+        if (targetId is! String || index is! int) return 'invalid_ultimate';
+        final result = authority.useUltimate(current.id, index, targetId);
+        current.lastCombatAction = {
+          'accepted': result.accepted,
+          'messageAr': result.messageAr,
+          'damage': result.damage,
+          'cooldownRemainingMs': result.cooldownRemainingMs,
+        };
+        _syncCrystalStandings();
+        return result.accepted ? null : 'ultimate_rejected';
+      case 'purchase':
+        final authority = combat;
+        final typeName = message['monsterType'];
+        if (authority == null) return 'combat_not_configured';
+        if (typeName is! String) return 'invalid_monster_type';
+        final matches = MonsterType.values.where((type) => type.name == typeName);
+        if (matches.isEmpty) return 'invalid_monster_type';
+        final purchase = authority.purchaseMonster(current.id, matches.single);
+        if (purchase == null) return 'purchase_rejected';
+        current.lastPurchase = {
+          'unitId': purchase.unit.id,
+          'monsterType': purchase.unit.type.name,
+          'cost': purchase.cost,
+        };
+        return null;
       default:
-        // Movement, attacks, damage, purchases and rewards must be routed
-        // through the actual authoritative world/combat/economy services.
         return 'unsupported_command';
     }
   }
@@ -231,6 +315,24 @@ class AuthoritativeMatchSession implements GameServerSession {
     final rules = _rules;
     if (rules?.phase != MatchPhase.running) return;
     rules!.advance(elapsed);
+    final authority = combat;
+    if (authority != null) {
+      for (final player in _players) {
+        if (!player.connected || (player.moveX == 0 && player.moveY == 0)) continue;
+        try {
+          authority.moveHero(
+            player.id,
+            Offset(player.moveX, player.moveY),
+            elapsed,
+          );
+        } on StateError {
+          player.moveX = 0;
+          player.moveY = 0;
+        }
+      }
+      authority.tick(elapsed);
+      _syncCrystalStandings();
+    }
     final matchWorld = world;
     if (matchWorld != null && elapsed.inMilliseconds > 0) {
       _worldNowMs += elapsed.inMilliseconds;
@@ -262,6 +364,9 @@ class AuthoritativeMatchSession implements GameServerSession {
             'connected': player.connected,
             'heroId': player.heroId,
             'weaponId': player.weaponId,
+            if (player.lastCombatAction != null)
+              'lastCombatAction': player.lastCombatAction,
+            if (player.lastPurchase != null) 'lastPurchase': player.lastPurchase,
           },
       ],
       if (rules?.result case final result?)
@@ -278,6 +383,45 @@ class AuthoritativeMatchSession implements GameServerSession {
                 'rank': standing.rank,
                 'hasForfeited': standing.hasForfeited,
               },
+          ],
+        },
+      if (combat case final matchCombat?)
+        'combat': {
+          'heroes': {
+            for (final entry in matchCombat.heroes.entries)
+              entry.key: {
+                'id': entry.value.entityId,
+                'health': entry.value.health,
+                'maxHealth': entry.value.maxHealth,
+                'level': entry.value.level,
+                'weaponId': entry.value.combat.selectedWeapon.id,
+                'comboIndex': entry.value.combat.comboIndex,
+                'attackCooldownMs': entry.value.combat.attackCooldownRemainingMs,
+                'ultimateCooldowns': entry.value.combat.ultimateCooldowns,
+              },
+          },
+          'monsters': [
+            for (final unit in matchCombat.monsters.liveUnits)
+              {
+                'id': unit.id,
+                'ownerId': unit.ownerId,
+                'type': unit.type.name,
+                'x': unit.positionX,
+                'y': unit.positionY,
+                'health': unit.health,
+                'maxHealth': unit.stats.maxHealth,
+                'targetId': unit.targetId,
+              },
+          ],
+          'dyingMonsters': [
+            for (final unit in matchCombat.monsters.dyingUnits)
+              {'id': unit.id, 'ownerId': unit.ownerId, 'type': unit.type.name},
+          ],
+          'projectiles': [
+            for (final projectile in matchCombat.monsters.projectileManager.active)
+              {'id': projectile.id, 'ownerId': projectile.ownerId,
+               'targetId': projectile.targetId, 'x': projectile.positionX,
+               'y': projectile.positionY},
           ],
         },
       if (world case final matchWorld?)
@@ -349,6 +493,15 @@ class AuthoritativeMatchSession implements GameServerSession {
     };
   }
 
+  void _syncCrystalStandings() {
+    final rules = _rules;
+    final matchWorld = world;
+    if (rules == null || matchWorld == null) return;
+    for (final id in matchWorld.playerIds) {
+      rules.setLivingCrystals(id, matchWorld.livingCrystals(id));
+    }
+  }
+
   _MatchPlayer? _find(String id) {
     for (final player in _players) {
       if (player.id == id) return player;
@@ -375,4 +528,8 @@ class _MatchPlayer implements GameServerPlayer {
   bool connected = true;
   String? heroId;
   String? weaponId;
+  double moveX = 0;
+  double moveY = 0;
+  Map<String, Object?>? lastCombatAction;
+  Map<String, Object?>? lastPurchase;
 }
