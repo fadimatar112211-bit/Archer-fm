@@ -30,7 +30,7 @@ void main() {
     ];
 
     final snapshot = <String, dynamic>{
-      'phase': 'setup',
+      'phase': 'running',
       'players': players,
       'world': {
         'size': {'width': 1920, 'height': 1080},
