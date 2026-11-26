@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/network/match_combat_configuration.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
+import 'package:archer_fm/game/heroes/hero_roster.dart';
 
 Map<String, Object?> _validConfiguration() => {
   'projectileSpeed': 120,
@@ -8,6 +9,12 @@ Map<String, Object?> _validConfiguration() => {
   'maxUnitsPerArmy': 100,
   'worldUnitsPerSecond': 100,
   'comboResetWindowMs': 1200,
+  'maxHeroEnergy': 100,
+  'energyRegenerationPerSecond': 1,
+  'ultimateEnergyCosts': {
+    for (final hero in archerFmHeroes)
+      for (final ultimate in hero.ultimates) ultimate.id: 20,
+  },
   'monsterCatalog': {
     for (final type in MonsterType.values)
       type.name: {
@@ -34,6 +41,9 @@ void main() {
     expect(config.maxUnitsPerArmy, 100);
     expect(config.worldUnitsPerSecond, 100);
     expect(config.comboResetWindowMs, 1200);
+    expect(config.maxHeroEnergy, 100);
+    expect(config.energyRegenerationPerSecond, 1);
+    expect(config.ultimateEnergyCosts, hasLength(16));
   });
 
   test('rejects a missing monster type instead of silently using defaults', () {
