@@ -1,12 +1,13 @@
 # Archer FM — Project Status
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
-> Last updated: 2026-11-26
-> Project status: Phase 1 technical asset integration complete (CI evidence); Phase 2 map quality pending real gameplay capture; Phase 3 core match/combat verification implemented and automated CI passing, with balance-dependent rewards and production account integration still open
-> Active work branch: `feature/match-rules-foundation` (PR #20, Draft, open)
+> Last updated: 2026-11-27
+> Project status: Phase 5 started — account identity and cloud persistence audit/architecture documented; implementation and provider integration remain in progress. Earlier phases retain their own acceptance gates.
+> Active work branch: `feature/phase-5-account-cloud-persistence` (new isolated Phase 5 branch)
+> Previous integration branch: `feature/match-rules-foundation` (PR #20 remains Draft/open/unmerged)
 > Default branch: `main`
 >
-> **Current status note (2026-11-26):** The detailed historical sections below include snapshots from earlier dates and are not a live completion claim. Official roadmap phases: Phase 1 = technical asset integration; Phase 2 = map quality; Phase 3 = core match/combat verification. Current evidence: `docs/ASSET_INTEGRATION_REPORT.md`, `docs/PHASE_3_CORE_MATCH_COMBAT_REPORT.md`, and `docs/PROJECT_AUDIT_AND_REMAINING_WORK.md`.
+> **Current status note (2026-11-27):** Phase 5 audit found local JSON progression stores but no production authentication provider, cloud database, or production TLS gateway. The client-supplied profile key is a development identifier, not authenticated identity. See `docs/PHASE_5_ACCOUNT_CLOUD_PERSISTENCE_REPORT.md`. The prior Phase 4 Android CI run built the debug APK and uploaded its artifact; emulator/device QA was skipped.
 
 ## 1. Project identity
 
