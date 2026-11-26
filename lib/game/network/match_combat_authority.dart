@@ -23,10 +23,12 @@ class MatchCombatConfiguration {
     required Map<String, InitialArmySelection> initialArmies,
     required this.projectileSpeed,
     required this.maxActiveProjectiles,
+    required this.maxUnitsPerArmy,
     required this.worldUnitsPerSecond,
   }) : initialArmies = Map.unmodifiable(initialArmies) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0 ||
         maxActiveProjectiles <= 0 ||
+        maxUnitsPerArmy < 20 ||
         !worldUnitsPerSecond.isFinite || worldUnitsPerSecond <= 0) {
       throw ArgumentError('Combat movement/projectile configuration is invalid.');
     }
@@ -36,6 +38,7 @@ class MatchCombatConfiguration {
   final Map<String, InitialArmySelection> initialArmies;
   final double projectileSpeed;
   final int maxActiveProjectiles;
+  final int maxUnitsPerArmy;
   final double worldUnitsPerSecond;
 }
 
@@ -101,6 +104,7 @@ class MatchCombatAuthority {
         idPrefix: '$playerId-army',
         catalog: configuration.monsterCatalog,
         selection: configuration.initialArmies[playerId]!,
+        maxUnits: configuration.maxUnitsPerArmy,
         castleX: castle.anchor.dx,
         castleY: castle.anchor.dy,
       ));
