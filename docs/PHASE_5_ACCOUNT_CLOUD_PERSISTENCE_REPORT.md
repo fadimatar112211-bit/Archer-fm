@@ -133,3 +133,13 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - The Android workflow's pull-request trigger is restricted to base branch `heroes-complete`; PR #21 currently targets `feature/match-rules-foundation`. Its push trigger includes the Phase 5 branch, but a successful run must be explicitly verified before acceptance.
 
 **Current acceptance status: IN PROGRESS — not ready for production or phase closure.**
+
+
+## 8. CI follow-up — 2026-11-27
+
+- Corrected the Android workflow pull-request target filter to include `feature/match-rules-foundation`, the actual base of PR #21. Previously, the PR event filter only named `heroes-complete`, so PR #21 would not receive that workflow through its pull-request event.
+- The Phase 5 head commit `a58e9bcb3471bd90c90543c95e60ec7b7ca66e38` completed the `match-rules` workflow successfully (analysis and full Flutter test steps passed).
+- Android validation run `45908292769` has completed dependency resolution, analysis and Flutter tests successfully; APK build was still running at the latest check. Do not mark Android package validation complete until build and artifact steps finish.
+- The PR now points at head commit `275f06a054eeedb800940cf7e395f5823ed77f32`; a fresh Android run is expected for this workflow change.
+
+**Acceptance remains IN PROGRESS.** Passing source CI does not substitute for staging Supabase deployment, service-role runtime wiring, atomic reward settlement, cross-device recovery, or account-isolation E2E tests.
