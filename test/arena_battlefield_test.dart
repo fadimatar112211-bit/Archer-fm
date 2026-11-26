@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:archer_fm/game/render3/arena_battlefield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -122,6 +124,48 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull);
     expect(find.byType(ArenaBattlefield), findsOneWidget);
+  });
+
+  testWidgets('fails closed when the local reveal position is missing',
+      (tester) async {
+    final boundaryKey = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: RepaintBoundary(
+              key: boundaryKey,
+              child: SizedBox(
+                width: 960,
+                height: 540,
+                child: const ArenaBattlefield(
+                  localPlayerId: 'p1',
+                  snapshot: {
+                    'world': {
+                      'size': {'width': 2000, 'height': 1200},
+                      'playerPositions': {},
+                    },
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final boundary = boundaryKey.currentContext!.findRenderObject()
+        as RenderRepaintBoundary;
+    final image = await boundary.toImage(pixelRatio: 1);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    expect(bytes, isNotNull);
+    final centerOffset = (image.width * (image.height ~/ 2) +
+            (image.width ~/ 2)) *
+        4;
+    expect(bytes!.getUint8(centerOffset), lessThan(40));
+    expect(bytes.getUint8(centerOffset + 1), lessThan(40));
+    expect(bytes.getUint8(centerOffset + 2), lessThan(40));
+    image.dispose();
   });
 
   testWidgets('shows a waiting label when no authoritative world exists',
