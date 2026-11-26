@@ -429,3 +429,5 @@ Still to decide or test:
 - Deployment template now provisions `/var/lib/archer-fm` as a private systemd state directory and documents the persistent outbox path.
 - This is durable for one gateway instance on persistent local storage. Multi-replica operation still requires a shared database queue/lease; do not share one JSON file across replicas.
 - New CI is expected from the latest commits; verify the exact latest head run before claiming this batch passed.
+
+- Settlement outbox CI correction: an initial analysis failure from a missing explicit `dart:async` import was fixed. The corrected source passed Flutter analysis and all tests in Android workflow [45911700825](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911700825); debug APK compilation was still running at the latest check.
