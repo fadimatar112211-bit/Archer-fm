@@ -64,7 +64,9 @@ class HeroProgress {
     }
     if (!unlockedWeaponIds.every(_allWeaponIds.contains) ||
         !weaponUpgradeLevels.keys.every(_allWeaponIds.contains) ||
-        weaponUpgradeLevels.values.any((level) => level < 0)) {
+        weaponUpgradeLevels.values.any(
+          (level) => level < 0 || level > heroLevelCap,
+        )) {
       throw const FormatException('Unknown weapon or invalid upgrade level.');
     }
     if (!unlockedWeaponIds.containsAll(_initialIds)) {
@@ -96,7 +98,9 @@ class HeroProgress {
   }) {
     if (!_allWeaponIds.contains(weaponId)) return ProgressionResult.unknownWeapon;
     if (!ownsWeapon(weaponId)) return ProgressionResult.weaponLocked;
-    if (cost < 0 || maxLevel < 0) return ProgressionResult.invalidCost;
+    if (cost < 0 || maxLevel < 0 || maxLevel > heroLevelCap) {
+      return ProgressionResult.invalidCost;
+    }
     final current = weaponLevel(weaponId);
     if (current >= maxLevel) return ProgressionResult.maxLevel;
     if (permanentCurrency < cost) return ProgressionResult.insufficientCurrency;
