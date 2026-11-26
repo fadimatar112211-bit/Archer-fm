@@ -14,7 +14,7 @@ create table if not exists public.player_profiles (
       display_name is null or (
         display_name = btrim(display_name)
         and display_name !~ '[[:cntrl:]]'
-        and display_name !~ U&'[\\202A-\\202E]'
+        and display_name !~ U&'[\202A-\202E]'
       )
     )
 );
