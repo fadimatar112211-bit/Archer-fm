@@ -121,3 +121,15 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 ### Validation
 - An initial Android validation run exposed two source errors (a malformed callback line and an interface capability cast); both were corrected.
 - The latest validation runs on the current branch are in progress. Record their final Match Rules, Monster Army and Android results here only after they complete. A previous run on an earlier SHA failed at analysis and did not build an APK.
+
+
+## 7. Review and verification checkpoint — 2026-11-27
+
+- Opened draft PR [#21](https://github.com/fadimatar112211-bit/Archer-fm/pull/21) targeting `feature/match-rules-foundation`; it is intentionally unmerged. PR #20 and `main` remain untouched.
+- Source spot-check confirmed the Arabic email account gate, environment-only Supabase URL/publishable key configuration, server-side Auth user lookup, account-bound room join/resume checks, and revision-checked hero progression REST adapter are present on this branch.
+- The cloud adapter uses a service-role key and must remain server-only. The mobile app uses only the publishable key.
+- The branch currently has no reported combined commit status checks at the PR head. A live CI result has not been confirmed in this checkpoint; do not treat the source spot-check as a passing test run.
+- The production gateway and Supabase project are not deployed from this session. No project URL, publishable key, service-role key, or database credentials were available. Live database migration, cloud runtime composition, reward/match-result settlement, save import, cross-device recovery, and expiry/revocation acceptance remain blockers.
+- The Android workflow's pull-request trigger is restricted to base branch `heroes-complete`; PR #21 currently targets `feature/match-rules-foundation`. Its push trigger includes the Phase 5 branch, but a successful run must be explicitly verified before acceptance.
+
+**Current acceptance status: IN PROGRESS — not ready for production or phase closure.**
