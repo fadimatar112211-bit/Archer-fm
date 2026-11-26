@@ -350,6 +350,15 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                             if (_room != null) SelectableText('الغرفة: $_room'),
                           ],
                         ),
+                        if (_connectionLabel == 'إعادة الاتصال')
+                          const Padding(
+                            padding: EdgeInsets.only(top: 6),
+                            child: Text(
+                              'جارٍ استعادة الاتصال بالغرفة؛ سيُعاد الاتصال تلقائياً',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.orangeAccent),
+                            ),
+                          ),
                         const SizedBox(height: 6),
                         Text('اللاعبون: $_playersCount / 4 · الحالة: ${_phaseLabel(_matchPhase)}'),
                         if (_playerId != null) Text('معرّفك داخل الغرفة: $_playerId'),
