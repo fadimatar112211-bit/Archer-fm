@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-27
-> Project status: Phase 5 started — account identity and cloud persistence audit/architecture documented; implementation and provider integration remain in progress. Earlier phases retain their own acceptance gates.
+> Project status: Phase 5 in progress — Supabase email account gate, server token verification, account-bound match reconnect, RLS schema and revision-checked progression adapters implemented in source; cloud deployment, progression/reward runtime wiring and staging/device acceptance remain open. Earlier phases retain their own acceptance gates.
 > Active work branch: `feature/phase-5-account-cloud-persistence` (new isolated Phase 5 branch)
 > Previous integration branch: `feature/match-rules-foundation` (PR #20 remains Draft/open/unmerged)
 > Default branch: `main`
