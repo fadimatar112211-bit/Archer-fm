@@ -15,10 +15,10 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 | ZIP component | Decision | Reason |
 |---|---|---|
-| WebSocket client | Adapted into `lib/game/network/game_client.dart` | Useful transport only; it does not own game rules. |
+| WebSocket client | Adapted into `lib/game/network/game_client.dart` | Useful transport only; it does not own game rules. Durable commands replay after sequence reconciliation; combat and movement inputs are dropped offline. |
 | Reliable command replay | Improved | Only durable selection/progression/purchase commands replay; movement and combat inputs are dropped while offline. |
 | Progress/weapon ownership model | Adapted into `lib/game/progression/hero_progress.dart` | Uses the existing canonical hero roster and weapon IDs. Costs and level caps are injected, not copied from provisional ZIP balance. |
-| Joystick widget | Reuse candidate only | Must be adapted to the final landscape HUD and existing game camera projection before UI integration. |
+| Joystick widget | Adapted into `lib/game/controls/virtual_joystick.dart` | Normalized input, dead zone, release-to-zero and retry while transport rejects movement are covered by widget tests. Final camera projection and HUD placement remain integration work. |
 | Selection screen and catalog | Not copied | They duplicate hero/weapon/unit catalogs and use a three-unit sample roster that conflicts with the canonical four monster types and OpenCode's integration. |
 | Game HUD | Not copied | It expects the ZIP Match snapshot schema, demo minimap coordinates, and ZIP unit IDs. |
 | server/lib/match.dart and world.dart | Not copied | They duplicate existing hero combat, castle/crystal, mine, world and monster systems; they also contain provisional combat rules and different economy/respawn assumptions. |
@@ -31,6 +31,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 - `MatchRulesEngine` is an isolated four-player match-result/clock rules foundation.
 - `GameClient` is a mobile WebSocket transport, not yet connected to a server or game HUD.
+- `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
 - `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. The authoritative server must supply costs and maximum levels.
 - Monsters and map integration remain owned by OpenCode and are not modified here.
 
