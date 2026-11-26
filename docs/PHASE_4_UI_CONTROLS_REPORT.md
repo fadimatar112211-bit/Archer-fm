@@ -110,6 +110,12 @@
 
 - The room retry action now remains visible even when the WebSocket reports connected but the server never completes the room welcome handshake. Commit: `dd51d5c6cda0cdce3b82fd0a5e486f3a45fe2318`.
 
+
+## Validation correction — armory import
+
+- The first Android validation run after adding the armory failed at `flutter analyze` because the new screen used an incorrect relative import for the existing canonical roster. The roster itself exists at `lib/game/heroes/hero_roster.dart`; the import is corrected to `../heroes/hero_roster.dart` in commit `2548bdd377913c4065816c7bcdf844edbee9dacf`.
+- The failed run skipped Flutter tests and APK build because analysis stopped the job. Do not count that run as passing. A fresh validation against the corrected branch head is still required.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
