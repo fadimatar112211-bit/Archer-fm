@@ -84,6 +84,37 @@ void main() {
       ), MonsterProjectileResult.alreadyResolved);
     });
 
+    test('reports a projectile kill once to the firing owner', () {
+      final source = _ranged();
+      final target = _Target('fragile-enemy', 'p2', 0, 0, health: 5);
+      final projectile = MonsterProjectile(
+        id: 'kill-bolt',
+        source: source,
+        targetId: target.id,
+        projectileSpeed: 10,
+        positionX: 0,
+        positionY: 0,
+      );
+      final events = <String>[];
+      final result = projectile.update(
+        elapsed: Duration.zero,
+        target: target,
+        onKill: (ownerId, kind) => events.add('$ownerId:${kind.name}'),
+      );
+      expect(result, MonsterProjectileResult.hit);
+      expect(target.isAlive, isFalse);
+      expect(events, ['p1:hero']);
+      expect(
+        projectile.update(
+          elapsed: Duration.zero,
+          target: target,
+          onKill: (ownerId, kind) => events.add('$ownerId:${kind.name}'),
+        ),
+        MonsterProjectileResult.alreadyResolved,
+      );
+      expect(events, ['p1:hero']);
+    });
+
     test('cancels when target disappears, dies, or becomes friendly', () {
       final source = _ranged();
       MonsterProjectile make() => MonsterProjectile(
