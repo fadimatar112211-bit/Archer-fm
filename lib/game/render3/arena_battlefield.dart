@@ -1112,6 +1112,58 @@ class _ArenaPainter extends CustomPainter {
     }
   }
 
+
+  void _drawStoneTurret(Canvas canvas, Offset base, double halfSize, double height) {
+    final top = base.translate(0, -height);
+    final leftBase = base + Offset(-halfSize, -halfSize * 0.35);
+    final rightBase = base + Offset(halfSize, -halfSize * 0.35);
+    final backBase = base + Offset(0, -halfSize * 0.72);
+    final frontBase = base + Offset(0, halfSize * 0.42);
+    final leftTop = top + Offset(-halfSize, -halfSize * 0.35);
+    final rightTop = top + Offset(halfSize, -halfSize * 0.35);
+    final backTop = top + Offset(0, -halfSize * 0.72);
+    final frontTop = top + Offset(0, halfSize * 0.42);
+    Path polygon(List<Offset> points) {
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
+      for (final point in points.skip(1)) {
+        path.lineTo(point.dx, point.dy);
+      }
+      return path..close();
+    }
+    canvas.drawOval(
+      Rect.fromCenter(center: base.translate(0, 2), width: halfSize * 3.2, height: halfSize * 1.25),
+      Paint()..color = const Color(0x66302620),
+    );
+    canvas.drawPath(polygon([leftBase, frontBase, frontTop, leftTop]),
+        Paint()..color = const Color(0xFF746B5D));
+    canvas.drawPath(polygon([frontBase, rightBase, rightTop, frontTop]),
+        Paint()..color = const Color(0xFF514B43));
+    canvas.drawPath(polygon([leftTop, frontTop, rightTop, backTop]),
+        Paint()..color = const Color(0xFFD1C3A8));
+    canvas.drawPath(polygon([leftBase, backBase, backTop, leftTop]),
+        Paint()..color = const Color(0xFF958A76));
+    canvas.drawPath(polygon([backBase, rightBase, rightTop, backTop]),
+        Paint()..color = const Color(0xFF665E52));
+    // crenellated crown blocks sit above the roof line
+    for (var merlon = 0; merlon < 4; merlon++) {
+      final x = -halfSize + merlon * (halfSize * 0.66);
+      final block = Rect.fromLTWH(
+        top.dx + x,
+        top.dy - halfSize * 0.7,
+        halfSize * 0.42,
+        halfSize * 0.58,
+      );
+      canvas.drawRect(block, Paint()..color = const Color(0xFFE0D2B8));
+      canvas.drawRect(
+        Rect.fromLTWH(block.left, block.top, block.width, 1.2),
+        Paint()..color = const Color(0xFFFFFFFF).withAlpha(0x88),
+      );
+    }
+    canvas.drawLine(leftTop, frontTop, Paint()
+      ..color = const Color(0xFFE5D9C2)
+      ..strokeWidth = 1.1);
+  }
+
   void _drawCastles(Canvas canvas, Map world, Offset Function(Offset) project) {
     for (final raw in _list(world['castles'])) {
       final castle = _map(raw);
@@ -1214,6 +1266,16 @@ class _ArenaPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4,
       );
+      // Four raised corner turrets and a keep make the castle read as a
+      // fortified 3D structure instead of a flat circular marker.
+      for (final offset in const [
+        Offset(-18, -18), Offset(18, -18),
+        Offset(-18, 18), Offset(18, 18),
+      ]) {
+        final turret = project(anchor + offset);
+        _drawStoneTurret(canvas, turret, 7.0, 19.0);
+      }
+      _drawStoneTurret(canvas, center + const Offset(0, -5), 10.0, 28.0);
       for (final crystalRaw in _list(castle['crystals'])) {
         final crystal = _map(crystalRaw);
         if (crystal == null) continue;
