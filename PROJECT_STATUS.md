@@ -435,3 +435,6 @@ Still to decide or test:
 - Added an Arabic player-account screen to the authenticated home menu. It reads the signed-in player's profile, wallet balance, currency ledger and recent match history through own-row RLS; players can edit only their display name and sign out. No client-side reward or progression writes were added.
 - Supabase access tokens are refreshed when within 30 seconds of expiry before game handshakes/reconnects.
 - Added typed account data models and validation tests. Latest CI must be checked at the current branch head before marking these changes verified.
+
+- Validation follow-up: workflow 45912232721 caught an invalid typed map invocation in the new player account history queries; this stopped analysis before tests/APK build. Both query mappers were corrected. The latest branch head has not yet produced a completed CI result, so validation remains pending.
+- Player profile names now have database-side checks against whitespace padding, control characters and Unicode bidi overrides. A trigger maintains updated_at while keeping timestamp columns unwritable by the client; staging assertions check the trigger.
