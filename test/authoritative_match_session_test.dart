@@ -1030,4 +1030,72 @@ void main() {
     expect(session.rules!.phase, MatchPhase.finished);
     expect(session.snapshot()['phase'], 'finished');
   });
+
+  test('finished account-bound matches are durably settled for every player', () async {
+    final settlements = <Map<String, Object?>>[];
+    final session = AuthoritativeMatchSession(
+      code: 'settle1',
+      onMatchSettlement: ({
+        required matchId,
+        required accountId,
+        required standing,
+        required finishReason,
+      }) async {
+        settlements.add({
+          'matchId': matchId,
+          'accountId': accountId,
+          'rank': standing.rank,
+          'score': standing.score,
+          'crystals': standing.livingCrystals,
+          'reason': finishReason.name,
+        });
+      },
+    );
+    final accounts = [
+      'account-one',
+      'account-two',
+      'account-three',
+      'account-four',
+    ];
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(
+        session.handle(players[i], {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': hero.weapons.first.id,
+        }),
+        isNull,
+      );
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+
+    for (final player in players.take(3)) {
+      expect(
+        session.handle(player, {'type': 'forfeit'}),
+        isNull,
+      );
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(session.rules!.phase, MatchPhase.finished);
+    expect(settlements, hasLength(4));
+    expect(
+      settlements.map((item) => item['accountId']).toSet(),
+      accounts.toSet(),
+    );
+    expect(
+      settlements.every((item) => item['matchId'] != 'settle1'),
+      isTrue,
+    );
+    expect(
+      settlements.every((item) => item['reason'] == 'lastCrystalHolder'),
+      isTrue,
+    );
+  });
+
 }
