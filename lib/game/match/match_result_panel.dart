@@ -13,6 +13,15 @@ class MatchResultPanel extends StatelessWidget {
   final String localPlayerId;
   final VoidCallback onReturnHome;
 
+  String _playerLabel(Object? playerId, List<dynamic> standings) {
+    if (playerId is! String || playerId.isEmpty) return 'لاعب';
+    if (playerId == localPlayerId) return 'أنت';
+    final index = standings.indexWhere(
+      (entry) => entry is Map && entry['playerId'] == playerId,
+    );
+    return index < 0 ? 'لاعب آخر' : 'اللاعب ${index + 1}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final winner = result['winnerId'];
@@ -24,9 +33,9 @@ class MatchResultPanel extends StatelessWidget {
         ? result['standings'] as List
         : const <dynamic>[];
     final winnerLabel = winner is String && winner.isNotEmpty
-        ? 'الفائز: اللاعب $winner'
+        ? 'الفائز: ${_playerLabel(winner, standings)}'
         : tied.isNotEmpty
-            ? 'تعادل بين: ${tied.map((id) => 'اللاعب $id').join('، ')}'
+            ? 'تعادل بين: ${tied.map((id) => _playerLabel(id, standings)).join('، ')}'
             : 'انتهت المباراة دون فائز معلن';
     final reasonLabel = switch (reason) {
       'lastCrystalHolder' => 'حُسمت المباراة ببقاء بلورات لاعب واحد',
@@ -48,31 +57,30 @@ class MatchResultPanel extends StatelessWidget {
             const SizedBox(height: 4),
             Text(reasonLabel, style: const TextStyle(color: Colors.white70)),
             const Divider(),
-            for (final entry in standings)
-              if (entry is Map)
+            for (var index = 0; index < standings.length; index++)
+              if (standings[index] is Map)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   child: Row(
                     children: [
                       SizedBox(
                         width: 34,
-                        child: Text('#${entry['rank'] ?? '—'}'),
+                        child: Text('#${standings[index]['rank'] ?? '—'}'),
                       ),
                       Expanded(
                         child: Text(
-                          'اللاعب ${entry['playerId'] ?? '—'}'
-                          '${entry['playerId'] == localPlayerId ? ' (أنت)' : ''}'
-                          '${entry['hasForfeited'] == true ? ' · انسحب' : ''}',
+                          '${_playerLabel(standings[index]['playerId'], standings)}'
+                          '${standings[index]['hasForfeited'] == true ? ' · انسحب' : ''}',
                           style: TextStyle(
-                            fontWeight: entry['playerId'] == localPlayerId
+                            fontWeight: standings[index]['playerId'] == localPlayerId
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                           ),
                         ),
                       ),
-                      Text('النقاط ${entry['score'] ?? 0}'),
+                      Text('النقاط ${standings[index]['score'] ?? 0}'),
                       const SizedBox(width: 10),
-                      Text('البلورات ${entry['livingCrystals'] ?? 0}/7'),
+                      Text('البلورات ${standings[index]['livingCrystals'] ?? 0}/7'),
                     ],
                   ),
                 ),
