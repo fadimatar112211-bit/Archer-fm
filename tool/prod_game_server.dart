@@ -108,6 +108,7 @@ Future<void> main() async {
           rewardAmount: reward,
           idempotencyKey: 'match:$matchId:user:$accountId:reward:v1',
         );
+        heroProgressStore.invalidateRevision(accountId);
       },
       onMatchSettlementError: (error) {
         stderr.writeln('Match settlement pending retry: $error');
