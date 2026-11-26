@@ -6,11 +6,12 @@ void main() {
   testWidgets('shows the authoritative winner and ranked final standings', (
     tester,
   ) async {
+    var returnedHome = false;
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p2',
-          onReturnHome: () {},
+          onReturnHome: () => returnedHome = true,
           result: {
             'reason': 'timeExpired',
             'winnerId': 'p2',
@@ -42,6 +43,8 @@ void main() {
     expect(find.text('النقاط 120'), findsOneWidget);
     expect(find.text('البلورات 5/7'), findsOneWidget);
     expect(find.text('العودة للقائمة الرئيسية'), findsOneWidget);
+    await tester.tap(find.text('العودة للقائمة الرئيسية'));
+    expect(returnedHome, isTrue);
   });
 
   testWidgets('shows a tie and crystal victory reason without inventing a winner', (
