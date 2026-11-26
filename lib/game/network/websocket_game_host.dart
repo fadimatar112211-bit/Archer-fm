@@ -51,6 +51,12 @@ abstract interface class AccountBoundGameServerSession implements GameServerSess
   bool ownsResumeToken(String resumeToken, String accountId);
 }
 
+/// Optional server-side account hydration hook. The host calls this only after
+/// Supabase has verified the access token and before sending the welcome state.
+abstract interface class AccountProvisioningGameServerSession {
+  Future<void> prepareAccount(GameServerPlayer player, String accountId);
+}
+
 typedef GameAccessTokenVerifier = Future<String?> Function(String accessToken);
 
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
@@ -339,6 +345,17 @@ class WebSocketGameHost {
       if (joinedRoom == null || joinedPlayer == null) {
         _send(socket, {'type': 'error', 'reason': 'no_session'});
         return;
+      }
+      if (accountId != null &&
+          joinedRoom is AccountProvisioningGameServerSession) {
+        try {
+          await (joinedRoom as AccountProvisioningGameServerSession)
+              .prepareAccount(joinedPlayer, accountId);
+        } on Object {
+          joinedRoom.leave(joinedPlayer);
+          _send(socket, {'type': 'error', 'reason': 'account_restore_failed'});
+          return;
+        }
       }
       if (socket.readyState != WebSocket.open) {
         joinedRoom.disconnect(joinedPlayer);
