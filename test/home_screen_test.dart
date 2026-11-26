@@ -1,5 +1,3 @@
-import 'dart:ui' show Size;
-
 import 'package:archer_fm/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,7 +20,7 @@ void main() {
     expect(find.text('الإعدادات'), findsOneWidget);
 
     await tester.tap(find.text('المباراة'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text('تجهيز المباراة'), findsOneWidget);
     expect(find.text('الاتصال بالغرفة'), findsOneWidget);
