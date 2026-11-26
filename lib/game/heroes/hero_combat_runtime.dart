@@ -31,6 +31,8 @@ class HeroCombatRuntime {
     required this.maxEnergy,
     required this.energyRegenerationPerSecond,
     required Map<String, int> ultimateEnergyCosts,
+    this.weaponUpgradeLevel = 0,
+    this.weaponUpgradeDamagePerLevel = 0,
   })  : targetHealth = targetMaxHealth,
         energy = maxEnergy.toDouble(),
         _ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts),
@@ -43,6 +45,11 @@ class HeroCombatRuntime {
     }
     if (comboResetWindowMs <= 0) {
       throw RangeError.value(comboResetWindowMs, 'comboResetWindowMs');
+    }
+    if (weaponUpgradeLevel < 0 || weaponUpgradeLevel > heroLevelCap ||
+        !weaponUpgradeDamagePerLevel.isFinite ||
+        weaponUpgradeDamagePerLevel < 0 || weaponUpgradeDamagePerLevel > 0.25) {
+      throw ArgumentError('Weapon upgrade damage configuration is invalid.');
     }
     if (maxEnergy <= 0 ||
         !energyRegenerationPerSecond.isFinite ||
@@ -65,6 +72,12 @@ class HeroCombatRuntime {
   final int maxEnergy;
   final double energyRegenerationPerSecond;
   final Map<String, int> _ultimateEnergyCosts;
+  /// Trusted permanent upgrade level for the selected weapon.
+  final int weaponUpgradeLevel;
+  /// Host-approved damage growth per permanent weapon level.
+  final double weaponUpgradeDamagePerLevel;
+  double get weaponUpgradeMultiplier =>
+      1 + weaponUpgradeLevel * weaponUpgradeDamagePerLevel;
   int _comboResetRemainingMs = 0;
   int targetHealth;
   double energy;
@@ -140,6 +153,7 @@ class HeroCombatRuntime {
     final currentHit = comboIndex;
     final raw = hero.damageAt(level) *
         selectedWeapon.damageMultiplier *
+        weaponUpgradeMultiplier *
         const [1.0, 1.05, 1.1, 1.2, 1.55][currentHit];
     final damage = raw.round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
@@ -185,7 +199,10 @@ class HeroCombatRuntime {
         targetHealth: targetHealth,
       );
     }
-    final damage = (hero.damageAt(level) * ultimate.damageMultiplier).round();
+    final damage = (hero.damageAt(level) *
+            ultimate.damageMultiplier *
+            weaponUpgradeMultiplier)
+        .round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
     energy -= energyCost;
     _ultimateCooldowns[index] = ultimate.cooldownMs;
