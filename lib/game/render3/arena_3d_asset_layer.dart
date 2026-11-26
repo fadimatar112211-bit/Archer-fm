@@ -14,10 +14,12 @@ class Arena3DAssetLayer extends StatefulWidget {
     super.key,
     required this.snapshot,
     required this.localPlayerId,
+    this.selectedTargetId,
   });
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
+  final String? selectedTargetId;
 
   @override
   State<Arena3DAssetLayer> createState() => _Arena3DAssetLayerState();
@@ -354,6 +356,7 @@ class _Arena3DAssetLayerState extends State<Arena3DAssetLayer>
         painter: _Arena3DActorPainter(
           snapshot: widget.snapshot,
           localPlayerId: widget.localPlayerId,
+          selectedTargetId: widget.selectedTargetId,
           heroes: _heroes,
           monsters: _monsters,
         ),
@@ -365,12 +368,14 @@ class _Arena3DActorPainter extends CustomPainter {
   _Arena3DActorPainter({
     required this.snapshot,
     required this.localPlayerId,
+    required this.selectedTargetId,
     required this.heroes,
     required this.monsters,
   });
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
+  final String? selectedTargetId;
   final Map<String, Hero3D> heroes;
   final Map<String, Monster3D> monsters;
 
@@ -463,6 +468,30 @@ class _Arena3DActorPainter extends CustomPainter {
     );
   }
 
+  void _targetRing(Canvas canvas, Offset p, double radius) {
+    canvas.drawCircle(
+      p,
+      radius,
+      Paint()..color = const Color(0x44FFD66B),
+    );
+    canvas.drawCircle(
+      p,
+      radius,
+      Paint()
+        ..color = const Color(0xFFFFD66B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6,
+    );
+    canvas.drawCircle(
+      p,
+      radius + 4,
+      Paint()
+        ..color = const Color(0xCCFFFFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
   void _fallback(Canvas canvas, Offset p, Color color, double radius) {
     canvas.drawCircle(
       p + const Offset(0, 2),
@@ -523,6 +552,9 @@ class _Arena3DActorPainter extends CustomPainter {
       } else {
         _fallback(canvas, p, _ownerColor(unit['ownerId']?.toString()), 6);
       }
+      if (selectedTargetId == id) {
+        _targetRing(canvas, p.translate(0, 7), 17);
+      }
       final hp = _number(unit['health']);
       final maxHp = _number(unit['maxHealth']);
       if (hp != null && maxHp != null && maxHp > 0) {
@@ -551,6 +583,9 @@ class _Arena3DActorPainter extends CustomPainter {
         model.paint(canvas);
       } else {
         _fallback(canvas, p, _ownerColor(id), 10);
+      }
+      if (selectedTargetId == 'hero_$id') {
+        _targetRing(canvas, p.translate(0, 9), 23);
       }
       final hp = _number(state['health']);
       final maxHp = _number(state['maxHealth']);
