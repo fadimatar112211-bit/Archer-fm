@@ -20,6 +20,7 @@ on:
       - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
+      - 'analysis_options.yaml'
       - '.github/workflows/flutter-android.yml'
 
 jobs:
@@ -67,12 +68,16 @@ jobs:
             adb install build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
-            sleep 5
+            sleep 10
             adb shell pidof com.archerfm.archer_fm
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
+            adb shell screencap -p /sdcard/archer-fm-launch.png
+            adb pull /sdcard/archer-fm-launch.png build/archer-fm-launch.png
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: archer-fm-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: archer-fm-android-validation
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/archer-fm-launch.png
           retention-days: 14
