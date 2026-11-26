@@ -6,7 +6,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 
 ## Implemented on the current feature branch
 
-- Connected the existing packaged `assets/maps/arena/height_map.csv` (96×96, authored elevations 0–1.5) to the live battlefield painter through an asynchronous asset load; the renderer now builds a continuous camera-culled triangular heightfield from that source, with shaded faces and contour highlights. No height-map data was regenerated.
+- Connected the existing packaged `assets/maps/arena/height_map.csv` (96×96, authored elevations 0–1.5) to the live battlefield painter through an asynchronous asset load; the renderer now builds a continuous camera-culled triangular heightfield from that source. Height sampling is bilinear (smoother transitions between source cells), and terrain facets use directional slope lighting. No height-map data was regenerated.
 - Added shallow raised river-bank faces, shoreline stones and pale foam seams along the water channels to improve depth and scale.
 - Added a software-rendered, height-bearing triangular mesh pass for biome landforms. The mesh has concentric elevation rings, exposed cliff faces, per-face directional shading, and biome palettes for forest, desert, snow and volcanic regions.
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
@@ -20,7 +20,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 ## Validation
 
 - The visual-capture workflow passed on an earlier terrain commit, including a Flutter test of the production battlefield widget at 960×540.
-- Current continuous-ground, bridge and crystal changes are committed on the same feature branch; their latest visual capture, full test and Android validation runs must pass before they are called validated.
+- The earlier height-map integration passed the visual capture and match-rules/monster checks. A follow-up terrain sampling and lighting refinement is committed; its fresh visual capture, tests and Android validation are queued/running and must pass before it is called validated.
 - The latest Android emulator install/launch result has not yet been confirmed.
 
 ## Still required before calling the map fully 3D
