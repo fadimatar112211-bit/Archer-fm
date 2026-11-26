@@ -559,7 +559,33 @@ class _ArenaPainter extends CustomPainter {
         Paint()..color = _ownerColor(castle['ownerId']?.toString(), state),
       );
     }
-    final positions = _map(world['playerPositions']) ?? const {};
+    // Keep the minimap's terrain and castle markers under the same
+    // local reveal radius as the main battlefield view.
+    final playerPositions = _map(world['playerPositions']);
+    final localPosition = _point(playerPositions?[localPlayerId]);
+    if (localPosition != null) {
+      final revealX = enemyVisibleRadius / worldSize.width * inner.width;
+      final revealY = enemyVisibleRadius / worldSize.height * inner.height;
+      final revealRadius = math.min(revealX, revealY);
+      final center = miniPoint(localPosition);
+      canvas.saveLayer(inner, Paint());
+      canvas.drawRect(inner, Paint()..color = const Color(0xB8000807));
+      canvas.drawCircle(
+        center,
+        revealRadius,
+        Paint()..blendMode = BlendMode.clear,
+      );
+      canvas.restore();
+      canvas.drawCircle(
+        center,
+        revealRadius,
+        Paint()
+          ..color = const Color(0x667DCB8A)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+    final positions = playerPositions ?? const {};
     for (final entry in positions.entries) {
       final point = _point(entry.value);
       if (point == null) continue;
