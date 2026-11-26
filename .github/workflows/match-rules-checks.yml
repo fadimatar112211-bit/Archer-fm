@@ -26,6 +26,7 @@ on:
       - 'lib/game/network/**'
       - 'lib/game/progression/**'
       - 'lib/game/controls/**'
+      - 'tool/**'
       - 'test/match_rules_test.dart'
       - 'test/game_client_test.dart'
       - 'test/websocket_game_host_test.dart'
