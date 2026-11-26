@@ -22,7 +22,7 @@ void main() {
     expect(find.text('وابل النجوم'), findsOneWidget);
     expect(find.text('السهم الثاقب'), findsOneWidget);
     expect(find.text('حارس الغابة'), findsOneWidget);
-    await tester.ensureVisible(find.text('القنص الأسطوري'));
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
     expect(find.text('القنص الأسطوري'), findsOneWidget);
     expect(find.textContaining('خمس ضربات متتابعة مستقلة'), findsOneWidget);
