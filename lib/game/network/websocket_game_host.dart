@@ -14,6 +14,12 @@ abstract interface class GameServerPlayer {
   set connected(bool value);
 }
 
+/// Optional per-player state projection for games with fog of war or
+/// private player data. The transport calls this once for each recipient.
+abstract interface class PlayerScopedSnapshotSession {
+  Map<String, Object?> snapshotFor(GameServerPlayer player);
+}
+
 abstract interface class GameServerSession {
   String get code;
   Iterable<GameServerPlayer> get players;
@@ -143,10 +149,16 @@ class WebSocketGameHost {
 
   void _broadcastSnapshots() {
     for (final room in _rooms.values) {
-      final snapshot = room.snapshot();
-      for (final player in room.players) {
+      final players = room.players.toList();
+      final sharedSnapshot =
+          room is PlayerScopedSnapshotSession ? null : room.snapshot();
+      for (final player in players) {
         final socket = _sockets[player.id];
-        if (socket != null) _send(socket, snapshot);
+        if (socket == null) continue;
+        final snapshot = room is PlayerScopedSnapshotSession
+            ? room.snapshotFor(player)
+            : sharedSnapshot!;
+        _send(socket, snapshot);
       }
     }
   }
