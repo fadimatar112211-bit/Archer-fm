@@ -304,3 +304,12 @@
 - Final visual review of the actual phone screen at supported landscape sizes.
 
 **Phase 4 is still in progress.** A successful arena capture on an earlier commit and older APK artifact do not substitute for validation of the latest code head.
+
+
+## Fifteenth implementation batch — haptics preference reaches gameplay
+
+- Replaced the settings screen's isolated switch state with a shared session-scoped game feedback preference. The setting now controls haptic feedback emitted by successful manual attacks, Ultimates, target cycling and unit purchase commands.
+- Reopening settings reflects the current preference rather than resetting to enabled. The preference is intentionally session-scoped; durable cross-launch storage belongs to Phase 5.
+- Added widget coverage proving the preference changes, survives leaving/reopening the settings route, and updates the shared runtime preference.
+- Commits: `31b38df150c6e0677109a8cad49f5d1c0d1b1537` (shared feedback preference), `68ed67a35c844b94745cfa09645c58ecda1fb701` (settings integration), `103a782a2f6b61923524efed198717ab6e5a53a6` (gameplay feedback hooks), `1c0ea071f70eba86eba3348a54681f981b0bd94f` (cross-route preference test).
+- Fresh Flutter analysis, full tests and Android APK build are required for this batch. Haptic behavior still needs confirmation on a physical Android device.
