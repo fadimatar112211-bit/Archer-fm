@@ -123,4 +123,108 @@ create trigger on_auth_user_created_archer_fm
   after insert on auth.users
   for each row execute procedure public.handle_new_archer_fm_user();
 
+
+-- Optimistic revision checks prevent two game-server instances from silently
+-- overwriting each other's progression updates. These RPCs are backend-only.
+create or replace function public.save_hero_progress(
+  p_user_id uuid,
+  p_data jsonb,
+  p_expected_revision bigint
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  current_revision bigint;
+begin
+  if jsonb_typeof(p_data) <> 'object' then
+    raise exception 'invalid_progress_document' using errcode = '22023';
+  end if;
+
+  select revision into current_revision
+  from public.hero_progress
+  where user_id = p_user_id
+  for update;
+
+  if not found then
+    insert into public.hero_progress(user_id)
+    values (p_user_id)
+    on conflict (user_id) do nothing;
+    select revision into current_revision
+    from public.hero_progress
+    where user_id = p_user_id
+    for update;
+  end if;
+
+  if current_revision <> p_expected_revision then
+    raise exception 'hero_progress_revision_conflict' using errcode = '40001';
+  end if;
+
+  update public.hero_progress
+  set data = p_data,
+      revision = current_revision + 1,
+      updated_at = now()
+  where user_id = p_user_id;
+
+  return current_revision + 1;
+end;
+$;
+
+create or replace function public.save_monster_progress(
+  p_user_id uuid,
+  p_data jsonb,
+  p_expected_revision bigint
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  current_revision bigint;
+begin
+  if jsonb_typeof(p_data) <> 'object' then
+    raise exception 'invalid_monster_progress_document' using errcode = '22023';
+  end if;
+
+  select revision into current_revision
+  from public.monster_progress
+  where user_id = p_user_id
+  for update;
+
+  if not found then
+    insert into public.monster_progress(user_id)
+    values (p_user_id)
+    on conflict (user_id) do nothing;
+    select revision into current_revision
+    from public.monster_progress
+    where user_id = p_user_id
+    for update;
+  end if;
+
+  if current_revision <> p_expected_revision then
+    raise exception 'monster_progress_revision_conflict' using errcode = '40001';
+  end if;
+
+  update public.monster_progress
+  set data = p_data,
+      revision = current_revision + 1,
+      updated_at = now()
+  where user_id = p_user_id;
+
+  return current_revision + 1;
+end;
+$;
+
+revoke all on function public.save_hero_progress(uuid, jsonb, bigint)
+  from public, anon, authenticated;
+revoke all on function public.save_monster_progress(uuid, jsonb, bigint)
+  from public, anon, authenticated;
+grant execute on function public.save_hero_progress(uuid, jsonb, bigint)
+  to service_role;
+grant execute on function public.save_monster_progress(uuid, jsonb, bigint)
+  to service_role;
+
 commit;
