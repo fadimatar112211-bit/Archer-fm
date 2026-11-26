@@ -815,24 +815,33 @@ class _ArenaPainter extends CustomPainter {
         canvas.drawCircle(p + Offset(-r * 0.22, -r * 1.18), r * 0.07,
             Paint()..color = const Color(0xFFD0E6A1));
       } else {
-        canvas.drawCircle(
-          p,
-          r,
-          Paint()..color = const Color(0xFF666F6B),
-        );
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: p + Offset(-r * 0.2, -r * 0.28),
-            width: r * 1.05,
-            height: r * 0.58,
-          ),
-          Paint()..color = const Color(0xFFADB0A8),
-        );
-        canvas.drawCircle(
-          p + Offset(r * 0.34, r * 0.18),
-          r * 0.2,
-          Paint()..color = const Color(0xFF858B83),
-        );
+        // Angular rock mesh with separately lit facets and a darker side wall.
+        final apex = p + Offset(-r * 0.12, -r * 1.12);
+        final ridge = p + Offset(r * 0.42, -r * 0.58);
+        final left = p + Offset(-r * 0.92, -r * 0.12);
+        final right = p + Offset(r * 0.94, -r * 0.02);
+        final front = p + Offset(r * 0.12, r * 0.52);
+        final back = p + Offset(-r * 0.18, -r * 0.48);
+        Path face(Offset a, Offset b, Offset d) => Path()
+          ..moveTo(a.dx, a.dy)
+          ..lineTo(b.dx, b.dy)
+          ..lineTo(d.dx, d.dy)
+          ..close();
+        canvas.drawPath(face(apex, left, back),
+            Paint()..color = const Color(0xFFB7C0B9));
+        canvas.drawPath(face(apex, back, ridge),
+            Paint()..color = const Color(0xFFD4D9D3));
+        canvas.drawPath(face(apex, ridge, right),
+            Paint()..color = const Color(0xFF8E9992));
+        canvas.drawPath(face(left, back, front),
+            Paint()..color = const Color(0xFF78847D));
+        canvas.drawPath(face(back, ridge, front),
+            Paint()..color = const Color(0xFF69756E));
+        canvas.drawPath(face(ridge, right, front),
+            Paint()..color = const Color(0xFF4F5C56));
+        canvas.drawLine(apex, ridge, Paint()
+          ..color = const Color(0xFFE5EAE4)
+          ..strokeWidth = 1.2);
       }
     }
   }
