@@ -22,6 +22,7 @@ void main() {
 
     WebSocket? connectedSocket;
     final received = <Map<String, dynamic>>[];
+    final createReceived = Completer<void>();
     final server = (await tester.runAsync(() async {
       final bound = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       // Register the listener in the real async zone so WebSocket upgrade and
@@ -42,6 +43,7 @@ void main() {
           final message = jsonDecode(raw) as Map<String, dynamic>;
           received.add(message);
           if (message['type'] == 'create') {
+            if (!createReceived.isCompleted) createReceived.complete();
             send({
               'type': 'welcome',
               'id': 'p1',
@@ -112,13 +114,14 @@ void main() {
       );
       await tester.tap(find.text('إنشاء غرفة'));
       await tester.pump();
-      await tester.runAsync(() => Future<void>.delayed(
-            const Duration(milliseconds: 250),
-          ));
-      await tester.pump();
-      await tester.runAsync(() => Future<void>.delayed(
-            const Duration(milliseconds: 100),
-          ));
+      await tester.runAsync(
+        () => createReceived.future.timeout(const Duration(seconds: 8)),
+      );
+      // Let the welcome and running-state frames reach the app before
+      // asserting the screen transition; avoid a timing-only 250 ms guess.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 120)),
+      );
       await tester.pump();
 
       expect(find.byType(ArenaBattlefield), findsOneWidget);
