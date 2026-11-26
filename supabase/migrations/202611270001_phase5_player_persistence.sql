@@ -89,7 +89,10 @@ grant all on table public.player_profiles,
   public.currency_transactions,
   public.match_results
   to service_role;
-
+revoke all on sequence public.currency_transactions_id_seq
+  from public, anon, authenticated;
+grant usage, select on sequence public.currency_transactions_id_seq
+  to service_role;
 
 -- A signed-in player can read their own profile and update only its display name.
 drop policy if exists player_profiles_select_own on public.player_profiles;
