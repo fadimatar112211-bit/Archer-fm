@@ -51,8 +51,8 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    await tester.pumpWidget(
+    try {
+      await tester.pumpWidget(
       MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p1',
@@ -76,12 +76,15 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('نتيجة المباراة'), findsOneWidget);
-    expect(
-      find.bySemanticsLabel(
-        'المركز 1، أنت، النقاط 120، البلورات 5 من 7',
-      ),
-      findsOneWidget,
-    );
+      expect(
+        find.bySemanticsLabel(
+          'المركز 1، أنت، النقاط 120، البلورات 5 من 7',
+        ),
+        findsOneWidget,
+      );
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets('shows a tie and crystal victory reason without inventing a winner', (
