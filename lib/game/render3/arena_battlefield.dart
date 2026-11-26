@@ -234,57 +234,88 @@ class _ArenaPainter extends CustomPainter {
     Offset cameraOrigin,
     Offset Function(Offset) project,
   ) {
-    const cell = 96.0;
-    // The projection uses a fixed 960x540 world-unit camera window.
-    final columns = (960.0 / cell).ceil() + 2;
-    final rows = (540.0 / cell).ceil() + 2;
+    // A deterministic 48-unit ground grid gives the battlefield a richer
+    // hand-painted texture while keeping every detail anchored to world space.
+    const cell = 48.0;
+    const columns = 22;
+    const rows = 15;
     final startX = (cameraOrigin.dx / cell).floor() - 1;
     final startY = (cameraOrigin.dy / cell).floor() - 1;
     for (var gy = startY; gy < startY + rows; gy++) {
       for (var gx = startX; gx < startX + columns; gx++) {
         final seed = (gx * 73856093) ^ (gy * 19349663);
-        final x = gx * cell + 17 + (seed.abs() % 57).toDouble();
-        final y = gy * cell + 13 + ((seed >> 5).abs() % 61).toDouble();
+        final x = gx * cell + 8 + (seed.abs() % 31).toDouble();
+        final y = gy * cell + 7 + ((seed >> 5).abs() % 29).toDouble();
         final point = project(Offset(x, y));
-        final variant = seed.abs() % 5;
-        if (variant == 0 || variant == 3) {
-          final tuft = Path()
-            ..moveTo(point.dx - 3, point.dy + 2)
-            ..quadraticBezierTo(
-              point.dx - 1,
-              point.dy - 4,
-              point.dx,
-              point.dy - 1,
-            )
-            ..quadraticBezierTo(
-              point.dx + 2,
-              point.dy - 5,
-              point.dx + 4,
-              point.dy + 2,
-            );
-          canvas.drawPath(
-            tuft,
+        final variant = seed.abs() % 7;
+        final patchRect = Rect.fromCenter(
+          center: point,
+          width: 13 + (variant % 3) * 4.0,
+          height: 6 + (variant % 2) * 3.0,
+        );
+        if (variant == 0 || variant == 4) {
+          // Soft moss/grass patches break up the flat base without obscuring
+          // tactical silhouettes or the fog-of-war layer.
+          canvas.drawOval(
+            patchRect,
             Paint()
-              ..color = variant == 0
-                  ? const Color(0x553F8050)
-                  : const Color(0x444F8A51)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.25
-              ..strokeCap = StrokeCap.round,
+              ..shader = RadialGradient(
+                colors: [
+                  const Color(0x443F8050),
+                  const Color(0x003F8050),
+                ],
+              ).createShader(patchRect),
           );
-        } else if (variant == 1) {
+          for (var blade = 0; blade < 3; blade++) {
+            final bx = point.dx + (blade - 1) * 2.8;
+            canvas.drawLine(
+              Offset(bx, point.dy + 2),
+              Offset(bx - 1.1, point.dy - 2.5 - (blade % 2)),
+              Paint()
+                ..color = const Color(0x665C9656)
+                ..strokeWidth = 0.9
+                ..strokeCap = StrokeCap.round,
+            );
+          }
+        } else if (variant == 1 || variant == 5) {
+          // Tiny pebbles with a lit upper edge create a more tactile ground.
           canvas.drawOval(
             Rect.fromCenter(
-              center: point,
-              width: 4.5,
-              height: 2.4,
+              center: point.translate(1, 1),
+              width: 5.5,
+              height: 3.2,
             ),
-            Paint()..color = const Color(0x335F7650),
+            Paint()..color = const Color(0x44302720),
+          );
+          canvas.drawOval(
+            Rect.fromCenter(center: point, width: 5, height: 2.8),
+            Paint()..color = const Color(0x557C806F),
+          );
+          canvas.drawLine(
+            point.translate(-1.2, -0.6),
+            point.translate(1.2, -0.6),
+            Paint()
+              ..color = const Color(0x667E927B)
+              ..strokeWidth = 0.7,
+          );
+        } else if (variant == 2) {
+          // A sparse flower cluster adds color at ground level only.
+          canvas.drawLine(
+            point.translate(0, 2),
+            point.translate(0, -2),
+            Paint()
+              ..color = const Color(0x665E8A4D)
+              ..strokeWidth = 1,
           );
           canvas.drawCircle(
-            point.translate(-0.7, -0.5),
-            0.7,
-            Paint()..color = const Color(0x447F9360),
+            point.translate(-2, -2),
+            1.15,
+            Paint()..color = const Color(0x99F0D58B),
+          );
+          canvas.drawCircle(
+            point.translate(2, -2),
+            1.15,
+            Paint()..color = const Color(0x99E7B9C5),
           );
         } else {
           canvas.drawCircle(
@@ -348,6 +379,30 @@ class _ArenaPainter extends CustomPainter {
           ..strokeWidth = math.max(2.0, projectedWidth * 0.12)
           ..strokeCap = StrokeCap.round,
       );
+      // Fine, offset glints make the water read as flowing rather than a flat
+      // blue stripe. Their positions are deterministic along each river.
+      for (var segment = 0; segment < points.length - 1; segment++) {
+        final a = project(points[segment]);
+        final b = project(points[segment + 1]);
+        final delta = b - a;
+        final length = delta.distance;
+        if (length < 1) continue;
+        final normal = Offset(-delta.dy / length, delta.dx / length);
+        for (var ripple = 1; ripple <= 4; ripple++) {
+          final t = (segment * 0.37 + ripple * 0.19) % 0.82 + 0.08;
+          final center = Offset.lerp(a, b, t)! +
+              normal * ((ripple.isEven ? 1 : -1) * projectedWidth * 0.18);
+          final rippleLength = math.max(3.0, projectedWidth * (0.08 + ripple * 0.012));
+          canvas.drawLine(
+            center - delta / length * rippleLength,
+            center + delta / length * rippleLength,
+            Paint()
+              ..color = const Color(0x665FD0DF)
+              ..strokeWidth = 1.1
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+      }
       for (final bridgeRaw in _list(river['bridges'])) {
         final bridge = _map(bridgeRaw);
         final point = _point(bridge);
@@ -541,6 +596,25 @@ class _ArenaPainter extends CustomPainter {
             ..strokeWidth = 3
             ..strokeCap = StrokeCap.round,
         );
+        // Small merlons and warm stone highlights give each castle a readable
+        // fortified silhouette even at the zoomed-out mobile camera scale.
+        final merlonCount = math.max(3, (sweep.abs() * radius / 34).round());
+        for (var merlon = 0; merlon <= merlonCount; merlon++) {
+          final angle = start + sweep * merlon / merlonCount;
+          final worldPoint = anchor +
+              Offset(math.cos(angle), math.sin(angle)) * radius;
+          final p = project(worldPoint);
+          canvas.drawCircle(
+            p.translate(0, 1.5),
+            3.1,
+            Paint()..color = const Color(0x77352F29),
+          );
+          canvas.drawCircle(
+            p,
+            2.4,
+            Paint()..color = const Color(0xFFD6C5A5),
+          );
+        }
       }
       canvas.drawCircle(
         center,
