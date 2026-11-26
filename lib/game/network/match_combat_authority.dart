@@ -155,6 +155,7 @@ class MatchCombatAuthority {
     required Map<String, InitialArmySelection> initialArmies,
     required Map<String, int> heroLevels,
     required this.configuration,
+    Map<String, int> weaponUpgradeLevels = const {},
     math.Random? random,
   }) {
     if (heroes.length != world.playerIds.length ||
@@ -182,6 +183,15 @@ class MatchCombatAuthority {
       );
     }
 
+    if (weaponUpgradeLevels.keys.any(
+          (playerId) => !world.playerIds.contains(playerId),
+        ) ||
+        weaponUpgradeLevels.values.any(
+          (level) => level < 0 || level > heroLevelCap,
+        )) {
+      throw ArgumentError('Weapon upgrades must be trusted levels for match players.');
+    }
+
     final armies = <MonsterArmy>[];
     for (final playerId in world.playerIds) {
       final castle = world.castles.castleOf(playerId)!;
@@ -197,6 +207,9 @@ class MatchCombatAuthority {
         maxEnergy: configuration.maxHeroEnergy,
         energyRegenerationPerSecond: configuration.energyRegenerationPerSecond,
         ultimateEnergyCosts: configuration.ultimateEnergyCosts,
+        weaponUpgradeLevel: weaponUpgradeLevels[playerId] ?? 0,
+        weaponUpgradeDamagePerLevel:
+            configuration.weaponUpgradeDamagePerLevel,
       );
       _heroes[playerId] = heroState;
       armies.add(MonsterArmy(
