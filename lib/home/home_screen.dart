@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../game/match/match_loadout_screen.dart';
+import '../game/match/hero_armory_screen.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_viewer_screen.dart';
 
@@ -83,6 +84,15 @@ class ArcherFmHomeScreen extends StatelessWidget {
                           onTap: () => _open(
                             context,
                             HeroViewerScreen(loaderFactory: loaderFactory),
+                          ),
+                        ),
+                        _HomeAction(
+                          icon: Icons.inventory_2,
+                          title: 'ترسانة الأبطال',
+                          subtitle: 'استعراض الأسلحة والضربات الخاصة',
+                          onTap: () => _open(
+                            context,
+                            const HeroArmoryScreen(),
                           ),
                         ),
                         _HomeAction(
