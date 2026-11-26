@@ -357,13 +357,13 @@ class _ArenaPainter extends CustomPainter {
     final visibleWorldWidth = viewport.width / scale;
     final visibleWorldHeight = viewport.height / (scale * projectionYScale);
     final firstCol = ((cameraOrigin.dx / cellWidth).floor() - 1)
-        .clamp(0, grid - 2);
+        .clamp(0, grid - 2).toInt();
     final lastCol = (((cameraOrigin.dx + visibleWorldWidth) / cellWidth).ceil() + 1)
-        .clamp(firstCol + 1, grid - 1);
+        .clamp(firstCol + 1, grid - 1).toInt();
     final firstRow = ((cameraOrigin.dy / cellHeight).floor() - 1)
-        .clamp(0, grid - 2);
+        .clamp(0, grid - 2).toInt();
     final lastRow = (((cameraOrigin.dy + visibleWorldHeight) / cellHeight).ceil() + 1)
-        .clamp(firstRow + 1, grid - 1);
+        .clamp(firstRow + 1, grid - 1).toInt();
     final paint = Paint()..style = PaintingStyle.fill;
 
     Offset vertex(int col, int row) {
