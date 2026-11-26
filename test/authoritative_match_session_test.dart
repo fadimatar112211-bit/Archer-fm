@@ -39,6 +39,7 @@ MatchCombatConfiguration _combatConfiguration() {
     },
     projectileSpeed: 120,
     maxActiveProjectiles: 128,
+    maxUnitsPerArmy: 100,
     worldUnitsPerSecond: 100,
   );
 }
