@@ -91,8 +91,8 @@ void main() {
   ) async {
     final sent = <Offset>[];
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    await tester.pumpWidget(
+    try {
+      await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.rtl,
         child: VirtualJoystick(
@@ -107,8 +107,11 @@ void main() {
     final data = tester
         .getSemantics(find.byType(VirtualJoystick))
         .getSemanticsData();
-    expect(data.customSemanticsActionIds, hasLength(5));
-    expect(sent, isEmpty);
+      expect(data.customSemanticsActionIds, hasLength(5));
+      expect(sent, isEmpty);
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets('movement sensitivity scales the input vector before normalization', (
