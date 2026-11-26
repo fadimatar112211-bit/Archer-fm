@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('HeroCombatRuntime', () {
     test('manual attacks form a five-hit combo and respect weapon cooldown', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger));
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200);
       final first = runtime.attack();
       expect(first.accepted, isTrue);
       expect(first.comboIndex, 1);
@@ -18,8 +18,23 @@ void main() {
       expect(second.damage, greaterThan(first.damage));
     });
 
+    test('missed combo timing window resets the sequence before the next tap', () {
+      final runtime = HeroCombatRuntime(
+        hero: heroCombatById(HeroId.ranger),
+        comboResetWindowMs: 1000,
+      );
+      expect(runtime.attack().comboIndex, 1);
+      runtime.advance(const Duration(milliseconds: 520));
+      expect(runtime.attack().comboIndex, 2);
+      runtime.advance(const Duration(milliseconds: 1000));
+      expect(runtime.comboIndex, 0);
+      final restarted = runtime.attack();
+      expect(restarted.comboIndex, 1);
+      expect(restarted.damage, 54);
+    });
+
     test('weapon selection changes attack cooldown and damage profile', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.flame));
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.flame), comboResetWindowMs: 1200);
       final first = runtime.attack();
       runtime.advance(const Duration(seconds: 1));
       runtime.selectWeapon(1);
@@ -29,7 +44,7 @@ void main() {
     });
 
     test('Ultimate buttons enforce unlock level and independent cooldowns', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.shadow));
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.shadow), comboResetWindowMs: 1200);
       expect(runtime.useUltimate(1).accepted, isFalse);
       expect(runtime.useUltimate(0).accepted, isTrue);
       expect(runtime.useUltimate(0).accepted, isFalse);
@@ -40,7 +55,7 @@ void main() {
     });
 
     test('Ultimate is independent and does not consume the five-hit combo', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger));
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200);
       runtime.attack();
       expect(runtime.comboIndex, 1);
 
@@ -55,7 +70,7 @@ void main() {
     });
 
     test('XP levels the hero and stops at level 40', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm));
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm), comboResetWindowMs: 1200);
       expect(runtime.gainExperience(150), 1);
       expect(runtime.level, 2);
       expect(runtime.health, 618);
@@ -76,6 +91,7 @@ void main() {
       final runtime = HeroCombatRuntime(
         hero: heroCombatById(HeroId.ranger),
         targetMaxHealth: 500,
+        comboResetWindowMs: 1200,
       );
       runtime.attack();
       runtime.resetTarget();
