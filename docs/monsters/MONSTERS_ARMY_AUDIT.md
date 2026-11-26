@@ -1,0 +1,310 @@
+# تدقيق نظام الوحوش والجيش — Archer FM
+
+تاريخ التدقيق: 2026-11-17
+المصدر: `fadimatar112211-bit/Archero_fm` — الفرع `main`
+الوجهة: `fadimatar112211-bit/Archer-fm` — الفرع `monster-army-work`
+
+## حدود العمل وحماية نظام الأبطال
+
+- هذا العمل محصور بنظام الوحوش والجيش (المرحلة 2).
+- أُنشئ فرع مستقل `monster-army-work` انطلاقاً من `main`، ولن نكتب على `main` أو على فروع `ranger-reference-work` و`ranger-atlas-work`.
+- لا تعديل على ملفات `lib/hero/` أو `assets/heroes/` أو `docs/heroes/` أو أدوات Blender أو مسارات رندر الأبطال.
+- أي دمج مستقبلي مع عمل الأبطال يجب أن يكون منفصلاً وبعد مراجعة التعارضات؛ لا ندمج تلقائياً.
+
+## 1. متطلبات النظام المعتمدة
+
+- أربعة أنواع وحوش موجودة فقط في الإصدار الأول، بالاستفادة من الأنواع الأربعة الموجودة في المشروع القديم بعد تدقيق أصولها.
+- قبل المباراة يوزّع اللاعب جيشاً ابتدائياً مجانياً من 20 وحشاً بين الأنواع الأربعة بأي توزيع.
+- تظهر الوحدات قرب قلعة مالكها عند بدء المباراة.
+- يمكن شراء وحدات إضافية أثناء المباراة بموارد المباراة؛ لا يوجد حد تصميمي ثابت للجيش، لكن يجب وضع حماية تقنية مبنية على اختبارات الأداء.
+- الأنواع الأربعة متاحة للشراء منذ بداية المباراة، ولكل نوع سعر وإحصاءات ودور مختلف. الأرقام النهائية غير معتمدة بعد.
+- تتحرك الوحوش وتقاتل تلقائياً. تتحرك كمجموعات متماسكة، لكن تختار أهدافها وتنفذ هجماتها بشكل مستقل.
+- تبحث عن أقرب عدو، ويمكنها مهاجمة أبطال الخصوم ووحوشهم وكريستالاتهم.
+- تدافع تلقائياً عن كريستالات مالكها.
+- لا تهاجم القلعة مباشرة؛ يجب تدمير الكريستالات أولاً.
+- الوحدات المشتراة تظهر بجانب قلعة مالكها.
+- الوحش الذي يموت يُفقد نهائياً، ويجب شراء بديل.
+- يطوّر كل نوع وحوش بصورة مستقلة خارج المباراة حتى المستوى 40؛ التطوير يحسن الصحة والهجوم وسرعة الحركة.
+
+## 2. الموجود في المشروع القديم
+
+تم فحص الملفات النصية التالية:
+- `lib/enemy_wave_factory.dart`
+- `lib/enemy_attack_factory.dart`
+- `lib/enemy_damage_resolver.dart`
+- `pubspec.yaml`
+
+وتم فحص شجرة ملفات المستودع لحصر الرسومات والاختبارات المرتبطة بالأعداء.
+
+### الأنواع والأصول التي عُثر عليها
+
+| النوع القديم | ملفات الرسوم المتاحة | ملاحظات |
+|---|---|---|
+| `runner` | `assets/spritesheets/enemy_runner.svg`, `enemy_runner_attack.svg`, `enemy_runner_death.svg` | حركة/هجوم/موت |
+| `tank` | `assets/spritesheets/enemy_tank.svg`, `enemy_tank_attack.svg`, `enemy_tank_death.svg` | حركة/هجوم/موت |
+| `stalker` | `assets/spritesheets/enemy_stalker.svg`, `enemy_stalker_attack.svg`, `enemy_stalker_death.svg` | حركة/هجوم/موت |
+| `ranged` | `assets/spritesheets/enemy_ranged.svg` | لم يظهر ملف هجوم/موت مستقل بالاسم نفسه ضمن الملفات المحصورة |
+
+توجد أيضاً ملفات عامة `enemy_melee.svg` و`enemy_ranged.svg` ورسومات `enemy_death.svg` و`enemy_melee_attack.svg`. لا نفترض أنها نوع خامس؛ يجب مطابقة شكلها بصرياً مع الأنواع الأربعة قبل أي اعتماد.
+
+### الكود القديم — ما يمكن الاستفادة منه
+
+- `EnemyWaveFactory`: يحدد أنواع runner/tank/stalker/ranged وبعض قيم الصحة والسرعة والحجم، لكنه يولّد موجات لأطوار فردية ويحتوي مسار boss كل خمس مراحل. هذا المنطق لا يناسب Archer FM ولا يُنقل.
+- `EnemyAttackFactory`: يحسب اتجاه وسرعة مقذوف للعدو البعيد؛ يمكن الاستفادة من الفكرة الرياضية فقط بعد تصميم نظام هجوم الوحدات الجديد.
+- `EnemyDamageResolver`: يطبق الضرر على Map عامة ويعيد حالة الموت، ويربط تأثيرات قديمة بنوع العدو؛ لا يُنقل كما هو.
+- اختبارات المشروع القديم تشمل اختبارات لمصنع الموجات والهجوم وحل الضرر، لكنها تختبر قواعد النمط الفردي القديم، ولا تثبت صلاحية سلوك الجيش الجماعي المطلوب.
+
+## 3. جرد إعادة الاستخدام
+
+### جاهز لإعادة الاستخدام مبدئياً
+- وجود أربعة معرّفات/أدوار مرشحة: runner وtank وstalker وranged.
+- رسومات SVG قديمة مرشحة كمراجع أو أصول احتياطية بعد المعاينة البصرية والتأكد من الحقوق والتوافق.
+- أفكار حساب المقذوفات وبعض بيانات الإحصاءات كمرجع أولي فقط.
+
+### يحتاج تعديل أو تحقق
+- مطابقة الرسومات العامة مع الأنواع الأربعة، خصوصاً ranged.
+- استخراج عدد الإطارات وأبعاد كل لوحة وتوقيت الحركة.
+- فحص بصري لكل إطار والتأكد من عدم القص أو اختلاف المحاور.
+- تحديد ما إذا كانت ملفات SVG القديمة تحقق الاتجاه الفني المعتمد 3D/2.5D؛ لا يوجد اعتماد بصري نهائي لها حتى الآن.
+- التحقق من الملكية/الترخيص قبل التوزيع العام؛ المستودع القديم لم يُظهر ترخيصاً واضحاً في فحص الجذر السابق.
+
+### سيُبنى من الصفر في Archer FM
+- نماذج بيانات ثابتة الأنواع وإحصاءات قابلة للتطوير.
+- جيش اللاعب وتوزيع الوحدات الابتدائية العشرين.
+- شراء الوحدات وربط التكلفة بموارد المباراة.
+- إنشاء الوحدات بجانب القلعة وإدارة ملكيتها.
+- حركة المجموعات والتشكّل والتتبّع دون فقدان تماسك الجيش.
+- اختيار هدف مستقل لكل وحدة، والهجوم والدفاع عن الكريستالات.
+- قواعد الموت والفقد الدائم وإحصاء الوحدات.
+- نقاط تكامل واضحة مع اللاعب والكريستالات والموارد، دون تنفيذ أنظمة الأبطال أو القتال العام ضمن هذا الفرع.
+- نظام ترقيات دائم مستقل لكل نوع حتى المستوى 40، عندما يحين دور نظام التطوير الدائم.
+
+## 4. قرارات مؤجلة — لا نخترع أرقاماً
+
+تحتاج إلى تصميم/اختبار قبل تثبيتها:
+- صحة وهجوم وسرعة ومدى ومعدل هجوم كل نوع.
+- أسعار الشراء وتكاليف الترقيات.
+- سلوك المجموعة عند ابتعاد البطل عن القلعة.
+- نصف قطر اكتشاف الأعداء، قواعد كسر التعادل بين الأهداف، ومتى تتحول الوحدة من الهجوم إلى الدفاع.
+- حدود الأداء التقنية وعدد الوحدات العملي على الأجهزة المستهدفة.
+- مواصفات هجوم ranged ومقذوفاته.
+- آلية ربط قتل الوحوش بمكافآت العملة الدائمة؛ تُنفذ ضمن نظام المكافآت لاحقاً.
+
+## 5. خطة التنفيذ الآمنة
+
+1. استكمال المعاينة البصرية للأصول الأربع وقياس لوحات الحركة.
+2. إعداد مواصفات بيانات وسلوك الوحوش دون ربطها بمحرك لعب لم يُحسم بعد.
+3. بناء اختبارات وحدات للجيش الابتدائي، الشراء، الملكية، الموت والفقد الدائم.
+4. تنفيذ حركة المجموعة والاستهداف والدفاع كوحدات منطقية مستقلة.
+5. اختبار حالات التزاحم وكثرة الوحدات والأهداف المتغيرة.
+6. ربط النظام لاحقاً بالكريستالات والموارد عبر واجهات واضحة.
+7. تحديث هذا التقرير و`PROJECT_STATUS.md` بعد كل دفعة عمل مع commit ونتائج الاختبار.
+
+## 6. الحالة عند إنشاء هذا التقرير
+
+- تدقيق أولي للكود وشجرة الأصول: مكتمل.
+- اعتماد أي رسم كأصل إنتاجي: لم يتم.
+- نقل أصول الوحوش إلى Archer FM: لم يتم.
+- تنفيذ نظام الوحوش والجيش: لم يبدأ.
+- اختبارات Archer FM الخاصة بالوحوش: لم تُنشأ بعد.
+- لا يوجد محرك/هيكل لعبة مكتمل في `main` حالياً؛ لذلك سنبدأ بمواصفات ومنطق مستقل قابل للاختبار، لا بكود مرتبط بمحرك مفترض.
+
+## 7. أول دفعة تنفيذ — 2026-11-17
+
+- نُقلت إلى `assets/monsters/legacy/` أوراق الحركة الأصلية للأنواع الأربعة من المستودع القديم: runner/tank/stalker/ranged.
+- للأنواع runner وtank وstalker توفرت أوراق idle/attack/death. للنوع ranged تأكد وجود ورقة أساسية فقط؛ لم نعثر على attack/death مخصصتين.
+- أُضيفت أوراق عامة قديمة للهجوم القريب والموت كمواد مرجعية مشتركة، لا كحركات معتمدة للنوع ranged.
+- أُضيف تسجيل مجلد الأصول في `pubspec.yaml`.
+- أُنشئ `lib/monsters/monster_assets.dart` لربط كل نوع بملفات الحركة المتوفرة مع ترك حالات ranged غير المتوفرة null بوضوح.
+- أُنشئ `lib/monsters/monster_models.dart` لتعريف الأنواع والإحصاءات والوحدات والضرر واختيار أقرب هدف عدو وتحديد أقرب كريستالة مملوكة للدفاع.
+- أُنشئ `lib/monsters/monster_army.dart` لتكوين جيش البداية من 20 وحدة وتوزيعها حول القلعة وشراء وحدات جديدة وإزالة الوحدات الميتة نهائياً.
+- أُضيف `test/monster_army_test.dart` ويغطي تكوين الجيش، رفض التوزيع غير الصحيح، الشراء، الموت الدائم، صحة الضرر والاستهداف.
+- إحصاءات الأنواع والأسعار ما زالت تُمرر كتهيئة خارجية ولم نثبت أرقام توازن غير معتمدة.
+- لم يتم تشغيل Flutter tests أو analyzer في بيئة checkout بعد؛ لا ندعي نجاحها. يلزم فحص GitHub Actions أو تشغيل محلي قبل اعتماد هذه الدفعة.
+- الأصول نُقلت حرفياً من المستودع القديم؛ لم تتم بعد مراجعة بصرية إطاراً بإطار أو اعتمادها فنياً للإصدار النهائي.
+
+
+## 6. تنفيذ الحركة والقتال المستقل — 2026-11-17
+
+- أضيف `lib/monsters/monster_combat.dart` كمتحكم مستقل يختار أقرب هدف عدو حي لكل وحدة، ويتحرك نحوه وفق سرعة الوحدة ومدى هجومها.
+- عندما يدخل الهدف ضمن المدى، يصدر المتحكم `MonsterCombatIntent` بضرر الوحدة، ويحترم فترة التهدئة بين الهجمات.
+- المتحكم لا يغيّر صحة هدف الخصم مباشرة؛ يعيد نية ضرر ليطبقها نظام المباراة صاحب السلطة لاحقاً، وهذا يمنع خلط AI الوحوش مع سلطة الشبكة والقتال.
+- أنواع الأهداف المتاحة هي البطل والوحش والكريستالة فقط؛ لا يوجد نوع هدف للقلعة، لذلك لا يمكن للوحوش تجاوز شرط الكريستالات عبر هذا المسار.
+- أضيفت اختبارات للحركة، اختيار الهدف، استبعاد الصديق والميت، هجوم الكريستال، وفترة التهدئة.
+- ما زال ربط نوايا الضرر مع نظام صحة الكريستالات/الأبطال غير منفذ، كما لم تُشغّل الاختبارات فعلياً بعد. كذلك لا تزال أرقام التوازن ونظام المقذوفات الخاص بـ ranged بحاجة إلى اعتماد وتنفيذ.
+
+
+## 7. تصحيح عقد الحركة المستقلة — 2026-11-17
+
+- أزيل معامل `cohesion` غير المستخدم من `MonsterCombatController.updateUnit`؛ لم يعد المتحكم يقبل خياراً يوحي بتأثير غير مطبق.
+- يبقى تماسك التشكيل مسؤولية `MonsterArmy.moveGroupToward`، بينما يظل قرار الهدف والحركة والهجوم مستقلاً لكل وحدة داخل متحكم القتال.
+- هذا التصحيح لا يضيف تصادمات أو pathfinding، ولا يطبق الضرر على أهداف المباراة؛ ما زال تطبيق `MonsterCombatIntent` مسؤولية سلطة المباراة.
+
+
+## 8. حدّ تطبيق ضرر القتال — 2026-11-17
+
+- أضيف `monster_combat_resolver.dart` كحد تكامل بين نوايا الذكاء الاصطناعي والكيانات السلطوية في المباراة.
+- يتطلب المحلل هدفاً حديث الحالة من سلطة المباراة، ويتحقق من تطابق المعرّف، والملكية المعادية، وبقاء الهدف، وصحة قيمة الضرر قبل التطبيق.
+- أضيف `MonsterUnitDamageTarget` كمحوّل لوحدات الوحوش، ويمكن لأنظمة الأبطال والكريستالات تنفيذ `MonsterDamageTarget` من جهة التكامل دون تعديل ملفاتها.
+- أضيفت اختبارات للمسار الناجح، والهدف الصديق أو الميت أو المفقود/غير المطابق، ونية الضرر غير الصالحة.
+- هذا ليس ربطاً مباشراً بنظام المباراة بعد: لا توجد حالياً واجهات صحة للأبطال أو الكريستالات ضمن نطاق الملفات التي تم تدقيقها، وعلى سلطة المباراة توفير الهدف السلطوي الحديث.
+
+
+## 9. تنفيذ مقذوفات الوحوش البعيدة — 2026-11-17
+- أضيف نموذج مقذوف موجه للوحوش من النوع ranged فقط؛ مصدر المقذوف يجب أن يكون حياً، وموقعه الابتدائي ومعاملاته صالحة.
+- في كل تحديث يستقبل المقذوف هدفاً سلطوياً حديثاً، ويتحرك باتجاه موقعه الحالي ثم يطبق الضرر عند الوصول.
+- المقذوف لا يصيب الأهداف الصديقة أو الميتة أو المفقودة، ويصبح محسوماً بعد الإصابة/الإلغاء لمنع تكرار الضرر.
+- أضيف عقد `MonsterPositionedDamageTarget` حتى لا نفترض أن واجهات الأبطال والكريستالات الحالية توفر إحداثيات؛ يجب على طبقة تكامل المباراة تنفيذ العقدين.
+- أضيفت اختبارات مستقلة للمقذوفات، وأُدرجت في workflow الخاص بفرع الوحوش.
+- لم تُشغّل الاختبارات فعلياً بعد، ولا يُعد هذا تكاملاً نهائياً مع نظام المباراة أو الشبكة. يجب أن تستدعيه سلطة المباراة فقط.
+
+
+## 10. إدارة المقذوفات النشطة وحدود الأداء — 2026-11-17
+- أضيف `MonsterProjectileManager` كمالك للمقذوفات النشطة ضمن محاكاة المباراة السلطوية.
+- يدعم إضافة المقذوفات مع رفض المعرّفات المكررة، وحد سعة تقني قابل للتهيئة بدلاً من فرض حد تصميمي ثابت للجيش.
+- ينفذ تحديثاً على snapshot لتجنب تعديل المجموعة أثناء التكرار، ثم يزيل المقذوفات التي حُسمت بسبب إصابة أو اختفاء/موت الهدف أو تحوله إلى صديق.
+- يوفر `clear()` لتنظيف الحالة عند نهاية المباراة، ويعيد نتائج التحديث لكل مقذوف.
+- أضيفت اختبارات لإدارة السعة ودورة الحياة والتنظيف. لم تُشغّل الاختبارات فعلياً بعد.
+
+## 11. جسر نية هجوم ranged إلى المقذوف
+- أضيف `MonsterRangedAttackHandler` كطبقة تحويل صريحة بين `MonsterCombatIntent` و`MonsterProjectile`.
+- لا يطبق هذا المسار الضرر فوراً: ينشئ مقذوفاً من موقع الوحش البعيد، ثم تتولى سلطة المباراة إدارته وتحديثه عبر `MonsterProjectileManager`.
+- يجري التحقق من هوية المصدر والهدف، ونوع المصدر وحالته، وملكية الهدف وحالته وإحداثياته، وتطابق قيمة الضرر مع إحصاءات المصدر.
+- لا يفرض المعالج سرعة أو معرّفاً افتراضياً؛ كلاهما مطلوب من تكوين المباراة.
+- الاختبارات المضافة تغطي الإنشاء الصحيح وحالات الرفض الأساسية. لم يتم تشغيلها فعلياً بعد.
+- ما زال توصيل المعالج بدورة tick السلطوية وتوفير adapters للأبطال والكريستالات والشبكة مسؤولية تكامل المباراة اللاحق.
+
+## 12. دورة قتال الوحوش ومحولات كيانات المباراة
+- أضيف `MonsterMatchCombatLoop` كمنسق tick سلطوي يجمع AI الوحدات، ضرر melee، إنشاء مقذوفات ranged، وتحديث/تنظيف المقذوفات.
+- يستخدم المعالج نية الهجوم الناتجة من وحدة الوحش نفسها، ويتحقق جسر ranged من تطابق المصدر والهدف قبل الإنشاء. يمر ضرر melee عبر resolver مع مالك المصدر الفعلي.
+- أضيف `MonsterExternalEntityAdapter` لتكييف الحالة السلطوية لأي بطل أو كريستالة إلى واجهة الهدف ذات الموقع والضرر، عبر callbacks يقدمها نظام المباراة.
+- اختبارات جديدة تغطي دورة melee/ranged عبر tickين، رفض مدة tick سالبة، وتفويض الضرر عبر adapter.
+- لا توجد في الفرع الحالي حلقة مباراة فعلية أو ملفات تنفيذ hero/crystal runtime يمكن توصيلها دون الخروج عن نطاق العمل؛ الموجود الآن orchestration قابل للربط مع المضيف وليس تكاملاً نهائياً مع الشبكة أو اللعبة الحية.
+- لم يتم تشغيل Flutter/CI فعلياً، فلا توجد نتيجة نجاح مؤكدة.
+
+
+## 13. حركة التشكيلات وتفادي التزاحم والعوائق — 2026-11-17
+- أضيف `MonsterFormationMovement` كطبقة steering مستقلة عن محرك الرسم: توجّه نحو الوجهة، تماسك نسبي، إبعاد الوحدات المتداخلة، وإبعادها عن نطاق العوائق الدائرية التي يمررها نظام الخريطة.
+- تم ربط `MonsterArmy.moveGroupToward` بهذه الطبقة مع الحفاظ على حد سرعة كل وحدة، وإضافة معامل العوائق الاختياري.
+- أضيف `moveUnitToward` لتطبيق تجنب محلي أثناء مطاردة كل وحدة لهدفها المستقل، مع تمرير الحلفاء والعوائق من المضيف.
+- أضيفت اختبارات للحركة المحدودة بالسرعة، فصل الوحدات المتراكبة، تجنب عائق ضمن نطاقه، الوحدات الميتة/المدة الصفرية، والمدخلات غير الصالحة.
+- هذا Steering محلي وليس Pathfinding كاملاً: لا يحسب مساراً حول عوائق بعيدة أو جدران معقدة، ولا يضمن عدم دخول وحدتين إلى المساحة نفسها تحت كل سيناريو. على محرك المباراة تمرير العوائق وتحديث حركة كل وحدة عبر `moveUnitToward` بدلاً من الحركة الخطية القديمة.
+- لم تُشغّل اختبارات Flutter أو CI بعد، فلا توجد نتيجة نجاح مؤكدة.
+
+
+## 14. ربط Steering بحركة القتال — 2026-11-17
+- تم تعديل `MonsterCombatController` ليستخدم `MonsterFormationMovement.moveUnitToward` بدلاً من الحركة الخطية المباشرة عند مطاردة الهدف؛ يبقى قرار الهدف والضرر والـ cooldown مستقلاً لكل وحدة.
+- أضيف تمرير اختياري لقائمة الحلفاء والعوائق لكل وحدة، مع بقاء الواجهة قابلة للاستخدام دون خريطة/حلفاء عبر callbacks افتراضية فارغة.
+- تم توصيل `MonsterMatchCombatLoop` بهذين المصدرين عبر `alliesFor` و`obstaclesFor`؛ بذلك يستطيع مضيف المباراة تزويد كل وحدة بجيرانها والعوائق القريبة في كل tick دون استيراد كود الأبطال.
+- أضيف `assignAttackSlots` لإنتاج نقاط اقتراب دائرية ثابتة حول الهدف وتوزيع الوحدات حوله بدلاً من تكديس الجميع على مركز واحد. هذه واجهة slots مستقلة حالياً وليست مفعلة تلقائياً في controller؛ يلزم ربطها بمنطق اختيار نقطة الاقتراب قبل اعتمادها داخل اللعب.
+- توسعت الاختبارات لتغطي slots ثابتة، رفض هندسة غير صالحة، دمج مطاردة القتال مع الحلفاء والعوائق، وثبات النتائج عند تكرار نفس الحالة.
+- تم تصحيح اسم package في اختبار الحركة ليتطابق مع `name: archer_fm` في `pubspec.yaml`.
+- لم يتم بعد تشغيل Flutter على checkout محلي. GitHub Actions بدأ تشغيله على commits سابقة أثناء هذه الدفعة؛ يجب انتظار نتيجة آخر commit قبل اعتبار الاختبارات ناجحة.
+
+## 8. دفعة أنيميشن الوحوش — 2026-11-17
+
+- أضيف متحكم مستقل لتوقيت إطارات الوحوش، منفصل تماماً عن موضع الحركة الفيزيائية.
+- يدعم حالات الوقوف والمشي والهجوم والموت، مع أولوية الموت ومنع إعادة إحياء أنيميشن الوحدة.
+- يدعم توقيتاً مستقلاً لكل ورقة، وتدوير إطارات المشي، وتشغيل الهجوم/الموت مرة واحدة.
+- يستهلك الزمن الزائد حسابياً لتجنب حلقات مكلفة عند قفزات delta كبيرة.
+- أضيفت اختبارات لتتابع إطارات المشي، الوقوف، تبديل الحالة، الهجوم، الموت، غياب ورقة ranged، والـ delta الكبير.
+- هذا المتحكم يجهز عقد الأنيميشن للعارض؛ لا يوجد حتى الآن عارض وحوش في واجهة اللعب يقرأ قصاصات SVG ويعرضها فعلياً، لذلك لا نعلن اكتمال العرض المرئي داخل المباراة.
+
+
+## 26. تقوية التحقق والاختبارات — 2026-11-17
+
+- أُصلح استيراد math في متحكم القتال، وربط MonsterExternalEntityAdapter بعقد الهدف الموضعي الصحيح.
+- أُصلحت imports اختبارات الجيش لتستخدم اسم الحزمة الفعلي archer_fm.
+- أضيف رفض صريح لاستهداف الوحش نفسه، ومعرّفات/مالكين فارغين في محلل الضرر.
+- أضيف تحقق وقت بناء الكتالوج من صلاحية إحصاءات الوحوش: القيم المالية، السرعة، المدى، فترة الهجوم والسعر.
+- أصبح اختيار الأهداف يتجاهل هويات الأعداء غير الصالحة، ويرفض إحداثيات مصدر غير صالحة؛ كما يتجاهل الكريستالات ذات الإحداثيات غير الصالحة عند الدفاع.
+- أضيف تحقق إعدادات التشكيل وإحداثيات الوحدات الحية والعوائق قبل الحركة، مع اختبارات لحالات NaN وInfinity.
+- المقذوفات ومعالج هجوم ranged يرفضان الأهداف ذات هوية المالك الفارغة، مع اختبارات تغطي هذه الحالات.
+- لا تزال هذه طبقات محاكاة ومحولات؛ لا يوجد حتى الآن عارض حي مربوط بواجهة المباراة ولا تكامل runtime مثبت.
+- تشغيل GitHub Actions رقم 55 كان قيد التنفيذ عند آخر فحص؛ لا تُسجل الاختبارات على أنها ناجحة قبل ظهور النتيجة النهائية.
+
+
+## 27. المرحلة الأولى — عقود ربط صحة الأبطال والوحوش والكريستالات — 2026-11-17
+
+تم تنفيذ ستة اختبارات تكامل على حدود نظام الوحوش:
+
+1. ضربة melee من وحش runner تخصم الصحة من هدف hero معادٍ عبر `MonsterExternalEntityAdapter`.
+2. ضربة melee من وحش tank تخصم الصحة من crystal معادٍ عبر المحوّل نفسه.
+3. ضربة melee من stalker تطبق الضرر مباشرة على وحدة monster معادية عبر `MonsterUnitDamageTarget`، وتثبت انتقال صحتها إلى الصفر.
+4. اختبار ضرر قاتل على hero يطلب محوّلاً حديث الحالة في كل lookup، ويتأكد أن الضربة التالية تُرفض بعد الموت ولا تخصم صحة إضافية.
+5. هجوم ranged ينشئ مقذوفاً ثم يصيب hero معادياً ويخصم الصحة عند وصوله.
+6. هجوم ranged ينشئ مقذوفاً قاتلاً على crystal معادٍ ويتأكد من وصول نتيجة الإصابة وانتهاء المقذوف.
+
+- أُنشئ `test/monster_match_health_integration_test.dart` لهذه الحالات الست.
+- أُدرج الملف في مسارات تشغيل workflow، وفي أوامر `dart format` و`flutter analyze` و`flutter test`.
+- لم تتغير ملفات الأبطال أو أصولهم أو ملفات Blender.
+- حدود التكامل أصبحت مغطاة باختبارات، لكن المستودع الحالي لا يحتوي بعد على نموذج مباراة حي أو كائنات صحة فعلية للأبطال والكريستالات؛ ملفات الأبطال الموجودة حالياً كتالوج/عارض أصول. لذلك هذه الاختبارات تثبت صحة عقد الربط ومحاكاة callbacks، ولا تثبت بعد اتصالها بصحة مباراة فعلية. إكمال الربط runtime يتطلب وجود طبقة المباراة وكيانات الصحة السلطوية.
+
+
+## 28. العرض المرئي للوحوش وتقوية الملاحة — 2026-11-17
+
+- أُضيف MonsterAnimationCatalog لإنشاء متحكم أنيميشن مستقل لكل نوع من الأنواع الأربعة اعتماداً على جرد الأصول. المشي متكرر، والهجوم والموت يُعرضان مرة واحدة عند توفر الورقة.
+- تم تحويل MonsterSpriteView إلى عارض فعلي يقوده Flutter ticker، ويقص الإطار وفق أبعاد ورقة الرسوم الحقيقية، ويدعم إظهار شريط صحة الوحدة.
+- أضيفت اختبارات للأنواع الأربعة، وتوقيت المشي، وثبات الوقوف، ونهاية الهجوم والموت، وغياب أوراق ranged غير المتوفرة، وقيمة شريط الصحة.
+- تم تقوية A*: يعيد تخطيط المسار إذا ابتعد الوحش عن المسار المخزن، ويتقدم بمؤشر نقاط الطريق عندما يتحرك الوحش على المسار الصحيح، ويحسب الإحداثيات مع أصل الخريطة غير الصفري.
+- أضيفت اختبارات للمسار حول الجدران، ومنع قطع الزوايا، وإبطال المسار عند تغير نسخة الخريطة، والتعافي من الإزاحة، وأصل الخريطة، وحجوزات الهجوم والدفاع عن الكريستالات والتصادم وحد السعة التقني.
+- تم توسيع workflow ليشمل اختبارات عارض الوحوش والكتالوج والملاحة.
+- هذه خطوة عرض قابلة لإعادة الاستخدام وليست ربطاً نهائياً بشاشة مباراة حية. أصول SVG القديمة ما زالت مؤقتة وغير معتمدة إنتاجياً، وranged ما زال يفتقد ورقتي هجوم وموت مخصصتين. لا نعتبر CI ناجحاً قبل انتهاء التشغيل الحالي بنجاح.
+
+
+## 29. A* navigation, automatic defense, formation reservations and sprite component — 2026-11-17
+
+- Added MonsterNavigationGrid and MonsterPathfinder: bounded A* search, eight-way movement, diagonal corner blocking, per-unit cached routes, and map-revision invalidation. The map host must provide an immutable grid snapshot and increment its revision when obstacle geometry changes.
+- Movement now resolves swept-circle intersections against circular map obstacles and nearby allies, and clamps movement to the current waypoint so large ticks cannot skip route nodes.
+- Added a per-owner cohesion anchor while each monster keeps its own target. MonsterSpatialIndex supplies nearby same-owner units through a spatial hash and updates bucket membership as units move, avoiding an all-army scan per unit.
+- Default MonsterOrder.auto prioritizes an enemy that is closer to an owned crystal than the defending unit is; a guard already at home still reacts to enemies within its own attack range around the crystal. The local threat threshold is derived from unit attackRange rather than an unapproved fixed radius. Advance ignores this defensive priority, while defend returns to its owner's crystal when no local threat is active and engages a threat when one appears.
+- Added MonsterAttackSlotCoordinator: units targeting the same enemy reserve stable approach positions. Reservations are pruned when units die, disappear, or change targets; the match loop computes targets first and assigns slots before moving any unit. Defenders that have no current threat move back toward their owned crystal without treating that friendly crystal as an attack target.
+- Added an optional MonsterArmy.maxUnits technical budget. It is unset by default and must be configured from measured device/runtime capacity; it is not a design-level army cap.
+- Added MonsterAnimationCatalog and upgraded MonsterSpriteView to crop the four horizontal 96×96 frames from each audited SVG sheet, play available one-shot animations, and optionally show a health bar. Missing ranged attack/death sheets remain explicitly unavailable.
+- Added tests in test/monster_navigation_and_formation_test.dart, test/monster_animation_catalog_test.dart, and test/monster_spatial_index_test.dart, and confirmed that the existing .github/workflows/monster-army-checks.yml workflow already includes the navigation, animation, and spatial-index test files and runs formatting, analysis, and monster tests.
+- Verification is confirmed for the tested monster branch: Monster Army Checks runs #174, #176, #182 and #200 completed successfully, including formatting, analysis, and all configured monster tests. Run #200 includes the battle-layer widget suite.
+- Remaining integration gates: the actual map must supply the grid, collision geometry and terrain factors; a live match must supply fresh authoritative hero/crystal entities; the actual match screen must mount MonsterBattleLayer; final approved 2.5D/3D-chibi production art is still absent; performance budgets require real device measurements.
+
+
+## 30. الترقيات الدائمة للأنواع الأربعة — 2026-11-17
+
+- أُضيف نظام مستويات دائم مستقل لكل من runner وtank وstalker وranged، مع حد أقصى للمستوى 40 لكل نوع.
+- معدلات نمو الصحة والضرر والسرعة وتكلفة كل مستوى تُمرر من إعدادات التوازن؛ لم نثبت أسعاراً أو نسباً غير معتمدة داخل النظام.
+- أضيف خصم عملة ذري، ورفض نقص الرصيد أو بلوغ المستوى الأقصى، وحساب الإحصاءات المطورة، وتحويل المستويات إلى JSON واستعادتها.
+- أصبح MonsterArmy يقبل مزود إحصاءات الترقية كي تظهر الوحدات الابتدائية والمشتراة في المباراة التالية بمستوى اللاعب الدائم، مع إبقاء سعر الشراء من الكتالوج الأساسي.
+- أضيفت اختبارات لاستقلال المستويات، والخصم، ورفض العملية، وحد 40، والحفظ والاستعادة، وتطبيق الإحصاءات على الجيش. أُدرج الاختبار في CI.
+- أضيف أيضاً idPrefix اختياري إلى MonsterArmy لمنع تكرار معرفات الوحدات عند إنشاء أكثر من نسخة جيش للمالك نفسه. ما زال على طبقة حساب اللاعب ربط JSON بنظام الحفظ الدائم وتزويد إعدادات أسعار ونسب الترقية المعتمدة.
+
+
+## 31. Monster match-world bridge — 2026-11-17
+
+- Added MonsterMatchWorldSnapshot as a narrow integration layer between the authoritative monster combat loop and match entities. It accepts live MonsterUnit instances plus positioned external damage targets and builds a fresh candidate list for each unit.
+- The snapshot excludes the source unit, includes friendly crystals for automatic defense, and adapts other monster units as damageable and projectile-targetable entities.
+- Duplicate entity IDs and non-finite positions are rejected. The same snapshot supplies damage lookup and positioned projectile lookup, and step() invokes one authoritative combat tick. External adapters can expose live health/position getters, so a second attacker in the same tick sees a target killed by the first hit instead of applying stale-snapshot overkill.
+- Added test/monster_match_world_test.dart for melee damage against a live hero adapter, homing ranged projectile impact against a fresh moving-target snapshot, friendly-crystal candidate inclusion, same-tick overkill prevention via live health callbacks, duplicate-ID rejection, and invalid-coordinate rejection. The existing Monster Army Checks workflow includes this test.
+- This is an integration bridge, not proof that the real hero/crystal systems are already connected. The match host must create MonsterExternalEntityAdapter values from the actual authoritative hero/crystal entities on each tick.
+- MonsterMatchWorldSnapshot.step and MonsterMatchCombatLoop.update accept the current navigation grid per tick. The loop also accepts a per-unit movementSpeedMultiplierFor callback and applies it to normal and defensive movement; the map host must supply actual grid/obstacles and surface factors (for example, a reduced factor on water). Green CI: Monster Army Checks #174, #176 and #182 passed. Remaining: connect actual hero/crystal adapters, mount MonsterBattleLayer in the real battle screen, approve original 2.5D art, connect versioned progression to player saves, and measure target-device performance.
+
+
+## 32. Terrain-aware monster movement — 2026-11-17
+
+- MonsterMatchCombatLoop exposes movementSpeedMultiplierFor per unit. The map layer can now express slow terrain such as water without hard-coding an unapproved multiplier into monster base stats.
+- The factor is validated and applied to both ordinary target pursuit and explicit defend-order return movement. Tests verify direct movement scaling and propagation through a full match tick.
+- Permanent progression now has a versioned save envelope (schema 1) with validated restore. Monster Army Checks run #200 passed formatting, static analysis, and all configured monster tests. The actual map still must provide terrain factors and navigation/collision geometry.
+
+
+## 33. Monster battle presentation layer — 2026-11-17
+
+- Added a reusable `MonsterBattleLayer` that draws live units, recently defeated visual-only units, health bars, and active projectile glows using a host-provided world-to-screen transform.
+- The layer depth-sorts by world Y, derives movement from simulation-tick position changes, and shares one animation ticker across the army for better scaling.
+- Successful attack source IDs are now returned in `MonsterMatchTickResult.attackingUnitIds`; the layer starts one-shot attack animations and lets them finish after the attack pulse clears.
+- Death animation completion is reported to the host so defeated units can be removed from the visual list after being permanently removed from the simulation army.
+- `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` documents the complete host contract. Monster Army Checks run #200 passed format, analyze, and all configured monster tests. Actual match-screen mounting and final production art remain outstanding.
+
+
+## 34. Unified monster match runtime — 2026-11-17
+
+- Added `MonsterMatchRuntime` to coordinate all player armies and the authoritative combat loop. Each tick creates a fresh world snapshot, applies melee/ranged combat and projectiles, removes defeated units from simulation, and retains them for death presentation.
+- The runtime exposes `buildBattleLayer()` so the actual match screen can render live units, dying units, projectiles, and successful attack events without manually wiring each list. The layer reports completed death animations back to the runtime.
+- Added integration tests for multi-army unit identity, target damage, defeated-unit removal, visual retention, attack-event handoff, and death cleanup.
+- `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` now documents the runtime as the single match-host entry point. Monster Army Checks run #205 passed all configured checks and 118 tests. Actual match-screen mounting, real hero/crystal adapters, map/camera data, final production art, profile persistence, and device performance remain host-owned gates.

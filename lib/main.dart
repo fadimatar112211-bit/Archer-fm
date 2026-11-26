@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'hero/hero_assets.dart';
 import 'hero/hero_catalog.dart';
 import 'hero/hero_viewer_screen.dart';
 
@@ -17,8 +16,8 @@ Future<void> main() async {
 class ArcherFmApp extends StatelessWidget {
   const ArcherFmApp({super.key, this.loaderFactory});
 
-  /// Tests inject fake loaders; the running game decodes the bundled atlases.
-  final HeroLoaderFactory? loaderFactory;
+  /// Kept for backward-compatible constructor signature.
+  final dynamic loaderFactory;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +33,9 @@ class ArcherFmApp extends StatelessWidget {
         scaffoldBackgroundColor: hero.theme.stageBottom,
         useMaterial3: true,
       ),
-      home: Directionality(
+      home: const Directionality(
         textDirection: TextDirection.rtl,
-        child: HeroViewerScreen(
-          loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
-        ),
+        child: HeroViewerScreen(),
       ),
     );
   }

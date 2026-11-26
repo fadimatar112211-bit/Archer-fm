@@ -1,0 +1,108 @@
+{
+  "id": "stone-golem",
+  "title": "Stone Golem",
+  "role": "heavy_aoe",
+  "file": "stone-golem.glb",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "height_m": 1.9,
+  "root_scale_baked": 0.816,
+  "proportions": {
+    "head_scale": 1.55,
+    "thigh_scale": 0.82,
+    "arm_scale": 0.95,
+    "target_height_m": 1.9
+  },
+  "triangles_original": 64092,
+  "triangles": 16082,
+  "vertices": 15951,
+  "glb_bytes": 1401900,
+  "bones": 39,
+  "materials": [
+    "Rock",
+    "Fur",
+    "Glow_Core",
+    "Crystal"
+  ],
+  "textures": [
+    "rock.jpg",
+    "rock_normal.jpg",
+    "fur.jpg",
+    "fur_normal.jpg"
+  ],
+  "animations": {
+    "Idle": {
+      "duration_s": 3.0,
+      "loop": true,
+      "source": "original"
+    },
+    "Walk": {
+      "duration_s": 1.7,
+      "loop": true,
+      "source": "original"
+    },
+    "Run": {
+      "duration_s": 0.95,
+      "loop": true,
+      "source": "original"
+    },
+    "Attack": {
+      "duration_s": 1.5,
+      "loop": false,
+      "source": "original"
+    },
+    "Roar": {
+      "duration_s": 2.6,
+      "loop": false,
+      "source": "original"
+    },
+    "Die": {
+      "duration_s": 2.2,
+      "loop": false,
+      "source": "original"
+    },
+    "Hit": {
+      "duration_s": 0.45,
+      "loop": false,
+      "source": "added_by_pipeline"
+    }
+  },
+  "estimates": {
+    "attack_impact_time_s": 0.78,
+    "attack_hand": "Hand_R",
+    "walk_ground_speed_mps": "0.35",
+    "run_ground_speed_mps": "0.95",
+    "note": "محسوبة من مسار العظام، تقريبية: راجعها بصرياً"
+  },
+  "animated_y_range_m": {
+    "Idle": [
+      -0.01,
+      1.9
+    ],
+    "Walk": [
+      -0.0,
+      1.88
+    ],
+    "Run": [
+      -0.0,
+      1.81
+    ],
+    "Attack": [
+      -0.0,
+      2.19
+    ],
+    "Roar": [
+      -0.0,
+      1.9
+    ],
+    "Die": [
+      -0.02,
+      1.9
+    ],
+    "Hit": [
+      -0.0,
+      1.93
+    ]
+  }
+}

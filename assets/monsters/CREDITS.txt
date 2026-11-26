@@ -1,0 +1,21 @@
+Credits for the monster models in Archer FM (CC BY 4.0)
+
+Source models: "Monsters" by vinish.dev (https://vinish.dev/free-3d-models/monsters), licensed CC BY 4.0
+Licence text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Credit lines to show in the game credits screen:
+
+"Bog Monster" by vinish.dev (https://vinish.dev/free-3d-models/), CC BY 4.0 - modified for Archer FM
+"Werewolf" by vinish.dev (https://vinish.dev/free-3d-models/), CC BY 4.0 - modified for Archer FM
+"Stone Golem" by vinish.dev (https://vinish.dev/free-3d-models/), CC BY 4.0 - modified for Archer FM
+"Blind Stalker" by vinish.dev (https://vinish.dev/free-3d-models/), CC BY 4.0 - modified for Archer FM
+
+Changes made to the original models (required by CC BY 4.0 to be stated):
+- Proportions changed to a chibi look by scaling bones (larger head, shorter legs/arms) and a uniform root scale.
+- Polygon count reduced automatically (edge-collapse decimation).
+- Animation "Hit" added; "Idle, Walk, Run, Attack, Roar, Die" kept from the originals with ground-contact corrections (Root translation).
+- Textures were not repainted; they are the original images, extracted unchanged into textures/ folders.
+
+Each GLB also carries this credit in its asset.copyright field.
+
+Original licence notice: see LICENSE_SOURCE.txt
