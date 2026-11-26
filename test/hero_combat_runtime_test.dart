@@ -77,6 +77,7 @@ void main() {
     test('Ultimates spend configured energy and regenerate independently of cooldowns', () {
       final runtime = HeroCombatRuntime(
         hero: heroCombatById(HeroId.ranger),
+        level: 10,
         comboResetWindowMs: 1200,
         maxEnergy: 50,
         energyRegenerationPerSecond: 10,
@@ -91,8 +92,8 @@ void main() {
       expect(runtime.energy, 30);
       runtime.advance(const Duration(seconds: 2));
       expect(runtime.energy, 50);
-      expect(runtime.useUltimate(1).accepted, isFalse);
-      expect(runtime.energy, 50);
+      expect(runtime.useUltimate(1).accepted, isTrue);
+      expect(runtime.energy, 10);
     });
 
     test('Ultimate is independent and does not consume the five-hit combo', () {
