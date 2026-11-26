@@ -156,10 +156,12 @@ class GameClient {
           onProfile?.call(receivedProfile);
         }
         final lastSequence = message['lastSeq'];
-        if (lastSequence is int && lastSequence > _sequence) {
-          _sequence = lastSequence;
+        if (lastSequence is int) {
+          if (lastSequence > _sequence) _sequence = lastSequence;
+          _pendingReliable.removeWhere(
+            (sequence, _) => sequence <= lastSequence,
+          );
         }
-        _pendingReliable.removeWhere((sequence, _) => sequence <= _sequence);
         _retryAttempt = 0;
         _setState(GameConnectionState.connected);
         final code = _roomCode;
