@@ -112,6 +112,50 @@ void main() {
       expect(find.text('تجهيز المباراة'), findsNothing);
       expect(received.any((message) => message['type'] == 'create'), isTrue);
       expect(tester.takeException(), isNull);
+
+      connectedSocket!.add(jsonEncode({
+        'type': 'state',
+        'phase': 'finished',
+        'players': [
+          {'id': 'p1', 'heroId': 'ranger', 'weaponId': 'ranger_bow'},
+          {'id': 'p2', 'heroId': 'flame', 'weaponId': 'flame_blade'},
+        ],
+        'world': {
+          'size': {'width': 1920, 'height': 1080},
+          'playerPositions': {
+            'p1': {'x': 900, 'y': 540},
+            'p2': {'x': 1200, 'y': 540},
+          },
+          'resources': {'p1': 100, 'p2': 100},
+          'livingCrystals': {'p1': 7, 'p2': 7},
+          'castles': [],
+        },
+        'combat': {
+          'heroes': {
+            'p1': {'health': 100, 'maxHealth': 100, 'level': 1, 'isAlive': true},
+            'p2': {'health': 0, 'maxHealth': 100, 'level': 1, 'isAlive': false},
+          },
+          'monsters': [],
+        },
+        'result': {
+          'winnerId': 'p1',
+          'reason': 'timeExpired',
+          'standings': [
+            {'playerId': 'p1', 'rank': 1, 'score': 100, 'livingCrystals': 7},
+            {'playerId': 'p2', 'rank': 2, 'score': 50, 'livingCrystals': 0},
+          ],
+        },
+      }));
+      await tester.runAsync(() => Future<void>.delayed(
+            const Duration(milliseconds: 80),
+          ));
+      await tester.pump();
+
+      expect(find.text('الفائز: أنت'), findsOneWidget);
+      expect(find.text('العودة للقائمة الرئيسية'), findsOneWidget);
+      expect(find.byType(VirtualJoystick), findsNothing);
+      expect(find.text('هجوم'), findsNothing);
+      expect(tester.takeException(), isNull);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await connectedSocket?.close();
