@@ -32,6 +32,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   StreamSubscription<GameConnectionState>? _states;
   HeroCombatDefinition _hero = archerFmHeroes.first;
   int _weaponIndex = 0;
+  int _durationMinutes = 30;
   String? _room;
   String? _playerId;
   int _playersCount = 0;
@@ -88,7 +89,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       _events.clear();
     });
     if (create) {
-      await client.create();
+      await client.create(durationMinutes: _durationMinutes);
     } else {
       await client.join(_roomCode.text.trim().toUpperCase());
     }
@@ -227,6 +228,27 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        DropdownButtonFormField<int>(
+                          value: _durationMinutes,
+                          decoration: const InputDecoration(
+                            labelText: 'مدة المباراة',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [10, 20, 30, 45, 60]
+                              .map((minutes) => DropdownMenuItem<int>(
+                                    value: minutes,
+                                    child: Text('$minutes دقيقة'),
+                                  ))
+                              .toList(),
+                          onChanged: _busy || _room != null
+                              ? null
+                              : (value) {
+                                  if (value != null) {
+                                    setState(() => _durationMinutes = value);
+                                  }
+                                },
+                        ),
+                        const SizedBox(height: 8),
                         TextField(
                           controller: _url,
                           textDirection: TextDirection.ltr,
@@ -261,7 +283,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                               label: const Text('انضمام'),
                             ),
                             OutlinedButton.icon(
-                              onPressed: _client == null ? null : _sendLoadout,
+                              onPressed: _client == null || _matchPhase != 'waiting' ? null : _sendLoadout,
                               icon: const Icon(Icons.save_alt),
                               label: const Text('إرسال التجهيز'),
                             ),
@@ -314,10 +336,10 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                               ChoiceChip(
                                 label: Text(hero.nameAr),
                                 selected: _hero.id == hero.id,
-                                onSelected: (_) => setState(() {
+                                onSelected: _matchPhase == 'waiting' ? (_) => setState(() {
                                   _hero = hero;
                                   _weaponIndex = 0;
-                                }),
+                                }) : null,
                               ),
                           ],
                         ),
@@ -328,7 +350,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                           RadioListTile<int>(
                             value: i,
                             groupValue: _weaponIndex,
-                            onChanged: i == 0
+                            onChanged: i == 0 && _matchPhase == 'waiting'
                                 ? (value) => setState(() => _weaponIndex = value!)
                                 : null,
                             title: Text(_hero.weapons[i].nameAr),
@@ -379,7 +401,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                         ),
                         const SizedBox(height: 8),
                         FilledButton.icon(
-                          onPressed: _armyTotal == 20 ? _sendLoadout : null,
+                          onPressed: _armyTotal == 20 && _matchPhase == 'waiting' ? _sendLoadout : null,
                           icon: const Icon(Icons.check_circle_outline),
                           label: const Text('تأكيد التشكيلة وإرسالها'),
                         ),
@@ -638,12 +660,12 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            onPressed: count == 0 ? null : () => _changeArmy(type, -1),
+            onPressed: count == 0 || _matchPhase != 'waiting' ? null : () => _changeArmy(type, -1),
             icon: const Icon(Icons.remove_circle_outline),
           ),
           SizedBox(width: 28, child: Text('$count', textAlign: TextAlign.center)),
           IconButton(
-            onPressed: _armyTotal == 20 ? null : () => _changeArmy(type, 1),
+            onPressed: _armyTotal == 20 || _matchPhase != 'waiting' ? null : () => _changeArmy(type, 1),
             icon: const Icon(Icons.add_circle_outline),
           ),
         ],
