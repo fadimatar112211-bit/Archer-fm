@@ -534,7 +534,7 @@ void main() {
     );
   });
 
-  test('disconnect permits resume without forfeiting', () {
+  test('disconnect permits one-time token-rotating resume', () {
     final session = AuthoritativeMatchSession(code: '222222');
     final player = session.join()!;
     final token = player.resumeToken;
@@ -543,6 +543,12 @@ void main() {
     final resumed = session.resume(token);
     expect(resumed?.id, player.id);
     expect(resumed?.connected, isTrue);
+    expect(resumed!.resumeToken, isNot(token));
+
+    // The previously issued bearer token must not be reusable.
+    expect(session.resume(token), isNull);
+    session.disconnect(resumed);
+    expect(session.resume(resumed.resumeToken)?.id, player.id);
   });
 
   test('runs a four-player lobby through the real WebSocket gateway', () async {
