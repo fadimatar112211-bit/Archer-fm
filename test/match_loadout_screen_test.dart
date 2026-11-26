@@ -117,6 +117,8 @@ void main() {
 
   testWidgets('setup remains scrollable at three landscape aspect sizes',
       (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     for (final size in [
       const Size(640, 360),
       const Size(1280, 540),
