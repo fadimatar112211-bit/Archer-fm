@@ -64,6 +64,7 @@ class GameClient {
   /// Movement and combat inputs are intentionally dropped while disconnected.
   static const Set<String> _replayableTypes = {
     'select',
+    'army_select',
     'unlock',
     'upgrade',
     'buy',
