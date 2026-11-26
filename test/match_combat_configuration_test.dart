@@ -7,6 +7,7 @@ import 'package:archer_fm/game/heroes/hero_roster.dart';
 
 Map<String, Object?> _validConfiguration() => {
   'projectileSpeed': 120,
+  'weaponUpgradeDamagePerLevel': 0.04,
   'maxActiveProjectiles': 128,
   'maxUnitsPerArmy': 100,
   'worldUnitsPerSecond': 100,
@@ -38,8 +39,10 @@ void main() {
     final config = decodeMatchCombatConfiguration(json);
     expect(config.monsterCatalog.all, hasLength(4));
     expect(config.ultimateEnergyCosts, hasLength(16));
+    expect(config.weaponUpgradeDamagePerLevel, 0.04);
     expect(config.maxHeroEnergy, 100);
     expect(config.energyRegenerationPerSecond, 8);
+    expect(config.weaponUpgradeDamagePerLevel, 0.04);
   });
 
   test('decodes all four explicit monster definitions and runtime limits', () {
@@ -100,6 +103,10 @@ void main() {
   test('rejects missing or non-finite runtime tuning values', () {
     final json = _validConfiguration()..remove('projectileSpeed');
     expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
+    final missingUpgradeScaling =
+        _validConfiguration()..remove('weaponUpgradeDamagePerLevel');
+    expect(() => decodeMatchCombatConfiguration(missingUpgradeScaling),
+        throwsFormatException);
     final nonFinite = _validConfiguration()..['projectileSpeed'] = double.infinity;
     expect(() => decodeMatchCombatConfiguration(nonFinite),
         throwsFormatException);
