@@ -88,10 +88,8 @@ class WebSocketGameHost {
   final int rateLimitRefillPerSecond;
   final Duration tickInterval;
   final Duration broadcastInterval;
-
   /// When set, all handshakes require a verified token and account-bound room.
   /// Keep null only for isolated local development and tests.
-
   final Map<String, GameServerSession> _rooms = {};
   final Map<String, WebSocket> _sockets = {};
   final Random _random = Random.secure();
