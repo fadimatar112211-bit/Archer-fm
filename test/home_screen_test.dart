@@ -88,4 +88,29 @@ void main() {
     await tester.pump();
     expect(GameFeedbackPreferences.hapticsEnabled, isTrue);
   });
+
+  testWidgets('movement sensitivity setting updates the live shared preference', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    GameFeedbackPreferences.setMovementSensitivity(1.0);
+    await tester.pumpWidget(const ArcherFmApp());
+    await tester.tap(find.text('الإعدادات'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('حساسية عصا الحركة'), findsOneWidget);
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, 1.0);
+    slider.onChanged!(1.4);
+    await tester.pump();
+    expect(GameFeedbackPreferences.movementSensitivity, 1.4);
+    expect(find.text('140٪'), findsOneWidget);
+
+    GameFeedbackPreferences.setMovementSensitivity(1.0);
+  });
+
 }
