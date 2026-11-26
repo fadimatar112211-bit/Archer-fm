@@ -285,3 +285,22 @@
 - Extended the local live-match widget test to resize the running arena from 640×360 to compact 568×320 and wide 1280×720, checking for layout exceptions at both sizes.
 - Commits: `8753220b6beef198eb62eeb7f77f5c42ca1d5ac8` (bounded scrollable controls panel), `4701778832341f96857dde45d532196b230e67c7` (compact/wide live-screen coverage).
 - The latest Flutter validation must confirm syntax, full tests and Android packaging before these changes can be called verified.
+
+
+## Phase 4 acceptance gate — current status
+
+### Implemented in the branch
+- Full-screen landscape arena with Arabic HUD, movement joystick, manual attack, target cycling, four Ultimate controls and in-match unit purchase.
+- Selected-target indicator for enemy hero, monster or crystal; combat requests carry the selected target ID while the server validates the action.
+- Server rejection feedback with a dismissible Arabic banner.
+- Match-finished overlay with authoritative winner/tie and final standings.
+- Compact landscape action panel with bounded scrolling.
+- Automated coverage for setup layouts, arena capture, selected target rendering, live WebSocket entry, joystick movement and release, attack target payload, rejection feedback, finish overlay, result panel and Ultimate unlock milestones.
+
+### Still required before Phase 4 can be accepted
+- A passing full Flutter test run and Android debug APK build on the latest branch head, including the newest live-screen integration and compact-layout tests.
+- Physical Android device verification of touch hit targets, joystick feel, combat panel scrolling, target highlighting and real multiplayer reconnection.
+- Approved sound assets and an implemented playback path. The repository audit found no audio files or audio playback dependency; sound is not represented as completed.
+- Final visual review of the actual phone screen at supported landscape sizes.
+
+**Phase 4 is still in progress.** A successful arena capture on an earlier commit and older APK artifact do not substitute for validation of the latest code head.
