@@ -135,7 +135,7 @@ returns bigint
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $phase5$
 declare
   current_revision bigint;
 begin
@@ -170,7 +170,7 @@ begin
 
   return current_revision + 1;
 end;
-$;
+$phase5$;
 
 create or replace function public.save_monster_progress(
   p_user_id uuid,
@@ -181,7 +181,7 @@ returns bigint
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $phase5$
 declare
   current_revision bigint;
 begin
@@ -216,7 +216,7 @@ begin
 
   return current_revision + 1;
 end;
-$;
+$phase5$;
 
 revoke all on function public.save_hero_progress(uuid, jsonb, bigint)
   from public, anon, authenticated;
