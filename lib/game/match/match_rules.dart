@@ -169,16 +169,6 @@ class MatchRulesEngine {
           ),
       ]);
 
-  /// True when every non-forfeited player has zero crystals.
-  ///
-  /// The product rules do not yet define an immediate outcome for this case.
-  /// The host can surface this state for a future approved rule; this engine
-  /// intentionally does not invent one.
-  bool get allRemainingPlayersHaveNoCrystals =>
-      _players.values
-          .where((player) => !player.hasForfeited)
-          .every((player) => player.livingCrystals == 0);
-
   MatchCommandResult start() {
     if (phase != MatchPhase.waiting) {
       return const MatchCommandResult.rejected('المباراة بدأت مسبقاً');
