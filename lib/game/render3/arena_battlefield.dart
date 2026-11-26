@@ -171,6 +171,7 @@ class _ArenaPainter extends CustomPainter {
     _drawPickups(canvas, world, project);
     _drawMines(canvas, world, project);
     _drawCastles(canvas, world, project);
+    _drawFogOfWar(canvas, world, project, bounds);
     _drawMonsters(canvas, snapshot, world, project);
     _drawDyingMonsters(canvas, snapshot, world, project);
     _drawProjectiles(canvas, snapshot, project);
@@ -421,6 +422,40 @@ class _ArenaPainter extends CustomPainter {
     final localPosition = _point(positions?[localPlayerId]);
     return localPosition == null ||
         (point - localPosition).distance <= enemyVisibleRadius;
+  }
+
+  /// Visually obscures terrain outside the same reveal radius enforced by
+  /// the server's player-scoped snapshots. Static map geometry is still sent
+  /// to clients, but it is no longer fully visible during ordinary play.
+  void _drawFogOfWar(
+    Canvas canvas,
+    Map world,
+    Offset Function(Offset) project,
+    Rect bounds,
+  ) {
+    final positions = _map(world['playerPositions']);
+    final localPosition = _point(positions?[localPlayerId]);
+    if (localPosition == null) return;
+
+    final center = project(localPosition);
+    final radius = (project(localPosition + Offset(enemyVisibleRadius, 0)) -
+            center)
+        .distance;
+    if (!radius.isFinite || radius <= 0) return;
+
+    canvas.saveLayer(bounds, Paint());
+    canvas.drawRect(bounds, Paint()..color = const Color(0xB8000807));
+    canvas.drawCircle(center, radius, Paint()..blendMode = BlendMode.clear);
+    canvas.restore();
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = const Color(0x667DCB8A)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
   }
 
   void _drawMonsters(
