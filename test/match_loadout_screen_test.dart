@@ -86,4 +86,28 @@ void main() {
     expect(find.text('جارٍ انتظار رد الخادم…'), findsNothing);
   });
 
+
+  testWidgets('match setup remains scrollable on a short landscape display',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: MatchLoadoutScreen(),
+        ),
+      ),
+    );
+
+    expect(find.text('تجهيز المباراة'), findsOneWidget);
+    expect(find.text('الاتصال بالغرفة'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    final scrollable = find.byType(Scrollable);
+    expect(scrollable, findsWidgets);
+  });
+
 }
