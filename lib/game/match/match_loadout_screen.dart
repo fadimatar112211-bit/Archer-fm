@@ -668,7 +668,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           Text(
             !alive
                 ? 'أنت خارج القتال مؤقتاً حتى يكتمل الإحياء'
-                : !_client!.isConnected
+                : _client?.isConnected != true
                     ? 'الاتصال غير مستقر؛ ستعود الأوامر عند استعادة الاتصال'
                     : _matchPhase != 'running'
                         ? 'التحكم القتالي متاح أثناء المباراة فقط'
