@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'match_target_selector.dart';
+
 import '../../monsters/monster_models.dart';
 
 import '../controls/virtual_joystick.dart';
@@ -435,70 +437,12 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   String? _nearestEnemyTarget() {
     final state = _latestState;
-    if (state == null || _playerId == null) return null;
-    final combat = state['combat'];
-    final world = state['world'];
-    if (combat is! Map || world is! Map) return null;
-    final positions = world['playerPositions'];
-    if (positions is! Map || positions[_playerId] is! Map) return null;
-    final ownPosition = positions[_playerId] as Map;
-    final ox = ownPosition['x'];
-    final oy = ownPosition['y'];
-    if (ox is! num || oy is! num) return null;
-
-    String? nearestId;
-    var nearestDistance = double.infinity;
-    void consider(String id, String ownerId, Object? x, Object? y) {
-      if (ownerId == _playerId || x is! num || y is! num) return;
-      final dx = x.toDouble() - ox.toDouble();
-      final dy = y.toDouble() - oy.toDouble();
-      final distance = dx * dx + dy * dy;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestId = id;
-      }
-    }
-
-    final heroes = combat['heroes'];
-    if (heroes is Map) {
-      for (final entry in heroes.entries) {
-        if (entry.value is! Map) continue;
-        final playerId = entry.key.toString();
-        final position = positions[playerId];
-        final hero = entry.value as Map;
-        if (position is Map && hero['isAlive'] == true) {
-          consider('hero_$playerId', playerId, position['x'], position['y']);
-        }
-      }
-    }
-    final monsters = combat['monsters'];
-    if (monsters is List) {
-      for (final monster in monsters) {
-        if (monster is Map && monster['id'] is String && monster['ownerId'] is String) {
-          consider(monster['id'] as String, monster['ownerId'] as String,
-              monster['x'], monster['y']);
-        }
-      }
-    }
-    final castles = world['castles'];
-    if (castles is List) {
-      for (final castle in castles) {
-        if (castle is! Map || castle['ownerId'] is! String) continue;
-        final owner = castle['ownerId'] as String;
-        final crystals = castle['crystals'];
-        if (crystals is! List) continue;
-        for (final crystal in crystals) {
-          if (crystal is Map &&
-              crystal['id'] is String &&
-              crystal['hp'] is num &&
-              (crystal['hp'] as num) > 0) {
-            consider(crystal['id'] as String, owner,
-                crystal['x'], crystal['y']);
-          }
-        }
-      }
-    }
-    return nearestId;
+    final playerId = _playerId;
+    if (state == null || playerId == null) return null;
+    return MatchTargetSelector.nearestEnemyTarget(
+      snapshot: state,
+      playerId: playerId,
+    );
   }
 
   void _sendCombat(String type, {int? ultimateIndex}) {
