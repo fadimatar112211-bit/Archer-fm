@@ -34,7 +34,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - `WebSocketGameHost` is the transport/room gateway, and `AuthoritativeMatchSession` now supplies a concrete four-player lobby, canonical hero/weapon selection validation, match clock/results, reconnect identity, and forfeit handling. The session factory receives the room creation message so the selected approved match duration is applied.
 
 - `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
-- `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; no ZIP sample prices are hardcoded.
+- `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; `PersistentHeroProgressionService` loads and saves transactions and serializes concurrent changes per trusted account ID. No ZIP sample prices are hardcoded.
 - Monsters and map integration remain owned by OpenCode and are not modified here.
 
 ## Not yet implemented
@@ -44,7 +44,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - Matchmaking, private room invite flow, friend invitations, and player removal.
 - Local Wi-Fi hotspot/LAN hosting and reconnect/host migration policy.
 - Final landscape selection screen and HUD connected to current 3D/2.5D renderer.
-- Server-side progression transaction endpoint that authenticates the account, loads/saves `HeroProgress`, and supplies the unlocked-weapon validator to session creation.
+- Wire `PersistentHeroProgressionService` into the production authenticated account/session handler, supply approved economy configuration, and pass a preloaded trusted ownership validator into match session creation. The persistent service is implemented and tested, but the auth/socket endpoint is not yet connected.
 - Connect `MatchWorldAuthority` to the existing monster combat adapters so monster attacks and hero attacks resolve against live crystals/units in the same authoritative tick.
 - Client input protocol and server-side movement-intent processing with the approved hero speed/world-unit conversion.
 
