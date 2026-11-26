@@ -509,13 +509,39 @@ class _ArenaPainter extends CustomPainter {
       if (point == null) continue;
       final p = project(point);
       final chest = pickup['kind'] == 'chest';
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: p, width: 12, height: 10),
-          const Radius.circular(2),
-        ),
-        Paint()..color = chest ? const Color(0xFFE4B34D) : const Color(0xFF68D9C4),
-      );
+      if (chest) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: p.translate(0, 1), width: 14, height: 11),
+            const Radius.circular(2),
+          ),
+          Paint()..color = const Color(0x77372A1D),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: p, width: 13, height: 9),
+            const Radius.circular(2),
+          ),
+          Paint()..color = const Color(0xFF9A5D2D),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: p.translate(0, -3), width: 14, height: 5),
+            const Radius.circular(2),
+          ),
+          Paint()..color = const Color(0xFFE4B34D),
+        );
+        canvas.drawLine(
+          p.translate(-6, 0),
+          p.translate(6, 0),
+          Paint()..color = const Color(0xFFFFD77B)..strokeWidth = 1.3,
+        );
+        canvas.drawCircle(p.translate(0, 1), 1.4, Paint()..color = const Color(0xFF68401F));
+      } else {
+        canvas.drawCircle(p, 8, Paint()..color = const Color(0x4468D9C4));
+        canvas.drawCircle(p, 4, Paint()..color = const Color(0xFF68D9C4));
+        canvas.drawCircle(p.translate(-1, -1), 1.4, Paint()..color = Colors.white);
+      }
     }
     for (final raw in _list(world['resourcePickups'])) {
       final pickup = _map(raw);
@@ -535,8 +561,26 @@ class _ArenaPainter extends CustomPainter {
       if (point == null) continue;
       final p = project(point);
       final color = _ownerColor(mine['ownerId']?.toString(), snapshot);
-      canvas.drawCircle(p, 13, Paint()..color = const Color(0xFF292B2A));
-      canvas.drawCircle(p, 9, Paint()..color = color);
+      final glowRect = Rect.fromCircle(center: p, radius: 19);
+      canvas.drawCircle(
+        p,
+        19,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [color.withOpacity(0.30), color.withOpacity(0)],
+          ).createShader(glowRect),
+      );
+      canvas.drawCircle(p.translate(0, 1.5), 13, Paint()..color = const Color(0x77302B25));
+      canvas.drawCircle(
+        p,
+        10,
+        Paint()
+          ..color = const Color(0xFF292B2A)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      canvas.drawCircle(p, 7.5, Paint()..color = color.withOpacity(0.75));
+      canvas.drawCircle(p.translate(-2, -2), 2.2, Paint()..color = const Color(0xAAFFFFFF));
       final capture = (_number(mine['captureFraction']) ?? 0).clamp(0.0, 1.0);
       canvas.drawArc(
         Rect.fromCircle(center: p, radius: 12),
@@ -633,13 +677,41 @@ class _ArenaPainter extends CustomPainter {
         final hp = _number(crystal['hp']) ?? 0;
         final maxHp = _number(crystal['maxHp']) ?? 1;
         final fraction = (hp / maxHp).clamp(0.0, 1.0);
+        if (hp > 0) {
+          final glow = Rect.fromCircle(center: p, radius: 15);
+          canvas.drawCircle(
+            p,
+            15,
+            Paint()
+              ..shader = RadialGradient(
+                colors: [color.withOpacity(0.38), color.withOpacity(0)],
+              ).createShader(glow),
+          );
+        }
         final path = Path()
-          ..moveTo(p.dx, p.dy - 7)
-          ..lineTo(p.dx + 6, p.dy)
-          ..lineTo(p.dx, p.dy + 7)
-          ..lineTo(p.dx - 6, p.dy)
+          ..moveTo(p.dx, p.dy - 9)
+          ..lineTo(p.dx + 7, p.dy - 1)
+          ..lineTo(p.dx + 4, p.dy + 8)
+          ..lineTo(p.dx - 4, p.dy + 8)
+          ..lineTo(p.dx - 7, p.dy - 1)
           ..close();
-        canvas.drawPath(path, Paint()..color = hp > 0 ? color : const Color(0xFF4A4540));
+        canvas.drawPath(
+          path,
+          Paint()
+            ..shader = hp > 0
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color.withOpacity(0.95), color, color.withOpacity(0.55)],
+                  ).createShader(path.getBounds())
+                : const Color(0xFF4A4540),
+        );
+        final facet = Path()
+          ..moveTo(p.dx, p.dy - 8)
+          ..lineTo(p.dx, p.dy + 7)
+          ..lineTo(p.dx - 6, p.dy - 1)
+          ..close();
+        canvas.drawPath(facet, Paint()..color = const Color(0x66FFFFFF));
         canvas.drawRect(
           Rect.fromLTWH(p.dx - 7, p.dy - 11, 14, 2),
           Paint()..color = const Color(0xFF211F1D),
