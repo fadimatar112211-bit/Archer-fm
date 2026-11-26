@@ -225,4 +225,79 @@ void main() {
 
     expect(find.text('بانتظار بيانات ساحة المعركة'), findsOneWidget);
   });
+
+  testWidgets('selected target renderer stays safe at compact and wide landscape sizes',
+      (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final snapshot = <String, dynamic>{
+      'players': [
+        {'id': 'p1', 'heroId': 'ranger'},
+        {'id': 'p2', 'heroId': 'flame'},
+      ],
+      'world': {
+        'size': {'width': 1920, 'height': 1080},
+        'playerPositions': {
+          'p1': {'x': 900, 'y': 540},
+          'p2': {'x': 1200, 'y': 540},
+        },
+        'castles': [
+          {
+            'ownerId': 'p2',
+            'anchor': {'x': 1200, 'y': 540},
+            'crystals': [
+              {'id': 'enemy-crystal', 'x': 1240, 'y': 560, 'hp': 300, 'maxHp': 500},
+            ],
+          },
+        ],
+      },
+      'combat': {
+        'heroes': {
+          'p1': {'health': 100, 'maxHealth': 100, 'isAlive': true},
+          'p2': {'health': 100, 'maxHealth': 100, 'isAlive': true},
+        },
+        'monsters': [
+          {
+            'id': 'enemy-monster',
+            'ownerId': 'p2',
+            'type': 'runner',
+            'x': 1120,
+            'y': 520,
+            'health': 80,
+            'maxHealth': 100,
+          },
+        ],
+      },
+    };
+
+    for (final size in [
+      const Size(640, 360),
+      const Size(1280, 720),
+    ]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: size.width,
+                child: ArenaBattlefield(
+                  snapshot: snapshot,
+                  localPlayerId: 'p1',
+                  selectedTargetId: 'enemy-crystal',
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(ArenaBattlefield), findsOneWidget);
+      expect(tester.takeException(), isNull,
+          reason: 'Selected-target rendering must remain safe at $size.');
+    }
+  });
+
+
 }
