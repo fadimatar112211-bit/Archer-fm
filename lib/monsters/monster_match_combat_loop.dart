@@ -35,6 +35,7 @@ class MonsterMatchCombatLoop {
     this.alliesFor,
     this.obstaclesFor = _noObstacles,
     this.movementSpeedMultiplierFor = _normalMonsterMovementSpeed,
+    this.onProjectileKill,
     this.navigationGrid,
     MonsterPathfinder? pathfinder,
     MonsterAttackSlotCoordinator? attackSlots,
@@ -55,6 +56,8 @@ class MonsterMatchCombatLoop {
   final MonsterObstaclesLookup obstaclesFor;
   /// Map hosts can lower movement on water or other slow surfaces.
   final MonsterMovementSpeedMultiplier movementSpeedMultiplierFor;
+  /// Called only when a projectile changes a live target into a defeated one.
+  final MonsterKillCallback? onProjectileKill;
   final MonsterNavigationGrid? navigationGrid;
   final MonsterPathfinder pathfinder;
   final MonsterAttackSlotCoordinator attackSlots;
@@ -100,6 +103,7 @@ class MonsterMatchCombatLoop {
     final projectileResults = projectiles.update(
       elapsed: elapsed,
       resolveTarget: resolvePositionedTarget,
+      onKill: onProjectileKill,
     );
 
     final candidatesByUnit = <String, List<MonsterTarget>>{};
