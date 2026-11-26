@@ -82,13 +82,19 @@ class _VirtualJoystickState extends State<VirtualJoystick> {
   @override
   void dispose() {
     _timer?.cancel();
+    if (_value != Offset.zero || _lastSent != Offset.zero) {
+      widget.onMove(Offset.zero);
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final knobOffset = _value * (widget.size * 0.32);
-    return GestureDetector(
+    return Semantics(
+      label: 'عصا الحركة',
+      hint: 'اسحب العصا لتوجيه البطل، واتركها لإيقاف الحركة',
+      child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanDown: (details) => _update(details.localPosition),
       onPanUpdate: (details) => _update(details.localPosition),
@@ -115,6 +121,7 @@ class _VirtualJoystickState extends State<VirtualJoystick> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
