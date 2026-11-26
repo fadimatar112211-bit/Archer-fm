@@ -120,7 +120,7 @@ class HeroCombatRuntime {
       throw RangeError.index(index, hero.weapons, 'index');
     }
     selectedWeaponIndex = index;
-    comboIndex = 0;
+    resetCombo();
     return CombatActionResult(
       accepted: true,
       messageAr: 'تم تجهيز ${selectedWeapon.nameAr}',
