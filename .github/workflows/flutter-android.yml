@@ -48,7 +48,10 @@ jobs:
           docker system prune --all --force || true
           echo "Disk space after cleanup:"
           df -h /
+      # Emulator execution is an explicit release/QA action only. Phase work and
+      # routine CI must not boot an Android emulator unless manually dispatched.
       - uses: reactivecircus/android-emulator-runner@v2
+        if: github.event_name == 'workflow_dispatch'
         # GitHub-hosted Linux runners do not expose KVM to this job. The
         # emulator exits immediately with "-accel off" unless TCG is explicitly
         # opted into; keep the longer boot window for software CPU emulation.
