@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../match/match_rules.dart';
+
 /// Mobile WebSocket transport for Archer FM.
 ///
 /// The server remains authoritative. This class only transports commands and
@@ -79,10 +81,14 @@ class GameClient {
     });
   }
 
-  Future<void> create() => _open({
-        'type': 'create',
-        if (profileKey != null) 'profile': profileKey,
-      });
+  Future<void> create({int durationMinutes = 30}) {
+    MatchDuration.fromMinutes(durationMinutes);
+    return _open({
+      'type': 'create',
+      'durationMinutes': durationMinutes,
+      if (profileKey != null) 'profile': profileKey,
+    });
+  }
 
   Future<void> join(String code) => _open({
         'type': 'join',
