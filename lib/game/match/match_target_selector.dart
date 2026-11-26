@@ -1,35 +1,30 @@
-/// Chooses the closest visible enemy entity from an authoritative match snapshot.
-///
-/// The server remains responsible for range, ownership and damage validation;
-/// this helper only chooses a target ID for the player's tap action.
+/// Builds the ordered list of enemy entities available to the local player.
+/// The server still validates visibility, range, ownership and damage.
 class MatchTargetSelector {
   const MatchTargetSelector._();
 
-  static String? nearestEnemyTarget({
+  static List<String> enemyTargets({
     required Map<String, dynamic> snapshot,
     required String playerId,
   }) {
     final combat = snapshot['combat'];
     final world = snapshot['world'];
-    if (combat is! Map || world is! Map) return null;
+    if (combat is! Map || world is! Map) return const [];
     final positions = world['playerPositions'];
-    if (positions is! Map || positions[playerId] is! Map) return null;
+    if (positions is! Map || positions[playerId] is! Map) return const [];
     final ownPosition = positions[playerId] as Map;
     final originX = ownPosition['x'];
     final originY = ownPosition['y'];
-    if (originX is! num || originY is! num) return null;
+    if (originX is! num || originY is! num) return const [];
 
-    String? nearestId;
-    var nearestDistance = double.infinity;
+    final distances = <String, double>{};
     void consider(String id, String ownerId, Object? x, Object? y) {
       if (ownerId == playerId || x is! num || y is! num) return;
       final dx = x.toDouble() - originX.toDouble();
       final dy = y.toDouble() - originY.toDouble();
       final distance = dx * dx + dy * dy;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestId = id;
-      }
+      final previous = distances[id];
+      if (previous == null || distance < previous) distances[id] = distance;
     }
 
     final heroes = combat['heroes'];
@@ -83,6 +78,19 @@ class MatchTargetSelector {
         }
       }
     }
-    return nearestId;
+
+    final ordered = distances.keys.toList(growable: false);
+    return ordered..sort((a, b) {
+      final byDistance = distances[a]!.compareTo(distances[b]!);
+      return byDistance != 0 ? byDistance : a.compareTo(b);
+    });
+  }
+
+  static String? nearestEnemyTarget({
+    required Map<String, dynamic> snapshot,
+    required String playerId,
+  }) {
+    final targets = enemyTargets(snapshot: snapshot, playerId: playerId);
+    return targets.isEmpty ? null : targets.first;
   }
 }
