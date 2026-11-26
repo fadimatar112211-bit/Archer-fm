@@ -1,0 +1,43 @@
+name: Match rules checks
+
+on:
+  push:
+    branches: [feature/match-rules-foundation]
+    paths:
+      - 'lib/game/match/**'
+      - 'lib/game/network/**'
+      - 'lib/game/controls/**'
+      - 'lib/game/progression/**'
+      - 'test/match_rules_test.dart'
+      - 'test/game_client_test.dart'
+      - 'test/hero_progress_test.dart'
+      - 'test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart'
+      - 'test/virtual_joystick_test.dart'
+      - '.github/workflows/match-rules-checks.yml'
+  pull_request:
+    branches: [heroes-complete]
+    paths:
+      - 'lib/game/match/**'
+      - 'lib/game/network/**'
+      - 'lib/game/controls/**'
+      - 'lib/game/progression/**'
+      - 'test/match_rules_test.dart'
+      - 'test/game_client_test.dart'
+      - 'test/hero_progress_test.dart'
+      - 'test/file_hero_progress_store_test.dart'
+      - 'test/virtual_joystick_test.dart'
+      - '.github/workflows/match-rules-checks.yml'
+
+jobs:
+  match-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/game/match lib/game/network lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart
