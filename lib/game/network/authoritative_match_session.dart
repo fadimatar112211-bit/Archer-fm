@@ -474,7 +474,9 @@ class AuthoritativeMatchSession
     if (rules == null) {
       return const MatchCommandResult.rejected('المباراة لم تبدأ');
     }
-    return rules.setLivingCrystals(playerId, count);
+    final result = rules.setLivingCrystals(playerId, count);
+    if (result.accepted) _queueFinishedSettlements();
+    return result;
   }
 
   /// Server-authoritative movement through map collision and terrain rules.
@@ -503,6 +505,7 @@ class AuthoritativeMatchSession
     );
     if (result.accepted && result.ownerId != null && result.livingCrystals != null) {
       rules!.setLivingCrystals(result.ownerId!, result.livingCrystals!);
+      _queueFinishedSettlements();
     }
     return result;
   }
@@ -519,6 +522,7 @@ class AuthoritativeMatchSession
     final result = matchWorld.rebuildCrystal(ownerId: ownerId, position: position);
     if (result == CrystalRebuildResult.ok) {
       rules!.setLivingCrystals(ownerId, matchWorld.livingCrystals(ownerId));
+      _queueFinishedSettlements();
     }
     return result;
   }
@@ -569,6 +573,7 @@ class AuthoritativeMatchSession
       for (final entry in result.livingCrystals.entries) {
         rules.setLivingCrystals(entry.key, entry.value);
       }
+      _queueFinishedSettlements();
     }
   }
 
@@ -921,8 +926,10 @@ class AuthoritativeMatchSession
     final matchWorld = world;
     if (rules == null || matchWorld == null) return;
     for (final id in matchWorld.playerIds) {
+      if (rules.phase != MatchPhase.running) break;
       rules.setLivingCrystals(id, matchWorld.livingCrystals(id));
     }
+    _queueFinishedSettlements();
   }
 
   _MatchPlayer? _find(String id) {
