@@ -64,4 +64,26 @@ void main() {
     expect(find.text('20 / 20'), findsOneWidget);
     expect(find.text('تأكيد التشكيلة وإرسالها'), findsOneWidget);
   });
+
+  testWidgets('connection validates server address before opening a socket',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: MatchLoadoutScreen()),
+    );
+
+    await tester.tap(find.text('إنشاء غرفة'));
+    await tester.pump();
+
+    expect(
+      find.text('أدخل عنوان خادم يبدأ بـ ws:// أو wss://'),
+      findsOneWidget,
+    );
+    expect(find.text('جارٍ انتظار رد الخادم…'), findsNothing);
+  });
+
 }
