@@ -179,7 +179,8 @@ class MatchCombatAuthority {
     Map<String, int> weaponUpgradeLevels = const {},
     void Function(String playerId, MonsterTargetKind targetKind)? onKill,
     math.Random? random,
-  }) {
+  })  : _onKill = onKill,
+        _random = random ?? math.Random() {
     if (heroes.length != world.playerIds.length ||
         weaponIds.length != world.playerIds.length ||
         initialArmies.length != world.playerIds.length ||
@@ -271,15 +272,13 @@ class MatchCombatAuthority {
         ),
       ),
     );
-    _onKill = onKill;
-    _random = random ?? math.Random();
   }
 
   final MatchWorldAuthority world;
   final MatchCombatConfiguration configuration;
   final Map<String, MatchHeroState> _heroes = {};
   late final MonsterMatchRuntime monsters;
-  late final math.Random _random;
+  final math.Random _random;
   final void Function(String playerId, MonsterTargetKind targetKind)? _onKill;
   int _nextProjectileId = 1;
   DateTime _now = DateTime.utc(2026, 1, 1);
