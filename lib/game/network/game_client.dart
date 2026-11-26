@@ -205,7 +205,7 @@ class GameClient {
     }
     _setState(GameConnectionState.reconnecting);
     _reconnectTimer?.cancel();
-    final exponent = _retryAttempt.clamp(0, 10);
+    final exponent = _retryAttempt.clamp(0, 10).toInt();
     final seconds = 1 << exponent;
     final delay = Duration(seconds: seconds).compareTo(maxReconnectDelay) > 0
         ? maxReconnectDelay
@@ -247,9 +247,9 @@ class GameClient {
   Future<void> dispose({bool leave = false}) async {
     if (_disposed) return;
     if (leave) send('leave');
+    _setState(GameConnectionState.closed);
     _disposed = true;
     _reconnectTimer?.cancel();
-    _setState(GameConnectionState.closed);
     final socket = _socket;
     _socket = null;
     try {
