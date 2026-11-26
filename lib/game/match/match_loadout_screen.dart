@@ -573,20 +573,31 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
         : !ready
             ? 'متبقي ${(remainingMs / 1000).ceil()} ث'
             : 'جاهزة للاستخدام';
-    return Tooltip(
-      message: '${ultimate.nameAr} · $hint',
-      child: SizedBox(
-        width: 88,
-        child: OutlinedButton(
-          onPressed: canAct && unlocked && ready
-              ? () => _sendCombat('ultimate', ultimateIndex: index)
-              : null,
-          child: Text(
-            ultimate.nameAr,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 10),
+    final enabled = canAct && unlocked && ready;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: ultimate.nameAr,
+      hint: '$hint · يستهدف أقرب عدو ظاهر تلقائياً',
+      child: Tooltip(
+        message: '${ultimate.nameAr} · $hint',
+        child: SizedBox(
+          width: 88,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(88, 52),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            ),
+            onPressed: enabled
+                ? () => _sendCombat('ultimate', ultimateIndex: index)
+                : null,
+            child: Text(
+              ultimate.nameAr,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 10),
+            ),
           ),
         ),
       ),
@@ -690,11 +701,22 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
               const Spacer(),
               Column(
                 children: [
-                  FilledButton(
-                    onPressed: canAct && (attackCooldown is! num || attackCooldown <= 0)
-                        ? () => _sendCombat('attack')
-                        : null,
-                    child: const Text('هجوم'),
+                  Semantics(
+                    button: true,
+                    enabled: canAct &&
+                        (attackCooldown is! num || attackCooldown <= 0),
+                    label: 'هجوم',
+                    hint: 'كل لمسة تنفذ ضربة واحدة وتستهدف أقرب عدو ظاهر تلقائياً',
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(120, 56),
+                      ),
+                      onPressed: canAct &&
+                              (attackCooldown is! num || attackCooldown <= 0)
+                          ? () => _sendCombat('attack')
+                          : null,
+                      child: const Text('هجوم'),
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Wrap(
