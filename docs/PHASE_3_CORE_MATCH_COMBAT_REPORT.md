@@ -27,7 +27,7 @@
 - All four heroes' three weapons are checked against their own canonical roster.
 - The initial weapon is available; locked weapons are rejected unless a trusted ownership resolver approves them.
 - Cross-hero weapon IDs are rejected.
-- Existing persistent unlock/upgrade transactions are covered by tests; weapon stat-scaling remains unapproved and is not fabricated.
+- Permanent weapon upgrades are now loaded through a trusted server-side player/weapon resolver and scale both manual combo damage and Ultimate damage. The example config's 4% per level is a first-playtest baseline, not final balance approval.
 
 ### Monster army and match world
 - Existing monster AI, target selection, formations, melee/ranged attacks, projectile lifecycle, death handling and permanent monster progression remain covered by the focused monster suite.
@@ -77,19 +77,22 @@ All code results below are from commit `7949380d98f551b0d83ab167c57aaab0f7f6b97b
 | Monster-focused analysis + tests | [45850887419](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45850887419) | **Success — 121 tests passed** |
 | Android build/emulator validation | [45851259514](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45851259514) | Retry in progress after Maven Central HTTP 429 on first attempt |
 
-## Explicitly unresolved — do not call the entire Phase 3 release-ready
+## Remaining scope — do not call the full game production-ready
 
-These items remain open after selecting an initial development balance baseline:
+The following are now implemented in the Phase 3 match runtime and covered by focused tests:
+- Authoritative kill attribution and one-time score/resource rewards for player manual attacks, Ultimates, AI melee, ranged monster projectiles and lethal damage-over-time ticks. Crystal destruction remains governed by crystal standings, not monster/hero bounty.
+- Trusted permanent weapon-upgrade levels scaling combo and Ultimate damage.
+- Live burn, poison, slow, freeze and stun effects, advanced by the authoritative server tick. Crowd-control pauses actions; slow reduces movement; damage-over-time retains trusted source attribution.
+- The live arena painter has received a stronger visual pass; it remains projected 2D terrain with 3D actors, not a fully volumetric terrain mesh.
 
-1. **Authoritative kill/reward pipeline remains unimplemented.** Score/currency amounts and kill attribution need server-side events that cannot double-award on repeated ticks. The balance baseline does not grant rewards prematurely.
-2. **Weapon upgrade combat scaling remains unimplemented.** Upgrade levels persist, but trusted account levels are not yet injected into match combat damage.
-3. **Status effects remain unimplemented in the live match runtime.** Burn/poison stacking and slow/freeze/stun durations, ticks and crowd-control behavior are not applied yet; Ultimate runtime currently validates unlock, energy, cooldown, damage and configured area.
-4. The local development gateway is not production authenticated. Account-linked weapon ownership/hero levels require the authenticated account context and cloud persistence planned for Phase 5.
-5. The server requires a reviewed external combat configuration. No production balance JSON has been supplied or committed.
-6. Phase 2 map quality is still pending an actual gameplay screenshot review. The earlier asset report filename was corrected: technical asset integration is Phase 1, map quality is Phase 2.
-7. Physical-device QA and release build/install checks remain in Phase 6.
+Still outside a Phase 3 completion claim:
+1. Production authentication and cloud account persistence are Phase 5.
+2. The development match server still requires a reviewed external combat configuration; example tuning values are playtest placeholders, not approved competitive balance.
+3. Final visual sign-off still requires a real 16:9 gameplay screenshot compared with the approved in-game reference.
+4. APK build and emulator install/launch smoke test are still running on the latest validation attempt.
+5. Physical-device QA and four-device network/security/performance validation remain Phase 6.
 
-**Conclusion:** the implemented core match/combat rules are now covered by passing automated tests, including four real WebSocket clients. Phase 3 remains partially open for the explicitly listed design-dependent systems; this report does not claim the entire game or production multiplayer is finished.
+**Conclusion:** Phase 3 gameplay logic is implemented and the latest Match Rules and Monster Army CI suites pass. The phase is not signed off yet because Android emulator validation and human visual review remain outstanding. This does not claim production multiplayer or the full game is finished.
 
 ## Live battlefield visual pass — 2026-11-26
 
@@ -132,3 +135,14 @@ The visual code change is committed on `feature/match-rules-foundation`. CI must
 - Monster Army CI: analysis and the monster/projectile/animation test suite passed.
 - Android validation on this same head: analyze and Flutter tests passed; debug APK build is still running. Emulator install/launch has not yet been confirmed.
 - Final map sign-off still requires a captured landscape gameplay screenshot and visual review. This remains open; the painter is still projected 2D terrain with 3D actors, not a fully volumetric 3D map.
+
+
+## Final Phase 3 continuation — 2026-11-26
+
+**Current branch head:** `bd804d91ed0c73a1360a0b329a3dd6bb8d04910c`
+
+- Match Rules CI [45860464814](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45860464814): **success**; `flutter analyze --no-fatal-infos` passed and **282 tests passed**.
+- Monster Army CI [45860464960](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45860464960): **success**; focused analysis and monster/projectile/animation tests passed.
+- Android validation [45860452966](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45860452966): analysis and full Flutter tests passed; debug APK build is still running, followed by emulator install/launch.
+- Latest arena visual changes include denser world-anchored ground details, layered water and ripples, timber bridge planks/rails, castle merlons, glowing crystals/mines and clearer chests/resource pickups.
+- The pull request remains Draft/open/unmerged. No merge was performed.
