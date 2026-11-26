@@ -1098,4 +1098,12 @@ void main() {
     );
   });
 
+
+  test('one verified account cannot occupy multiple slots in one room', () {
+    final session = AuthoritativeMatchSession(code: 'account1');
+    expect(session.joinForAccount('same-account'), isNotNull);
+    expect(session.joinForAccount('same-account'), isNull);
+    expect(session.players, hasLength(1));
+  });
+
 }
