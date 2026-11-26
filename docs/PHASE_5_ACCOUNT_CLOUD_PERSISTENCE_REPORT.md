@@ -189,3 +189,15 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Live Supabase migration deployment, cross-device restore and cross-account isolation E2E remain blocked until an owner-configured staging project and secrets are available.
 
 **Acceptance remains IN PROGRESS; do not merge PR #21 or mark Phase 5 complete yet.**
+
+
+## 13. Verified cloud hero restore before match entry — 2026-11-27
+
+- Added an account-provisioning handshake hook. The WebSocket host now waits for server-side profile hydration after Supabase verifies the access token and before it sends the player a welcome/snapshot. If restore fails, the player is removed from the slot and the handshake is rejected.
+- Production sessions load `hero_progress` through `SupabaseHeroProgressStore` using the verified account UUID. The authoritative match uses the restored hero level, weapon upgrade level and unlocked-weapon set when validating loadouts and constructing combat.
+- A single verified account cannot occupy multiple player slots in the same room.
+- Match settlement invalidates the hero store's cached revision after the atomic RPC updates currency/revision, so a later progression save reloads the current database revision instead of using a stale cache.
+- Added tests for restoring cloud hero levels/unlocked weapons before match start, account ownership mismatch, duplicate account slots, and match completion settlement for all four accounts.
+- Monster progression remains stored in Supabase but is not yet applied to match combat: the approved combat JSON currently contains monster base stats but does not define the per-level growth policy needed to interpret saved monster levels. This must be configured and approved rather than guessed.
+
+**Current status: significant local implementation progress; CI for the newest commit and live Supabase acceptance still pending.**
