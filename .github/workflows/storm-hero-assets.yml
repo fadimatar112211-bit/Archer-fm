@@ -32,10 +32,19 @@ jobs:
           ref: heroes-complete
           fetch-depth: 0
 
-      - name: Install Blender and image tools
+      - name: Install Blender 3.6.13 and image tools
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y blender python3-pil
+          sudo apt-get install -y python3-pil xz-utils
+          curl -fL --retry 3 \
+            https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz \
+            -o /tmp/blender-3.6.13.tar.xz
+          sudo mkdir -p /opt/blender
+          sudo tar -xJf /tmp/blender-3.6.13.tar.xz -C /opt/blender
+          echo "/opt/blender/blender-3.6.13-linux-x64" >> "$GITHUB_PATH"
+          /opt/blender/blender-3.6.13-linux-x64/blender --version | head -n 2
+          /opt/blender/blender-3.6.13-linux-x64/blender --version | grep -F "3.6.13"
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
