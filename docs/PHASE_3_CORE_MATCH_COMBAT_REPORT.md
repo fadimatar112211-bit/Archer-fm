@@ -169,3 +169,19 @@ The visual code change is committed on `feature/match-rules-foundation`. CI must
 - Isolated Filament spike [45884614572](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45884614572) completed its build/install/launch script on older code head `6ef1f1a373d269b01483fd29a3411f0f6800f7b0`, not the current branch head. Its captured screenshot showed Android's **“System UI isn't responding”** dialog and no visible 3D scene. The job's green conclusion only means the shell commands completed; it does **not** validate successful rendering, animation, depth occlusion or performance. Artifact: [archer-fm-android-3d-spike](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45884614572/artifacts/15150495157).
 
 **Conclusion:** Core match/combat CI and the production debug APK emulator install/launch gate now pass on the current branch head. Phase 3 is **not signed off**: the production arena image needs human review, and the isolated Filament spike needs diagnosis/retest on the current head until an actual responsive 3D scene is captured. The live production terrain remains projected 2D with skinned 3D actors; no full 3D terrain claim is made. PR #20 remains Draft/open/unmerged.
+
+
+## Latest terrain contour pass and visual review — 2026-11-26 20:00 UTC
+
+**Current branch head:** `fd4add584ffde000b70af3451036193c06624c01`.
+
+- Replaced the biome renderer's concentric triangulated/radial wedge surfaces with a single softly shaded organic contour per biome. The contour uses low-frequency irregularity and a radial color gradient; it no longer draws individual radial triangle facets or per-segment bright outlines.
+- Removed duplicate thin triangle-stroke passes from the terrain height-map mesh to reduce visible grid seams.
+- Visual capture run [45887347291](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887347291) passed on this exact head. Artifact `phase3-arena-visual-capture` (artifact ID `15149074514`) was downloaded and visually inspected at 960×540. The obvious fan/wedge facets are substantially reduced and biome boundaries look softer. Remaining visual issues: central actor/unit cluster is crowded and small; the screenshot remains a representative renderer capture rather than a live-device gameplay screenshot.
+- Match Rules run [45887347281](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887347281) passed on this exact head. A duplicate run [45887353753](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887353753) also passed.
+- Monster Army run [45887353609](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887353609) passed on this exact head.
+- A duplicate visual capture [45887353606](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887353606) also passed.
+- Android validation runs [45887347342](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887347342) and [45887353728](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45887353728) have passed Flutter setup, dependency resolution, analysis and the full Flutter test suite; debug APK build is still in progress. Emulator install/launch has not yet been confirmed.
+- The isolated Filament spike [45886639832](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45886639832) has passed dependency resolution, analysis and APK build; its Android emulator runner is still in progress. No successful 3D render has been verified from this run yet.
+
+**Current conclusion:** visual terrain fan artifacts have been materially reduced and core match/monster checks pass on the current head. Phase 3 remains open pending Android APK/emulator completion, Filament runtime evidence, and further visual refinement of the crowded central actors. Production terrain is still a 2D projected painter with 3D actors, not a fully volumetric 3D terrain scene. PR #20 remains Draft/open/unmerged.
