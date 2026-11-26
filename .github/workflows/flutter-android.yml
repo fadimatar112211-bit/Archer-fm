@@ -11,9 +11,12 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'analysis_options.yaml'
+      - 'supabase/**'
+      - 'tool/**'
+      - 'docs/PHASE_5_ACCOUNT_CLOUD_PERSISTENCE_REPORT.md'
       - '.github/workflows/flutter-android.yml'
   pull_request:
-    branches: [heroes-complete, feature/match-rules-foundation]
+    branches: [heroes-complete, feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
     paths:
       - 'lib/**'
       - 'test/**'
@@ -58,9 +61,18 @@ jobs:
               }
 
           """ + content
-              settings.write_text(content)
-          elif "mavenCentral()" not in content.split("dependencyResolutionManagement", 1)[0]:
-              raise SystemExit("Flutter Gradle pluginManagement exists but does not include Maven Central")
+          else:
+              prefix, *rest = content.split("dependencyResolutionManagement", 1)
+              required = ["google()", "mavenCentral()", "gradlePluginPortal()"]
+              missing = [repo for repo in required if repo not in prefix]
+              if missing:
+                  marker = "repositories {"
+                  if marker not in prefix:
+                      raise SystemExit("Flutter Gradle pluginManagement has no repositories block")
+                  pos = prefix.index(marker) + len(marker)
+                  prefix = prefix[:pos] + "\n        " + "\n        ".join(missing) + prefix[pos:]
+                  content = prefix + ("dependencyResolutionManagement" + rest[0] if rest else "")
+          settings.write_text(content)
           PY
           grep -A6 '^pluginManagement {' "$SETTINGS"
       - run: flutter pub get
