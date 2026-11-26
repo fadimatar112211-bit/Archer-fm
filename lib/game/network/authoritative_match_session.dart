@@ -662,9 +662,8 @@ class AuthoritativeMatchSession
     final dying = combatData['dyingMonsters'];
     if (dying is List) {
       // Dying entries have no position; expose only the recipient's own units.
-      scopedCombat['dyingMonsters'] = dying
-          .where((unit) => unit is Map && unit['ownerId'] == player.id)
-          .toList();
+      scopedCombat['dyingMonsters'] =
+          dying.where(visibleToPlayer).toList();
     }
     final projectiles = combatData['projectiles'];
     if (projectiles is List) {
