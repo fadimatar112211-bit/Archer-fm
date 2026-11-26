@@ -5,7 +5,10 @@ import 'package:archer_fm/game/network/authoritative_match_session.dart';
 
 void main() {
   test('enforces four-player lobby, canonical loadouts and selected duration', () {
-    final session = AuthoritativeMatchSession.fromCreateMessage(\n      '123456',\n      {'durationMinutes': 10},\n    );
+    final session = AuthoritativeMatchSession.fromCreateMessage(
+      '123456',
+      {'durationMinutes': 10},
+    );
     final players = [for (var i = 0; i < 4; i++) session.join()!];
     expect(session.join(), isNull);
 
