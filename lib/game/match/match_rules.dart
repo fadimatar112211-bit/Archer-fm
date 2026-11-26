@@ -8,7 +8,6 @@ enum MatchPhase { waiting, running, finished }
 enum MatchFinishReason {
   lastCrystalHolder,
   timeExpired,
-  lastPlayerRemaining,
 }
 
 class MatchDuration {
@@ -256,10 +255,7 @@ class MatchRulesEngine {
       return const MatchCommandResult.rejected('اللاعب انسحب مسبقاً');
     }
     player.hasForfeited = true;
-    _finishIfOneNonForfeitedPlayerRemains();
-    if (phase != MatchPhase.finished) {
-      _finishIfOneCrystalHolderRemains();
-    }
+    _finishIfOneCrystalHolderRemains();
     return const MatchCommandResult.accepted();
   }
 
@@ -272,20 +268,6 @@ class MatchRulesEngine {
         MatchFinishReason.lastCrystalHolder,
         winnerId: holders.single.playerId,
       );
-    }
-  }
-
-  void _finishIfOneNonForfeitedPlayerRemains() {
-    final remaining = _players.values
-        .where((player) => !player.hasForfeited)
-        .toList();
-    if (remaining.length == 1) {
-      _finish(
-        MatchFinishReason.lastPlayerRemaining,
-        winnerId: remaining.single.playerId,
-      );
-    } else if (remaining.isEmpty) {
-      _finish(MatchFinishReason.lastPlayerRemaining);
     }
   }
 
