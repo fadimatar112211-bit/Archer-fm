@@ -66,6 +66,36 @@ void main() {
     expect(firstState['livingCrystals'], 6);
   });
 
+  test('blocks locked weapons unless trusted progression validates ownership', () {
+    final hero = archerFmHeroes.first;
+    final lockedWeapon = hero.weapons[1].id;
+    final blocked = AuthoritativeMatchSession(code: '444444');
+    final player = blocked.join()!;
+    expect(
+      blocked.handle(player, {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': lockedWeapon,
+      }),
+      'weapon_locked',
+    );
+
+    final allowed = AuthoritativeMatchSession(
+      code: '555555',
+      canUseWeapon: (playerId, weaponId) =>
+          playerId == 'p1' && weaponId == lockedWeapon,
+    );
+    final allowedPlayer = allowed.join()!;
+    expect(
+      allowed.handle(allowedPlayer, {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': lockedWeapon,
+      }),
+      isNull,
+    );
+  });
+
   test('disconnect permits resume without forfeiting', () {
     final session = AuthoritativeMatchSession(code: '222222');
     final player = session.join()!;
