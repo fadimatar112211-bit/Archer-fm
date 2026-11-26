@@ -369,7 +369,7 @@ void main() {
   test('Flame burn damage can finish a target and awards the kill once', () {
     final session = _combatReadySession();
     final authority = session.combat!;
-    final flame = session.players[1];
+    final flame = session.players.elementAt(1);
     final target = authority.armies
         .firstWhere((army) => army.ownerId == 'p1')
         .units.first;
