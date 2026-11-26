@@ -380,3 +380,14 @@ Still to decide or test:
 - **Android validation:** Flutter analyze, full tests and debug APK build previously passed. Emulator boot failed on the Ubuntu 26.04 runner before ADB could discover the device; the workflow is pinned to Ubuntu 24.04 for the retry.
 - **Current code head:** `acee10fb04aecc1c39e2b2cad12e83f4a0d57a28`. Match Rules, Monster Army, visual-capture and Android validation workflows are running. Do not mark Phase 3 closed until the current runs pass, the new visual capture is reviewed, and emulator install/launch succeeds.
 - **Repository safety:** all current work remains on `feature/match-rules-foundation`; `main` has not been modified or merged. PR #20 remains Draft/open/unmerged.
+
+
+## 3D battlefield terrain progress — 2026-11-26
+
+- Continued the Phase 3 map visual work without replacing the existing arena source assets or changing gameplay coordinates.
+- The production battlefield now asynchronously loads the original 96×96 `assets/maps/arena/height_map.csv` and uses it to draw a continuous, camera-culled triangulated heightfield with elevation shading and contour lines.
+- Added/extended faceted terrain landforms, 3D-style tree and rock geometry, raised river banks, extruded timber bridges, segmented castle ramparts, and crystal side facets.
+- Renderer remains a projected Flutter Canvas mesh (2.5D), not yet a true GPU 3D scene with depth buffer and physically based materials. Full 3D castles/towers, water surface, actor-terrain occlusion and mobile profiling remain outstanding.
+- Latest heightfield viewport culling and parser fixes are committed; CI and Android emulator verification are pending. Do not mark the map or Phase 3 complete until those gates pass and the screenshot is reviewed.
+- Detailed scope and remaining work: `docs/ARENA_3D_TERRAIN_IMPLEMENTATION.md`.
+- All work remains on `feature/match-rules-foundation`; PR #20 remains unmerged and `main` is untouched.
