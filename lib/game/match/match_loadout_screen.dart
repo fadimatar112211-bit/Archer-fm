@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../monsters/monster_models.dart';
 
+import '../controls/virtual_joystick.dart';
 import '../heroes/hero_roster.dart';
 import '../network/game_client.dart';
 
@@ -426,6 +427,105 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     );
   }
 
+  bool _sendMove(Offset direction) {
+    final client = _client;
+    if (client == null || !client.isConnected) return false;
+    return client.send('move', {'dx': direction.dx, 'dy': direction.dy});
+  }
+
+  String? _nearestEnemyTarget() {
+    final state = _latestState;
+    if (state == null || _playerId == null) return null;
+    final combat = state['combat'];
+    final world = state['world'];
+    if (combat is! Map || world is! Map) return null;
+    final positions = world['playerPositions'];
+    if (positions is! Map || positions[_playerId] is! Map) return null;
+    final ownPosition = positions[_playerId] as Map;
+    final ox = ownPosition['x'];
+    final oy = ownPosition['y'];
+    if (ox is! num || oy is! num) return null;
+
+    String? nearestId;
+    var nearestDistance = double.infinity;
+    void consider(String id, String ownerId, Object? x, Object? y) {
+      if (ownerId == _playerId || x is! num || y is! num) return;
+      final dx = x.toDouble() - ox.toDouble();
+      final dy = y.toDouble() - oy.toDouble();
+      final distance = dx * dx + dy * dy;
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestId = id;
+      }
+    }
+
+    final heroes = combat['heroes'];
+    if (heroes is Map) {
+      for (final entry in heroes.entries) {
+        if (entry.value is! Map) continue;
+        final playerId = entry.key.toString();
+        final position = positions[playerId];
+        final hero = entry.value as Map;
+        if (position is Map && hero['isAlive'] == true) {
+          consider('hero_$playerId', playerId, position['x'], position['y']);
+        }
+      }
+    }
+    final monsters = combat['monsters'];
+    if (monsters is List) {
+      for (final monster in monsters) {
+        if (monster is Map && monster['id'] is String && monster['ownerId'] is String) {
+          consider(monster['id'] as String, monster['ownerId'] as String,
+              monster['x'], monster['y']);
+        }
+      }
+    }
+    final castles = world['castles'];
+    if (castles is List) {
+      for (final castle in castles) {
+        if (castle is! Map || castle['ownerId'] is! String) continue;
+        final owner = castle['ownerId'] as String;
+        final crystals = castle['crystals'];
+        if (crystals is! List) continue;
+        for (final crystal in crystals) {
+          if (crystal is Map &&
+              crystal['id'] is String &&
+              crystal['hp'] is num &&
+              (crystal['hp'] as num) > 0) {
+            consider(crystal['id'] as String, owner,
+                crystal['x'], crystal['y']);
+          }
+        }
+      }
+    }
+    return nearestId;
+  }
+
+  void _sendCombat(String type, {int? ultimateIndex}) {
+    final client = _client;
+    if (client == null || !client.isConnected) {
+      setState(() => _lastError = 'الاتصال بالخادم غير متاح');
+      return;
+    }
+    final targetId = _nearestEnemyTarget();
+    if (targetId == null) {
+      setState(() => _lastError = 'لا يوجد هدف عدو ظاهر حالياً');
+      return;
+    }
+    final sent = type == 'ultimate'
+        ? client.send('ultimate', {'targetId': targetId, 'index': ultimateIndex!})
+        : client.send('attack', {'targetId': targetId});
+    if (!sent) setState(() => _lastError = 'تعذّر إرسال أمر القتال');
+  }
+
+  void _sendPurchase(MonsterType type) {
+    final client = _client;
+    if (client == null || !client.isConnected) return;
+    if (!client.send('purchase', {'monsterType': type.name})) {
+      setState(() => _lastError = 'تعذّر إرسال طلب شراء الوحدة');
+    }
+  }
+
   Widget _buildLiveHud() {
     final state = _latestState ?? const <String, dynamic>{};
     final participants = state['participants'] is List
@@ -444,6 +544,12 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     final myHero = _playerId == null ? null : heroes[_playerId];
     final myHealth = myHero is Map ? myHero['health'] : null;
     final myMaxHealth = myHero is Map ? myHero['maxHealth'] : null;
+    final myLevel = myHero is Map ? myHero['level'] : null;
+    final comboIndex = myHero is Map ? myHero['comboIndex'] : null;
+    final attackCooldown = myHero is Map ? myHero['attackCooldownMs'] : null;
+    final ultimateCooldowns = myHero is Map && myHero['ultimateCooldowns'] is List
+        ? myHero['ultimateCooldowns'] as List
+        : const [];
     final alive = myHero is Map ? myHero['isAlive'] == true : false;
     final respawnMs =
         myHero is Map && myHero['respawnRemainingMs'] is num
@@ -471,6 +577,68 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
               Text('مواردك: ${myResources ?? '—'}'),
               Text('بلوراتك: ${myCrystals ?? '—'} / 7'),
               Text('الوحوش الحية: $monsters'),
+            ],
+          ),
+          Text('مستواك: ${myLevel ?? '—'} · الكومبو: ${comboIndex ?? '—'} / 5 · تبريد الهجوم: ${attackCooldown ?? 0} ms'),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              VirtualJoystick(
+                size: 116,
+                onMove: _sendMove,
+              ),
+              const Spacer(),
+              Column(
+                children: [
+                  FilledButton(
+                    onPressed: alive && _client?.isConnected == true
+                        ? () => _sendCombat('attack')
+                        : null,
+                    child: const Text('هجوم'),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      for (var i = 0; i < _hero.ultimates.length; i++)
+                        SizedBox(
+                          width: 68,
+                          child: OutlinedButton(
+                            onPressed: alive &&
+                                    _client?.isConnected == true &&
+                                    (myLevel is num && myLevel >= _hero.ultimates[i].unlockLevel) &&
+                                    (i >= ultimateCooldowns.length ||
+                                        ultimateCooldowns[i] is! num ||
+                                        (ultimateCooldowns[i] as num) <= 0)
+                                ? () => _sendCombat('ultimate', ultimateIndex: i)
+                                : null,
+                            child: Text('خاصة ${i + 1}'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('شراء وحدات (يُخصم السعر من رصيد المباراة):'),
+          Wrap(
+            spacing: 6,
+            children: [
+              for (final type in MonsterType.values)
+                OutlinedButton(
+                  onPressed: alive && _client?.isConnected == true
+                      ? () => _sendPurchase(type)
+                      : null,
+                  child: Text(switch (type) {
+                    MonsterType.runner => 'شراء عدّاء',
+                    MonsterType.tank => 'شراء مدرّع',
+                    MonsterType.stalker => 'شراء متسلّل',
+                    MonsterType.ranged => 'شراء رامٍ',
+                  }),
+                ),
             ],
           ),
           const Divider(),
