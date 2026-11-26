@@ -732,16 +732,22 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             ],
           ),
           const Divider(),
-          for (final item in participants)
-            if (item is Map)
+          for (var index = 0; index < participants.length; index++)
+            if (participants[index] is Map)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
-                    Expanded(child: Text('اللاعب ${item['playerId']}')),
-                    Text('النقاط ${item['score'] ?? 0}'),
+                    Expanded(
+                      child: Text(
+                        participants[index]['playerId'] == _playerId
+                            ? 'أنت'
+                            : 'اللاعب ${index + 1}',
+                      ),
+                    ),
+                    Text('النقاط ${participants[index]['score'] ?? 0}'),
                     const SizedBox(width: 12),
-                    Text('البلورات ${item['livingCrystals'] ?? 0}/7'),
+                    Text('البلورات ${participants[index]['livingCrystals'] ?? 0}/7'),
                   ],
                 ),
               ),
