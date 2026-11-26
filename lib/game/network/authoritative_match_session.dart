@@ -181,10 +181,11 @@ class AuthoritativeMatchSession implements GameServerSession {
         return null;
       case 'forfeit':
         final rules = _rules;
-        if (rules == null) return 'match_not_started';
+        if (rules == null || rules.phase != MatchPhase.running) return 'match_not_running';
         final result = rules.forfeit(current.id);
         return result.accepted ? null : 'forfeit_rejected';
       case 'move':
+        if (_rules?.phase != MatchPhase.running) return 'match_not_running';
         final authority = combat;
         final dx = message['dx'];
         final dy = message['dy'];
@@ -198,6 +199,7 @@ class AuthoritativeMatchSession implements GameServerSession {
         current.moveY = dy.toDouble();
         return null;
       case 'attack':
+        if (_rules?.phase != MatchPhase.running) return 'match_not_running';
         final authority = combat;
         final targetId = message['targetId'];
         if (authority == null) return 'combat_not_configured';
@@ -212,6 +214,7 @@ class AuthoritativeMatchSession implements GameServerSession {
         _syncCrystalStandings();
         return result.accepted ? null : 'attack_rejected';
       case 'ultimate':
+        if (_rules?.phase != MatchPhase.running) return 'match_not_running';
         final authority = combat;
         final targetId = message['targetId'];
         final index = message['index'];
@@ -227,6 +230,7 @@ class AuthoritativeMatchSession implements GameServerSession {
         _syncCrystalStandings();
         return result.accepted ? null : 'ultimate_rejected';
       case 'purchase':
+        if (_rules?.phase != MatchPhase.running) return 'match_not_running';
         final authority = combat;
         final typeName = message['monsterType'];
         if (authority == null) return 'combat_not_configured';
