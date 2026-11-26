@@ -8,6 +8,7 @@ import 'dart:math';
 abstract interface class GameServerPlayer {
   String get id;
   String get resumeToken;
+  set resumeToken(String value);
   int get lastSequence;
   set lastSequence(int value);
   bool get connected;
