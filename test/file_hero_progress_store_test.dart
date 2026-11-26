@@ -46,7 +46,10 @@ void main() {
   });
 
   test('rejects empty or oversized account identifiers', () async {
-    expect(() => store.load(''), throwsArgumentError);
-    expect(() => store.save('x' * 257, HeroProgress.fresh()), throwsArgumentError);
+    await expectLater(store.load(''), throwsArgumentError);
+    await expectLater(
+      store.save('x' * 257, HeroProgress.fresh()),
+      throwsArgumentError,
+    );
   });
 }
