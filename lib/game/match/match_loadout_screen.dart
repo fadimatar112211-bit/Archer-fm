@@ -686,6 +686,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             ArenaBattlefield(
               snapshot: state,
               localPlayerId: _playerId!,
+              selectedTargetId: _currentEnemyTarget(),
             ),
             const SizedBox(height: 12),
           ],
