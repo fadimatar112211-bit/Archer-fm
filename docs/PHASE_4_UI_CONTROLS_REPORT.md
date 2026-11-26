@@ -136,3 +136,12 @@
 8. Add responsive widget tests for short landscape and wide landscape dimensions, including HUD/map overlap checks.
 
 **Do not mark Phase 4 complete** until the remaining flows and automated UI checks pass. Physical touch-device usability and audio verification remain device QA items; no emulator is run automatically during this phase.
+
+
+## Arabic player identity presentation correction
+
+- Match result summaries now map the local player to "أنت" and other participants to stable ordinal labels instead of exposing transport/player IDs.
+- The live match standings use the same player-facing approach, so internal IDs such as `p1` and `p2` are not shown in the HUD.
+- Added/updated result-panel widget expectations for winner and tie labels without raw IDs.
+- Commits: `36dcb19d538b7958a29a15c7ae7ac9eb30523df5`, `f517fc8b15b76406b9f61c98d416811c746d9cd1`, `3510e38e12d366ae8b0de9e28cdd849f99d831a6`.
+- Validation is running on the newest commit; do not count it as accepted until the corresponding Android validation and test workflows finish successfully.
