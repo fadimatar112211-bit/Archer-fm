@@ -60,6 +60,10 @@ MatchCombatConfiguration _combatConfiguration({
         for (final ultimate in hero.ultimates) ultimate.id: 20,
     },
     weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
+    monsterKillScore: 5,
+    monsterKillResources: 3,
+    heroKillScore: 15,
+    heroKillResources: 10,
     monsterProgressionByPlayer: p1RunnerLevel == 1
         ? const {}
         : {'p1': progression},
