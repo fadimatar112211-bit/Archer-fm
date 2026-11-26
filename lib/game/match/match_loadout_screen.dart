@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../game/heroes/hero_roster.dart';
-import '../game/network/game_client.dart';
+import '../../monsters/monster_models.dart';
+
+import '../heroes/hero_roster.dart';
+import '../network/game_client.dart';
 
 class MatchLoadoutScreen extends StatefulWidget {
   const MatchLoadoutScreen({super.key});
