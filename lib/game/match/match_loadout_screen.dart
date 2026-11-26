@@ -361,7 +361,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                           ),
                         const SizedBox(height: 6),
                         Text('اللاعبون: $_playersCount / 4 · الحالة: ${_phaseLabel(_matchPhase)}'),
-                        if (_playerId != null) Text('معرّفك داخل الغرفة: $_playerId'),
+                        if (_playerId != null) const Text('تم ربطك كلاعب داخل الغرفة'),
                         Text(
                           _allPlayersReady ? 'كل اللاعبين أكملوا التجهيز' : 'بانتظار تجهيز بقية اللاعبين',
                           style: TextStyle(
