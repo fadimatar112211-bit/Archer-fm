@@ -254,11 +254,19 @@ class _ArenaPainter extends CustomPainter {
     double heightAt(Offset point) {
       final authored = heightMap;
       if (authored != null && authored.length == 96) {
-        final column = (point.dx / worldSize.width * 95)
-            .round().clamp(0, 95).toInt();
-        final row = (point.dy / worldSize.height * 95)
-            .round().clamp(0, 95).toInt();
-        return authored[row][column] * 18.0;
+        // Bilinear sampling avoids stair-stepped cliffs between authored
+        // height-map cells while keeping the original map data untouched.
+        final gx = (point.dx / worldSize.width * 95).clamp(0.0, 95.0);
+        final gy = (point.dy / worldSize.height * 95).clamp(0.0, 95.0);
+        final x0 = gx.floor();
+        final y0 = gy.floor();
+        final x1 = math.min(x0 + 1, 95);
+        final y1 = math.min(y0 + 1, 95);
+        final tx = gx - x0;
+        final ty = gy - y0;
+        final north = authored[y0][x0] * (1 - tx) + authored[y0][x1] * tx;
+        final south = authored[y1][x0] * (1 - tx) + authored[y1][x1] * tx;
+        return (north * (1 - ty) + south * ty) * 18.0;
       }
       var height = 3.0 +
           math.sin(point.dx * 0.0061) * 3.0 +
@@ -315,11 +323,30 @@ class _ArenaPainter extends CustomPainter {
           (entry) => entry.key == _biomeKindAt(center, biomes),
           orElse: () => MapEntry('forest', [base, light, shade]),
         ).value;
-        final slope = (heightAt(Offset(x1, y1)) - heightAt(Offset(x, y))) / cell;
-        final first = slope > 0.06 ? palette[2] : palette[0];
-        final second = slope < -0.06 ? palette[2] : palette[1];
+        final h00 = heightAt(Offset(x, y));
+        final h10 = heightAt(Offset(x1, y));
+        final h01 = heightAt(Offset(x, y1));
+        final h11 = heightAt(Offset(x1, y1));
+        final lightX = ((h00 + h01) - (h10 + h11)) / (cell * 2);
+        final lightY = ((h00 + h10) - (h01 + h11)) / (cell * 2);
+        // Directional diffuse response: slopes facing the light receive a
+        // brighter facet, while reverse slopes deepen into the terrain.
+        final illumination = (0.92 + lightX * 0.28 - lightY * 0.22)
+            .clamp(0.62, 1.18).toDouble();
+        Color lit(Color color, double factor) => Color.fromARGB(
+          color.alpha,
+          (color.red * factor).round().clamp(0, 255),
+          (color.green * factor).round().clamp(0, 255),
+          (color.blue * factor).round().clamp(0, 255),
+        );
+        final first = lit(palette[0], illumination);
+        final second = lit(palette[1], illumination * 0.94);
         canvas.drawPath(triangle(a, b, d), Paint()..color = first);
         canvas.drawPath(triangle(a, d, e), Paint()..color = second);
+        canvas.drawPath(triangle(a, b, d), Paint()
+          ..color = const Color(0x18312B22)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.45);
         canvas.drawPath(triangle(a, b, d), Paint()
           ..color = const Color(0x12312A22)
           ..style = PaintingStyle.stroke
