@@ -674,6 +674,42 @@ class _ArenaPainter extends CustomPainter {
         final bridgeNormal = bridgeLength == 0
             ? Offset.zero
             : Offset(-bridgeAxis.dy / bridgeLength, bridgeAxis.dx / bridgeLength);
+        // Extruded timber deck: four side faces and a raised top surface
+        // give the crossing a visible thickness above the river.
+        final halfDeck = math.max(6.0, projectedWidth * 0.24);
+        final leftA = a + bridgeNormal * halfDeck;
+        final rightA = a - bridgeNormal * halfDeck;
+        final leftB = b + bridgeNormal * halfDeck;
+        final rightB = b - bridgeNormal * halfDeck;
+        Path quad(Offset p0, Offset p1, Offset p2, Offset p3) => Path()
+          ..moveTo(p0.dx, p0.dy)
+          ..lineTo(p1.dx, p1.dy)
+          ..lineTo(p2.dx, p2.dy)
+          ..lineTo(p3.dx, p3.dy)
+          ..close();
+        canvas.drawPath(
+          quad(leftA.translate(0, 5), rightA.translate(0, 5),
+              rightB.translate(0, 5), leftB.translate(0, 5)),
+          Paint()..color = const Color(0xFF493628),
+        );
+        canvas.drawPath(
+          quad(leftA, leftA.translate(0, 5), leftB.translate(0, 5), leftB),
+          Paint()..color = const Color(0xFF60452F),
+        );
+        canvas.drawPath(
+          quad(rightA, rightB, rightB.translate(0, 5), rightA.translate(0, 5)),
+          Paint()..color = const Color(0xFF3F3026),
+        );
+        canvas.drawPath(
+          quad(leftA, rightA, rightB, leftB),
+          Paint()..color = const Color(0xFFB18455),
+        );
+        canvas.drawLine(leftA, leftB, Paint()
+          ..color = const Color(0xFFE0BD88)
+          ..strokeWidth = 1.8);
+        canvas.drawLine(rightA, rightB, Paint()
+          ..color = const Color(0xFF745137)
+          ..strokeWidth = 1.8);
         // A dark under-shadow, timber deck, raised side rails and cross-planks
         // make bridges read as traversable structures over the river.
         canvas.drawLine(
