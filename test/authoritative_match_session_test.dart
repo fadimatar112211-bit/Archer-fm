@@ -115,6 +115,42 @@ void main() {
   });
 
 
+  test('player-scoped snapshots hide distant enemy units before network send', () {
+    final session = _combatReadySession();
+    final player = session.players.first;
+    final full = session.snapshot();
+    final scoped = session.snapshotFor(player);
+    final fullWorld = full['world'] as Map;
+    final scopedCombat = scoped['combat'] as Map;
+    final allCombat = full['combat'] as Map;
+    final origin = (fullWorld['playerPositions'] as Map)[player.id] as Map;
+    final originX = (origin['x'] as num).toDouble();
+    final originY = (origin['y'] as num).toDouble();
+    final allMonsters = (allCombat['monsters'] as List).cast<Map>();
+    final scopedMonsters = (scopedCombat['monsters'] as List).cast<Map>();
+
+    final distantEnemyIds = allMonsters
+        .where((monster) {
+          if (monster['ownerId'] == player.id) return false;
+          final dx = (monster['x'] as num).toDouble() - originX;
+          final dy = (monster['y'] as num).toDouble() - originY;
+          return dx * dx + dy * dy > enemyVisibleRadius * enemyVisibleRadius;
+        })
+        .map((monster) => monster['id'])
+        .toSet();
+    expect(distantEnemyIds, isNotEmpty);
+
+    final scopedIds = scopedMonsters.map((monster) => monster['id']).toSet();
+    expect(scopedIds.intersection(distantEnemyIds), isEmpty);
+    for (final monster in scopedMonsters) {
+      if (monster['ownerId'] == player.id) continue;
+      final dx = (monster['x'] as num).toDouble() - originX;
+      final dy = (monster['y'] as num).toDouble() - originY;
+      expect(dx * dx + dy * dy,
+          lessThanOrEqualTo(enemyVisibleRadius * enemyVisibleRadius));
+    }
+  });
+
   test('configured factory creates combat-enabled WebSocket room sessions', () {
     final factory = AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: _combatConfiguration(),
