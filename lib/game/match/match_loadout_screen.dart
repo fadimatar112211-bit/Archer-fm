@@ -30,6 +30,10 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   HeroCombatDefinition _hero = archerFmHeroes.first;
   int _weaponIndex = 0;
   String? _room;
+  String? _playerId;
+  int _playersCount = 0;
+  bool _allPlayersReady = false;
+  String _matchPhase = 'waiting';
   String _connectionLabel = 'غير متصل';
   String? _lastError;
   bool _busy = false;
@@ -104,15 +108,31 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     setState(() {
       if (type == 'welcome') {
         _room = message['code'] as String?;
+        _playerId = message['id'] as String?;
         if (_room != null) _roomCode.text = _room!;
         _events.insert(0, 'تم دخول الغرفة ${_room ?? ''}');
         _sendLoadout();
       } else if (type == 'error') {
         _lastError = _errorLabel(message['reason']?.toString() ?? 'unknown');
       } else if (type == 'ack') {
-        _events.insert(0, 'تم تأكيد الأمر');
-      } else if (type == 'snapshot') {
-        _events.insert(0, 'وصل تحديث المباراة');
+        final error = message['error'];
+        if (error is String && error.isNotEmpty) {
+          _lastError = _errorLabel(error);
+        } else {
+          _events.insert(0, 'تم تأكيد الأمر');
+        }
+      } else if (type == 'state') {
+        final players = message['players'];
+        if (players is List) {
+          _playersCount = players.length;
+          _allPlayersReady = players.length == 4 &&
+              players.every((player) =>
+                  player is Map &&
+                  player['heroId'] is String &&
+                  player['weaponId'] is String &&
+                  player['initialArmy'] is Map);
+        }
+        _matchPhase = message['phase']?.toString() ?? 'waiting';
       }
       if (_events.length > 8) _events.removeLast();
     });
@@ -129,6 +149,8 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       'invalid_army_selection': 'تشكيلة الجيش غير صالحة؛ يجب أن يكون المجموع 20',
       'match_already_started': 'المباراة بدأت بالفعل',
       'player_unavailable': 'اللاعب غير متاح',
+      'all_players_must_select_army': 'يجب على كل اللاعبين اختيار جيشهم',
+      'match_not_running': 'المباراة لم تبدأ',
     };
     return labels[reason] ?? 'تعذّر تنفيذ الأمر: $reason';
   }
@@ -159,6 +181,10 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   }
 
   void _sendStart() {
+    if (_playersCount != 4 || !_allPlayersReady) {
+      setState(() => _lastError = 'لا يمكن البدء قبل اكتمال أربعة لاعبين وتجهيز جيوشهم');
+      return;
+    }
     if (_armyTotal != 20) {
       setState(() => _lastError = 'يجب اختيار 20 وحدة بالضبط');
       return;
@@ -244,6 +270,15 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                             const Spacer(),
                             if (_room != null) SelectableText('الغرفة: $_room'),
                           ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text('اللاعبون: $_playersCount / 4 · الحالة: ${_phaseLabel(_matchPhase)}'),
+                        Text(
+                          _allPlayersReady ? 'كل اللاعبين أكملوا التجهيز' : 'بانتظار تجهيز بقية اللاعبين',
+                          style: TextStyle(
+                            color: _allPlayersReady ? Colors.greenAccent : Colors.white60,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -346,7 +381,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                         ),
                         const SizedBox(height: 8),
                         FilledButton.icon(
-                          onPressed: _client?.isConnected == true ? _sendStart : null,
+                          onPressed: _client?.isConnected == true && _allPlayersReady ? _sendStart : null,
                           icon: const Icon(Icons.play_arrow),
                           label: const Text('طلب بدء المباراة'),
                         ),
@@ -384,6 +419,13 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       ),
     );
   }
+
+  String _phaseLabel(String phase) => switch (phase) {
+        'waiting' => 'انتظار',
+        'running' => 'جارية',
+        'finished' => 'منتهية',
+        _ => phase,
+      };
 
   Widget _armyCounter(MonsterType type) {
     final label = switch (type) {
