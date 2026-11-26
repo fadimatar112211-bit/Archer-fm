@@ -59,6 +59,8 @@ The following are findings from the repository tree and source files inspected f
 
 **Acceptance:** no broken asset references; four hero model entries resolve; monster runtime layer demonstrably appears and animates in a live match; no missing runtime asset warnings.
 
+**Status update (2026-11-26):** technical asset integration has passing GLB/material/texture validation, four-hero/four-monster runtime loading tests, and a live battlefield 3D actor-layer widget test. Supporting evidence: [Asset Integration Report](ASSET_INTEGRATION_REPORT.md). Physical-device QA remains in Phase 6.
+
 ### Phase 2 — Map quality (technical + aesthetic)
 1. Capture the current arena from a real running build at target mobile landscape resolution.
 2. Review terrain readability, biome distinction, river/bridge composition, obstacles, castle/crystal visibility, mines, spawn spacing, pathing clarity, contrast, depth, lighting/shadows and HUD overlap.
@@ -68,6 +70,8 @@ The following are findings from the repository tree and source files inspected f
 6. Re-capture screenshots and compare before/after at phone resolution and different camera/device aspect ratios.
 
 **Acceptance:** map review includes actual screenshots; all critical gameplay objects remain legible; paths/collisions/objectives are correct; visual improvements are demonstrated in a new runtime capture. Do not call the map production-ready based on source inspection alone.
+
+**Status update (2026-11-26): NOT COMPLETE.** No actual in-game landscape screenshot has yet been reviewed against these criteria. The earlier asset-integration report was incorrectly named as Phase 2; its corrected location is `ASSET_INTEGRATION_REPORT.md` and it is Phase 1 evidence only.
 
 ### Phase 3 — Core match and combat verification
 1. Verify manual tap = one attack input, five-hit combo sequencing/reset, attack cooldowns and interruption.
@@ -80,6 +84,10 @@ The following are findings from the repository tree and source files inspected f
 8. Run four-player scenarios and adversarial cases (invalid loadout, duplicate purchase, stale snapshot, impossible movement, rapid inputs).
 
 **Acceptance:** deterministic automated tests for core rules; no client-only authority for competitive outcomes; four clients see consistent match state; no unapproved economy values silently treated as final.
+
+**Status update (2026-11-26): CORE AUTOMATED VERIFICATION PASSED; FULL PHASE 3 STILL PARTIALLY OPEN.** The implementation now has passing analysis/full tests (265 tests) and a four-client WebSocket combat integration test. Verified items include combo timing/interruption, Ultimate unlock/energy/cooldowns, trusted hero-level loading, persistent hero XP, weapon ownership gates, authoritative recruitment/rebuild, mine pickups, crystal/castle rules and replay/forgery rejection. See [Phase 3 Report](PHASE_3_CORE_MATCH_COMBAT_REPORT.md).
+
+Remaining Phase 3 design-dependent items are explicitly not fabricated: permanent rewards/kill attribution and score values; weapon-upgrade stat scaling; burn/poison/freeze/stun runtime effect values/behavior. Account-linked ownership/levels and cloud persistence belong to Phase 5.
 
 ### Phase 4 — UI, controls, accessibility and audio
 1. Inventory every route/screen and identify missing home, profile/account, hero, weapon, inventory/equipment, settings and match-end flows.
