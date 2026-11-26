@@ -175,3 +175,17 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - This verifies Dart source/tests for the new settlement adapter, but does not validate the PostgreSQL migration against a live Supabase instance or wire the settlement call into the match lifecycle.
 
 **Acceptance remains IN PROGRESS.**
+
+
+## 12. Authoritative match lifecycle settlement wiring — 2026-11-27
+
+- Added an account-bound completion callback to `AuthoritativeMatchSession`. It captures the final standings, maps each internal player slot to the account UUID established by the verified handshake, and submits one durable result for every account-bound participant when the match finishes by time or last-crystal-holder/forfeit.
+- The room uses a per-session unique match identifier rather than the short join code, preventing collisions with historical match records.
+- Production gateway now constructs the server-only Supabase settlement adapter from `SUPABASE_SERVICE_ROLE_KEY` and invokes the atomic settlement RPC. The key is required at server startup and is never part of mobile configuration.
+- Failed settlement requests remain queued and are retried on subsequent server ticks. The room is not eligible for removal while durable settlements remain pending. Retries use the database idempotency key so a lost HTTP response does not double-award currency.
+- Added `ARCHER_FM_MATCH_REWARDS_BY_RANK` as an optional four-integer server configuration. It defaults to `[0,0,0,0]`; no currency values were invented without an approved economy schedule.
+- Added a session-level test proving a finished account-bound match queues durable settlement for all four accounts. The new implementation still needs CI and a real Supabase staging test.
+- Cloud hero/monster progression hydration before match start is still not complete; the adapters and revision-checked save APIs exist, but all game profile/upgrade handlers are not yet connected.
+- Live Supabase migration deployment, cross-device restore and cross-account isolation E2E remain blocked until an owner-configured staging project and secrets are available.
+
+**Acceptance remains IN PROGRESS; do not merge PR #21 or mark Phase 5 complete yet.**
