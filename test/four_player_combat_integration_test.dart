@@ -34,6 +34,12 @@ MatchCombatConfiguration _configuration() {
     maxUnitsPerArmy: 100,
     worldUnitsPerSecond: 100,
     comboResetWindowMs: 1200,
+    maxHeroEnergy: 100,
+    energyRegenerationPerSecond: 1,
+    ultimateEnergyCosts: {
+      for (final hero in archerFmHeroes)
+        for (final ultimate in hero.ultimates) ultimate.id: 20,
+    },
   );
 }
 
