@@ -47,13 +47,19 @@ jobs:
           echo "Disk space after cleanup:"
           df -h /
       - uses: reactivecircus/android-emulator-runner@v2
+        # GitHub-hosted Linux runners do not expose KVM to this job. The
+        # emulator exits immediately with "-accel off" unless TCG is explicitly
+        # opted into; keep the longer boot window for software CPU emulation.
+        env:
+          ANDROID_I_WANT_MY_TCG: "yes"
         with:
           api-level: 30
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           disable-animations: true
+          disable-linux-hardware-acceleration: true
           script: |
             adb devices
             adb get-state
