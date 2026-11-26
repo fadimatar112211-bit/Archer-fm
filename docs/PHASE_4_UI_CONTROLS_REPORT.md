@@ -129,7 +129,7 @@
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
 2. Audit every player-facing string for English leaks, RTL issues, truncation and numeric formatting.
 3. Improve match setup connection lifecycle: reliable busy state, timeout/error feedback, retry affordances and explicit reconnect/session-expired messaging.
-4. Verify joystick, attack, Ultimate, target selection and unit-purchase controls, including disabled reasons and touch hit areas.
+4. Verify joystick, attack, Ultimate, manual target cycling and unit-purchase controls, including disabled reasons, touch hit areas and a visible arena highlight for the selected target.
 5. Add clear empty, loading, success/confirmation and match-finished states.
 6. The read-only armory now presents canonical weapons and Ultimates. Actual inventory ownership, unlock and upgrade transactions must remain server-authoritative and are not simulated in the UI.
 7. Connect actual audio assets and settings only when the assets/runtime exist; until then keep the limitation explicit.
@@ -168,3 +168,19 @@
 - Commit `dfccde948053f7d7bb4fa67eb88e08840b1efddc` completed all four relevant workflows successfully: Android validation run `45897633608`, Match Rules run `45897633519`, Monster Army run `45897633546`, and arena visual capture run `45897633593`.
 - Android validation completed `flutter analyze`, the full `flutter test` suite and `flutter build apk --debug`; the Android artifact `archer-fm-android-validation` was uploaded (artifact ID `15155016256`). The emulator runner was skipped by its manual-dispatch guard, so no emulator execution is claimed.
 - This CI evidence predates the subsequent lifecycle and touch/accessibility commits (`0a2f745...` and `ec1cf68...`). Their own validation runs are pending/in progress and must pass before these changes are certified.
+
+
+## Tenth implementation batch — manual enemy target cycling
+
+- Added a stable enemy-target candidate list sorted by distance from the local player's authoritative position. It includes living enemy heroes, enemy monsters and living enemy crystals, while excluding own entities, defeated heroes and destroyed crystals.
+- Added a live HUD **تغيير الهدف** control. Repeated taps cycle through available targets; attacks and Ultimates now use the manually selected target while it remains in the latest authoritative snapshot. If it disappears, combat safely falls back to the nearest available enemy.
+- The server remains authoritative for ownership, visibility, range, energy, cooldown and damage validation. The client-side selector only chooses the target ID sent with the action.
+- Added a unit test for deterministic distance ordering, in addition to the existing nearest-target, own-entity, defeated-hero, destroyed-crystal and missing-position tests.
+- Commits: `916770b640c15ceb7393ab7d8f201be4572f40c2` (ordered target candidates), `f404c7b1e244142e94e058a535a30ec8b3404d2a` (ordering test), `39daf5a200509bbc548825978ab6e198e104bbda` and `03bd74e60134b74943611871fef69b215614ba04` (live HUD control and stale-selection fallback), `55e8923af290ce5f23432e8f10a3a2a0aa4f5b90` (sortable candidate list).
+- Fresh CI validation is required. The previous run against the earlier automatic-target-only code is not evidence for this implementation. Device-level visual confirmation that the selected target is highlighted in the arena is still outstanding; this batch adds a HUD selection control but does not yet draw a target highlight around the chosen entity.
+
+## Current validation after manual-target implementation
+
+- Latest code commit: `55e8923af290ce5f23432e8f10a3a2a0aa4f5b90`.
+- Flutter Android validation, Match Rules, Monster Army and arena visual capture must complete on this exact commit before the new target-selection code is considered verified.
+- No emulator/device result is claimed unless the corresponding workflow step actually runs and completes.
