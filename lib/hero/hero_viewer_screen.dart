@@ -1,122 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import 'hero_assets.dart';
 import 'hero_catalog.dart';
-import 'hero_manifest.dart';
-import 'hero_stage.dart';
-import 'sprite_player.dart';
+import 'hero3d.dart';
 
-const List<String> heroStates = [
-  'idle',
-  'walk',
-  'run',
-  'attack',
-  'skill',
-  'dodge',
-  'hit',
-  'death',
-];
-
-const Map<String, String> stateLabels = {
-  'idle': 'وقوف',
-  'walk': 'مشي',
-  'run': 'جري',
-  'attack': 'هجوم',
-  'skill': 'مهارة',
-  'dodge': 'تفادي',
-  'hit': 'إصابة',
-  'death': 'موت',
-};
-
-const List<String> heroDirections = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
-
-const Map<String, String> directionLabels = {
-  'n': 'شمال',
-  'ne': 'شمال شرق',
-  'e': 'شرق',
-  'se': 'جنوب شرق',
-  's': 'جنوب',
-  'sw': 'جنوب غرب',
-  'w': 'غرب',
-  'nw': 'شمال غرب',
-};
-
-const Map<String, IconData> directionIcons = {
-  'n': Icons.north,
-  'ne': Icons.north_east,
-  'e': Icons.east,
-  'se': Icons.south_east,
-  's': Icons.south,
-  'sw': Icons.south_west,
-  'w': Icons.west,
-  'nw': Icons.north_west,
-};
-
-const Map<String, String> eventLabels = {
-  // Ranger, ranged.
-  'projectile_release': 'إطلاق سهم',
-  'bow_draw': 'شد القوس',
-  'volley_charge': 'تجميع طاقة',
-  'volley_release': 'وابل سهام',
-  // Shared melee choreography.
-  'weapon_windup': 'رفع السلاح',
-  'melee_impact': 'ضربة قريبة',
-  'hit_react': 'ارتداد الإصابة',
-  'dodge_start': 'بداية التفادي',
-  'dodge_end': 'نهاية التفادي',
-  // Flame.
-  'inferno_charge': 'تجميع اللهب',
-  'inferno_burst': 'انفجار الجحيم',
-  // Shadow.
-  'shadow_charge': 'تجميع الظل',
-  'shadow_burst': 'اندفاع الظل',
-  // Storm.
-  'storm_charge': 'تجميع الصاعقة',
-  'thunder_strike': 'ضربة الرعد',
-  'death_complete': 'السقوط',
-};
-
-String _effectForEvent(String name) {
-  switch (name) {
-    case 'projectile_release':
-      return 'release';
-    case 'volley_release':
-      return 'volley';
-    case 'bow_draw':
-    case 'volley_charge':
-    case 'weapon_windup':
-    case 'inferno_charge':
-    case 'shadow_charge':
-    case 'storm_charge':
-      return 'charge';
-    case 'melee_impact':
-      return 'impact';
-    case 'inferno_burst':
-    case 'shadow_burst':
-      return 'burst';
-    case 'thunder_strike':
-      return 'thunder';
-    case 'hit_react':
-      return 'hit';
-    case 'dodge_start':
-    case 'dodge_end':
-      return 'streak';
-    default:
-      return 'release';
-  }
-}
+/// Placeholder type kept for backward-compatible constructor signature.
+/// The old sprite system used it; Hero3D loads its own .bin assets.
+typedef HeroLoaderFactory = dynamic;
 
 class HeroViewerScreen extends StatefulWidget {
   const HeroViewerScreen({
     super.key,
-    required this.loaderFactory,
+    this.loaderFactory,
     this.initialHero,
   });
 
-  /// Builds a loader per hero. Tests inject a factory returning fake loaders.
-  final HeroLoaderFactory loaderFactory;
-
+  final HeroLoaderFactory? loaderFactory;
   final HeroDefinition? initialHero;
 
   @override
@@ -126,789 +27,388 @@ class HeroViewerScreen extends StatefulWidget {
 class _HeroViewerScreenState extends State<HeroViewerScreen>
     with SingleTickerProviderStateMixin {
   late HeroDefinition _hero;
-  late HeroAssetLoader _loader;
+  late Hero3D _hero3d;
   late final Ticker _ticker;
+  final ValueNotifier<int> _frame = ValueNotifier<int>(0);
+  Size _stageSize = const Size(400, 400);
 
-  final ValueNotifier<int> _clock = ValueNotifier<int>(0);
-  final ValueNotifier<List<String>> _log = ValueNotifier<List<String>>([]);
-  final List<StageEffect> _effects = [];
-  final Set<String> _unavailable = <String>{};
-
-  HeroManifest? _manifest;
-  AtlasSheet? _sheet;
-  SpritePlayer? _player;
-  String _state = 'idle';
-  String _direction = 's';
-  String? _error;
-  String? _errorDetail;
-  String? _sheetError;
-  bool _loadingSheet = false;
-  double _speed = 1.0;
   Duration _lastTick = Duration.zero;
-  int _loadToken = 0;
+  Offset _stick = Offset.zero;
+  Offset _stickOrigin = Offset.zero;
+  bool _stickActive = false;
+  String _lastAnim = 'idle';
+  final List<String> _log = <String>[];
 
-  HeroTheme get _theme => _hero.theme;
+  static const List<String> _movementOrder = [
+    'idle',
+    'run',
+    'attack1',
+    'attack2',
+    'attack3',
+    'attack4',
+    'attack5',
+    'dash',
+    'hurt',
+    'death',
+    'ult1',
+    'ult2',
+    'ult3',
+    'ult4',
+  ];
+
+  static const Map<String, String> _movementLabels = {
+    'idle': 'وقوف',
+    'run': 'جري',
+    'attack1': 'كومبو 1',
+    'attack2': 'كومبو 2',
+    'attack3': 'كومبو 3',
+    'attack4': 'كومبو 4',
+    'attack5': 'كومبو 5',
+    'dash': 'اندفاع',
+    'hurt': 'إصابة',
+    'death': 'موت',
+    'ult1': 'مهارة 1',
+    'ult2': 'مهارة 2',
+    'ult3': 'مهارة 3',
+    'ult4': 'مهارة 4',
+  };
+
+  static const Map<String, String> _soundToAsset = {
+    'swish': 'audio/flame/swish.wav',
+    'boom': 'audio/flame/boom.wav',
+    'charge': 'audio/flame/charge.wav',
+    'step': 'audio/flame/step.wav',
+    'hit': 'audio/flame/hit.wav',
+    'hurt': 'audio/flame/hurt.wav',
+    'death': 'audio/flame/death.wav',
+  };
 
   @override
   void initState() {
     super.initState();
     _hero = widget.initialHero ?? heroCatalog.first;
-    _loader = widget.loaderFactory(_hero);
+    _hero3d = _createHero(_hero);
     _ticker = createTicker(_onTick)..start();
-    _loadManifest();
+  }
+
+  Hero3D _createHero(HeroDefinition hero) {
+    final h = Hero3D(hero.id, height: 150);
+    h.position = const Offset(260, 360);
+    h.onSound = _onSound;
+    h.load().then((_) {
+      if (mounted) setState(() {});
+    });
+    return h;
+  }
+
+  void _onSound(String sound) {
+    final asset = _soundToAsset[sound];
+    if (asset == null) return;
+    // Flame audio assets are bundled and mapped; playback is best-effort.
+    // In this environment no audio plugin is available in cache, so we
+    // keep the integration point without crashing.
+    _log.insert(0, 'صوت: ${sound.split('.').first}');
+    if (_log.length > 8) _log.removeRange(8, _log.length);
   }
 
   @override
   void dispose() {
     _ticker.dispose();
-    _player?.dispose();
-    _clock.dispose();
-    _log.dispose();
-    _loader.dispose();
+    _frame.dispose();
+    _hero3d.dispose();
     super.dispose();
   }
 
   void _onTick(Duration elapsed) {
-    final delta = elapsed - _lastTick;
+    final dt = ((elapsed - _lastTick).inMicroseconds / 1e6).clamp(0.0, 0.05).toDouble();
     _lastTick = elapsed;
-    final player = _player;
-    if (player != null && delta.inMilliseconds > 0) {
-      player.advance((delta.inMilliseconds * _speed).round());
+    final move = _stickActive ? _stick : Offset.zero;
+    _hero3d.update(dt, move);
+    // Keep hero centered in viewer stage for stable preview.
+    _hero3d.position = Offset(_stageSize.width * 0.5, _stageSize.height * 0.82);
+    _hero3d.height = _stageSize.height * 0.42;
+    if (_hero3d.anim != _lastAnim) {
+      _lastAnim = _hero3d.anim;
+      _log.insert(0, '${_hero.nameAr} · ${_movementLabels[_lastAnim] ?? _lastAnim}');
+      if (_log.length > 8) _log.removeRange(8, _log.length);
     }
-    _clock.value = elapsed.inMilliseconds;
-    _effects.removeWhere((effect) => !effect.isAlive(_clock.value));
+    _frame.value++;
   }
 
-  Future<void> _loadManifest() async {
-    final loader = _loader;
-    final hero = _hero;
-    final token = ++_loadToken;
-    try {
-      final manifest = await loader.loadManifest();
-      if (!mounted || token != _loadToken) return;
-      setState(() {
-        _manifest = manifest;
-        _error = null;
-        _errorDetail = null;
-        _unavailable.remove(hero.id);
-      });
-      await _select('idle', 's');
-    } catch (error) {
-      if (!mounted || token != _loadToken) return;
-      setState(() {
-        _unavailable.add(hero.id);
-        _error = 'لم تُضمَّن أصول «${hero.nameAr}» في هذه النسخة بعد. '
-            'بقية الأبطال يعملون بشكل كامل.';
-        _errorDetail = '$error';
-      });
-    }
-  }
-
-  Future<void> _switchHero(HeroDefinition hero) async {
+  void _switchHero(HeroDefinition hero) {
     if (hero.id == _hero.id) return;
-    final previous = _loader;
-    _loadToken++;
     setState(() {
       _hero = hero;
-      _loader = widget.loaderFactory(hero);
-      _manifest = null;
-      _sheet = null;
-      _player?.dispose();
-      _player = null;
-      _state = 'idle';
-      _direction = 's';
-      _error = null;
-      _errorDetail = null;
-      _sheetError = null;
-      _loadingSheet = false;
-      _effects.clear();
-      _log.value = const <String>[];
-    });
-    previous.dispose();
-    await _loadManifest();
-  }
-
-  Future<void> _select(String state, String direction) async {
-    final manifest = _manifest;
-    if (manifest == null) return;
-    if (state == _state && direction == _direction && _player != null) return;
-    final name = '${state}_$direction';
-    final clip = manifest.clipFor(state, direction);
-    if (clip == null) {
-      setState(() {
-        _error = 'لا توجد حركة مسماة $name في بيانات البطل';
-      });
-      return;
-    }
-    final token = ++_loadToken;
-    final loader = _loader;
-    setState(() {
-      _state = state;
-      _direction = direction;
-      _loadingSheet = true;
-      _sheetError = null;
-      _error = null;
-      _errorDetail = null;
-    });
-    AtlasSheet? sheet;
-    String? sheetError;
-    try {
-      sheet = await loader.loadSheet(manifest, name);
-    } catch (error) {
-      sheetError = 'تعذّر تحميل صورة الحركة: $error';
-    }
-    if (!mounted || token != _loadToken) return;
-    final player = SpritePlayer(clip: clip, onEvent: _handleEvent);
-    setState(() {
-      _player?.dispose();
-      _player = player;
-      _sheet = sheet;
-      _sheetError = sheetError;
-      _loadingSheet = false;
+      _lastAnim = 'idle';
+      _log.clear();
+      _hero3d.dispose();
+      _hero3d = _createHero(hero);
     });
   }
 
-  void _handleEvent(AnimationEvent event) {
-    final now = _clock.value;
-    _effects.add(StageEffect(kind: _effectForEvent(event.name), startMs: now));
-    final state = stateLabels[_state] ?? _state;
-    final direction = directionLabels[_direction] ?? _direction;
-    final label = eventLabels[event.name] ?? event.name;
-    _log.value = <String>[
-      '$state · $direction — $label',
-      ..._log.value,
-    ].take(6).toList(growable: false);
+  void _playMovement(String key) {
+    switch (key) {
+      case 'idle':
+        _hero3d.revive(_hero3d.hp <= 0 ? 100 : _hero3d.hp);
+        // revive sets idle; if alive it also sets idle via timers clear+set. 
+        // For alive case, force idle by using revive-like behavior:
+        if (!_hero3d.isDead) {
+          _hero3d.revive(_hero3d.hp);
+        }
+        break;
+      case 'run':
+        // Run is driven by movement input; give a brief nudge.
+        _stick = const Offset(0, 1);
+        _stickActive = true;
+        Future<void>.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) {
+            _stickActive = false;
+            _stick = Offset.zero;
+          }
+        });
+        break;
+      case 'attack1':
+      case 'attack2':
+      case 'attack3':
+      case 'attack4':
+      case 'attack5':
+        _hero3d.attack();
+        break;
+      case 'dash':
+        _hero3d.dash();
+        break;
+      case 'hurt':
+        _hero3d.hurt(20);
+        break;
+      case 'death':
+        _hero3d.hurt(_hero3d.hp > 0 ? _hero3d.hp : 100);
+        break;
+      case 'ult1':
+        _hero3d.ultimate(1);
+        break;
+      case 'ult2':
+        _hero3d.ultimate(2);
+        break;
+      case 'ult3':
+        _hero3d.ultimate(3);
+        break;
+      case 'ult4':
+        _hero3d.ultimate(4);
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final manifest = _manifest;
-    final theme = _theme;
+    final theme = _hero.theme;
     return Scaffold(
       backgroundColor: theme.stageBottom,
-      appBar: AppBar(
-        backgroundColor: theme.stageTop,
-        foregroundColor: const Color(0xFFE4F2E7),
-        title: Text('Archer FM · ${_hero.nameEn}'),
-        actions: [
-          if (manifest != null)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 16),
-              child: Center(
-                child: Text(
-                  '${manifest.clips.length} حركة',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            ),
-        ],
-      ),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildHeroPicker(),
-                const SizedBox(height: 12),
-                _buildStage(manifest),
-                const SizedBox(height: 14),
-                if (_error != null) _errorCard(_error!, _errorDetail),
-                if (manifest == null && _error == null)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: LinearProgressIndicator(minHeight: 3),
-                  ),
-                _buildHeroCard(),
-                const SizedBox(height: 12),
-                _buildStatePicker(),
-                const SizedBox(height: 12),
-                _buildControls(),
-                const SizedBox(height: 12),
-                _buildDirectionPicker(),
-                const SizedBox(height: 12),
-                _buildDetails(),
-                const SizedBox(height: 12),
-                _buildLog(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroPicker() {
-    final theme = _theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('البطل'),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 112,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: heroCatalog.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final hero = heroCatalog[index];
-              return _HeroPickerCard(
-                hero: hero,
-                selected: hero.id == _hero.id,
-                unavailable: _unavailable.contains(hero.id),
-                onTap: () => _switchHero(hero),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'اختر بطلاً ثم استعرض حركاته الثماني في ثمانية اتجاهات. '
-          'كل بطل يملك سلاحه ومهارته وتأثيراته الخاصة.',
-          style: TextStyle(
-            fontSize: 12,
-            height: 1.5,
-            color: theme.accent.withAlpha(150),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStage(HeroManifest? manifest) {
-    final theme = _theme;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 430),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_clock, _player]),
-          builder: (context, _) {
-            final player = _player;
-            return HeroStage(
-              sheet: _sheet,
-              frameId: player?.frameId,
-              pivotX: manifest?.pivotX ?? 0.5,
-              pivotY: manifest?.pivotY ?? 0.86,
-              effects: _effects,
-              timeMs: _clock.value,
-              theme: theme,
-              placeholder: _sheetError ??
-                  (_loadingSheet
-                      ? 'جارٍ تحميل الرسوم…'
-                      : _error != null
-                          ? 'أصول هذا البطل قيد الإنتاج'
-                          : 'اختر حركة واتجاهاً لعرض البطل'),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _errorCard(String message, String? detail) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF3A1515),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF8C3B3B)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.error_outline, color: Color(0xFFFF9D9D), size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message,
-                  style: const TextStyle(
-                    color: Color(0xFFFFC9C9),
-                    fontSize: 13,
-                  ),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            children: [
+              _buildHeader(theme),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(flex: 3, child: _buildStage(theme)),
+                    Expanded(flex: 2, child: _buildControls(theme)),
+                  ],
                 ),
-                if (detail != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    detail,
-                    style: const TextStyle(
-                      color: Color(0xFFD99A9A),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroCard() {
-    final theme = _theme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.stageTop,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.accent.withAlpha(70)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: theme.accentSoft,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.accent.withAlpha(110)),
-            ),
-            child: Icon(_hero.icon, color: theme.accent, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_hero.nameAr} · ${_hero.roleAr}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFFE4F2E7),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_hero.weaponAr} · ${_hero.skillAr}',
-                  style: TextStyle(fontSize: 12, color: theme.accent),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _hero.descriptionAr,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    height: 1.55,
-                    color: Color(0xFFAFC8B6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatePicker() {
-    final theme = _theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('الحركة'),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final state in heroStates)
-              ChoiceChip(
-                label: Text(stateLabels[state]!),
-                selected: _state == state,
-                onSelected: (_) => _select(state, _direction),
-                selectedColor: theme.accent,
-                labelStyle: TextStyle(
-                  color: _state == state
-                      ? theme.stageBottom
-                      : const Color(0xFFD7E8DB),
-                  fontWeight: FontWeight.w600,
-                ),
-                backgroundColor: theme.stageTop,
-                side: BorderSide(color: theme.accent.withAlpha(60)),
-                showCheckmark: false,
               ),
-          ],
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildControls() {
-    final player = _player;
-    final theme = _theme;
+  Widget _buildHeader(HeroTheme theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.stageTop,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.accent.withAlpha(60)),
-      ),
+      color: theme.stageTop,
       child: Row(
         children: [
-          if (player == null)
-            const IconButton(
-              onPressed: null,
-              icon: Icon(Icons.play_arrow),
-            )
-          else
-            AnimatedBuilder(
-              animation: player,
-              builder: (context, _) => IconButton(
-                tooltip: player.playing ? 'إيقاف مؤقت' : 'تشغيل',
-                onPressed: player.toggle,
-                icon: Icon(
-                  player.completed
-                      ? Icons.replay
-                      : player.playing
-                          ? Icons.pause
-                          : Icons.play_arrow,
-                ),
-              ),
-            ),
-          IconButton(
-            tooltip: 'إعادة من البداية',
-            onPressed: player == null ? null : player.restart,
-            icon: const Icon(Icons.restart_alt),
-          ),
-          const Spacer(),
-          const Text(
-            'السرعة',
-            style: TextStyle(fontSize: 12, color: Color(0xFF9FB8A6)),
-          ),
+          Icon(_hero.icon, color: theme.accent),
           const SizedBox(width: 8),
-          for (final speed in const [0.5, 1.0, 1.5, 2.0])
-            Padding(
-              padding: const EdgeInsetsDirectional.only(start: 4),
-              child: ChoiceChip(
-                label: Text('${speed}x'),
-                selected: _speed == speed,
-                onSelected: (_) => setState(() => _speed = speed),
-                selectedColor: theme.accent,
-                labelStyle: TextStyle(
-                  fontSize: 11,
-                  color: _speed == speed
-                      ? theme.stageBottom
-                      : const Color(0xFFD7E8DB),
-                ),
-                backgroundColor: theme.stageTop,
-                side: BorderSide(color: theme.accent.withAlpha(60)),
-                showCheckmark: false,
-                visualDensity: VisualDensity.compact,
-              ),
+          Expanded(
+            child: Text(
+              'Archer FM · ${_hero.nameAr}',
+              style: const TextStyle(color: Color(0xFFE4F2E7), fontSize: 16, fontWeight: FontWeight.w700),
             ),
+          ),
+          Text(
+            _hero3d.isReady ? 'Hero3D جاهز' : 'جارٍ التحميل…',
+            style: TextStyle(color: theme.accent.withAlpha(180), fontSize: 12),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDirectionPicker() {
-    final theme = _theme;
-    Widget cell(String direction) {
-      final selected = _direction == direction;
-      return Padding(
-        padding: const EdgeInsets.all(3),
-        child: Tooltip(
-          message: directionLabels[direction]!,
-          child: Material(
-            color: selected ? theme.accent : theme.stageTop,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => _select(_state, direction),
-              child: SizedBox(
-                width: 46,
-                height: 46,
-                child: Icon(
-                  directionIcons[direction],
-                  size: 20,
-                  color: selected
-                      ? theme.stageBottom
-                      : const Color(0xFFBFD7C5),
-                ),
-              ),
+  Widget _buildStage(HeroTheme theme) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [theme.stageTop, theme.stageMid, theme.stageBottom],
+            ),
+          ),
+          child: GestureDetector(
+            onPanStart: (d) => _stickOrigin = d.localPosition,
+            onPanUpdate: (d) {
+              _stickActive = true;
+              _stick = (d.localPosition - _stickOrigin) / 50;
+            },
+            onPanEnd: (_) {
+              _stickActive = false;
+              _stick = Offset.zero;
+            },
+            onPanCancel: () {
+              _stickActive = false;
+              _stick = Offset.zero;
+            },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _stageSize = constraints.biggest;
+                return ValueListenableBuilder<int>(
+                  valueListenable: _frame,
+                  builder: (context, _, __) {
+                    return CustomPaint(
+                      painter: _Hero3DPainter(_hero3d, theme),
+                      size: Size.infinite,
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildControls(HeroTheme theme) {
+    return ListView(
+      padding: const EdgeInsets.all(8),
       children: [
-        _SectionTitle(
-          'الاتجاه · ${directionLabels[_direction] ?? _direction}',
-        ),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        _sectionTitle('الأبطال'),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
           children: [
-            Column(
-              children: [
-                Row(children: [cell('nw'), cell('n'), cell('ne')]),
-                Row(children: [cell('w'), _centerCell(), cell('e')]),
-                Row(children: [cell('sw'), cell('s'), cell('se')]),
-              ],
-            ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                'كل اتجاه عبارة عن دورة كاملة حول البطل، لذلك يمكن اختيار '
-                'أي زاوية أثناء اللعب دون تغيير الأبعاد أو نقطة الارتكاز.',
-                style: TextStyle(
+            for (final hero in heroCatalog)
+              ChoiceChip(
+                label: Text(hero.nameAr),
+                selected: hero.id == _hero.id,
+                onSelected: (_) => _switchHero(hero),
+                selectedColor: hero.theme.accent,
+                labelStyle: TextStyle(
+                  color: hero.id == _hero.id ? hero.theme.stageBottom : const Color(0xFFE4F2E7),
+                  fontWeight: FontWeight.w600,
                   fontSize: 12,
-                  height: 1.5,
-                  color: Color(0xFF9FB8A6),
                 ),
+                backgroundColor: theme.stageTop,
+                side: BorderSide(color: hero.theme.accent.withAlpha(90)),
+                showCheckmark: false,
               ),
-            ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _centerCell() {
-    return Container(
-      width: 52,
-      height: 52,
-      alignment: Alignment.center,
-      child: const Icon(Icons.my_location, size: 18, color: Color(0xFF5B7F66)),
-    );
-  }
-
-  Widget _buildDetails() {
-    final player = _player;
-    final theme = _theme;
-    if (player == null) {
-      return const SizedBox.shrink();
-    }
-    return AnimatedBuilder(
-      animation: player,
-      builder: (context, _) {
-        final clip = player.clip;
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.stageTop,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.accent.withAlpha(60)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(
-                        clip.name,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                          color: theme.accent,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'الإطار ${player.frameIndex + 1}/${clip.frames.length}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFFBFD7C5),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'مدة الإطار ${clip.frameDurationMs} مللي ثانية · '
-                '${clip.loop ? 'حركة متكررة' : 'حركة لمرة واحدة'} · '
-                '${clip.events.length} حدث',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF9FB8A6),
-                ),
-              ),
-              if (_sheetError != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  _sheetError!,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFFFFB4A9),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLog() {
-    final theme = _theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('سجل الأحداث'),
-        const SizedBox(height: 8),
-        ValueListenableBuilder<List<String>>(
-          valueListenable: _log,
-          builder: (context, entries, _) {
-            if (entries.isEmpty) {
-              return const Text(
-                'ستظهر هنا أحداث الحركة مثل إطلاق السهم أو الإصابة.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF7F9788)),
-              );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final entry in entries)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.bolt, size: 14, color: theme.accent),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            entry,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFCFE4D5),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            );
-          },
+        const SizedBox(height: 10),
+        _buildHeroInfo(theme),
+        const SizedBox(height: 10),
+        _sectionTitle('الحركات'),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final key in _movementOrder)
+              _moveButton(key, theme),
+          ],
         ),
+        const SizedBox(height: 10),
+        _sectionTitle('سجل'),
+        const SizedBox(height: 6),
+        for (final line in _log.take(6))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(line, style: TextStyle(color: theme.accent.withAlpha(190), fontSize: 11)),
+          ),
       ],
     );
   }
-}
 
-class _HeroPickerCard extends StatelessWidget {
-  const _HeroPickerCard({
-    required this.hero,
-    required this.selected,
-    required this.unavailable,
-    required this.onTap,
-  });
-
-  final HeroDefinition hero;
-  final bool selected;
-  final bool unavailable;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = hero.theme;
-    return Material(
-      color: selected ? theme.accentSoft : theme.stageTop,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          width: 168,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected
-                  ? theme.accent
-                  : theme.accent.withAlpha(unavailable ? 35 : 70),
-              width: selected ? 1.6 : 1,
+  Widget _buildHeroInfo(HeroTheme theme) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: theme.stageTop,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.accent.withAlpha(70)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${_hero.nameAr} · ${_hero.roleAr}',
+              style: const TextStyle(color: Color(0xFFE4F2E7), fontWeight: FontWeight.w700, fontSize: 13)),
+          const SizedBox(height: 4),
+          Text('${_hero.weaponAr} · ${_hero.skillAr}',
+              style: TextStyle(color: theme.accent, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(_hero.descriptionAr,
+              style: const TextStyle(color: Color(0xFFAFC8B6), fontSize: 11, height: 1.4)),
+          const SizedBox(height: 6),
+          ValueListenableBuilder<int>(
+            valueListenable: _frame,
+            builder: (context, _, __) => Text(
+              'الحركة: ${_movementLabels[_hero3d.anim] ?? _hero3d.anim} · HP: ${_hero3d.hp}',
+              style: TextStyle(color: theme.accent.withAlpha(200), fontSize: 11),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    hero.icon,
-                    size: 20,
-                    color: unavailable
-                        ? theme.accent.withAlpha(110)
-                        : theme.accent,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      hero.nameEn,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: unavailable
-                            ? const Color(0xFF8DA396)
-                            : const Color(0xFFE4F2E7),
-                      ),
-                    ),
-                  ),
-                  if (selected)
-                    Icon(Icons.check_circle, size: 16, color: theme.accent),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                hero.nameAr,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFFCFE4D5),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                unavailable ? 'الأصول قيد الإنتاج' : hero.roleAr,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: unavailable
-                      ? const Color(0xFF8DA396)
-                      : theme.accent.withAlpha(200),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
+  }
+
+  Widget _moveButton(String key, HeroTheme theme) {
+    final label = _movementLabels[key] ?? key;
+    return ElevatedButton(
+      onPressed: () => _playMovement(key),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.stageTop,
+        foregroundColor: const Color(0xFFE4F2E7),
+        side: BorderSide(color: theme.accent.withAlpha(80)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(0, 34),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+      child: Text(label),
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Text(text, style: const TextStyle(color: Color(0xFFD7E8DB), fontSize: 13, fontWeight: FontWeight.w700));
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
+class _Hero3DPainter extends CustomPainter {
+  _Hero3DPainter(this.hero, this.theme);
+  final Hero3D hero;
+  final HeroTheme theme;
 
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: Color(0xFFD7E8DB),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    hero.paint(canvas);
   }
+
+  @override
+  bool shouldRepaint(covariant _Hero3DPainter oldDelegate) => true;
 }

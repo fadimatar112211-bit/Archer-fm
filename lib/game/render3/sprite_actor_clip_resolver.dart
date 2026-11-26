@@ -1,24 +1,33 @@
+import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
-import '../../hero/hero_manifest.dart';
-import '../world/game_world.dart';
-
-/// Shared state/direction lookup for camera-facing hero and monster sprites.
-/// Gameplay facing remains in world space; GameWorld owns the established
-/// screen/world octant convention, so art packs cannot invent a second one.
+/// Shared direction lookup for camera-facing actors.
+/// Gameplay facing remains in world space; this keeps the established
+/// eight-way screen/world convention in one place.
 class SpriteActorClipResolver {
   const SpriteActorClipResolver._();
 
-  static String directionFor(Offset facing) =>
-      GameWorld.octantNames[GameWorld.octantIndexOf(facing)];
+  static const List<String> octantNames = [
+    'e',
+    'se',
+    's',
+    'sw',
+    'w',
+    'nw',
+    'n',
+    'ne',
+  ];
+
+  static int octantIndexOf(Offset facing) {
+    if (facing.dx == 0 && facing.dy == 0) return 2; // south
+    // atan2 returns -pi..pi, 0 along +x. Convert to 0=e,1=se,...
+    final angle = math.atan2(facing.dy, facing.dx);
+    final octant = ((angle / (math.pi / 4)).round() + 8) % 8;
+    return octant;
+  }
+
+  static String directionFor(Offset facing) => octantNames[octantIndexOf(facing)];
 
   static String clipName(String state, Offset facing) =>
       '${state}_${directionFor(facing)}';
-
-  static AnimationClip? clipFor(
-    HeroManifest manifest,
-    String state,
-    Offset facing,
-  ) =>
-      manifest.clipFor(state, directionFor(facing));
 }
