@@ -392,3 +392,12 @@ Still to decide or test:
 - Latest heightfield viewport culling and parser fixes are committed; CI and Android emulator verification are pending. Do not mark the map or Phase 3 complete until those gates pass and the screenshot is reviewed.
 - Detailed scope and remaining work: `docs/ARENA_3D_TERRAIN_IMPLEMENTATION.md`.
 - All work remains on `feature/match-rules-foundation`; PR #20 remains unmerged and `main` is untouched.
+
+
+## Phase 5 continuation — 2026-11-27
+
+- Continued isolated Phase 5 work on `feature/phase-5-account-cloud-persistence`; PR #21 remains Draft/open/unmerged. PR #20 and `main` remain untouched.
+- Added an atomic Supabase RPC for per-player match result + reward settlement, including ledger insertion, permanent currency update, progression revision increment, and idempotent retry protection. Added server REST client and typed settlement adapter plus receipt tests.
+- The settlement primitive is not yet called by the authoritative match lifecycle. Runtime composition, trusted reward policy, durable retry handling, cloud profile restore and live Supabase acceptance remain incomplete.
+- Current Android CI run: [45908839341](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908839341), still running at this checkpoint. The latest successful Match Rules workflow predates the newest settlement changes; do not infer the new commit is green.
+- **Phase 5 remains IN PROGRESS.** No phase closure or production-readiness claim until latest CI passes and staging database/auth/reconnect/isolation tests are complete.
