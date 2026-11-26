@@ -86,6 +86,36 @@ void main() {
   });
 
 
+  testWidgets('exposes accessible directional movement and stop actions', (
+    tester,
+  ) async {
+    final sent = <Offset>[];
+    final semantics = tester.ensureSemantics();
+    addTearDown(semantics.dispose);
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.rtl,
+        child: VirtualJoystick(
+          onMove: (direction) {
+            sent.add(direction);
+            return true;
+          },
+        ),
+      ),
+    );
+
+    final data = tester
+        .getSemantics(find.byType(VirtualJoystick))
+        .getSemanticsData();
+    final actionLabels = data.customSemanticsActions.map((action) => action.label);
+    expect(actionLabels, contains('تحريك للأعلى'));
+    expect(actionLabels, contains('تحريك للأسفل'));
+    expect(actionLabels, contains('تحريك لليسار'));
+    expect(actionLabels, contains('تحريك لليمين'));
+    expect(actionLabels, contains('إيقاف الحركة'));
+    expect(sent, isEmpty);
+  });
+
   testWidgets('movement sensitivity scales the input vector before normalization', (
     tester,
   ) async {
