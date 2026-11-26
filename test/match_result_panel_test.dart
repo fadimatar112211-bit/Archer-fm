@@ -37,9 +37,9 @@ void main() {
       ),
     );
 
-    expect(find.text('الفائز: اللاعب p2'), findsOneWidget);
+    expect(find.text('الفائز: أنت'), findsOneWidget);
     expect(find.textContaining('انتهى وقت المباراة'), findsOneWidget);
-    expect(find.textContaining('اللاعب p2 (أنت)'), findsOneWidget);
+    expect(find.text('أنت'), findsOneWidget);
     expect(find.text('النقاط 120'), findsOneWidget);
     expect(find.text('البلورات 5/7'), findsOneWidget);
     expect(find.text('العودة للقائمة الرئيسية'), findsOneWidget);
@@ -80,8 +80,8 @@ void main() {
       ),
     );
 
-    expect(find.text('تعادل بين: اللاعب p1، اللاعب p4'), findsOneWidget);
+    expect(find.text('تعادل بين: اللاعب 1، أنت'), findsOneWidget);
     expect(find.textContaining('ببقاء بلورات لاعب واحد'), findsOneWidget);
-    expect(find.text('الفائز: اللاعب p1'), findsNothing);
+    expect(find.text('الفائز: اللاعب 1'), findsNothing);
   });
 }
