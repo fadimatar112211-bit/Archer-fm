@@ -304,6 +304,39 @@ void main() {
     );
   });
 
+  test('a monster kill grants configured score and resources exactly once', () {
+    final session = _combatReadySession();
+    final enemy = session.combat!.armies
+        .firstWhere((army) => army.ownerId == 'p2')
+        .units.first;
+    final p1Position = session.world!.playerPositions['p1']!;
+    enemy.positionX = p1Position.dx;
+    enemy.positionY = p1Position.dy;
+    enemy.health = 1;
+
+    expect(session.world!.resources['p1'], 0);
+    expect(session.handle(session.players.first, {
+      'type': 'attack',
+      'targetId': enemy.id,
+    }), isNull);
+    expect(enemy.isAlive, isFalse);
+    expect(session.world!.resources['p1'], 3);
+    final firstScore = (session.snapshot()['participants'] as List)
+        .cast<Map>()
+        .firstWhere((item) => item['playerId'] == 'p1')['score'];
+    expect(firstScore, 5);
+
+    expect(session.handle(session.players.first, {
+      'type': 'attack',
+      'targetId': enemy.id,
+    }), 'attack_rejected');
+    expect(session.world!.resources['p1'], 3);
+    final secondScore = (session.snapshot()['participants'] as List)
+        .cast<Map>()
+        .firstWhere((item) => item['playerId'] == 'p1')['score'];
+    expect(secondScore, 5);
+  });
+
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
     final session = _combatReadySession();
     final authority = session.combat!;
