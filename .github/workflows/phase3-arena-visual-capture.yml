@@ -1,0 +1,30 @@
+name: Phase 3 arena visual capture
+
+on:
+  push:
+    branches: [feature/match-rules-foundation]
+    paths:
+      - 'test/arena_battlefield_visual_capture_test.dart'
+      - 'lib/game/render3/arena_battlefield.dart'
+      - 'lib/game/render3/arena_3d_asset_layer.dart'
+      - '.github/workflows/phase3-arena-visual-capture.yml'
+  workflow_dispatch:
+
+jobs:
+  render-arena-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test test/arena_battlefield_visual_capture_test.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase3-arena-visual-capture
+          path: build/arena-captures/phase3-arena-visual-review.png
+          if-no-files-found: error
+          retention-days: 14
