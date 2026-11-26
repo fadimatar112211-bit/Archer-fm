@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../game/match/match_loadout_screen.dart';
+import '../game/feedback/game_feedback_preferences.dart';
 import '../game/match/hero_armory_screen.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_viewer_screen.dart';
@@ -188,11 +189,12 @@ class GameSettingsScreen extends StatefulWidget {
 }
 
 class _GameSettingsScreenState extends State<GameSettingsScreen> {
-  bool _hapticsEnabled = true;
+  bool _hapticsEnabled = GameFeedbackPreferences.hapticsEnabled;
 
   Future<void> _toggleHaptics(bool enabled) async {
+    GameFeedbackPreferences.hapticsEnabled = enabled;
     setState(() => _hapticsEnabled = enabled);
-    if (enabled) await HapticFeedback.selectionClick();
+    if (enabled) await GameFeedbackPreferences.selectionClick();
   }
 
   @override
