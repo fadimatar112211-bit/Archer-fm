@@ -4,6 +4,8 @@ import 'package:archer_fm/game/progression/hero_progress.dart';
 import 'package:archer_fm/game/progression/hero_progression_service.dart';
 
 class _TestEconomy implements HeroProgressionEconomy {
+  const _TestEconomy();
+
   @override
   int? unlockCost(String weaponId) => weaponId.endsWith('_longbow') ? 200 : null;
 
