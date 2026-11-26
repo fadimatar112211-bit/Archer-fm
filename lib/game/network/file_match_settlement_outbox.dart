@@ -117,7 +117,8 @@ class FileMatchSettlementOutbox {
     sink.write(jsonEncode(_pending));
     await sink.flush();
     await sink.close();
-    if (await file.exists()) await file.delete();
+    // Rename the fully flushed temporary file over the previous snapshot.
+    // On the production POSIX host this is an atomic replacement.
     await temporary.rename(file.path);
   }
 
