@@ -64,8 +64,8 @@ All code results below are from commit `7949380d98f551b0d83ab167c57aaab0f7f6b97b
 |---|---:|---|
 | Full Flutter analysis + full test suite | [45851259471](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45851259471) | **Success — 265 tests passed** |
 | Four-client combat WebSocket integration | Included in run 45851259471 | **Passed** |
-| Monster-focused analysis + tests | [45851347330](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45851347330) | Pending at report preparation |
-| Android build/emulator validation | [45851259514](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45851259514) | Pending at report preparation |
+| Monster-focused analysis + tests | [45850887419](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45850887419) | **Success — 121 tests passed** |
+| Android build/emulator validation | [45851259514](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45851259514) | Retry in progress after Maven Central HTTP 429 on first attempt |
 
 ## Explicitly unresolved — do not call the entire Phase 3 release-ready
 
