@@ -250,6 +250,17 @@ class AuthoritativeMatchSession
                           ?.call(item.id, item.weaponId!) ??
                       0,
               },
+              onKill: (playerId, targetKind) {
+                final isHero = targetKind == MonsterTargetKind.hero;
+                final score = isHero
+                    ? config.heroKillScore
+                    : config.monsterKillScore;
+                final resources = isHero
+                    ? config.heroKillResources
+                    : config.monsterKillResources;
+                if (score > 0) awardScore(playerId, score);
+                if (resources > 0) world!.creditResources(playerId, resources);
+              },
               random: _random,
             );
           } on ArgumentError {
