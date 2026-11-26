@@ -182,6 +182,7 @@ class MatchCombatAuthority {
   /// are owned by the canonical HeroCombatRuntime.
   CombatActionResult attack(String playerId, String targetId) {
     final hero = _requireHero(playerId);
+    if (!hero.isAlive) return _rejected('البطل مهزوم');
     final target = _resolveTarget(targetId);
     if (target == null || !target.isAlive) {
       return _rejected('الهدف غير موجود');
@@ -206,6 +207,7 @@ class MatchCombatAuthority {
     String targetId,
   ) {
     final hero = _requireHero(playerId);
+    if (!hero.isAlive) return _rejected('البطل مهزوم');
     final target = _resolveTarget(targetId);
     if (target == null || !target.isAlive) {
       return _rejected('الهدف غير موجود');
@@ -232,7 +234,7 @@ class MatchCombatAuthority {
   /// Purchases one unit using the authoritative match wallet. Cost comes from
   /// the canonical monster catalog; failed spawns refund the exact debit.
   MonsterPurchase? purchaseMonster(String playerId, MonsterType type) {
-    _requireHero(playerId);
+    if (!_requireHero(playerId).isAlive) return null;
     final army = monsters.armies.firstWhere((item) => item.ownerId == playerId);
     final balance = world.resources[playerId]!;
     return army.purchaseAtomically(
