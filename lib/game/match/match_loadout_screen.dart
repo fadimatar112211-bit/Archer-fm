@@ -631,6 +631,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             MatchResultPanel(
               result: Map<String, dynamic>.from(state['result'] as Map),
               localPlayerId: _playerId!,
+              onReturnHome: () => Navigator.of(context).pop(),
             ),
           if (_playerId != null) ...[
             ArenaBattlefield(
