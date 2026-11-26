@@ -783,6 +783,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     bottom: 12,
                     child: VirtualJoystick(
                       size: joystickSize,
+                      sensitivity: GameFeedbackPreferences.movementSensitivity,
                       onMove: _sendMove,
                     ),
                   ),
