@@ -161,3 +161,10 @@
 - Clarified in the attack/Ultimate accessibility hints that target selection currently chooses the nearest visible enemy automatically; this does not claim a manual target-picker exists.
 - Commit: `ec1cf685c40a0965af5068412e60e32ecd990846`.
 - Fresh CI validation is required for this change; physical-device touch verification remains outstanding.
+
+
+## CI evidence — previous validation head
+
+- Commit `dfccde948053f7d7bb4fa67eb88e08840b1efddc` completed all four relevant workflows successfully: Android validation run `45897633608`, Match Rules run `45897633519`, Monster Army run `45897633546`, and arena visual capture run `45897633593`.
+- Android validation completed `flutter analyze`, the full `flutter test` suite and `flutter build apk --debug`; the Android artifact `archer-fm-android-validation` was uploaded (artifact ID `15155016256`). The emulator runner was skipped by its manual-dispatch guard, so no emulator execution is claimed.
+- This CI evidence predates the subsequent lifecycle and touch/accessibility commits (`0a2f745...` and `ec1cf68...`). Their own validation runs are pending/in progress and must pass before these changes are certified.
