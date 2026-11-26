@@ -17,8 +17,8 @@ class FileHeroProgressStore {
   final Map<String, Future<void>> _writeQueue = {};
 
   String _keyFor(String accountId) {
-    if (accountId.trim().isEmpty || accountId.length > 256) {
-      throw ArgumentError.value(accountId, 'accountId', 'Invalid account ID.');
+    if (accountId.trim().isEmpty || accountId.length > 180) {
+      throw ArgumentError.value(accountId, 'accountId', 'Account ID must be 1 to 180 characters.');
     }
     return base64Url.encode(utf8.encode(accountId)).replaceAll('=', '');
   }
