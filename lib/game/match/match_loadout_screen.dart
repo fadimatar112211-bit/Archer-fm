@@ -789,10 +789,15 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                         borderRadius: BorderRadius.circular(14),
                         child: Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight * 0.84,
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
                               Wrap(
                                 alignment: WrapAlignment.end,
                                 spacing: 6,
@@ -893,7 +898,9 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                                     ),
                                 ],
                               ),
-                            ],
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
