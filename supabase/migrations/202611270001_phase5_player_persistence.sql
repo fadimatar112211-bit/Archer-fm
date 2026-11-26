@@ -150,6 +150,8 @@ drop trigger if exists on_auth_user_created_archer_fm on auth.users;
 create trigger on_auth_user_created_archer_fm
   after insert on auth.users
   for each row execute procedure public.handle_new_archer_fm_user();
+revoke all on function public.handle_new_archer_fm_user()
+  from public, anon, authenticated;
 
 
 -- Optimistic revision checks prevent two game-server instances from silently
