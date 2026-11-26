@@ -79,6 +79,18 @@ void main() {
       expect(restored.weaponLevel(weaponId), 1);
     });
 
+    test('rejects unsupported progression schema versions', () {
+      expect(
+        () => HeroProgress.fromJson({
+          'schemaVersion': 2,
+          'permanentCurrency': 0,
+          'unlockedWeaponIds': <String>[],
+          'weaponUpgradeLevels': <String, int>{},
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('rejects corrupted progression documents', () {
       expect(
         () => HeroProgress.fromJson({
