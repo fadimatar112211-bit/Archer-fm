@@ -103,3 +103,11 @@ The requested Phase 3 scope explicitly includes a visual improvement pass for th
 These are presentation-only changes. The authoritative world snapshot, movement, collision, visibility/fog rules, resource ownership, castle state and combat remain the source of truth. The map is still a 2D projected terrain painter with skinned 3D actors layered above it; this pass does not claim a fully volumetric 3D terrain mesh.
 
 The visual code change is committed on `feature/match-rules-foundation`. CI must pass on the final branch head, and a real landscape gameplay screenshot still needs human visual review before map quality can be signed off.
+
+## Trusted weapon-upgrade combat scaling — 2026-11-26
+
+- Added a server-only `weaponUpgradeLevelForPlayer(playerId, weaponId)` lookup to the configured match-session factory. No client message can set or override this level.
+- The trusted selected-weapon upgrade level is injected into `MatchHeroState` and `HeroCombatRuntime`; it now scales both manual five-hit-combo damage and Ultimate damage.
+- The strict match config now requires `weaponUpgradeDamagePerLevel`. The example config uses 0.04 (4% per upgrade level) only as a first-playtest baseline; it is not a final balance approval.
+- Runtime validation bounds the configured growth to 0–25% per level and the trusted weapon level to 0–40.
+- Added tests for attack and Ultimate scaling and strict config decoding. Full CI on the final head is required before this integration can be marked validated.
