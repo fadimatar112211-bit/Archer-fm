@@ -7,6 +7,7 @@ import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/network/supabase_access_token_verifier.dart';
 import 'package:archer_fm/game/network/supabase_rest_client.dart';
 import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
+import 'package:archer_fm/game/network/file_match_settlement_outbox.dart';
 import 'package:archer_fm/game/progression/supabase_hero_progress_store.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
@@ -85,6 +86,38 @@ Future<void> main() async {
     serviceRoleKey: serviceRoleKey,
   );
   final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
+  final settlementOutbox = FileMatchSettlementOutbox(
+    file: File(
+      Platform.environment['ARCHER_FM_SETTLEMENT_OUTBOX_PATH'] ??
+          '/var/lib/archer-fm/pending-match-settlements.json',
+    ),
+    deliver: (item) async {
+      await settlementStore.finalizePlayer(
+        matchId: item['matchId'] as String,
+        verifiedUserId: item['accountId'] as String,
+        placement: item['placement'] as int,
+        score: item['score'] as int,
+        crystalsRemaining: item['crystalsRemaining'] as int,
+        finishReason: item['finishReason'] as String,
+        rewardAmount: item['rewardAmount'] as int,
+        idempotencyKey: item['idempotencyKey'] as String,
+      );
+    },
+  );
+  try {
+    await settlementOutbox.load();
+    await settlementOutbox.flushPending();
+  } catch (error) {
+    stderr.writeln('Existing match settlements remain queued for retry: $error');
+  }
+  final outboxRetryTimer = Timer.periodic(
+    const Duration(seconds: 5),
+    (_) {
+      settlementOutbox.flushPending().catchError((Object error) {
+        stderr.writeln('Persistent settlement outbox retry failed: $error');
+      });
+    },
+  );
   final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
 
   final verifier = SupabaseAccessTokenVerifier(
@@ -105,9 +138,9 @@ Future<void> main() async {
         required finishReason,
       }) async {
         final reward = rewardSchedule[standing.rank - 1];
-        await settlementStore.finalizePlayer(
+        await settlementOutbox.enqueueAndFlush(
           matchId: matchId,
-          verifiedUserId: accountId,
+          accountId: accountId,
           placement: standing.rank,
           score: standing.score,
           crystalsRemaining: standing.livingCrystals,
@@ -132,6 +165,12 @@ Future<void> main() async {
       ProcessSignal.sigterm.watch().first,
     ]);
   } finally {
+    outboxRetryTimer.cancel();
+    try {
+      await settlementOutbox.flushPending();
+    } catch (error) {
+      stderr.writeln('Pending settlements retained on disk during shutdown: $error');
+    }
     await host.close();
     verifier.close();
     persistenceClient.close();
