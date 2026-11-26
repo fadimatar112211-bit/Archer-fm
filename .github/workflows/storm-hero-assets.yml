@@ -1,0 +1,151 @@
+name: Storm hero assets
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [heroes-complete]
+    paths:
+      - "tools/blender/render_storm_glb.py"
+      - "tools/blender/export_hero_glb.py"
+      - "tools/blender/validate_hero_glb.py"
+      - "tools/blender/pack_storm_atlases.py"
+      - "tools/blender/validate_hero_assets.py"
+      - ".github/workflows/storm-hero-assets.yml"
+      - "docs/heroes/2_5d_visual_contract.md"
+      - "assets/heroes/ranger/renders/**"
+      - "assets/heroes/flame/renders/**"
+      - "assets/heroes/shadow/renders/**"
+      - "assets/heroes/*/source/**"
+
+permissions:
+  contents: write
+
+
+jobs:
+  render-storm:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out Archer FM
+        uses: actions/checkout@v4
+        with:
+          ref: heroes-complete
+          fetch-depth: 0
+
+      - name: Install Blender 3.6.13 and image tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y python3-pil xz-utils
+          curl -fL --retry 3 \
+            https://download.blender.org/release/Blender3.6/blender-3.6.13-linux-x64.tar.xz \
+            -o /tmp/blender-3.6.13.tar.xz
+          sudo mkdir -p /opt/blender
+          sudo tar -xJf /tmp/blender-3.6.13.tar.xz -C /opt/blender
+          echo "/opt/blender/blender-3.6.13-linux-x64" >> "$GITHUB_PATH"
+          /opt/blender/blender-3.6.13-linux-x64/blender --version | head -n 2
+          /opt/blender/blender-3.6.13-linux-x64/blender --version | grep -F "3.6.13"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Export Ranger, Flame and Shadow as animated GLB models
+        run: |
+          set -euo pipefail
+          for hero in ranger flame shadow; do
+            blender --background "assets/heroes/${hero}/source/${hero}_source.blend" \
+              --python-exit-code 1 --python tools/blender/export_hero_glb.py -- \
+              --hero "${hero}" --config assets/heroes/ranger/source/render_config.json
+          done
+
+      - name: Fetch the rigged Storm GLB from the implementation branch
+        run: |
+          git fetch origin implementation/visual-systems-next-pass --depth=1
+          mkdir -p assets/heroes/storm/model
+          git show FETCH_HEAD:assets/heroes/storm/model/storm_animated.glb > assets/heroes/storm/model/storm_animated.glb
+          test -s assets/heroes/storm/model/storm_animated.glb
+          ls -lh assets/heroes/storm/model/storm_animated.glb
+
+      - name: Validate all four animated GLB models
+        run: |
+          set -euo pipefail
+          for hero in ranger flame shadow storm; do
+            blender --background --python-exit-code 1 \
+              --python tools/blender/validate_hero_glb.py -- \
+              --hero "${hero}" --model "assets/heroes/${hero}/model/${hero}_animated.glb"
+          done
+
+      - name: Render eight real animation states in eight directions
+        run: |
+          blender --background --python-exit-code 1 --python tools/blender/render_storm_glb.py
+          test -s assets/heroes/storm/renders/storm_manifest.json
+
+      - name: Pack and validate all Storm atlases
+        run: |
+          /usr/bin/python3 tools/blender/pack_storm_atlases.py
+          test "$(find assets/heroes/storm/renders/atlases -maxdepth 1 -name '*.png' | wc -l)" -eq 64
+          test "$(find assets/heroes/storm/renders/atlases -maxdepth 1 -name '*.json' | wc -l)" -eq 64
+          echo "STORM_ATLAS_COUNT_OK=64"
+          /usr/bin/python3 tools/blender/validate_hero_assets.py
+
+      - name: Register all hero models and Storm animation atlases in Flutter assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("pubspec.yaml")
+          text = path.read_text(encoding="utf-8")
+          anchor = "    - assets/heroes/shadow/renders/atlases/\n"
+          additions = [
+              "    - assets/heroes/storm/renders/storm_manifest.json\n",
+              "    - assets/heroes/storm/renders/atlases/\n",
+          ]
+          additions.extend(
+              f"    - assets/heroes/{hero}/model/{hero}_animated.glb\n"
+              for hero in ("ranger", "flame", "shadow", "storm")
+          )
+          for entry in additions:
+              if entry.strip() not in text:
+                  if anchor not in text:
+                      raise SystemExit("Could not locate Flutter asset insertion point")
+                  text = text.replace(anchor, anchor + entry, 1)
+                  anchor = entry
+          path.write_text(text, encoding="utf-8")
+          print("REGISTERED_ALL_FOUR_HERO_MODELS_AND_STORM_ATLASES")
+          PY
+
+      - name: Run Flutter analysis and tests against the complete four-hero bundle
+        run: |
+          set -euo pipefail
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+
+      - name: Upload generated Storm assets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storm-directional-assets
+          path: |
+            assets/heroes/storm/renders/storm_manifest.json
+            assets/heroes/storm/renders/atlases/
+            assets/heroes/*/model/*.glb
+            build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit generated assets to heroes-complete
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml assets/heroes/ranger/model/ranger_animated.glb assets/heroes/flame/model/flame_animated.glb assets/heroes/shadow/model/shadow_animated.glb assets/heroes/storm/model/storm_animated.glb assets/heroes/storm/renders
+          if git diff --cached --quiet; then
+            echo "No generated Storm asset changes to commit."
+          else
+            git commit -m "Generate Storm directional animation atlases"
+            git push origin HEAD:heroes-complete
+          fi

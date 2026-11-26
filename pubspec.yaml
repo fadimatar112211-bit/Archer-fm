@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.2.0
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +27,4 @@ flutter:
     - assets/heroes/flame/renders/atlases/
     - assets/heroes/shadow/renders/shadow_manifest.json
     - assets/heroes/shadow/renders/atlases/
+    - assets/monsters/legacy/

@@ -6,6 +6,8 @@ import 'hero_catalog.dart';
 import 'hero_manifest.dart';
 import 'hero_stage.dart';
 import 'sprite_player.dart';
+import '../game/heroes/hero_roster.dart';
+import '../game/heroes/hero_combat_runtime.dart';
 
 const List<String> heroStates = [
   'idle',
@@ -107,6 +109,28 @@ String _effectForEvent(String name) {
   }
 }
 
+String _ultimateEffectKind(String id) {
+  const effects = <String, String>{
+    'ranger_starfall': 'starfall',
+    'ranger_piercing': 'piercing',
+    'ranger_nature': 'nature',
+    'ranger_apex': 'apex',
+    'flame_eruption': 'eruption',
+    'flame_comet': 'comet',
+    'flame_brand': 'brand',
+    'flame_phoenix': 'phoenix',
+    'shadow_vanish': 'vanish',
+    'shadow_cross': 'cross',
+    'shadow_poison': 'poison',
+    'shadow_execution': 'execution',
+    'storm_bolt': 'thunder',
+    'storm_chain': 'chain',
+    'storm_field': 'field',
+    'storm_tempest': 'tempest',
+  };
+  return effects[id] ?? 'burst';
+}
+
 class HeroViewerScreen extends StatefulWidget {
   const HeroViewerScreen({
     super.key,
@@ -127,6 +151,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     with SingleTickerProviderStateMixin {
   late HeroDefinition _hero;
   late HeroAssetLoader _loader;
+  late HeroCombatRuntime _combat;
   late final Ticker _ticker;
 
   final ValueNotifier<int> _clock = ValueNotifier<int>(0);
@@ -154,6 +179,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     super.initState();
     _hero = widget.initialHero ?? heroCatalog.first;
     _loader = widget.loaderFactory(_hero);
+    _combat = HeroCombatRuntime(hero: heroCombatById(_heroId(_hero.id)));
     _ticker = createTicker(_onTick)..start();
     _loadManifest();
   }
@@ -172,8 +198,11 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     final delta = elapsed - _lastTick;
     _lastTick = elapsed;
     final player = _player;
-    if (player != null && delta.inMilliseconds > 0) {
-      player.advance((delta.inMilliseconds * _speed).round());
+    if (delta.inMilliseconds > 0) {
+      _combat.advance(delta);
+      if (player != null) {
+        player.advance((delta.inMilliseconds * _speed).round());
+      }
     }
     _clock.value = elapsed.inMilliseconds;
     _effects.removeWhere((effect) => !effect.isAlive(_clock.value));
@@ -210,6 +239,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     _loadToken++;
     setState(() {
       _hero = hero;
+      _combat = HeroCombatRuntime(hero: heroCombatById(_heroId(hero.id)));
       _loader = widget.loaderFactory(hero);
       _manifest = null;
       _sheet = null;
@@ -228,10 +258,10 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     await _loadManifest();
   }
 
-  Future<void> _select(String state, String direction) async {
+  Future<void> _select(String state, String direction, {bool replay = false}) async {
     final manifest = _manifest;
     if (manifest == null) return;
-    if (state == _state && direction == _direction && _player != null) return;
+    if (!replay && state == _state && direction == _direction && _player != null) return;
     final name = '${state}_$direction';
     final clip = manifest.clipFor(state, direction);
     if (clip == null) {
@@ -321,6 +351,8 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
                     child: LinearProgressIndicator(minHeight: 3),
                   ),
                 _buildHeroCard(),
+                const SizedBox(height: 12),
+                _buildCombatPanel(),
                 const SizedBox(height: 12),
                 _buildStatePicker(),
                 const SizedBox(height: 12),
@@ -505,6 +537,161 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
           ),
         ],
       ),
+    );
+  }
+
+  HeroId _heroId(String id) => HeroId.values.firstWhere(
+        (value) => value.name == id,
+      );
+
+  Widget _buildCombatPanel() {
+    final theme = _theme;
+    return AnimatedBuilder(
+      animation: _clock,
+      builder: (context, _) {
+        final combat = _combat;
+        final hpPercent = combat.targetHealth / combat.targetMaxHealth;
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.stageTop,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: theme.accent.withAlpha(90)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _SectionTitle('ساحة اختبار القتال'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 16,
+                runSpacing: 6,
+                children: [
+                  Text('المستوى ${combat.level}/$heroLevelCap'),
+                  Text('الصحة ${combat.health}'),
+                  Text('السرعة ${combat.moveSpeed.toStringAsFixed(2)}'),
+                  Text('الهدف ${combat.targetHealth}/${combat.targetMaxHealth}'),
+                ],
+              ),
+              const SizedBox(height: 7),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: hpPercent,
+                  minHeight: 8,
+                  backgroundColor: const Color(0xFF442020),
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.accent),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text('السلاح', style: TextStyle(color: Color(0xFFBFD7C5))),
+              const SizedBox(height: 5),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (var i = 0; i < combat.hero.weapons.length; i++)
+                    ChoiceChip(
+                      label: Text(combat.hero.weapons[i].nameAr),
+                      selected: combat.selectedWeaponIndex == i,
+                      onSelected: (_) => setState(() => combat.selectWeapon(i)),
+                      showCheckmark: false,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  FilledButton.icon(
+                    onPressed: combat.attackCooldownRemainingMs > 0
+                        ? null
+                        : () {
+                            final result = combat.attack();
+                            _select('attack', _direction, replay: true);
+                            setState(() {
+                              _log.value = <String>[
+                                '${result.messageAr} · ${result.damage} ضرر',
+                                ..._log.value,
+                              ].take(6).toList(growable: false);
+                            });
+                          },
+                    icon: const Icon(Icons.gps_fixed),
+                    label: Text(combat.attackCooldownRemainingMs > 0
+                        ? 'انتظر ${(combat.attackCooldownRemainingMs / 1000).toStringAsFixed(1)}ث'
+                        : 'هجوم · ضربة ${combat.comboIndex + 1}/5'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => setState(() {
+                      combat.resetTarget();
+                      _log.value = ['تمت إعادة الهدف', ..._log.value]
+                          .take(6).toList(growable: false);
+                    }),
+                    child: const Text('إعادة الهدف'),
+                  ),
+                  OutlinedButton(
+                    onPressed: combat.level >= heroLevelCap
+                        ? null
+                        : () => setState(() {
+                              final gained = combat.gainExperience(100);
+                              _log.value = [
+                                gained > 0
+                                    ? 'ارتفع المستوى إلى ${combat.level}'
+                                    : 'أضيفت خبرة للتقدم',
+                                ..._log.value,
+                              ].take(6).toList(growable: false);
+                            }),
+                    child: const Text('+100 خبرة تجريبية'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text('الضربات الخاصة · مستقلة عن الكومبو',
+                  style: TextStyle(color: Color(0xFFBFD7C5))),
+              const SizedBox(height: 5),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (var i = 0; i < combat.hero.ultimates.length; i++)
+                    OutlinedButton(
+                      onPressed: combat.level < combat.hero.ultimates[i].unlockLevel ||
+                              combat.ultimateCooldowns[i] > 0
+                          ? null
+                          : () {
+                              final result = combat.useUltimate(i);
+                              if (result.accepted) {
+                                _effects.add(StageEffect(
+                                  kind: _ultimateEffectKind(combat.hero.ultimates[i].id),
+                                  startMs: _clock.value,
+                                ));
+                                _select('skill', _direction, replay: true);
+                              }
+                              setState(() {
+                                _log.value = [
+                                  '${result.messageAr} · ${result.damage} ضرر',
+                                  ..._log.value,
+                                ].take(6).toList(growable: false);
+                              });
+                            },
+                      child: Text(
+                        '${combat.hero.ultimates[i].nameAr} · م${combat.hero.ultimates[i].unlockLevel}'
+                        '${combat.level < combat.hero.ultimates[i].unlockLevel ? ' · مقفلة' : combat.ultimateCooldowns[i] > 0 ? ' · تبريد' : ''}',
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'نموذج قتال تجريبي ضد هدف تدريبي؛ الخبرة هنا للاختبار فقط.',
+                style: TextStyle(fontSize: 11, color: theme.accent.withAlpha(170)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

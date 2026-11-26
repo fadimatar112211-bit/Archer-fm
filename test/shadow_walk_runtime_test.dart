@@ -6,10 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Shadow runtime loader resolves all 8×4 walk frames from one shared atlas',
+  test('Shadow walk loads all eight directional atlases and loops nine frames',
       () async {
-    final hero = heroById('shadow');
-    final loader = BundleHeroAssetLoader(hero);
+    final loader = BundleHeroAssetLoader(heroById('shadow'));
     addTearDown(loader.dispose);
 
     final manifest = await loader.loadManifest();
@@ -20,45 +19,41 @@ void main() {
     expect(manifest.pivotY, 0.86);
 
     const directions = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'];
-    AtlasSheet? sharedImage;
     final seenFrameIds = <String>{};
 
-    for (var row = 0; row < directions.length; row++) {
-      final direction = directions[row];
+    for (final direction in directions) {
       final clip = manifest.clipFor('walk', direction);
       expect(clip, isNotNull, reason: 'walk_$direction');
-      expect(clip!.loop, isTrue);
-      expect(clip.frames, hasLength(4));
-      expect(clip.frames.toSet(), hasLength(4));
+      final walkClip = clip!;
+      expect(walkClip.loop, isTrue);
+      expect(walkClip.frames, hasLength(9));
+      expect(walkClip.frames.toSet(), hasLength(9));
 
       final sheet = await loader.loadSheet(manifest, 'walk_$direction');
-      sharedImage ??= sheet;
-      expect(identical(sheet.image, sharedImage!.image), isTrue,
-          reason: 'all directional clips must share one decoded GPU image');
-      expect(sheet.width, 768);
-      expect(sheet.height, 1536);
+      expect(sheet.width, 784);
+      expect(sheet.height, 588);
 
-      for (var column = 0; column < clip.frames.length; column++) {
-        final id = clip.frames[column];
-        expect(seenFrameIds.add(id), isTrue,
-            reason: 'frame id $id must belong to one direction only');
+      for (var index = 0; index < walkClip.frames.length; index++) {
+        final id = walkClip.frames[index];
+        expect(seenFrameIds.add(id), isTrue, reason: 'duplicate frame $id');
         final rect = sheet.rectFor(id);
         expect(rect, isNotNull, reason: id);
-        expect(rect!.left, column * 192);
-        expect(rect.top, row * 192);
-        expect(rect.width, 192);
-        expect(rect.height, 192);
+        final frameRect = rect!;
+        expect(frameRect.left, (index % 4) * 196 + 2);
+        expect(frameRect.top, (index ~/ 4) * 196 + 2);
+        expect(frameRect.width, 192);
+        expect(frameRect.height, 192);
       }
 
-      final player = SpritePlayer(clip: clip);
+      final player = SpritePlayer(clip: walkClip);
       addTearDown(player.dispose);
-      expect(player.frameId, clip.frames.first);
-      player.advance(clip.frameDurationMs);
-      expect(player.frameId, clip.frames[1]);
-      player.advance(clip.frameDurationMs * 3);
+      expect(player.frameId, walkClip.frames.first);
+      player.advance(walkClip.frameDurationMs);
+      expect(player.frameId, walkClip.frames[1]);
+      player.advance(walkClip.frameDurationMs * 8);
       expect(player.frameIndex, 0,
-          reason: 'the four-frame walk loop should wrap after frame four');
+          reason: 'the nine-frame walk loop should wrap after frame nine');
     }
-    expect(seenFrameIds, hasLength(32));
+    expect(seenFrameIds, hasLength(72));
   });
 }
