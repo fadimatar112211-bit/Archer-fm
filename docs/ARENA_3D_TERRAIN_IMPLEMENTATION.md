@@ -7,7 +7,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 ## Implemented on the current feature branch
 
 - Added a continuous camera-culled triangulated ground mesh across the visible battlefield, with deterministic elevation variation and biome-specific surface palettes.
-- Added shallow raised river-bank faces along the water channels to improve terrain depth at the shoreline.
+- Added shallow raised river-bank faces, shoreline stones and pale foam seams along the water channels to improve depth and scale.
 - Added a software-rendered, height-bearing triangular mesh pass for biome landforms. The mesh has concentric elevation rings, exposed cliff faces, per-face directional shading, and biome palettes for forest, desert, snow and volcanic regions.
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
 - Replaced circular rock icons with multi-face angular rock geometry and directional highlights.
