@@ -469,6 +469,10 @@ class AuthoritativeMatchSession implements GameServerSession {
                 'ultimateCooldowns': entry.value.combat.ultimateCooldowns,
               },
           },
+          'monsterProgression': {
+            for (final entry in matchCombat.configuration.monsterProgressionByPlayer.entries)
+              entry.key: entry.value.toSaveData(),
+          },
           'monsters': [
             for (final unit in matchCombat.monsters.liveUnits)
               {
