@@ -233,4 +233,117 @@ grant execute on function public.save_hero_progress(uuid, jsonb, bigint)
 grant execute on function public.save_monster_progress(uuid, jsonb, bigint)
   to service_role;
 
+
+-- Finalize one authenticated player's match result and reward in one database
+-- transaction. Retries with the same match/player and identical payload return
+-- the original result without awarding currency twice.
+create or replace function public.finalize_match_player_result(
+  p_match_id text,
+  p_user_id uuid,
+  p_placement smallint,
+  p_score bigint,
+  p_crystals_remaining smallint,
+  p_finish_reason text,
+  p_reward_amount bigint,
+  p_idempotency_key text
+)
+returns table (
+  result_id uuid,
+  reward_transaction_id bigint,
+  currency_balance bigint
+)
+language plpgsql
+security definer
+set search_path = ''
+as $phase5$
+declare
+  current_currency bigint;
+  existing public.match_results%rowtype;
+  transaction_id bigint;
+  inserted_result_id uuid;
+begin
+  if p_match_id is null or char_length(p_match_id) not between 1 and 128
+     or p_user_id is null
+     or p_placement not between 1 and 4
+     or p_score < 0
+     or p_crystals_remaining not between 0 and 7
+     or p_finish_reason is null or char_length(p_finish_reason) not between 1 and 48
+     or p_reward_amount < 0
+     or p_idempotency_key is null
+     or char_length(p_idempotency_key) not between 1 and 128 then
+    raise exception 'invalid_match_settlement' using errcode = '22023';
+  end if;
+
+  -- Lock the profile's progression row to serialize currency settlement.
+  select (data->>'permanentCurrency')::bigint
+    into current_currency
+    from public.hero_progress
+    where user_id = p_user_id
+    for update;
+
+  if not found then
+    insert into public.hero_progress(user_id)
+      values (p_user_id) on conflict (user_id) do nothing;
+    select (data->>'permanentCurrency')::bigint
+      into current_currency
+      from public.hero_progress
+      where user_id = p_user_id
+      for update;
+  end if;
+
+  if current_currency is null or current_currency < 0 then
+    raise exception 'invalid_persisted_currency' using errcode = '22023';
+  end if;
+
+  select * into existing
+    from public.match_results
+    where match_id = p_match_id and user_id = p_user_id
+    for update;
+
+  if found then
+    if existing.placement <> p_placement
+       or existing.score <> p_score
+       or existing.crystals_remaining <> p_crystals_remaining
+       or existing.finish_reason <> p_finish_reason then
+      raise exception 'match_result_idempotency_conflict' using errcode = '23505';
+    end if;
+    return query select existing.id, existing.reward_transaction_id, current_currency;
+    return;
+  end if;
+
+  if p_reward_amount > 0 then
+    insert into public.currency_transactions(
+      user_id, idempotency_key, amount, reason, reference_id
+    ) values (
+      p_user_id, p_idempotency_key, p_reward_amount, 'match_reward', p_match_id
+    ) returning id into transaction_id;
+
+    current_currency := current_currency + p_reward_amount;
+    update public.hero_progress
+      set data = jsonb_set(data, '{permanentCurrency}', to_jsonb(current_currency), true),
+          revision = revision + 1,
+          updated_at = now()
+      where user_id = p_user_id;
+  end if;
+
+  insert into public.match_results(
+    match_id, user_id, placement, score, crystals_remaining,
+    finish_reason, reward_transaction_id
+  ) values (
+    p_match_id, p_user_id, p_placement, p_score, p_crystals_remaining,
+    p_finish_reason, transaction_id
+  ) returning id into inserted_result_id;
+
+  return query select inserted_result_id, transaction_id, current_currency;
+end;
+$phase5$;
+
+revoke all on function public.finalize_match_player_result(
+  text, uuid, smallint, bigint, smallint, text, bigint, text
+) from public, anon, authenticated;
+grant execute on function public.finalize_match_player_result(
+  text, uuid, smallint, bigint, smallint, text, bigint, text
+) to service_role;
+
+
 commit;
