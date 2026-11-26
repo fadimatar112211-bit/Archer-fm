@@ -190,7 +190,7 @@ class _ArenaPainter extends CustomPainter {
         ).createShader(bounds),
     );
     _drawBiomes(canvas, world, project);
-    _drawTerrainTexture(canvas, size, cameraOrigin, project);
+    _drawTerrainTexture(canvas, cameraOrigin, project);
     _drawRivers(canvas, world, project);
     _drawObstacles(canvas, world, project);
     _drawPickups(canvas, world, project);
@@ -231,7 +231,6 @@ class _ArenaPainter extends CustomPainter {
   /// appears anchored while the follow camera moves.
   void _drawTerrainTexture(
     Canvas canvas,
-    Size viewport,
     Offset cameraOrigin,
     Offset Function(Offset) project,
   ) {
