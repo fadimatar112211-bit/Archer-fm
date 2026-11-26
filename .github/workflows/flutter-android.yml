@@ -59,7 +59,8 @@ jobs:
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 900
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          # Give the software-rendered emulator enough CPU/RAM for Flutter's first frame.
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -memory 4096 -cores 4
           disable-animations: true
           disable-linux-hardware-acceleration: true
           script: |
@@ -68,11 +69,19 @@ jobs:
             adb install build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
-            sleep 10
+            sleep 20
             adb shell pidof com.archerfm.archer_fm
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
+            adb logcat -d -t 12000 > build/android-logcat-before-recovery.txt
             adb shell screencap -p /sdcard/archer-fm-launch.png
             adb pull /sdcard/archer-fm-launch.png build/archer-fm-launch.png
+            # A system-UI ANR dialog can cover a healthy foreground app on TCG.
+            # Save diagnostics first, then dismiss it and capture the recovered frame.
+            adb shell input keyevent 4 || true
+            sleep 8
+            adb shell screencap -p /sdcard/archer-fm-launch-recovered.png
+            adb pull /sdcard/archer-fm-launch-recovered.png build/archer-fm-launch-recovered.png
+            adb logcat -d -t 12000 > build/android-logcat-after-recovery.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -80,4 +89,7 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/app-debug.apk
             build/archer-fm-launch.png
+            build/archer-fm-launch-recovered.png
+            build/android-logcat-before-recovery.txt
+            build/android-logcat-after-recovery.txt
           retention-days: 14
