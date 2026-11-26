@@ -145,3 +145,10 @@
 - Added/updated result-panel widget expectations for winner and tie labels without raw IDs.
 - Commits: `36dcb19d538b7958a29a15c7ae7ac9eb30523df5`, `f517fc8b15b76406b9f61c98d416811c746d9cd1`, `3510e38e12d366ae8b0de9e28cdd849f99d831a6`.
 - Validation is running on the newest commit; do not count it as accepted until the corresponding Android validation and test workflows finish successfully.
+
+
+## Eighth implementation batch — connection lifecycle disposal safety
+
+- Added a mounted-state guard after the asynchronous previous-client disposal in room create/join setup. If the player leaves the screen while cleanup is awaiting completion, the screen no longer proceeds to create a new socket or call `setState` on a disposed widget.
+- Commit: `0a2f745fb237c4cac96d3cffbfaa20a11ccc2517`.
+- The change requires fresh CI validation; it is not counted as passed until the new workflow completes.
