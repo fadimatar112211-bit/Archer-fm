@@ -362,3 +362,11 @@
 - Added a widget test that enables the semantics tree and verifies the named result region is exposed.
 - Commits: `377a973d9f6db7455a8e88c7fd7213f4282d800b` (accessible result region), `22116ae80d2f0569e33243edf85d3769b8468490` (regression test).
 - Fresh analyzer, full Flutter tests, Android APK build and visual capture are required for the latest branch head. Physical screen-reader testing remains outstanding.
+
+
+## Twentieth implementation batch — accessible final standings
+
+- Each final standings row is now exposed as one concise Arabic screen-reader summary containing rank, player label, score, crystal count out of seven, and withdrawal status when applicable. This avoids forcing assistive-technology users to piece together separate visual columns.
+- Added a widget assertion for the complete spoken summary alongside the named result region.
+- Commits: `c02f5a3e9901db2bd8a7a9779579a21bf4ab256c` (accessible standings summaries), `b7d406f8b300916aab47578954fb6628b921b709` (initial semantics regression coverage; fixture finalized in the following test update).
+- Fresh Flutter analysis and full test suite are required before this batch is considered verified. Android APK and physical-device screen-reader checks remain outstanding.
