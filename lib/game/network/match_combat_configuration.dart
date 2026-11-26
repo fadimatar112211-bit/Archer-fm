@@ -47,6 +47,15 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
   final maxUnitsPerArmy = _integer(json, 'maxUnitsPerArmy');
   final worldUnitsPerSecond = _number(json, 'worldUnitsPerSecond');
   final comboResetWindowMs = _integer(json, 'comboResetWindowMs');
+  final maxHeroEnergy = _integer(json, 'maxHeroEnergy');
+  final energyRegenerationPerSecond = _number(json, 'energyRegenerationPerSecond');
+  final rawEnergyCosts = json['ultimateEnergyCosts'];
+  if (rawEnergyCosts is! Map ||
+      rawEnergyCosts.keys.any((key) => key is! String) ||
+      rawEnergyCosts.values.any((value) => value is! int)) {
+    throw const FormatException('ultimateEnergyCosts must map every Ultimate ID to an integer.');
+  }
+  final ultimateEnergyCosts = Map<String, int>.from(rawEnergyCosts);
 
   return MatchCombatConfiguration(
     monsterCatalog: MonsterCatalog(definitions),
@@ -55,6 +64,9 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     maxUnitsPerArmy: maxUnitsPerArmy,
     worldUnitsPerSecond: worldUnitsPerSecond,
     comboResetWindowMs: comboResetWindowMs,
+    maxHeroEnergy: maxHeroEnergy,
+    energyRegenerationPerSecond: energyRegenerationPerSecond,
+    ultimateEnergyCosts: ultimateEnergyCosts,
   );
 }
 
