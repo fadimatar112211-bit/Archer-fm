@@ -143,3 +143,16 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - The PR now points at head commit `275f06a054eeedb800940cf7e395f5823ed77f32`; a fresh Android run is expected for this workflow change.
 
 **Acceptance remains IN PROGRESS.** Passing source CI does not substitute for staging Supabase deployment, service-role runtime wiring, atomic reward settlement, cross-device recovery, or account-isolation E2E tests.
+
+
+## 9. Atomic match settlement foundation — 2026-11-27
+
+- Added the backend-only `finalize_match_player_result` PostgreSQL RPC. It locks the authenticated player's hero-progression row, records the match result, appends the currency ledger transaction, updates the permanent currency balance and increments the progression revision in one database transaction.
+- Repeated settlement for the same match/player returns the existing receipt without awarding currency again. A retry with conflicting result fields, reward amount or idempotency key is rejected.
+- The RPC validates placement, score, remaining crystals, finish reason, reward amount and idempotency key, and is executable only by `service_role`; anon/authenticated/public execution is revoked.
+- Added `SupabaseRestClient.finalizeMatchPlayerResult`, typed `SupabaseMatchSettlementStore` / `MatchSettlementReceipt`, and receipt parsing tests.
+- This is a durable database primitive, **not yet connected to the live match-finalization callback**. The authoritative match session and production gateway still need account-to-standing mapping, approved reward calculation, retry/outbox behavior, and invocation of this RPC. Do not treat the new RPC as live reward settlement until that composition and a staging database test pass.
+- Latest Android workflow for the current branch head is running (run [45908839341](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908839341)); prior intermediate runs were cancelled as newer commits arrived. The latest completed Match Rules run on this branch remains the successful run [45908590238](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908590238), before the settlement changes. The new settlement code has not yet received a completed green CI run.
+- Supabase migration execution, live database concurrency/idempotency verification, production runtime wiring, save import, second-device restore and account-isolation E2E remain open.
+
+**Current acceptance status: IN PROGRESS — not ready for production or phase closure.**
