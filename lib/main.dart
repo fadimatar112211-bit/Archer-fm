@@ -49,6 +49,7 @@ class ArcherFmApp extends StatelessWidget {
                 accountService: accountService!,
                 child: ArcherFmHomeScreen(
                   loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+                  accountService: accountService,
                 ),
               ),
       ),
