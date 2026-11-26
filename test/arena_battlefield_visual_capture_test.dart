@@ -180,6 +180,7 @@ void main() {
                 child: ArenaBattlefield(
                   snapshot: snapshot,
                   localPlayerId: 'p1',
+                  selectedTargetId: 'm-runner',
                 ),
               ),
             ),
