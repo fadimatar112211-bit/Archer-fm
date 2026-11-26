@@ -412,14 +412,64 @@ class _ArenaPainter extends CustomPainter {
         final bridgeDepth = _number(bridge['depth']) ?? 120;
         final a = project(point + Offset(bridgeWidth / 2, bridgeDepth / 2));
         final b = project(point - Offset(bridgeWidth / 2, bridgeDepth / 2));
+        final bridgeAxis = b - a;
+        final bridgeLength = bridgeAxis.distance;
+        final bridgeNormal = bridgeLength == 0
+            ? Offset.zero
+            : Offset(-bridgeAxis.dy / bridgeLength, bridgeAxis.dx / bridgeLength);
+        // A dark under-shadow, timber deck, raised side rails and cross-planks
+        // make bridges read as traversable structures over the river.
+        canvas.drawLine(
+          a.translate(0, 3),
+          b.translate(0, 3),
+          Paint()
+            ..color = const Color(0x88302620)
+            ..strokeWidth = math.max(12.0, projectedWidth * 0.58)
+            ..strokeCap = StrokeCap.round,
+        );
         canvas.drawLine(
           a,
           b,
           Paint()
-            ..color = const Color(0xFFB99A70)
-            ..strokeWidth = math.max(8.0, projectedWidth * 0.5)
+            ..color = const Color(0xFF8B6748)
+            ..strokeWidth = math.max(10.0, projectedWidth * 0.48)
             ..strokeCap = StrokeCap.round,
         );
+        canvas.drawLine(
+          a,
+          b,
+          Paint()
+            ..color = const Color(0xFFD0AD7B)
+            ..strokeWidth = math.max(6.0, projectedWidth * 0.28)
+            ..strokeCap = StrokeCap.round,
+        );
+        if (bridgeLength > 0) {
+          for (var plank = 1; plank < 8; plank++) {
+            final t = plank / 8;
+            final center = Offset.lerp(a, b, t)!;
+            canvas.drawLine(
+              center - bridgeNormal * math.max(3.0, projectedWidth * 0.19),
+              center + bridgeNormal * math.max(3.0, projectedWidth * 0.19),
+              Paint()
+                ..color = const Color(0xAA704D35)
+                ..strokeWidth = 1.1,
+            );
+          }
+          canvas.drawLine(
+            a + bridgeNormal * math.max(3.0, projectedWidth * 0.2),
+            b + bridgeNormal * math.max(3.0, projectedWidth * 0.2),
+            Paint()
+              ..color = const Color(0xFFE0C394)
+              ..strokeWidth = 1.4,
+          );
+          canvas.drawLine(
+            a - bridgeNormal * math.max(3.0, projectedWidth * 0.2),
+            b - bridgeNormal * math.max(3.0, projectedWidth * 0.2),
+            Paint()
+              ..color = const Color(0xFF684B35)
+              ..strokeWidth = 1.4,
+          );
+        }
         canvas.drawCircle(p, 3, Paint()..color = const Color(0xFFE7D7B5));
       }
       // Keep local variables used for path diagnostics and avoid a false
