@@ -53,6 +53,8 @@ Place it behind a trusted reverse proxy that terminates TLS and exposes only WSS
 - The two revision-checked progression RPCs and atomic match-result/reward settlement RPC are executable only by `service_role`.
 - The Supabase service-role/secret key is server-only. Never put it in Dart defines, APKs, assets, GitHub source or client logs.
 
+See [the production gateway deployment template](../docs/deployment/PRODUCTION_GATEWAY.md) for the systemd, Nginx WSS proxy, firewall, secret-file, backup and release-acceptance checklist.
+
 ## Current implementation boundary
 
 Implemented in this branch:
@@ -72,7 +74,7 @@ Still required before production use:
 - Approve the rank reward schedule and configure `ARCHER_FM_MATCH_REWARDS_BY_RANK`; the default is zero rewards, not an invented economy balance.
 - Load cloud profile on login and migrate existing local saves with a tested conflict policy.
 - Add end-to-end tests against a staging Supabase project, including second-device recovery, concurrent/idempotent settlement and cross-account isolation.
-- Add production TLS proxy deployment, monitoring, backups and a restore drill.
+- Apply the deployment template to the chosen host, then complete monitoring, backups and a restore drill; no live deployment or operations validation has been performed yet.
 - Test token expiry/revocation during long-lived WebSocket sessions.
 
 No real cloud project, credentials or staging environment were available during this code pass. The database schema and adapters are source changes only until an owner creates and configures the Supabase project.
