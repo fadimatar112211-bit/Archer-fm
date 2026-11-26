@@ -162,6 +162,11 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       'attack_rejected': 'رفض الخادم الهجوم؛ تحقق من المدى والتبريد',
       'ultimate_rejected': 'رفض الخادم الضربة الخاصة؛ تحقق من المستوى والتبريد',
       'purchase_rejected': 'تعذّر الشراء؛ تحقق من الرصيد والسعة',
+      'invalid_rebuild_position': 'موقع إعادة البناء غير صالح',
+      'rebuild_not_enough_resources': 'الموارد غير كافية لإعادة بناء البلورة',
+      'rebuild_at_max': 'اكتمل عدد البلورات المسموح به',
+      'rebuild_outside_territory': 'موقع البناء خارج منطقتك',
+      'rebuild_blocked': 'الموقع محجوب أو قريب من عائق أو منجم',
       'invalid_movement': 'اتجاه الحركة غير صالح',
     };
     return labels[reason] ?? 'تعذّر تنفيذ الأمر: $reason';
