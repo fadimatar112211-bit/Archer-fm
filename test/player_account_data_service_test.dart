@@ -16,7 +16,7 @@ void main() {
         throwsArgumentError,
       );
       expect(
-        () => PlayerAccountDataService.validateDisplayName('x' * 33),
+        () => PlayerAccountDataService.validateDisplayName(List.filled(33, 'x').join()),
         throwsArgumentError,
       );
       expect(
