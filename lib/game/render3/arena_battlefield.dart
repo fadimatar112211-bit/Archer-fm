@@ -772,6 +772,37 @@ class _ArenaPainter extends CustomPainter {
           ..strokeWidth = math.max(2.0, projectedWidth * 0.12)
           ..strokeCap = StrokeCap.round,
       );
+      // Wet shoreline stones and pale foam seams add scale and depth to
+      // the river channel without covering the bridge deck.
+      for (var segment = 0; segment < points.length - 1; segment++) {
+        final a = project(points[segment]);
+        final b = project(points[segment + 1]);
+        final delta = b - a;
+        final length = delta.distance;
+        if (length < 1) continue;
+        final normal = Offset(-delta.dy / length, delta.dx / length);
+        for (var stone = 0; stone < 3; stone++) {
+          final t = (stone * 0.31 + 0.17) % 0.86 + 0.07;
+          final side = stone.isEven ? -1.0 : 1.0;
+          final center = Offset.lerp(a, b, t)! +
+              normal * (projectedWidth * (0.55 + (stone % 2) * 0.08) * side);
+          final stoneRect = Rect.fromCenter(
+            center: center.translate(0, -1.2),
+            width: 3.2 + stone * 1.1,
+            height: 1.8 + stone * 0.6,
+          );
+          canvas.drawOval(stoneRect, Paint()
+            ..color = stone.isEven
+                ? const Color(0xFF9A9B80)
+                : const Color(0xFF6F806D));
+        }
+        final foamA = Offset.lerp(a, b, 0.22)! + normal * projectedWidth * 0.43;
+        final foamB = Offset.lerp(a, b, 0.61)! + normal * projectedWidth * 0.43;
+        canvas.drawLine(foamA, foamB, Paint()
+          ..color = const Color(0x668AD8E2)
+          ..strokeWidth = 1.2
+          ..strokeCap = StrokeCap.round);
+      }
       // Fine, offset glints make the water read as flowing rather than a flat
       // blue stripe. Their positions are deterministic along each river.
       for (var segment = 0; segment < points.length - 1; segment++) {
