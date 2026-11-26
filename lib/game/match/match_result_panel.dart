@@ -43,7 +43,11 @@ class MatchResultPanel extends StatelessWidget {
       _ => 'النتيجة النهائية',
     };
 
-    return Card(
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label: 'نتيجة المباراة',
+      child: Card(
       color: const Color(0xFF263B32),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -92,6 +96,7 @@ class MatchResultPanel extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
