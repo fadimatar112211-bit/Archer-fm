@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'match_target_selector.dart';
+import 'match_result_panel.dart';
 
 import '../../monsters/monster_models.dart';
 
@@ -586,6 +587,11 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_matchPhase == 'finished' && state['result'] is Map && _playerId != null)
+            MatchResultPanel(
+              result: Map<String, dynamic>.from(state['result'] as Map),
+              localPlayerId: _playerId!,
+            ),
           if (_playerId != null) ...[
             ArenaBattlefield(
               snapshot: state,
