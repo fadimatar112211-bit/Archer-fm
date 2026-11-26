@@ -165,6 +165,15 @@ void main() {
     expect(bytes!.getUint8(centerOffset), lessThan(40));
     expect(bytes.getUint8(centerOffset + 1), lessThan(40));
     expect(bytes.getUint8(centerOffset + 2), lessThan(40));
+
+    // The minimap's inner area must also remain obscured without a local
+    // reveal center; sample away from its frame and labels.
+    const minimapX = 880;
+    const minimapY = 50;
+    final minimapOffset = (image.width * minimapY + minimapX) * 4;
+    expect(bytes.getUint8(minimapOffset), lessThan(40));
+    expect(bytes.getUint8(minimapOffset + 1), lessThan(40));
+    expect(bytes.getUint8(minimapOffset + 2), lessThan(40));
     image.dispose();
   });
 
