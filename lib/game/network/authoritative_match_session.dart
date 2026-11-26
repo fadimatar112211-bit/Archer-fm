@@ -865,6 +865,12 @@ class AuthoritativeMatchSession
           projectiles.where(visibleToPlayer).toList();
     }
     result['combat'] = scopedCombat;
+    final accountProgress = _accountHeroProgress[player.id];
+    if (accountProgress != null) {
+      // Cloud profile details are private: include them only in this player's
+      // recipient-scoped snapshot, never the shared match broadcast.
+      result['accountProgression'] = accountProgress.toJson();
+    }
     return result;
   }
 
