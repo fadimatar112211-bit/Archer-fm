@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archer_fm/game/controls/virtual_joystick.dart';
+import 'package:archer_fm/game/feedback/game_feedback_preferences.dart';
 import 'package:archer_fm/game/match/match_loadout_screen.dart';
 import 'package:archer_fm/game/render3/arena_battlefield.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,9 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+
+    GameFeedbackPreferences.setMovementSensitivity(1.3);
+    addTearDown(() => GameFeedbackPreferences.setMovementSensitivity(1.0));
 
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     WebSocket? connectedSocket;
@@ -106,6 +110,7 @@ void main() {
 
       expect(find.byType(ArenaBattlefield), findsOneWidget);
       expect(find.byType(VirtualJoystick), findsOneWidget);
+      expect(tester.widget<VirtualJoystick>(find.byType(VirtualJoystick)).sensitivity, 1.3);
       expect(find.text('هجوم'), findsOneWidget);
       expect(find.text('تغيير الهدف'), findsOneWidget);
       expect(find.text('لوحة المباراة المباشرة'), findsNothing);
