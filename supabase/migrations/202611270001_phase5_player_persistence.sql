@@ -8,7 +8,15 @@ create table if not exists public.player_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint player_profiles_display_name_length
-    check (display_name is null or char_length(display_name) between 1 and 32)
+    check (display_name is null or char_length(display_name) between 1 and 32),
+  constraint player_profiles_display_name_safe
+    check (
+      display_name is null or (
+        display_name = btrim(display_name)
+        and display_name !~ '[[:cntrl:]]'
+        and display_name !~ U&'[\\202A-\\202E]'
+      )
+    )
 );
 
 -- Keep profile timestamps accurate without granting clients permission to
