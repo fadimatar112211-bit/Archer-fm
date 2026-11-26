@@ -119,9 +119,10 @@ void main() {
     final socket = await WebSocket.connect(host.uri.toString());
     final messages = _messages(socket).asBroadcastStream();
 
+    final welcomeFuture = _nextType(messages, 'welcome');
     final stateFuture = _nextType(messages, 'state');
     socket.add(jsonEncode({'type': 'create'}));
-    final welcome = await _nextType(messages, 'welcome');
+    final welcome = await welcomeFuture;
     expect(welcome['code'], isA<String>());
     expect(welcome['id'], 'p1');
     expect(host.roomCount, 1);
@@ -148,8 +149,9 @@ void main() {
   test('resumes the same player and returns the last accepted sequence', () async {
     final first = await WebSocket.connect(host.uri.toString());
     final firstMessages = _messages(first).asBroadcastStream();
+    final welcomeFuture = _nextType(firstMessages, 'welcome');
     first.add(jsonEncode({'type': 'create'}));
-    final welcome = await _nextType(firstMessages, 'welcome');
+    final welcome = await welcomeFuture;
     final code = welcome['code'] as String;
     final token = welcome['token'] as String;
 
@@ -160,13 +162,14 @@ void main() {
 
     final resumed = await WebSocket.connect(host.uri.toString());
     final resumedMessages = _messages(resumed).asBroadcastStream();
+    final resumedWelcomeFuture = _nextType(resumedMessages, 'welcome');
     resumed.add(jsonEncode({
       'type': 'resume',
       'code': code,
       'token': token,
     }));
 
-    final resumedWelcome = await _nextType(resumedMessages, 'welcome');
+    final resumedWelcome = await resumedWelcomeFuture;
     expect(resumedWelcome['id'], welcome['id']);
     expect(resumedWelcome['lastSeq'], 7);
     expect(host.connectedPlayerCount, 1);
