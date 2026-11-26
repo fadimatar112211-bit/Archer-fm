@@ -175,7 +175,7 @@ class _ArenaPainter extends CustomPainter {
         Paint()
           ..color = const Color(0xFF62B6D0)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(2, projectedWidth * 0.12)
+          ..strokeWidth = math.max(2.0, projectedWidth * 0.12)
           ..strokeCap = StrokeCap.round,
       );
       for (final bridgeRaw in _list(river['bridges'])) {
@@ -192,7 +192,7 @@ class _ArenaPainter extends CustomPainter {
           b,
           Paint()
             ..color = const Color(0xFFB99A70)
-            ..strokeWidth = math.max(8, projectedWidth * 0.5)
+            ..strokeWidth = math.max(8.0, projectedWidth * 0.5)
             ..strokeCap = StrokeCap.round,
         );
         canvas.drawCircle(p, 3, Paint()..color = const Color(0xFFE7D7B5));
@@ -211,7 +211,7 @@ class _ArenaPainter extends CustomPainter {
       final radius = _number(obstacle['radius']);
       if (point == null || radius == null) continue;
       final p = project(point);
-      final r = math.max(4, (project(point + Offset(radius, 0)) - p).distance);
+      final r = math.max(4.0, (project(point + Offset(radius, 0)) - p).distance);
       final tree = obstacle['kind'] == 'tree';
       canvas.drawCircle(p + const Offset(0, 3), r, Paint()..color = const Color(0x66000000));
       canvas.drawCircle(
@@ -289,7 +289,7 @@ class _ArenaPainter extends CustomPainter {
         center,
         34,
         Paint()
-          ..color = color.withValues(alpha: 0.18)
+          ..color = color.withOpacity(0.18)
           ..style = PaintingStyle.fill,
       );
       canvas.drawCircle(
