@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
@@ -344,7 +343,8 @@ void main() {
   test('Flame basic attacks apply live burn damage over time', () {
     final session = _combatReadySession();
     final authority = session.combat!;
-    final flame = session.players[1];
+    final players = session.players.toList(growable: false);
+    final flame = players[1];
     final target = authority.armies
         .firstWhere((army) => army.ownerId == 'p1')
         .units.first;
@@ -365,8 +365,9 @@ void main() {
   test('Storm basic attacks stun an enemy hero and prevent movement temporarily', () {
     final session = _combatReadySession();
     final authority = session.combat!;
-    final storm = session.players[3];
-    final victim = session.players[0];
+    final players = session.players.toList(growable: false);
+    final storm = players[3];
+    final victim = players[0];
     final stormPosition = session.world!.playerPositions[storm.id]!;
     session.world!.setPlayerPosition(
       victim.id,
