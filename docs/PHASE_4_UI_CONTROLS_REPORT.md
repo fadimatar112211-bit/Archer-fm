@@ -116,6 +116,14 @@
 - The first Android validation run after adding the armory failed at `flutter analyze` because the new screen used an incorrect relative import for the existing canonical roster. The roster itself exists at `lib/game/heroes/hero_roster.dart`; the import is corrected to `../heroes/hero_roster.dart` in commit `2548bdd377913c4065816c7bcdf844edbee9dacf`.
 - The failed run skipped Flutter tests and APK build because analysis stopped the job. Do not count that run as passing. A fresh validation against the corrected branch head is still required.
 
+
+## Latest CI failure analysis and test correction
+
+- The latest full Flutter test run reported 289 passing and 3 failing tests. All three failures were widget tests searching for list entries that were below the visible viewport; the failures were not analyzer errors or reported application exceptions.
+- Updated the armory test to scroll to the level-30 Ultimate before asserting it, the home test to scroll to the armory tile before tapping, and the settings test to scroll to the haptics control before inspecting/toggling it.
+- Commits: `ca91daec9fb150347dd449d5264fb27bc18e03e2`, `f49d8d82eb2381b95ff2bf01bf155393a5e11b04`.
+- These are test corrections only; the corrected full suite still needs a fresh CI result. The earlier run's APK build was skipped because the test step failed.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
