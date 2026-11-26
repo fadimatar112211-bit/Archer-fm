@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 import '../game/match/match_loadout_screen.dart';
 import '../game/feedback/game_feedback_preferences.dart';
 import '../game/match/hero_armory_screen.dart';
@@ -212,7 +210,41 @@ class _GameSettingsScreenState extends State<GameSettingsScreen> {
             onChanged: _toggleHaptics,
             secondary: const Icon(Icons.vibration),
             title: const Text('الاهتزاز'),
-            subtitle: const Text('استجابة لمسية عند تغيير الإعداد'),
+            subtitle: const Text('استجابة لمسية عند الهجوم والقدرات وتغيير الهدف والشراء'),
+          ),
+          const Divider(),
+          StatefulBuilder(
+            builder: (context, refresh) {
+              final sensitivity = GameFeedbackPreferences.movementSensitivity;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.gamepad_outlined),
+                    title: const Text('حساسية عصا الحركة'),
+                    subtitle: Text('${(sensitivity * 100).round()}٪'),
+                  ),
+                  Slider(
+                    value: sensitivity,
+                    min: 0.5,
+                    max: 1.5,
+                    divisions: 10,
+                    label: '${(sensitivity * 100).round()}٪',
+                    onChanged: (value) {
+                      GameFeedbackPreferences.setMovementSensitivity(value);
+                      refresh(() {});
+                    },
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'اضبط سرعة استجابة العصا بين 50٪ و150٪',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const Divider(),
           const ListTile(
