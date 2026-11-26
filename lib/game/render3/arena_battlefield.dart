@@ -705,6 +705,37 @@ class _ArenaPainter extends CustomPainter {
       final start = project(points.first);
       final end = project(points.last);
       final projectedWidth = (project(points.first + Offset(width, 0)) - start).distance;
+      // Raised banks follow each river segment as shallow extruded channel
+      // walls. They sit below the water fill and create a readable shoreline.
+      for (var bankSegment = 0; bankSegment < points.length - 1; bankSegment++) {
+        final bankA = project(points[bankSegment]);
+        final bankB = project(points[bankSegment + 1]);
+        final bankDelta = bankB - bankA;
+        final bankLength = bankDelta.distance;
+        if (bankLength < 1) continue;
+        final normal = Offset(-bankDelta.dy / bankLength, bankDelta.dx / bankLength);
+        for (final side in [-1.0, 1.0]) {
+          final innerA = bankA + normal * (projectedWidth * 0.47 * side);
+          final innerB = bankB + normal * (projectedWidth * 0.47 * side);
+          final outerA = bankA + normal * (projectedWidth * 0.68 * side);
+          final outerB = bankB + normal * (projectedWidth * 0.68 * side);
+          final topA = outerA.translate(0, -5.5);
+          final topB = outerB.translate(0, -5.5);
+          final bankFace = Path()
+            ..moveTo(innerA.dx, innerA.dy)
+            ..lineTo(innerB.dx, innerB.dy)
+            ..lineTo(topB.dx, topB.dy)
+            ..lineTo(topA.dx, topA.dy)
+            ..close();
+          canvas.drawPath(bankFace, Paint()
+            ..color = side < 0
+                ? const Color(0xFF6F7650)
+                : const Color(0xFF536B46));
+          canvas.drawLine(topA, topB, Paint()
+            ..color = const Color(0xFF9AA16A)
+            ..strokeWidth = 1.6);
+        }
+      }
       // A darker, soft bank separates the water from grass and stone.
       canvas.drawPath(
         path,
