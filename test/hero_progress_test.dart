@@ -79,6 +79,56 @@ void main() {
       expect(restored.weaponLevel(weaponId), 1);
     });
 
+    test('persists independent hero XP, level unlocks and the level-40 cap', () {
+      final progress = HeroProgress.fresh();
+      expect(progress.heroLevel('ranger'), 1);
+      expect(progress.awardHeroExperience('ranger', 149), 0);
+      expect(progress.heroXp('ranger'), 149);
+      expect(progress.awardHeroExperience('ranger', 1), 1);
+      expect(progress.heroLevel('ranger'), 2);
+      expect(progress.heroXp('ranger'), 0);
+      expect(progress.heroLevel('flame'), 1);
+
+      final gained = progress.awardHeroExperience('ranger', 100000000);
+      expect(gained, 38);
+      expect(progress.heroLevel('ranger'), heroLevelCap);
+      expect(progress.heroXp('ranger'), 0);
+      expect(progress.awardHeroExperience('ranger', 1000), 0);
+
+      final restored = HeroProgress.fromJson(progress.toJson());
+      expect(restored.heroLevel('ranger'), heroLevelCap);
+      expect(restored.heroXp('ranger'), 0);
+      expect(restored.heroLevel('flame'), 1);
+    });
+
+    test('loads legacy version-one progression documents without hero fields', () {
+      final restored = HeroProgress.fromJson({
+        'schemaVersion': 1,
+        'permanentCurrency': 25,
+        'unlockedWeaponIds': [
+          for (final hero in archerFmHeroes) hero.weapons.first.id,
+        ],
+        'weaponUpgradeLevels': <String, int>{},
+      });
+      expect(restored.heroLevel('storm'), 1);
+      expect(restored.heroXp('storm'), 0);
+    });
+
+    test('rejects invalid hero levels and XP ranges', () {
+      expect(
+        () => HeroProgress(
+          heroLevels: {'ranger': heroLevelCap + 1},
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => HeroProgress(
+          heroExperience: {'ranger': 150},
+        ),
+        throwsFormatException,
+      );
+    });
+
     test('rejects unsupported progression schema versions', () {
       expect(
         () => HeroProgress.fromJson({
