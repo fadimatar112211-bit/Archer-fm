@@ -166,3 +166,11 @@ Update this document after each meaningful batch with commit references, test co
 - New CI runs were triggered by these commits. Phase 1 remains **in progress** until the latest required jobs finish green; do not treat queued/running workflows as passes.
 
 Current commit trail includes workflow trigger/concurrency corrections, the fog visibility correction, and the test readback correction. See GitHub history for exact commit SHAs; the completion report records the acceptance gate.
+
+
+## 8. Phase 1 closure — 2026-11-26
+
+- The final Match Rules Checks run on the current audited branch head `e9d61832639331a5be7bcbd78a39d2bcf2ddc2f5` completed successfully: run [45843157534](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45843157534). `flutter pub get`, `flutter analyze --no-fatal-infos`, and the full `flutter test` suite passed. The test log reports **229 tests passed**.
+- The final Monster Army Checks run on the same head completed successfully: run [45843157554](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45843157554). Monster-specific analysis and all configured monster tests passed.
+- PR #20 remains open, Draft, unmerged, with base `heroes-complete`; branch head is `e9d61832639331a5be7bcbd78b89d2bcf2ddc2f5`.
+- **Phase 1 acceptance is met for repository audit, workflow coverage and automated CI validation.** It does not certify runtime model integration; those technical asset path mismatches are explicitly handed to Phase 2.
