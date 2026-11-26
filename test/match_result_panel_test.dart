@@ -61,7 +61,15 @@ void main() {
             'reason': 'timeExpired',
             'winnerId': 'p1',
             'tiedPlayerIds': [],
-            'standings': const [],
+            'standings': [
+              {
+                'playerId': 'p1',
+                'rank': 1,
+                'score': 120,
+                'livingCrystals': 5,
+                'hasForfeited': false,
+              },
+            ],
           },
         ),
       ),
