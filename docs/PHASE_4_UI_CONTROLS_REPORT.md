@@ -214,3 +214,18 @@
 - On this exact commit, Match Rules checks passed (run `45899552735`), Monster Army checks passed (run `45899552683`), and the arena visual-capture workflow passed (run `45899552810`).
 - The Android workflow `45899552698` has completed `flutter analyze --no-fatal-infos` and the full `flutter test` suite successfully. Its debug APK build is still running; artifact upload and final workflow completion are not yet confirmed.
 - No emulator or physical-device execution is claimed. The emulator step remains guarded for manual dispatch.
+
+
+## Twelfth implementation batch — verified landscape widget coverage
+
+- Added a real responsive widget test for match setup at 640×360, 1280×540 and 1600×720. It verifies that the setup screen remains scrollable and does not throw layout exceptions at each size.
+- Added a real battlefield widget test at 640×360 and 1280×720 with an enemy crystal explicitly selected. This exercises the selected-target render path at compact and wide 16:9 landscape sizes.
+- These tests are committed separately from the earlier renderer implementation so the coverage is present in the actual test files, not only described in this report.
+- Commits: `269f58b1bd9866410840da739e6db60d42ef19de` (setup size coverage), `b086c35865d2d00d3e4e98eca0a4e4d798cbfa09` (viewport cleanup), `3a11a47e49d3947f9cdd59b456e1284313ec7428` (battlefield selected-target size coverage).
+- The 960×540 production arena visual capture already passes on the preceding code head; these new tests require fresh CI on the current head.
+
+## Audio asset audit and Android build status
+
+- A recursive repository asset audit found no `.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac` or `.flac` files and no `assets/audio`, `assets/sounds` or `assets/music` directories. The project also has no audio playback dependency configured. Therefore no genuine music or gameplay sound effects can be connected or verified without approved audio assets and a playback implementation; no placeholder audio is presented as finished.
+- On code head `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`, Android validation has now passed `flutter analyze --no-fatal-infos`, the full `flutter test` suite and `flutter build apk --debug`. Emulator setup and artifact upload are still pending at the time of this report update.
+- Match Rules, Monster Army and arena visual-capture workflows all passed on `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`. The new responsive widget tests are not covered by those earlier successful runs and need a fresh validation cycle.
