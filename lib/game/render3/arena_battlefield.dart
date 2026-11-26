@@ -754,38 +754,67 @@ class _ArenaPainter extends CustomPainter {
         Paint()..color = const Color(0x55302D24),
       );
       if (tree) {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: p + Offset(0, r * 0.42),
-              width: r * 0.34,
-              height: r * 0.95,
-            ),
-            Radius.circular(r * 0.12),
-          ),
-          Paint()..color = const Color(0xFF76543A),
+        // Faceted conifer mesh: tapered trunk, stacked polygon crowns and
+        // directional light/shadow faces give the obstacle real volume.
+        final trunkTop = p + Offset(0, -r * 0.95);
+        final trunkBase = p + Offset(0, r * 0.28);
+        final trunk = Path()
+          ..moveTo(trunkBase.dx - r * 0.16, trunkBase.dy)
+          ..lineTo(trunkBase.dx - r * 0.10, trunkTop.dy)
+          ..lineTo(trunkBase.dx + r * 0.12, trunkTop.dy)
+          ..lineTo(trunkBase.dx + r * 0.18, trunkBase.dy)
+          ..close();
+        canvas.drawPath(trunk, Paint()..color = const Color(0xFF63452F));
+        canvas.drawPath(
+          Path()
+            ..moveTo(trunkTop.dx - r * 0.10, trunkTop.dy)
+            ..lineTo(trunkTop.dx + r * 0.12, trunkTop.dy)
+            ..lineTo(trunkBase.dx + r * 0.18, trunkBase.dy)
+            ..lineTo(trunkBase.dx + r * 0.02, trunkBase.dy)
+            ..close(),
+          Paint()..color = const Color(0xFF9A7048),
         );
-        canvas.drawCircle(
-          p + Offset(-r * 0.32, -r * 0.12),
-          r * 0.72,
-          Paint()..color = const Color(0xFF315B37),
-        );
-        canvas.drawCircle(
-          p + Offset(r * 0.3, -r * 0.18),
-          r * 0.68,
-          Paint()..color = const Color(0xFF3C7040),
-        );
-        canvas.drawCircle(
-          p + Offset(-r * 0.08, -r * 0.48),
-          r * 0.72,
-          Paint()..color = const Color(0xFF54864B),
-        );
-        canvas.drawCircle(
-          p + Offset(-r * 0.28, -r * 0.68),
-          r * 0.2,
-          Paint()..color = const Color(0xFF79A95D),
-        );
-      } else {
+        void crown(double centerY, double width, double height, Color light, Color mid, Color shade) {
+          final apex = p + Offset(0, centerY - height);
+          final left = p + Offset(-width, centerY + height * 0.32);
+          final right = p + Offset(width, centerY + height * 0.32);
+          final front = p + Offset(0, centerY + height * 0.55);
+          final crownPath = Path()
+            ..moveTo(apex.dx, apex.dy)
+            ..lineTo(left.dx, left.dy)
+            ..lineTo(front.dx, front.dy)
+            ..lineTo(right.dx, right.dy)
+            ..close();
+          canvas.drawPath(crownPath, Paint()..color = mid);
+          canvas.drawPath(
+            Path()
+              ..moveTo(apex.dx, apex.dy)
+              ..lineTo(left.dx, left.dy)
+              ..lineTo(front.dx, front.dy)
+              ..close(),
+            Paint()..color = light,
+          );
+          canvas.drawPath(
+            Path()
+              ..moveTo(apex.dx, apex.dy)
+              ..lineTo(front.dx, front.dy)
+              ..lineTo(right.dx, right.dy)
+              ..close(),
+            Paint()..color = shade,
+          );
+          canvas.drawLine(left, front, Paint()
+            ..color = light.withAlpha(0x88)
+            ..strokeWidth = 1.1);
+        }
+        crown(-r * 0.18, r * 0.76, r * 0.92,
+            const Color(0xFF78A95A), const Color(0xFF477A43), const Color(0xFF244A32));
+        crown(-r * 0.62, r * 0.62, r * 0.82,
+            const Color(0xFF8BBE68), const Color(0xFF568B4A), const Color(0xFF2D5A37));
+        crown(-r * 1.02, r * 0.45, r * 0.72,
+            const Color(0xFFA0CB78), const Color(0xFF679A54), const Color(0xFF38673D));
+        canvas.drawCircle(p + Offset(-r * 0.22, -r * 1.18), r * 0.07,
+            Paint()..color = const Color(0xFFD0E6A1));
+      } else { else {
         canvas.drawCircle(
           p,
           r,
