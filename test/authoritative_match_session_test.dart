@@ -1164,6 +1164,7 @@ void main() {
 
   test('failed match settlements retry and keep a finished room alive', () async {
     var attempts = 0;
+    var failedOnce = false;
     final settled = <String>{};
     final session = AuthoritativeMatchSession(
       code: 'retry01',
@@ -1174,7 +1175,8 @@ void main() {
         required finishReason,
       }) async {
         attempts++;
-        if (accountId == 'retry-account-1' && !settled.contains(accountId)) {
+        if (accountId == 'retry-account-1' && !failedOnce) {
+          failedOnce = true;
           throw StateError('temporary database outage');
         }
         settled.add(accountId);
