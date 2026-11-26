@@ -135,7 +135,9 @@ class AuthoritativeMatchSession
   bool get shouldRemove =>
       _players.isEmpty ||
       (_rules?.phase == MatchPhase.finished &&
-          _players.every((player) => !player.connected));
+          _players.every((player) => !player.connected) &&
+          _pendingSettlements.isEmpty &&
+          !_settlementInFlight);
 
   @override
   GameServerPlayer? join() => _join(accountId: null);
@@ -202,6 +204,7 @@ class AuthoritativeMatchSession
     if (_rules?.phase == MatchPhase.running) {
       _rules!.forfeit(matchPlayer.id);
       matchPlayer.connected = false;
+      _queueFinishedSettlements();
       return;
     }
     _players.remove(matchPlayer);
