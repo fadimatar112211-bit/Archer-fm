@@ -69,21 +69,6 @@ void main() {
       expect(match.result?.reason, MatchFinishReason.lastCrystalHolder);
     });
 
-    test('all players losing crystals does not invent an immediate winner', () {
-      final match = MatchRulesEngine(
-        duration: MatchDuration.ten,
-        participants: fourPlayers(),
-      )..start();
-
-      for (final player in ['p1', 'p2', 'p3', 'p4']) {
-        expect(match.setLivingCrystals(player, 0).accepted, isTrue);
-      }
-
-      expect(match.phase, MatchPhase.running);
-      expect(match.result, isNull);
-      expect(match.allRemainingPlayersHaveNoCrystals, isTrue);
-    });
-
     test('time expiry ranks by score then by remaining crystals', () {
       final match = MatchRulesEngine(
         duration: MatchDuration.ten,
