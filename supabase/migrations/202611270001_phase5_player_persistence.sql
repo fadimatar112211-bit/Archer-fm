@@ -66,6 +66,31 @@ alter table public.monster_progress enable row level security;
 alter table public.currency_transactions enable row level security;
 alter table public.match_results enable row level security;
 
+-- Explicitly remove broad/default table grants before granting the minimum
+-- client surface. RLS policies alone are not a substitute for SQL privileges.
+revoke all on table public.player_profiles,
+  public.hero_progress,
+  public.monster_progress,
+  public.currency_transactions,
+  public.match_results
+  from public, anon, authenticated;
+
+grant select on table public.player_profiles,
+  public.hero_progress,
+  public.monster_progress,
+  public.currency_transactions,
+  public.match_results
+  to authenticated;
+
+grant update (display_name) on table public.player_profiles to authenticated;
+grant all on table public.player_profiles,
+  public.hero_progress,
+  public.monster_progress,
+  public.currency_transactions,
+  public.match_results
+  to service_role;
+
+
 -- A signed-in player can read their own profile and update only its display name.
 drop policy if exists player_profiles_select_own on public.player_profiles;
 create policy player_profiles_select_own on public.player_profiles
