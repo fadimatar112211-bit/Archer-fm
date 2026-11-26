@@ -6,6 +6,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 
 ## Implemented on the current feature branch
 
+- Added a continuous camera-culled triangulated ground mesh across the visible battlefield, with deterministic elevation variation and biome-specific surface palettes.
 - Added a software-rendered, height-bearing triangular mesh pass for biome landforms. The mesh has concentric elevation rings, exposed cliff faces, per-face directional shading, and biome palettes for forest, desert, snow and volcanic regions.
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
 - Replaced circular rock icons with multi-face angular rock geometry and directional highlights.
@@ -22,7 +23,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 ## Still required before calling the map fully 3D
 
 This is an initial mesh-based terrain pass, not completion of the final map art. Remaining work includes:
-- Full continuous terrain surface driven by the checked-in height map, with terrain chunking and correct depth ordering.
+- Connect the packaged 96×96 height-map asset to the live match renderer (the asset loader currently parses it separately from the procedural match-world snapshot), with terrain chunking and correct depth ordering.
 - Volumetric 3D castles, towers, walls, bridges, crystals and resource structures (not flat painter symbols).
 - Water surface geometry, river banks, waterfalls/ripples and material response.
 - More detailed biome-specific trees, rocks, snow, dunes, lava and vegetation.
