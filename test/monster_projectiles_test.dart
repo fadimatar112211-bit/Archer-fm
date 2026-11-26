@@ -309,6 +309,46 @@ void main() {
       expect(events, ['p1:hero', 'p1:hero']);
     });
 
+    test('stunned or frozen units do not move, melee attack or launch projectiles', () {
+      final ranged = _ranged();
+      final target = _Target(
+        'paused-target', 'p2', ranged.positionX + 1, ranged.positionY,
+      );
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 4);
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: manager,
+        projectileSpeed: 10,
+        projectileId: (_) => 'paused-projectile',
+        canActFor: (_) => false,
+      );
+
+      final result = loop.update(
+        units: [ranged],
+        candidatesFor: (_) => [
+          MonsterTarget(
+            id: target.id,
+            ownerId: target.ownerId,
+            kind: target.kind,
+            x: target.positionX,
+            y: target.positionY,
+            isAlive: target.isAlive,
+          ),
+        ],
+        resolveDamageTarget: (_) => target,
+        resolvePositionedTarget: (_) => target,
+        now: DateTime.utc(2026, 3, 1),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(result.meleeHitsApplied, 0);
+      expect(result.rangedProjectilesCreated, 0);
+      expect(manager.activeCount, 0);
+      expect(target.health, 50);
+    });
+
     test('routes melee damage and ranged attacks through the projectile manager', () {
       final ranged = _ranged();
       final melee = MonsterArmy(
