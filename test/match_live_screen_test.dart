@@ -114,6 +114,26 @@ void main() {
       expect(tester.takeException(), isNull);
 
       connectedSocket!.add(jsonEncode({
+        'type': 'ack',
+        'seq': 999,
+        'error': 'attack_rejected',
+      }));
+      await tester.runAsync(() => Future<void>.delayed(
+            const Duration(milliseconds: 60),
+          ));
+      await tester.pump();
+      expect(
+        find.text('رفض الخادم الهجوم؛ تحقق من المدى والتبريد'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byTooltip('إغلاق التنبيه'));
+      await tester.pump();
+      expect(
+        find.text('رفض الخادم الهجوم؛ تحقق من المدى والتبريد'),
+        findsNothing,
+      );
+
+      connectedSocket!.add(jsonEncode({
         'type': 'state',
         'phase': 'finished',
         'players': [
