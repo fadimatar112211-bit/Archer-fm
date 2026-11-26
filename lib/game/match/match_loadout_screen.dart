@@ -8,6 +8,7 @@ import 'match_result_panel.dart';
 import '../../monsters/monster_models.dart';
 
 import '../controls/virtual_joystick.dart';
+import '../feedback/game_feedback_preferences.dart';
 import '../render3/arena_battlefield.dart';
 import '../heroes/hero_roster.dart';
 import '../network/game_client.dart';
@@ -558,6 +559,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       _selectedTargetId = targets[nextIndex];
       _lastError = null;
     });
+    unawaited(GameFeedbackPreferences.selectionClick());
   }
 
 
@@ -575,7 +577,11 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     final sent = type == 'ultimate'
         ? client.send('ultimate', {'targetId': targetId, 'index': ultimateIndex!})
         : client.send('attack', {'targetId': targetId});
-    if (!sent) setState(() => _lastError = 'تعذّر إرسال أمر القتال');
+    if (!sent) {
+      setState(() => _lastError = 'تعذّر إرسال أمر القتال');
+    } else {
+      unawaited(GameFeedbackPreferences.selectionClick());
+    }
   }
 
   void _sendPurchase(MonsterType type) {
@@ -583,6 +589,8 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     if (client == null || !client.isConnected || _matchPhase != 'running') return;
     if (!client.send('purchase', {'monsterType': type.name})) {
       setState(() => _lastError = 'تعذّر إرسال طلب شراء الوحدة');
+    } else {
+      unawaited(GameFeedbackPreferences.selectionClick());
     }
   }
 
