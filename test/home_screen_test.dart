@@ -34,6 +34,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const ArcherFmApp());
+    await tester.ensureVisible(find.text('ترسانة الأبطال'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('ترسانة الأبطال'));
     await tester.pump();
 
@@ -52,6 +54,8 @@ void main() {
     await tester.pumpWidget(const ArcherFmApp());
     await tester.tap(find.text('الإعدادات'));
     await tester.pump();
+    await tester.ensureVisible(find.text('الاهتزاز'));
+    await tester.pumpAndSettle();
 
     expect(find.text('الاهتزاز'), findsOneWidget);
     expect(find.text('الصوت'), findsOneWidget);
