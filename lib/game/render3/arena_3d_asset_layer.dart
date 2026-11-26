@@ -138,7 +138,7 @@ class _Arena3DAssetLayerState extends State<Arena3DAssetLayer>
       final existing = _heroes[playerId];
       if (existing == null || existing.id != heroId) {
         existing?.dispose();
-        final model = Hero3D(heroId, height: 54)..onSound = (_) {};
+        final model = Hero3D(heroId, height: 68)..onSound = (_) {};
         _heroes[playerId] = model;
         model.load().then((_) {
           if (mounted) setState(() {});
@@ -174,10 +174,10 @@ class _Arena3DAssetLayerState extends State<Arena3DAssetLayer>
       if (existing == null || existing.id != modelId) {
         existing?.dispose();
         final model = Monster3D(modelId, height: switch (modelId) {
-          'stone-golem' => 56,
-          'blind-stalker' => 42,
-          'werewolf' => 47,
-          _ => 46,
+          'stone-golem' => 64,
+          'blind-stalker' => 50,
+          'werewolf' => 55,
+          _ => 54,
         })
           ..onSound = (_) {}
           ..isHeavyAoe = modelId == 'stone-golem'
@@ -526,7 +526,7 @@ class _Arena3DActorPainter extends CustomPainter {
       final hp = _number(unit['health']);
       final maxHp = _number(unit['maxHealth']);
       if (hp != null && maxHp != null && maxHp > 0) {
-        _healthBar(canvas, p.translate(0, -modelHeight(model, 34) / 2 - 7), 24, hp / maxHp);
+        _healthBar(canvas, p.translate(0, -modelHeight(model, 34) / 2 - 7), 28, hp / maxHp);
       }
     }
 
@@ -558,7 +558,7 @@ class _Arena3DActorPainter extends CustomPainter {
         _healthBar(
           canvas,
           p.translate(0, -(model?.height ?? 54) * 0.69),
-          34,
+          40,
           hp / maxHp,
         );
       }
