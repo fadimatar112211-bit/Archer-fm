@@ -42,6 +42,8 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     throw const FormatException('monsterCatalog contains an unknown monster type.');
   }
 
+  final weaponUpgradeDamagePerLevel =
+      _number(json, 'weaponUpgradeDamagePerLevel');
   final projectileSpeed = _number(json, 'projectileSpeed');
   final maxActiveProjectiles = _integer(json, 'maxActiveProjectiles');
   final maxUnitsPerArmy = _integer(json, 'maxUnitsPerArmy');
@@ -67,6 +69,7 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     maxHeroEnergy: maxHeroEnergy,
     energyRegenerationPerSecond: energyRegenerationPerSecond,
     ultimateEnergyCosts: ultimateEnergyCosts,
+    weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
   );
 }
 
