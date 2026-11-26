@@ -28,6 +28,9 @@ jobs:
       - name: Generate isolated Android runner
         working-directory: tools/arena_3d_spike
         run: flutter create --platforms=android --project-name arena_3d_spike --org com.archerfm --no-pub .
+      - name: Remove generated sample test (it targets Flutter's starter counter app)
+        working-directory: tools/arena_3d_spike
+        run: rm -rf test
       - name: Resolve spike-only dependencies
         working-directory: tools/arena_3d_spike
         run: flutter pub get
