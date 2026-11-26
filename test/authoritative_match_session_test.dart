@@ -172,6 +172,30 @@ void main() {
     expect(p1Standing['livingCrystals'], 7);
   });
 
+
+  test('defeated heroes cannot attack, cast Ultimates or purchase units', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final hero = authority.heroes['p1']!;
+    final enemy = authority.armies
+        .firstWhere((army) => army.ownerId == 'p2')
+        .units.first;
+    hero.health = 0;
+    expect(
+      authority.attack('p1', enemy.id).accepted,
+      isFalse,
+    );
+    expect(
+      authority.useUltimate('p1', 0, enemy.id).accepted,
+      isFalse,
+    );
+    expect(
+      authority.purchaseMonster('p1', MonsterType.runner),
+      isNull,
+    );
+    expect(hero.combat.comboIndex, 0);
+  });
+
   test('server movement is speed-capped and purchases debit the match wallet', () {
     final session = _combatReadySession();
     final authority = session.combat!;
