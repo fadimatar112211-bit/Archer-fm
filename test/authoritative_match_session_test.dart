@@ -80,6 +80,7 @@ void main() {
         .units.first;
     enemy.positionX = p1Position.dx;
     enemy.positionY = p1Position.dy;
+    enemy.order = MonsterOrder.advance;
 
     session.tick(const Duration(milliseconds: 500));
     expect(enemy.targetId, 'hero_p1');
@@ -123,6 +124,7 @@ void main() {
     final crystal = session.world!.castles.castleOf('p1')!.crystals.first;
     enemy.positionX = crystal.position.dx;
     enemy.positionY = crystal.position.dy;
+    enemy.order = MonsterOrder.advance;
     final initialHp = crystal.hp;
 
     session.tick(const Duration(milliseconds: 500));
