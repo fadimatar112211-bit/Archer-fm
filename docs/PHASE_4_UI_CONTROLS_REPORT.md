@@ -42,6 +42,18 @@
 - The Android workflow's emulator step is guarded by `github.event_name == 'workflow_dispatch'`; normal push/PR validation will not start it.
 - An older Android run that began before this guard was committed may still be running. This repository integration does not expose a cancel-running-workflow action, so the guard prevents new automatic emulator starts but cannot terminate that already-running job from this session.
 
+
+## Second implementation batch — room connection lifecycle
+
+- Added a 12-second room-response deadline so the setup screen cannot remain in a silent indefinite busy state when a socket opens but no room welcome arrives.
+- Added a visible progress indicator and waiting message while the server response is pending.
+- Added a retry action for failed room creation/join attempts, retaining whether the last attempt was create or join.
+- Added explicit Arabic messaging for expired room sessions and clearer connection failures.
+- Added a widget test proving malformed/missing WebSocket addresses are rejected before any socket attempt.
+- The UI listens for connection state changes and clears its busy state on connected, closed, and expired-session states. A room welcome cancels the response deadline.
+- Commit: `87e7e66ad5b6d4fc9da30f48f2f931f8f73382a9` — bounded room connection feedback and retry.
+- Commit: `89c7152fadd8b9925a30f10d502a96d9bff66661` — connection address validation test.
+
 ## Remaining Phase 4 work
 
 1. Complete the home/profile/account and post-match navigation without inventing account functionality before Phase 5.
