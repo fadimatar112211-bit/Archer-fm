@@ -87,7 +87,7 @@ Future<void> _pumpLoaded(WidgetTester tester) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(ArcherFmApp(loaderFactory: _FakeLoader.new));
   await tester.tap(find.text('الأبطال'));
-  await tester.pumpAndSettle();
+  await tester.pump();
   for (var i = 0; i < 4; i++) {
     await tester.pump(const Duration(milliseconds: 20));
   }
@@ -169,7 +169,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('الأبطال'));
-    await tester.pumpAndSettle();
+    await tester.pump();
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 25));
     }
