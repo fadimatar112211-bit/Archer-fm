@@ -172,6 +172,7 @@ class _ArenaPainter extends CustomPainter {
     _drawMines(canvas, world, project);
     _drawCastles(canvas, world, project);
     _drawMonsters(canvas, snapshot, world, project);
+    _drawDyingMonsters(canvas, snapshot, world, project);
     _drawProjectiles(canvas, snapshot, project);
     _drawHeroes(canvas, snapshot, world, project);
     _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
@@ -582,6 +583,35 @@ class _ArenaPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
+  }
+
+  void _drawDyingMonsters(
+    Canvas canvas,
+    Map<String, dynamic> state,
+    Map world,
+    Offset Function(Offset) project,
+  ) {
+    final combat = _map(state['combat']);
+    for (final raw in _list(combat?['dyingMonsters'])) {
+      final monster = _map(raw);
+      if (monster == null) continue;
+      final point = _point(monster);
+      if (point == null ||
+          !_enemyMonsterVisible(point, world, monster['ownerId']?.toString())) {
+        continue;
+      }
+      final p = project(point);
+      final color = _ownerColor(monster['ownerId']?.toString(), state);
+      canvas.drawOval(
+        Rect.fromCenter(center: p, width: 13, height: 5),
+        Paint()..color = color.withOpacity(0.42),
+      );
+      canvas.drawCircle(
+        p,
+        3,
+        Paint()..color = const Color(0xFF4A4946).withOpacity(0.8),
+      );
+    }
   }
 
   void _drawProjectiles(
