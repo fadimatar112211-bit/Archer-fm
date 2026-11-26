@@ -20,12 +20,11 @@ import 'match_world_authority.dart';
 class MatchCombatConfiguration {
   MatchCombatConfiguration({
     required this.monsterCatalog,
-    required Map<String, InitialArmySelection> initialArmies,
     required this.projectileSpeed,
     required this.maxActiveProjectiles,
     required this.maxUnitsPerArmy,
     required this.worldUnitsPerSecond,
-  }) : initialArmies = Map.unmodifiable(initialArmies) {
+  }) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0 ||
         maxActiveProjectiles <= 0 ||
         maxUnitsPerArmy < 20 ||
@@ -35,7 +34,6 @@ class MatchCombatConfiguration {
   }
 
   final MonsterCatalog monsterCatalog;
-  final Map<String, InitialArmySelection> initialArmies;
   final double projectileSpeed;
   final int maxActiveProjectiles;
   final int maxUnitsPerArmy;
@@ -75,16 +73,17 @@ class MatchCombatAuthority {
     required this.world,
     required Map<String, HeroCombatDefinition> heroes,
     required Map<String, String> weaponIds,
+    required Map<String, InitialArmySelection> initialArmies,
     required this.configuration,
     math.Random? random,
   }) {
     if (heroes.length != world.playerIds.length ||
         weaponIds.length != world.playerIds.length ||
-        configuration.initialArmies.length != world.playerIds.length ||
+        initialArmies.length != world.playerIds.length ||
         world.playerIds.any((id) =>
             !heroes.containsKey(id) ||
             !weaponIds.containsKey(id) ||
-            !configuration.initialArmies.containsKey(id))) {
+            !initialArmies.containsKey(id))) {
       throw ArgumentError('Combat loadouts and initial armies must cover all four players.');
     }
 
@@ -103,7 +102,7 @@ class MatchCombatAuthority {
         ownerId: playerId,
         idPrefix: '$playerId-army',
         catalog: configuration.monsterCatalog,
-        selection: configuration.initialArmies[playerId]!,
+        selection: initialArmies[playerId]!,
         maxUnits: configuration.maxUnitsPerArmy,
         castleX: castle.anchor.dx,
         castleY: castle.anchor.dy,
