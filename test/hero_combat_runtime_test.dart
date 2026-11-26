@@ -81,7 +81,11 @@ void main() {
 
     test('all heroes have equal health and retain their distinct movement speed', () {
       final runtimes = HeroId.values
-          .map((id) => HeroCombatRuntime(hero: heroCombatById(id), level: 12))
+          .map((id) => HeroCombatRuntime(
+              hero: heroCombatById(id),
+              level: 12,
+              comboResetWindowMs: 1200,
+            ))
           .toList();
       expect(runtimes.map((runtime) => runtime.health).toSet(), hasLength(1));
       expect(runtimes.map((runtime) => runtime.moveSpeed).toSet(), hasLength(4));
