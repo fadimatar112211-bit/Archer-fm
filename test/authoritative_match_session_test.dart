@@ -1132,7 +1132,7 @@ void main() {
       await session.prepareAccount(players[i], accounts[i]);
     }
 
-    expect(
+    await expectLater(
       session.prepareAccount(players.first, 'different-account'),
       throwsStateError,
     );
