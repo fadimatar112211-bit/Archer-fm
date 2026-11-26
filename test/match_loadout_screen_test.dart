@@ -29,6 +29,10 @@ void main() {
     expect(find.text('متسلّل'), findsOneWidget);
     expect(find.text('رامٍ'), findsOneWidget);
     expect(find.text('20 / 20'), findsOneWidget);
+    expect(find.text('runner'), findsNothing);
+    expect(find.text('tank'), findsNothing);
+    expect(find.text('stalker'), findsNothing);
+    expect(find.text('ranged'), findsNothing);
   });
 
   testWidgets('army selector never allows more than twenty starting units',
