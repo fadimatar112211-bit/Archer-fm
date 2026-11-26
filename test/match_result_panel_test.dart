@@ -11,7 +11,7 @@ void main() {
       MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p2',
-          onReturnHome: () => returnedHome = true,
+          onReturnHome: () { returnedHome = true; },
           result: {
             'reason': 'timeExpired',
             'winnerId': 'p2',
@@ -51,7 +51,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p4',
           onReturnHome: () {},
