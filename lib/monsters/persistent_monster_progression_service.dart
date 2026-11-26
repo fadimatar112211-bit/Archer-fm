@@ -58,7 +58,15 @@ class PersistentMonsterProgressionService {
         final progression = _restore(
           await store.loadData(trustedAccountId),
         );
-        final nextLevel = progression.levelOf(type) + 1;
+        final currentLevel = progression.levelOf(type);
+        if (currentLevel >= MonsterProgression.maxLevel) {
+          return PersistentMonsterUpgrade(
+            result: MonsterUpgradeResult.maxLevelReached,
+            currencyBalance: currentCurrency,
+            level: currentLevel,
+          );
+        }
+        final nextLevel = currentLevel + 1;
         final cost = economy.upgradeCost(type, nextLevel);
         if (cost == null || cost < 0) {
           throw StateError('No valid upgrade cost configured for ${type.name}.');
