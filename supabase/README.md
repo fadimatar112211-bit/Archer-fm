@@ -31,6 +31,8 @@ The server verifies every WebSocket create/join/resume access token by calling S
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY` — public anon/publishable key used for the Auth API request
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only secret used by the cloud persistence adapters; never add it to the mobile app, repository, or logs
+- `ARCHER_FM_MATCH_REWARDS_BY_RANK` — optional JSON array of four non-negative integer rewards for ranks 1–4, for example `[0,0,0,0]`; omitted means no currency reward until the owner approves a balance schedule
 - `ARCHER_FM_COMBAT_CONFIG` — path to the approved combat JSON
 - `ARCHER_FM_BIND_ADDRESS=127.0.0.1`
 - `ARCHER_FM_PORT=8080`
@@ -48,7 +50,7 @@ Place it behind a trusted reverse proxy that terminates TLS and exposes only WSS
 - Authenticated users can read only their own progression, currency ledger and match results.
 - Clients may update only their profile display name.
 - Clients cannot insert/update/delete hero progression, monster progression, currency transactions or match results.
-- The two revision-checked progression RPCs are executable only by `service_role`.
+- The two revision-checked progression RPCs and atomic match-result/reward settlement RPC are executable only by `service_role`.
 - The Supabase service-role/secret key is server-only. Never put it in Dart defines, APKs, assets, GitHub source or client logs.
 
 ## Current implementation boundary
@@ -61,13 +63,14 @@ Implemented in this branch:
 - RLS schema, account profile bootstrap trigger, currency ledger and match-result tables.
 - Provider-neutral progression store interfaces and Supabase REST adapters for hero/monster JSON saves.
 - Revision-checked backend save RPCs to reject cross-server stale writes.
+- Atomic, idempotent match-result and currency-reward settlement RPC, typed server adapter, and an authoritative match-finish callback that retries failed writes while the room remains alive.
 
 Still required before production use:
 - Create/link the actual Supabase project and apply the migration.
-- Add server-side service-role configuration and wire the cloud progression stores into the authenticated match/profile services.
-- Persist currency and match rewards through one idempotent database transaction; the ledger schema exists but reward settlement is not yet connected.
+- Wire cloud hero/monster progression loading and saving into all account profile and upgrade handlers; the stores exist, but the current match session does not yet hydrate all saved progression before match start.
+- Approve the rank reward schedule and configure `ARCHER_FM_MATCH_REWARDS_BY_RANK`; the default is zero rewards, not an invented economy balance.
 - Load cloud profile on login and migrate existing local saves with a tested conflict policy.
-- Add end-to-end tests against a staging Supabase project, including second-device recovery and cross-account isolation.
+- Add end-to-end tests against a staging Supabase project, including second-device recovery, concurrent/idempotent settlement and cross-account isolation.
 - Add production TLS proxy deployment, monitoring, backups and a restore drill.
 - Test token expiry/revocation during long-lived WebSocket sessions.
 
