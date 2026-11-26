@@ -1,6 +1,6 @@
 import 'monster_models.dart';
 import 'monster_progression.dart';
-import 'file_monster_progress_store.dart';
+import 'monster_progress_store.dart';
 
 /// Trusted economy configuration for permanent monster upgrades.
 abstract interface class MonsterProgressionEconomy {
@@ -35,7 +35,7 @@ class PersistentMonsterProgressionService {
     required this.economy,
   });
 
-  final FileMonsterProgressStore store;
+  final MonsterProgressStore store;
   final MonsterCatalog catalog;
   final Map<MonsterType, MonsterUpgradeGrowth> growth;
   final MonsterProgressionEconomy economy;
