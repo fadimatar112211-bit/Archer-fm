@@ -12,6 +12,7 @@ import '../../monsters/monster_match_combat_loop.dart';
 import '../../monsters/monster_match_runtime.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_projectile_manager.dart';
+import '../../monsters/monster_progression.dart';
 import '../../monsters/monster_ranged_attack_handler.dart';
 import 'match_world_authority.dart';
 
@@ -24,7 +25,9 @@ class MatchCombatConfiguration {
     required this.maxActiveProjectiles,
     required this.maxUnitsPerArmy,
     required this.worldUnitsPerSecond,
-  }) {
+    Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
+  }) : monsterProgressionByPlayer =
+           Map.unmodifiable(monsterProgressionByPlayer) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0 ||
         maxActiveProjectiles <= 0 ||
         maxUnitsPerArmy < 20 ||
@@ -38,6 +41,9 @@ class MatchCombatConfiguration {
   final int maxActiveProjectiles;
   final int maxUnitsPerArmy;
   final double worldUnitsPerSecond;
+  /// Trusted, already-loaded permanent monster progression for each account.
+  /// The host remains responsible for loading and saving each profile.
+  final Map<String, MonsterProgression> monsterProgressionByPlayer;
 }
 
 class MatchHeroState {
@@ -143,6 +149,7 @@ class MatchCombatAuthority {
         maxUnits: configuration.maxUnitsPerArmy,
         castleX: castle.anchor.dx,
         castleY: castle.anchor.dy,
+        statsForType: configuration.monsterProgressionByPlayer[playerId]?.statsFor,
       ));
     }
 
