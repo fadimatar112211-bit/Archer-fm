@@ -82,6 +82,15 @@
 - Buttons remain disabled unless the player is alive, connected, in a running match, at the required level and past cooldown; the authoritative server still validates energy, range and all combat rules.
 - Commit: `2fee0a14bdebe62fb02b1282f07bebc3cb9db82d`.
 
+
+## Sixth implementation batch — Arabic UI fallbacks
+
+- Removed raw internal English monster type IDs from the Arabic starting-army list.
+- Unknown connection/action errors now show a clear Arabic fallback instead of leaking server reason identifiers into player-facing UI.
+- Unknown match phases now fall back to a generic Arabic label.
+- Added widget assertions that the internal `runner/tank/stalker/ranged` identifiers are not displayed.
+- Commits: `10da6c4acde3418575d228b8a1a9e316040e832b` and `0085fbe0d456eb80262075f5755a69d08b172ca8`.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
