@@ -5,6 +5,8 @@ import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/match_combat_configuration.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/network/supabase_access_token_verifier.dart';
+import 'package:archer_fm/game/network/supabase_rest_client.dart';
+import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 /// Production-oriented gateway entry point.
@@ -16,15 +18,19 @@ import 'package:archer_fm/game/network/websocket_game_host.dart';
 Future<void> main() async {
   final supabaseUrl = Platform.environment['SUPABASE_URL'];
   final supabaseAnonKey = Platform.environment['SUPABASE_ANON_KEY'];
+  final serviceRoleKey = Platform.environment['SUPABASE_SERVICE_ROLE_KEY'];
+  final rawRewardSchedule = Platform.environment['ARCHER_FM_MATCH_REWARDS_BY_RANK'];
   final configPath = Platform.environment['ARCHER_FM_COMBAT_CONFIG'];
   if (supabaseUrl == null ||
       supabaseUrl.trim().isEmpty ||
       supabaseAnonKey == null ||
       supabaseAnonKey.trim().isEmpty ||
+      serviceRoleKey == null ||
+      serviceRoleKey.trim().isEmpty ||
       configPath == null ||
       configPath.trim().isEmpty) {
     stderr.writeln(
-      'SUPABASE_URL, SUPABASE_ANON_KEY and ARCHER_FM_COMBAT_CONFIG are required.',
+      'SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY and ARCHER_FM_COMBAT_CONFIG are required.',
     );
     exitCode = 64;
     return;
@@ -65,6 +71,13 @@ Future<void> main() async {
   }
 
   final port = int.tryParse(Platform.environment['ARCHER_FM_PORT'] ?? '') ?? 8080;
+  final rewardSchedule = _decodeRewardSchedule(rawRewardSchedule);
+  final persistenceClient = SupabaseRestClient(
+    supabaseUrl: supabaseUrl,
+    serviceRoleKey: serviceRoleKey,
+  );
+  final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
+
   final verifier = SupabaseAccessTokenVerifier(
     supabaseUrl: supabaseUrl,
     anonKey: supabaseAnonKey,
@@ -75,6 +88,27 @@ Future<void> main() async {
     accessTokenVerifier: verifier.verify,
     sessionFactory: AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: combatConfiguration,
+      onMatchSettlement: ({
+        required matchId,
+        required accountId,
+        required standing,
+        required finishReason,
+      }) async {
+        final reward = rewardSchedule[standing.rank - 1];
+        await settlementStore.finalizePlayer(
+          matchId: matchId,
+          verifiedUserId: accountId,
+          placement: standing.rank,
+          score: standing.score,
+          crystalsRemaining: standing.livingCrystals,
+          finishReason: finishReason.name,
+          rewardAmount: reward,
+          idempotencyKey: 'match:$matchId:user:$accountId:reward:v1',
+        );
+      },
+      onMatchSettlementError: (error) {
+        stderr.writeln('Match settlement pending retry: $error');
+      },
     ),
   );
 
@@ -89,5 +123,19 @@ Future<void> main() async {
   } finally {
     await host.close();
     verifier.close();
+    persistenceClient.close();
   }
+}
+
+List<int> _decodeRewardSchedule(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return List<int>.filled(4, 0);
+  final decoded = jsonDecode(raw);
+  if (decoded is! List ||
+      decoded.length != 4 ||
+      decoded.any((value) => value is! int || value < 0)) {
+    throw const FormatException(
+      'ARCHER_FM_MATCH_REWARDS_BY_RANK must be a JSON array of four non-negative integers.',
+    );
+  }
+  return decoded.cast<int>();
 }
