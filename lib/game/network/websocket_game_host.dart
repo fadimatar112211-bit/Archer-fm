@@ -46,7 +46,7 @@ typedef GameServerSessionFactory = GameServerSession Function(
   Map<String, dynamic> createMessage,
 );
 
-abstract interface class AccountBoundGameServerSession {
+abstract interface class AccountBoundGameServerSession implements GameServerSession {
   GameServerPlayer? joinForAccount(String accountId);
   bool ownsResumeToken(String resumeToken, String accountId);
 }
@@ -293,7 +293,7 @@ class WebSocketGameHost {
       GameServerPlayer? joinRoom(GameServerSession session) {
         if (verifier == null) return session.join();
         if (session is! AccountBoundGameServerSession) return null;
-        return (session as AccountBoundGameServerSession).joinForAccount(accountId!);
+        return session.joinForAccount(accountId!);
       }
 
       switch (message['type']) {
@@ -304,17 +304,17 @@ class WebSocketGameHost {
           }
           final code = _newRoomCode();
           room = sessionFactory(code, message);
-          player = joinRoom(room!);
+          player = joinRoom(room);
           if (player == null) {
             _send(socket, {'type': 'error', 'reason': 'account_binding_unavailable'});
             return;
           }
-          _rooms[code] = room!;
+          _rooms[code] = room;
           break;
         case 'join':
           final code = message['code'];
           if (code is String) room = _rooms[code];
-          if (room != null) player = joinRoom(room!);
+          if (room != null) player = joinRoom(room);
           break;
         case 'resume':
           final code = message['code'];
@@ -322,9 +322,9 @@ class WebSocketGameHost {
           if (code is String) room = _rooms[code];
           if (room != null && token is String) {
             if (verifier == null) {
-              player = room!.resume(token);
+              player = room.resume(token);
             } else if (room is AccountBoundGameServerSession &&
-                (room as AccountBoundGameServerSession).ownsResumeToken(token, accountId!)) {
+                room.ownsResumeToken(token, accountId!)) {
               player = room!.resume(token);
             }
           }
@@ -334,29 +334,31 @@ class WebSocketGameHost {
           return;
       }
 
-      if (room == null || player == null) {
+      final joinedRoom = room;
+      final joinedPlayer = player;
+      if (joinedRoom == null || joinedPlayer == null) {
         _send(socket, {'type': 'error', 'reason': 'no_session'});
         return;
       }
       if (socket.readyState != WebSocket.open) {
-        room!.disconnect(player!);
+        joinedRoom.disconnect(joinedPlayer);
         return;
       }
-      player!.connected = true;
-      final oldSocket = _sockets[player!.id];
-      _sockets[player!.id] = socket;
+      joinedPlayer.connected = true;
+      final oldSocket = _sockets[joinedPlayer.id];
+      _sockets[joinedPlayer.id] = socket;
       oldSocket?.close();
-      attach(room!, player!);
+      attach(joinedRoom, joinedPlayer);
       _send(socket, {
         'type': 'welcome',
-        'id': player!.id,
-        'token': player!.resumeToken,
-        'code': room!.code,
-        'lastSeq': player!.lastSequence,
+        'id': joinedPlayer.id,
+        'token': joinedPlayer.resumeToken,
+        'code': joinedRoom.code,
+        'lastSeq': joinedPlayer.lastSequence,
       });
-      final initialSnapshot = room is PlayerScopedSnapshotSession
-          ? (room as PlayerScopedSnapshotSession).snapshotFor(player!)
-          : room!.snapshot();
+      final initialSnapshot = joinedRoom is PlayerScopedSnapshotSession
+          ? joinedRoom.snapshotFor(joinedPlayer)
+          : joinedRoom.snapshot();
       _send(socket, initialSnapshot);
     } catch (_) {
       _send(socket, {'type': 'error', 'reason': 'handshake_failed'});
