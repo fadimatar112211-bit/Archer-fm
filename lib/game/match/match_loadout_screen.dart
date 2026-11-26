@@ -320,7 +320,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                               label: const Text('إرسال التجهيز'),
                             ),
                             if (!_busy && _client != null &&
-                                _connectionLabel != 'متصل' && _room == null)
+                                _lastError != null && _room == null)
                               TextButton.icon(
                                 onPressed: () => _connect(create: _lastAttemptCreate),
                                 icon: const Icon(Icons.refresh),
