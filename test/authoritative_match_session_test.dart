@@ -1106,4 +1106,58 @@ void main() {
     expect(session.players, hasLength(1));
   });
 
+
+  test('verified cloud hero progression is restored before match loadout checks', () async {
+    final ranger = archerFmHeroes.first;
+    final unlocked = {
+      for (final hero in archerFmHeroes) hero.weapons.first.id,
+      ranger.weapons[1].id,
+    };
+    final progress = HeroProgress(
+      unlockedWeaponIds: unlocked,
+      weaponUpgradeLevels: {ranger.weapons[1].id: 2},
+      heroLevels: {ranger.id.name: 7},
+    );
+    final session = AuthoritativeMatchSession(
+      code: 'restore1',
+      combatConfiguration: _combatConfiguration(),
+      loadAccountHeroProgress: (_) async => progress,
+    );
+    final accounts = ['restore-a', 'restore-b', 'restore-c', 'restore-d'];
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      await session.prepareAccount(players[i], accounts[i]);
+    }
+
+    expect(
+      await session.prepareAccount(players.first, 'different-account'),
+      throwsStateError,
+    );
+
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(
+        session.handle(players[i], {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': i == 0 ? ranger.weapons[1].id : hero.weapons.first.id,
+        }),
+        isNull,
+      );
+      expect(
+        session.handle(players[i], {
+          'type': 'army_select',
+          'counts': {'runner': 20},
+        }),
+        isNull,
+      );
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    final heroes = (session.snapshot()['combat'] as Map)['heroes'] as Map;
+    expect((heroes['p1'] as Map)['level'], 7);
+    expect((heroes['p1'] as Map)['weaponId'], ranger.weapons[1].id);
+  });
+
 }
