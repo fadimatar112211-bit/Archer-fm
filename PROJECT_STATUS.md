@@ -2,11 +2,11 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-26
-> Project status: Phase 1 repository audit and CI hardening complete; Phase 2 technical asset integration next
+> Project status: Phase 1 technical asset integration complete (CI evidence); Phase 2 map quality pending real gameplay capture; Phase 3 core match/combat verification implemented and automated CI passing, with balance-dependent rewards and production account integration still open
 > Active work branch: `feature/match-rules-foundation` (PR #20, Draft, open)
 > Default branch: `main`
 >
-> **Current status note (2026-11-26):** The detailed historical sections below include snapshots from earlier dates and are not a live completion claim. For the current evidence-based audit and execution order, see `docs/PROJECT_AUDIT_AND_REMAINING_WORK.md` and `docs/PHASE_1_COMPLETION_REPORT.md`.
+> **Current status note (2026-11-26):** The detailed historical sections below include snapshots from earlier dates and are not a live completion claim. Official roadmap phases: Phase 1 = technical asset integration; Phase 2 = map quality; Phase 3 = core match/combat verification. Current evidence: `docs/ASSET_INTEGRATION_REPORT.md`, `docs/PHASE_3_CORE_MATCH_COMBAT_REPORT.md`, and `docs/PROJECT_AUDIT_AND_REMAINING_WORK.md`.
 
 ## 1. Project identity
 
