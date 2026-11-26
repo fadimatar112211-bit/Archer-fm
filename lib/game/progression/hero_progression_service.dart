@@ -62,6 +62,15 @@ class HeroProgressionService {
       weaponLevel: progress.weaponLevel(weaponId),
     );
   }
+
+  /// Applies a reward amount calculated by trusted post-match reward logic.
+  /// This service deliberately does not choose or invent the reward amount.
+  int awardHeroExperience(
+    HeroProgress progress,
+    String heroId, {
+    required int amount,
+  }) =>
+      progress.awardHeroExperience(heroId, amount);
 }
 
 
@@ -112,6 +121,21 @@ class PersistentHeroProgressionService {
         final result = HeroProgressionService(economy).upgrade(progress, weaponId);
         if (result.accepted) await store.save(trustedAccountId, progress);
         return result;
+      });
+
+  /// Persists a server-calculated post-match hero XP award atomically with
+  /// other updates for this account. The account ID must be authenticated by
+  /// the caller and the amount must come from trusted reward logic.
+  Future<int> awardHeroExperience(
+    String trustedAccountId,
+    String heroId, {
+    required int amount,
+  }) =>
+      _serialize(trustedAccountId, () async {
+        final progress = await store.load(trustedAccountId);
+        final gained = progress.awardHeroExperience(heroId, amount);
+        await store.save(trustedAccountId, progress);
+        return gained;
       });
 
   Future<T> _serialize<T>(
