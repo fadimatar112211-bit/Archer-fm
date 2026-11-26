@@ -172,7 +172,7 @@ class _ArenaPainter extends CustomPainter {
     _drawMonsters(canvas, snapshot, project);
     _drawProjectiles(canvas, snapshot, project);
     _drawHeroes(canvas, snapshot, world, project);
-    _drawMinimap(canvas, snapshot, worldSize);
+    _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
     canvas.restore();
   }
 
@@ -453,7 +453,13 @@ class _ArenaPainter extends CustomPainter {
     }
   }
 
-  void _drawMinimap(Canvas canvas, Map<String, dynamic> state, Size worldSize) {
+  void _drawMinimap(
+    Canvas canvas,
+    Map<String, dynamic> state,
+    Size worldSize,
+    Offset cameraOrigin,
+    Size viewport,
+  ) {
     final world = _map(state['world']);
     if (world == null) return;
     const width = 132.0;
@@ -526,6 +532,26 @@ class _ArenaPainter extends CustomPainter {
         Paint()..color = const Color(0xFFFF6D5F),
       );
     }
+    const projectionYScale = 0.82;
+    final cameraScale = math.min(
+      viewport.width / 960.0,
+      viewport.height / (540.0 * projectionYScale),
+    );
+    final visibleWorld = Size(
+      viewport.width / cameraScale,
+      viewport.height / (cameraScale * projectionYScale),
+    );
+    final cameraRect = Rect.fromPoints(
+      miniPoint(cameraOrigin),
+      miniPoint(cameraOrigin + Offset(visibleWorld.width, visibleWorld.height)),
+    );
+    canvas.drawRect(
+      cameraRect,
+      Paint()
+        ..color = const Color(0xFFFFFFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, const Radius.circular(7)),
       Paint()
