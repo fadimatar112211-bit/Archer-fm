@@ -111,3 +111,24 @@ The visual code change is committed on `feature/match-rules-foundation`. CI must
 - The strict match config now requires `weaponUpgradeDamagePerLevel`. The example config uses 0.04 (4% per upgrade level) only as a first-playtest baseline; it is not a final balance approval.
 - Runtime validation bounds the configured growth to 0–25% per level and the trusted weapon level to 0–40.
 - Added tests for attack and Ultimate scaling and strict config decoding. Full CI on the final head is required before this integration can be marked validated.
+
+## Kill attribution and live status effects — 2026-11-26
+
+### Kill rewards
+- The test match configuration now supplies explicit kill-reward values (monster: 5 score + 3 resources; hero: 15 score + 10 resources). These are first-playtest placeholders, not final balance.
+- Player manual attacks and Ultimates award only on the live-to-defeated transition.
+- AI melee damage and ranged projectile impacts now report the attacker owner to the same authoritative reward callback. Repeated impacts against an already defeated target do not create another kill event.
+- Crystal destruction is intentionally excluded from hero/monster kill bounties; crystal scoring remains owned by the crystal/standings rules.
+
+### Status effects
+- Added a deterministic server-owned runtime for burn, poison, slow, freeze and stun, including duration refresh, strongest-slow handling, periodic damage, and expiry.
+- Live basic attacks currently apply first-playtest effects by hero: Ranger slow, Flame burn, Shadow poison, Storm stun.
+- Selected Ultimates apply stronger effects: the level-20 Ultimates apply each hero's signature control/damage-over-time effect; Storm's level-10 chain applies stun.
+- Effects are advanced on authoritative match ticks. Damage-over-time kill credit goes to the latest trusted source player; stunned/frozen heroes cannot move, attack or cast, and stunned/frozen monsters pause their AI action loop. Slow reduces movement without changing attack cooldowns.
+- Values are provisional playtest tuning and must be balanced from actual four-player match telemetry.
+
+### Validation at commit `294b2b93454512836e12368bf376588be33925c2`
+- Match Rules CI: analysis passed and **278 tests passed**, including exactly-once manual/AI melee/projectile kill attribution and live Flame burn / Storm stun integration tests.
+- Monster Army CI: analysis and the monster/projectile/animation test suite passed.
+- Android validation on this same head: analyze and Flutter tests passed; debug APK build is still running. Emulator install/launch has not yet been confirmed.
+- Final map sign-off still requires a captured landscape gameplay screenshot and visual review. This remains open; the painter is still projected 2D terrain with 3D actors, not a fully volumetric 3D map.
