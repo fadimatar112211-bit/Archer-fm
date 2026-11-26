@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -34,11 +34,11 @@ void main() {
   late MatchWorldAuthority world;
 
   setUp(() {
-    map = ArenaMap.generate(Random(42));
+    map = ArenaMap.generate(math.Random(42));
     world = MatchWorldAuthority(
       map: map,
       playerIds: const ['p1', 'p2', 'p3', 'p4'],
-      random: Random(7),
+      random: math.Random(7),
     );
   });
 
