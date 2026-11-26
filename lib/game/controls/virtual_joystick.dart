@@ -3,6 +3,12 @@ import 'package:flutter/widgets.dart';
 
 typedef JoystickMoveCallback = bool Function(Offset direction);
 
+const _moveUp = CustomSemanticsAction(label: 'تحريك للأعلى');
+const _moveDown = CustomSemanticsAction(label: 'تحريك للأسفل');
+const _moveLeft = CustomSemanticsAction(label: 'تحريك لليسار');
+const _moveRight = CustomSemanticsAction(label: 'تحريك لليمين');
+const _stopMoving = CustomSemanticsAction(label: 'إيقاف الحركة');
+
 /// Reusable mobile movement control adapted from the supplied multiplayer ZIP.
 /// Return false while disconnected so the current direction is retried.
 /// Releasing always sends Offset.zero.
@@ -74,6 +80,14 @@ class _VirtualJoystickState extends State<VirtualJoystick> {
     setState(() => _value = direction);
   }
 
+  void _sendAccessibleDirection(Offset direction) {
+    setState(() => _value = direction);
+    if (widget.onMove(direction)) {
+      _lastSent = direction;
+      _lastSentAt = DateTime.now();
+    }
+  }
+
   void _release() {
     setState(() => _value = Offset.zero);
     _flush();
@@ -93,7 +107,14 @@ class _VirtualJoystickState extends State<VirtualJoystick> {
     final knobOffset = _value * (widget.size * 0.32);
     return Semantics(
       label: 'عصا الحركة',
-      hint: 'اسحب العصا لتوجيه البطل، واتركها لإيقاف الحركة',
+      hint: 'اسحب العصا لتوجيه البطل، أو استخدم إجراءات الاتجاه، واتركها لإيقاف الحركة',
+      customSemanticsActions: {
+        _moveUp: () => _sendAccessibleDirection(const Offset(0, -1)),
+        _moveDown: () => _sendAccessibleDirection(const Offset(0, 1)),
+        _moveLeft: () => _sendAccessibleDirection(const Offset(-1, 0)),
+        _moveRight: () => _sendAccessibleDirection(const Offset(1, 0)),
+        _stopMoving: _release,
+      },
       child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanDown: (details) => _update(details.localPosition),
