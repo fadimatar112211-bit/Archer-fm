@@ -129,6 +129,17 @@ class MatchCombatAuthority {
       throw ArgumentError('Combat loadouts and initial armies must cover all four players.');
     }
 
+    if (configuration.monsterProgressionByPlayer.keys.any(
+      (playerId) => !world.playerIds.contains(playerId),
+    ) ||
+        configuration.monsterProgressionByPlayer.values.any(
+          (progression) => !identical(progression.catalog, configuration.monsterCatalog),
+        )) {
+      throw ArgumentError(
+        'Monster progression must belong to a match player and use the approved catalog.',
+      );
+    }
+
     final armies = <MonsterArmy>[];
     for (final playerId in world.playerIds) {
       final castle = world.castles.castleOf(playerId)!;
