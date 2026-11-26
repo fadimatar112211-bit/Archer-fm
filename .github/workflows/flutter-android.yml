@@ -3,11 +3,11 @@ name: Flutter Android validation
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/match-rules-foundation]
     paths:
       - 'lib/**'
       - 'test/**'
-      - 'assets/heroes/ranger/renders/**'
+      - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/flutter-android.yml'
