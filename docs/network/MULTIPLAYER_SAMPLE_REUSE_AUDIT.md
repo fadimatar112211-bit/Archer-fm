@@ -35,18 +35,19 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 - `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
 - `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; `PersistentHeroProgressionService` loads and saves transactions and serializes concurrent changes per trusted account ID. No ZIP sample prices are hardcoded.
-- Monsters and map integration remain owned by OpenCode and are not modified here.
+- The existing monster runtime and arena systems are reused through the authoritative match adapters described below; this branch does not replace OpenCode's asset/content pipeline.
 
 ## Not yet implemented
 
 - Authenticated account service and cloud persistence.
-- `AuthoritativeMatchSession` now creates a per-match `MatchWorldAuthority` at match start. It maps the four session player IDs to the four canonical castle anchors, creates seven crystals per player, advances the canonical mine controller, exposes server-side movement through map collision/terrain rules, applies crystal damage and rebuild checks, and synchronizes living-crystal counts into match standings. Client movement, attacks, damage, purchases, and rewards are still rejected at the transport boundary until authenticated server-side input handlers and the monster/hero combat adapters are connected.
+- `AuthoritativeMatchSession` now creates a per-match `MatchWorldAuthority` at match start. It maps the four session player IDs to the four canonical castle anchors, creates seven crystals per player, advances the canonical mine controller, exposes server-side movement through map collision/terrain rules, applies crystal damage and rebuild checks, and synchronizes living-crystal counts into match standings. The configured match session now accepts normalized movement intent, manual hero attacks, Ultimate activation, and server-priced monster purchases. Client-submitted damage, scores, crystal counts, and rewards remain rejected; those values are changed only by trusted server simulation.
 - Matchmaking, private room invite flow, friend invitations, and player removal.
 - Local Wi-Fi hotspot/LAN hosting and reconnect/host migration policy.
 - Final landscape selection screen and HUD connected to current 3D/2.5D renderer.
 - Wire `PersistentHeroProgressionService` into the production authenticated account/session handler, supply approved economy configuration, and pass a preloaded trusted ownership validator into match session creation. The persistent service is implemented and tested, but the auth/socket endpoint is not yet connected.
-- Connect `MatchWorldAuthority` to the existing monster combat adapters so monster attacks and hero attacks resolve against live crystals/units in the same authoritative tick.
-- Client input protocol and server-side movement-intent processing with the approved hero speed/world-unit conversion.
+- Supply the trusted production `MatchCombatConfiguration` (approved monster catalog, unit cap, projectile tuning and world-unit conversion) through the deployed server factory; the development server intentionally remains unconfigured until those values are approved.
+- Add authored Ultimate hit-shapes/effects and bind hero combat events to the corresponding 3D attack/skill animations; the current server adapter uses configured radius metadata as a generic area effect.
+- Add hero death/respawn, kill scoring/rewards, monster-level progression persistence, and connect the authoritative snapshots/input commands to the final mobile HUD.
 
 
 ## Concrete match-session contract added
@@ -88,3 +89,9 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - The exact hit shapes/animations of line, chain, dash, persistent-damage and other hero Ultimates are not represented by the current `HeroUltimate` schema. The first integration uses the existing radius metadata as a generic target-centered area; each ability still needs its authored shape/effect implementation and 3D animation binding.
 - Hero ranged projectile visuals, hero death/respawn rules, kill scoring/rewards, monster permanent-level save loading, and the final mobile HUD/rendering hookup remain separate tasks.
 - The world-unit conversion and monster balance catalog must be supplied by the approved server configuration. The test fixture uses isolated synthetic values solely to verify integration behavior; they are not proposed production balance values.
+
+
+### Reconnect-safe army selection — 2026-11-26
+
+- The selected 20-unit pre-match army is a durable lobby choice. The mobile client now retains and replays `army_select` if the socket drops before the server acknowledges it.
+- Movement and combat remain transient and are never queued or replayed after reconnect. Unit purchases are also not replayed as lobby selections; their server-side sequence/ack handling remains authoritative.
