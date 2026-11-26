@@ -100,3 +100,24 @@ Provider choice must be explicit before adding provider-specific SDKs or schema.
 ## 5. Acceptance rule
 
 Phase 5 is **not complete** until authentication is verified server-side, account data is durably stored remotely, second-device recovery works, authorization/isolation tests pass, reconnect and recovery are tested, and production transport is encrypted. A green unit-test suite or a successful APK build alone is insufficient.
+
+
+## 6. Implementation update — 2026-11-27
+
+### Implemented in source
+- Added `HeroProgressStore` and `MonsterProgressStore` abstractions; existing file adapters now implement them and the persistence services depend on the abstractions.
+- Added Supabase mobile SDK integration with environment-based initialization and an Arabic email sign-up/sign-in gate. If no project URL/key is supplied, the existing offline development entry remains available.
+- `GameClient` can obtain a fresh access token before each create/join/resume socket handshake; the match loadout screen supplies the configured Supabase session token.
+- Added a server-side verifier that asks Supabase Auth's `/auth/v1/user` endpoint to validate the bearer token and returns the verified user UUID. No locally decoded, unverified JWT claims are trusted.
+- Added account-bound room joins and resume-token ownership checks. A token issued to one account cannot resume another account's match slot.
+- Added a separate authenticated gateway entry point that refuses non-loopback binding and is intended to sit behind a TLS-terminating WSS reverse proxy. The loopback development gateway remains separate.
+- Added Supabase schema for profiles, hero progression, monster progression, currency ledger and match results; enabled RLS and restricted client writes.
+- Added backend-only revision-checked RPCs and server-only REST adapters for hero and monster progression.
+- Added the Supabase CLI/setup guide and enabled CI workflows on this isolated Phase 5 branch.
+
+### Important boundary
+The code is **not production-deployed or fully cloud-wired yet**. No Supabase project or credentials were available in this session. The production gateway currently verifies account identity, but its match session is not yet composed with the Supabase progression stores; currency ledger settlement, match-result writes, existing-save import and second-device recovery still require integration and staging tests. Long-lived socket token expiry/revocation also needs a defined enforcement policy. Do not expose the gateway or claim Phase 5 complete until those items and the acceptance checklist pass.
+
+### Validation
+- An initial Android validation run exposed two source errors (a malformed callback line and an interface capability cast); both were corrected.
+- The latest validation runs on the current branch are in progress. Record their final Match Rules, Monster Army and Android results here only after they complete. A previous run on an earlier SHA failed at analysis and did not build an APK.
