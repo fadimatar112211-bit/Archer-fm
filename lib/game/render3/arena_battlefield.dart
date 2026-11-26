@@ -477,51 +477,6 @@ class _ArenaPainter extends CustomPainter {
     );
   }
 
-  void _drawMonsters(
-    Canvas canvas,
-    Map<String, dynamic> state,
-    Map world,
-    Offset Function(Offset) project,
-  ) {
-    final combat = _map(state['combat']);
-    for (final raw in _list(combat?['monsters'])) {
-      final monster = _map(raw);
-      if (monster == null) continue;
-      final point = _point(monster);
-      if (point == null ||
-          !_enemyMonsterVisible(point, world, monster['ownerId']?.toString())) {
-        continue;
-      }
-      final p = project(point);
-      final color = _ownerColor(monster['ownerId']?.toString(), state);
-      final radius = switch (monster['type']) {
-        'tank' => 8.0,
-        'ranged' => 6.5,
-        _ => 5.5,
-      };
-      canvas.drawCircle(p + const Offset(0, 2), radius + 1, Paint()..color = const Color(0x77000000));
-      canvas.drawCircle(p, radius, Paint()..color = color);
-      canvas.drawCircle(
-        p,
-        radius,
-        Paint()
-          ..color = const Color(0xFF222222)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
-      );
-      final hp = _number(monster['health']);
-      final maxHp = _number(monster['maxHealth']);
-      if (hp != null && maxHp != null && maxHp > 0) {
-        final rect = Rect.fromLTWH(p.dx - 8, p.dy - radius - 5, 16, 2);
-        canvas.drawRect(rect, Paint()..color = const Color(0xFF241E1B));
-        canvas.drawRect(
-          Rect.fromLTWH(rect.left, rect.top, rect.width * (hp / maxHp).clamp(0.0, 1.0), 2),
-          Paint()..color = const Color(0xFF8DE36A),
-        );
-      }
-    }
-  }
-
   void _drawMinimap(
     Canvas canvas,
     Map<String, dynamic> state,
@@ -669,35 +624,6 @@ class _ArenaPainter extends CustomPainter {
     );
   }
 
-  void _drawDyingMonsters(
-    Canvas canvas,
-    Map<String, dynamic> state,
-    Map world,
-    Offset Function(Offset) project,
-  ) {
-    final combat = _map(state['combat']);
-    for (final raw in _list(combat?['dyingMonsters'])) {
-      final monster = _map(raw);
-      if (monster == null) continue;
-      final point = _point(monster);
-      if (point == null ||
-          !_enemyMonsterVisible(point, world, monster['ownerId']?.toString())) {
-        continue;
-      }
-      final p = project(point);
-      final color = _ownerColor(monster['ownerId']?.toString(), state);
-      canvas.drawOval(
-        Rect.fromCenter(center: p, width: 13, height: 5),
-        Paint()..color = color.withOpacity(0.42),
-      );
-      canvas.drawCircle(
-        p,
-        3,
-        Paint()..color = const Color(0xFF4A4946).withOpacity(0.8),
-      );
-    }
-  }
-
   void _drawProjectiles(
     Canvas canvas,
     Map<String, dynamic> state,
@@ -724,51 +650,6 @@ class _ArenaPainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
       canvas.drawCircle(p, 2, Paint()..color = color);
-    }
-  }
-
-  void _drawHeroes(
-    Canvas canvas,
-    Map<String, dynamic> state,
-    Map world,
-    Offset Function(Offset) project,
-  ) {
-    final combat = _map(state['combat']);
-    final heroes = _map(combat?['heroes']) ?? const {};
-    final positions = _map(world['playerPositions']) ?? const {};
-    for (final entry in heroes.entries) {
-      final playerId = entry.key.toString();
-      final hero = _map(entry.value);
-      final point = _point(positions[playerId]);
-      if (hero == null || point == null) continue;
-      final p = project(point);
-      final color = _ownerColor(playerId, state);
-      final alive = hero['isAlive'] == true;
-      canvas.drawCircle(p + const Offset(0, 3), 12, Paint()..color = const Color(0x77000000));
-      canvas.drawCircle(
-        p,
-        alive ? 10 : 7,
-        Paint()..color = alive ? color : const Color(0xFF777777),
-      );
-      canvas.drawCircle(
-        p,
-        alive ? 10 : 7,
-        Paint()
-          ..color = const Color(0xFFFFFFFF)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = playerId == localPlayerId ? 2.5 : 1,
-      );
-      final hp = _number(hero['health']);
-      final maxHp = _number(hero['maxHealth']);
-      if (hp != null && maxHp != null && maxHp > 0) {
-        final rect = Rect.fromLTWH(p.dx - 13, p.dy - 17, 26, 3);
-        canvas.drawRect(rect, Paint()..color = const Color(0xFF211F1D));
-        canvas.drawRect(
-          Rect.fromLTWH(rect.left, rect.top, rect.width * (hp / maxHp).clamp(0.0, 1.0), 3),
-          Paint()..color = const Color(0xFF8DE36A),
-        );
-      }
-      _drawText(canvas, playerId == localPlayerId ? 'أنت' : 'خصم', p + const Offset(0, 13), 8);
     }
   }
 
