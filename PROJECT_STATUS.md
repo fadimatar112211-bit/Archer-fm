@@ -408,3 +408,15 @@ Still to decide or test:
 - Corrected settlement REST client source passed Match Rules CI: Flutter analysis and the full test suite are green on commit `19306b11ed55f8f719d7f0ed92f69d503b4386ee` ([run 45908955504](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955504)).
 - Android workflow on the same source commit has passed analysis and tests; APK build is still running ([run 45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588)).
 - PostgreSQL migration has not been applied to a live Supabase project. Atomic settlement RPC is implemented but not yet invoked by the authoritative match lifecycle. Phase 5 remains open.
+
+
+## Phase 5 continuation — 2026-11-27
+
+- Match completion now submits account-bound results/rewards to the idempotent Supabase settlement RPC and retries transient failures while the room remains alive.
+- Authenticated account hero progression is restored before the WebSocket welcome; the authoritative server enforces unlocked weapons and applies hero/weapon levels. Private progression appears only in the owning player's snapshot.
+- Added handshake, account isolation, settlement retry, private snapshot and profile restore coverage.
+- Hardened Supabase table/sequence grants and added a staging SQL privilege-check script.
+- Added a production WSS/systemd/Nginx deployment template.
+- Latest checked head before this status update: `c429c4ae0bff7813b529e90b335530a018258ca6`; Flutter analyze and tests passed, current Android APK build was still running. Earlier Android build success is recorded in the Phase 5 report.
+- Phase 5 is still open pending live Supabase staging execution, approved progression economy configuration, profile/upgrade handlers, cross-device/cross-account E2E, durable process-restart recovery and production deployment/device testing.
+- PR #21 remains Draft and unmerged; `main` and PR #20 remain untouched.
