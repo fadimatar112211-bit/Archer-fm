@@ -86,6 +86,7 @@ Future<void> main() async {
     serviceRoleKey: serviceRoleKey,
   );
   final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
+  final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
   final settlementOutbox = FileMatchSettlementOutbox(
     file: File(
       Platform.environment['ARCHER_FM_SETTLEMENT_OUTBOX_PATH'] ??
@@ -102,6 +103,7 @@ Future<void> main() async {
         rewardAmount: item['rewardAmount'] as int,
         idempotencyKey: item['idempotencyKey'] as String,
       );
+      heroProgressStore.invalidateRevision(item['accountId'] as String);
     },
   );
   try {
@@ -118,7 +120,6 @@ Future<void> main() async {
       });
     },
   );
-  final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
 
   final verifier = SupabaseAccessTokenVerifier(
     supabaseUrl: supabaseUrl,
@@ -148,7 +149,6 @@ Future<void> main() async {
           rewardAmount: reward,
           idempotencyKey: 'match:$matchId:user:$accountId:reward:v1',
         );
-        heroProgressStore.invalidateRevision(accountId);
       },
       onMatchSettlementError: (error) {
         stderr.writeln('Match settlement pending retry: $error');
