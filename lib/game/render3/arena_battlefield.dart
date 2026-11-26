@@ -349,6 +349,21 @@ class _ArenaPainter extends CustomPainter {
     const elevationPixels = 18.0;
     final cellWidth = worldSize.width / grid;
     final cellHeight = worldSize.height / grid;
+    const projectionYScale = 0.82;
+    final scale = math.min(
+      viewport.width / 960.0,
+      viewport.height / (540.0 * projectionYScale),
+    );
+    final visibleWorldWidth = viewport.width / scale;
+    final visibleWorldHeight = viewport.height / (scale * projectionYScale);
+    final firstCol = ((cameraOrigin.dx / cellWidth).floor() - 1)
+        .clamp(0, grid - 2);
+    final lastCol = (((cameraOrigin.dx + visibleWorldWidth) / cellWidth).ceil() + 1)
+        .clamp(firstCol + 1, grid - 1);
+    final firstRow = ((cameraOrigin.dy / cellHeight).floor() - 1)
+        .clamp(0, grid - 2);
+    final lastRow = (((cameraOrigin.dy + visibleWorldHeight) / cellHeight).ceil() + 1)
+        .clamp(firstRow + 1, grid - 1);
     final paint = Paint()..style = PaintingStyle.fill;
 
     Offset vertex(int col, int row) {
