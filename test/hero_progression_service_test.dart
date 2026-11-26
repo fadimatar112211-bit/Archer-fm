@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/progression/hero_progress.dart';
 import 'package:archer_fm/game/progression/hero_progression_service.dart';
+import 'package:archer_fm/game/progression/file_hero_progress_store.dart';
 
 class _TestEconomy implements HeroProgressionEconomy {
   const _TestEconomy();
@@ -49,6 +52,37 @@ void main() {
     expect(second.accepted, isTrue);
     expect(second.currencyBalance, 150);
     expect(second.weaponLevel, 2);
+  });
+
+  test('persistent service serializes concurrent unlocks and saves the balance', () async {
+    final directory = await Directory.systemTemp.createTemp('archer_progress_');
+    try {
+      final persistent = PersistentHeroProgressionService(
+        store: FileHeroProgressStore(directory),
+        economy: const _TestEconomy(),
+      );
+      await persistent.store.save(
+        'verified-account-1',
+        HeroProgress(permanentCurrency: 500),
+      );
+
+      final results = await Future.wait([
+        persistent.unlockWeapon('verified-account-1', longbowId),
+        persistent.unlockWeapon('verified-account-1', longbowId),
+      ]);
+      expect(results.where((result) => result.accepted), hasLength(1));
+      expect(
+        results.where((result) => result.result == ProgressionResult.alreadyOwned),
+        hasLength(1),
+      );
+
+      final reloaded = await persistent.load('verified-account-1');
+      expect(reloaded.ownsWeapon(longbowId), isTrue);
+      expect(reloaded.permanentCurrency, 300);
+      expect(await persistent.ownsWeapon('verified-account-1', longbowId), isTrue);
+    } finally {
+      await directory.delete(recursive: true);
+    }
   });
 
   test('unknown items and insufficient funds do not mutate progress', () {
