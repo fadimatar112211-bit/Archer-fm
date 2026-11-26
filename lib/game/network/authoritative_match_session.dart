@@ -21,8 +21,9 @@ class AuthoritativeMatchSession implements GameServerSession {
 
   factory AuthoritativeMatchSession.fromCreateMessage(
     String roomCode,
-    Map<String, dynamic> message,
-  ) {
+    Map<String, dynamic> message, {
+    bool Function(String playerId, String weaponId)? canUseWeapon,
+  }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
       throw const FormatException('durationMinutes must be an integer.');
@@ -30,6 +31,7 @@ class AuthoritativeMatchSession implements GameServerSession {
     return AuthoritativeMatchSession(
       code: roomCode,
       durationMinutes: requestedDuration as int? ?? 30,
+      canUseWeapon: canUseWeapon,
     );
   }
 
