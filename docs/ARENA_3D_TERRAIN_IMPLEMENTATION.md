@@ -7,6 +7,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 ## Implemented on the current feature branch
 
 - Added a continuous camera-culled triangulated ground mesh across the visible battlefield, with deterministic elevation variation and biome-specific surface palettes.
+- Added shallow raised river-bank faces along the water channels to improve terrain depth at the shoreline.
 - Added a software-rendered, height-bearing triangular mesh pass for biome landforms. The mesh has concentric elevation rings, exposed cliff faces, per-face directional shading, and biome palettes for forest, desert, snow and volcanic regions.
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
 - Replaced circular rock icons with multi-face angular rock geometry and directional highlights.
@@ -28,7 +29,7 @@ This is an initial mesh-based terrain pass, not completion of the final map art.
 - Connect the packaged 96×96 height-map asset to the live match renderer (the asset loader currently parses it separately from the procedural match-world snapshot), with terrain chunking and correct depth ordering.
 - Move the terrain from this Canvas-based mesh/2.5D pass to a true GPU 3D scene with camera, depth buffer, perspective, materials and real mesh geometry; current renderer still paints projected triangles.
 - Replace remaining flat castle cores, towers and resource structures with full 3D meshes; wall, bridge and crystal elements only have partial extrusion so far.
-- Upgrade river rendering to a 3D water surface with raised banks, waterfalls/ripples, reflections and material response.
+- Upgrade river rendering to a true 3D water surface with waterfalls/ripples, reflections and material response; the current banks are extruded but the water itself remains a projected painter surface.
 - More detailed biome-specific trees, rocks, snow, dunes, lava and vegetation.
 - Camera perspective, occlusion/depth sorting, lighting/shadows and mobile performance profiling.
 - Visual review of the final 16:9 capture and Android device/emulator launch.
