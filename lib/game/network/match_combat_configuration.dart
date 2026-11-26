@@ -46,6 +46,7 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
   final maxActiveProjectiles = _integer(json, 'maxActiveProjectiles');
   final maxUnitsPerArmy = _integer(json, 'maxUnitsPerArmy');
   final worldUnitsPerSecond = _number(json, 'worldUnitsPerSecond');
+  final comboResetWindowMs = _integer(json, 'comboResetWindowMs');
 
   return MatchCombatConfiguration(
     monsterCatalog: MonsterCatalog(definitions),
@@ -53,6 +54,7 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     maxActiveProjectiles: maxActiveProjectiles,
     maxUnitsPerArmy: maxUnitsPerArmy,
     worldUnitsPerSecond: worldUnitsPerSecond,
+    comboResetWindowMs: comboResetWindowMs,
   );
 }
 
