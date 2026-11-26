@@ -152,3 +152,12 @@
 - Added a mounted-state guard after the asynchronous previous-client disposal in room create/join setup. If the player leaves the screen while cleanup is awaiting completion, the screen no longer proceeds to create a new socket or call `setState` on a disposed widget.
 - Commit: `0a2f745fb237c4cac96d3cffbfaa20a11ccc2517`.
 - The change requires fresh CI validation; it is not counted as passed until the new workflow completes.
+
+
+## Ninth implementation batch — combat touch targets and assistive semantics
+
+- Increased the live attack button's minimum touch area to 120×56 logical pixels and each Ultimate button to at least 88×52.
+- Added explicit button semantics for screen readers, including whether each Ultimate is currently enabled and its lock/cooldown/ready hint.
+- Clarified in the attack/Ultimate accessibility hints that target selection currently chooses the nearest visible enemy automatically; this does not claim a manual target-picker exists.
+- Commit: `ec1cf685c40a0965af5068412e60e32ecd990846`.
+- Fresh CI validation is required for this change; physical-device touch verification remains outstanding.
