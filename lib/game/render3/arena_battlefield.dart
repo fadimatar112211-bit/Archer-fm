@@ -212,7 +212,6 @@ class _ArenaPainter extends CustomPainter {
     // Real elevated mesh facets are rendered before gameplay overlays so
     // rivers, bridges, castles and actors remain readable and authoritative.
     _drawBaseTerrainMesh(canvas, world, worldSize, cameraOrigin, size, project);
-    _drawHeightfieldMesh(canvas, worldSize, cameraOrigin, size, project);
     _drawTerrain3D(canvas, world, project);
     _drawBiomes(canvas, world, project);
     _drawTerrainTexture(canvas, world, cameraOrigin, project);
@@ -240,7 +239,7 @@ class _ArenaPainter extends CustomPainter {
     Size viewport,
     Offset Function(Offset) project,
   ) {
-    const cell = 64.0;
+    const cell = 32.0;
     const base = Color(0xFF426B43);
     const light = Color(0xFF52794A);
     const shade = Color(0xFF345B3C);
@@ -252,6 +251,14 @@ class _ArenaPainter extends CustomPainter {
     };
     final biomes = _list(world['biomes']).map(_map).whereType<Map>().toList();
     double heightAt(Offset point) {
+      final authored = heightMap;
+      if (authored != null && authored.length == 96) {
+        final column = (point.dx / worldSize.width * 95)
+            .round().clamp(0, 95).toInt();
+        final row = (point.dy / worldSize.height * 95)
+            .round().clamp(0, 95).toInt();
+        return authored[row][column] * 18.0;
+      }
       var height = 3.0 +
           math.sin(point.dx * 0.0061) * 3.0 +
           math.cos(point.dy * 0.0073) * 2.6 +
@@ -332,105 +339,6 @@ class _ArenaPainter extends CustomPainter {
     return 'forest';
   }
 
-
-  /// Draw the checked-in 96x96 authored height map as a continuous,
-  /// depth-ordered triangular terrain mesh. Gameplay coordinates remain
-  /// server-authoritative; this only adds a visual Z displacement.
-  void _drawHeightfieldMesh(
-    Canvas canvas,
-    Size worldSize,
-    Offset cameraOrigin,
-    Size viewport,
-    Offset Function(Offset) project,
-  ) {
-    final heights = heightMap;
-    if (heights == null || heights.length != 96) return;
-    const grid = 96;
-    const elevationPixels = 18.0;
-    final cellWidth = worldSize.width / grid;
-    final cellHeight = worldSize.height / grid;
-    const projectionYScale = 0.82;
-    final scale = math.min(
-      viewport.width / 960.0,
-      viewport.height / (540.0 * projectionYScale),
-    );
-    final visibleWorldWidth = viewport.width / scale;
-    final visibleWorldHeight = viewport.height / (scale * projectionYScale);
-    final firstCol = ((cameraOrigin.dx / cellWidth).floor() - 1)
-        .clamp(0, grid - 2).toInt();
-    final lastCol = (((cameraOrigin.dx + visibleWorldWidth) / cellWidth).ceil() + 1)
-        .clamp(firstCol + 1, grid - 1).toInt();
-    final firstRow = ((cameraOrigin.dy / cellHeight).floor() - 1)
-        .clamp(0, grid - 2).toInt();
-    final lastRow = (((cameraOrigin.dy + visibleWorldHeight) / cellHeight).ceil() + 1)
-        .clamp(firstRow + 1, grid - 1).toInt();
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    Offset vertex(int col, int row) {
-      final h = heights[row][col];
-      return project(Offset(col * cellWidth, row * cellHeight))
-          .translate(0, -h * elevationPixels);
-    }
-
-    Color terrainColor(double h, int face) {
-      final normalized = (h / 1.5).clamp(0.0, 1.0);
-      final low = const Color(0xFF477447);
-      final high = const Color(0xFF9AA49A);
-      final base = Color.lerp(low, high, normalized)!;
-      final lighting = face == 0 ? 1.0 : face == 1 ? 0.88 : 0.78;
-      return Color.fromARGB(
-        255,
-        (base.red * lighting).round().clamp(0, 255),
-        (base.green * lighting).round().clamp(0, 255),
-        (base.blue * lighting).round().clamp(0, 255),
-      );
-    }
-
-    Path triangle(Offset a, Offset b, Offset c) => Path()
-      ..moveTo(a.dx, a.dy)
-      ..lineTo(b.dx, b.dy)
-      ..lineTo(c.dx, c.dy)
-      ..close();
-
-    // Painter order follows the map's north-to-south rows so nearer facets
-    // naturally cover farther ones. Each cell is split along a diagonal.
-    for (var row = firstRow; row < lastRow; row++) {
-      for (var col = firstCol; col < lastCol; col++) {
-        final a = vertex(col, row);
-        final b = vertex(col + 1, row);
-        final c = vertex(col, row + 1);
-        final d = vertex(col + 1, row + 1);
-        final average = (heights[row][col] +
-            heights[row][col + 1] +
-            heights[row + 1][col] +
-            heights[row + 1][col + 1]) / 4;
-        final first = triangle(a, c, d);
-        final second = triangle(a, d, b);
-        paint.color = terrainColor(average, (row + col) % 3);
-        canvas.drawPath(first, paint);
-        paint.color = terrainColor(average, (row + col + 1) % 3);
-        canvas.drawPath(second, paint);
-      }
-    }
-
-    // Fine contour highlights make changes in elevation legible at mobile scale.
-    final contourPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.55
-      ..color = const Color(0x227C9272);
-    for (var row = firstRow; row <= lastRow; row += 4) {
-      final path = Path();
-      for (var col = firstCol; col <= lastCol; col++) {
-        final point = vertex(col, row);
-        if (col == 0) {
-          path.moveTo(point.dx, point.dy);
-        } else {
-          path.lineTo(point.dx, point.dy);
-        }
-      }
-      canvas.drawPath(path, contourPaint);
-    }
-  }
 
   /// Software-rendered 3D terrain mesh. Each biome is built from lit triangular
   /// faces with explicit world height; it is not a flat tinted circle.
