@@ -37,7 +37,7 @@ void main() {
   test('connects, receives welcome, and sends sequenced commands', () async {
     await client.create();
     await Future<void>.delayed(const Duration(milliseconds: 20));
-    socket.add(jsonEncode({
+    socket!.add(jsonEncode({
       'type': 'welcome',
       'id': 'p1',
       'code': '123456',
