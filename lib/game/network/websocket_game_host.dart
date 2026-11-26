@@ -306,7 +306,10 @@ class WebSocketGameHost {
       'code': room.code,
       'lastSeq': player.lastSequence,
     });
-    _send(socket, room.snapshot());
+    final initialSnapshot = room is PlayerScopedSnapshotSession
+        ? (room as PlayerScopedSnapshotSession).snapshotFor(player)
+        : room.snapshot();
+    _send(socket, initialSnapshot);
   }
 
   String _newRoomCode() {
