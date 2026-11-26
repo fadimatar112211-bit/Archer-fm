@@ -79,7 +79,7 @@ class MatchTargetSelector {
       }
     }
 
-    final ordered = distances.keys.toList(growable: false);
+    final ordered = distances.keys.toList();
     return ordered..sort((a, b) {
       final byDistance = distances[a]!.compareTo(distances[b]!);
       return byDistance != 0 ? byDistance : a.compareTo(b);
