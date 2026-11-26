@@ -763,9 +763,10 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     ),
                   ),
                   Text(
-                    _selectedTargetId == null
-                        ? 'الهدف: الأقرب تلقائياً'
-                        : 'الهدف: اختيار يدوي',
+                    _selectedTargetId != null &&
+                            _availableEnemyTargets().contains(_selectedTargetId)
+                        ? 'الهدف: اختيار يدوي'
+                        : 'الهدف: الأقرب تلقائياً',
                     style: const TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                   const SizedBox(height: 6),
