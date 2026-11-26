@@ -420,7 +420,9 @@ class _ArenaPainter extends CustomPainter {
     if (ownerId == localPlayerId) return true;
     final positions = _map(world['playerPositions']);
     final localPosition = _point(positions?[localPlayerId]);
-    return localPosition == null ||
+    // Fail closed when a snapshot has no trusted local reveal center.
+    // Otherwise enemy units could be painted over the fog overlay.
+    return localPosition != null &&
         (point - localPosition).distance <= enemyVisibleRadius;
   }
 
