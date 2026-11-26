@@ -30,6 +30,10 @@ class HeroProgress {
   factory HeroProgress.fresh() => HeroProgress();
 
   factory HeroProgress.fromJson(Map<String, dynamic> json) {
+    final schemaVersion = json['schemaVersion'];
+    if (schemaVersion != null && schemaVersion != 1) {
+      throw const FormatException('Unsupported hero progression schema.');
+    }
     final currency = json['permanentCurrency'];
     final unlocked = json['unlockedWeaponIds'];
     final levels = json['weaponUpgradeLevels'];
