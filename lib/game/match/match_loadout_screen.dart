@@ -194,7 +194,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       'rebuild_blocked': 'الموقع محجوب أو قريب من عائق أو منجم',
       'invalid_movement': 'اتجاه الحركة غير صالح',
     };
-    return labels[reason] ?? 'تعذّر تنفيذ الأمر: $reason';
+    return labels[reason] ?? 'تعذّر تنفيذ الأمر؛ حاول مرة أخرى';
   }
 
   void _sendLoadout() {
@@ -727,7 +727,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
         'waiting' => 'انتظار',
         'running' => 'جارية',
         'finished' => 'منتهية',
-        _ => phase,
+        _ => 'غير معروف',
       };
 
   Widget _armyCounter(MonsterType type) {
@@ -741,7 +741,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     return ListTile(
       dense: true,
       title: Text(label),
-      subtitle: Text(type.name),
+      subtitle: const Text('وحدة ضمن تشكيلة البداية'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
