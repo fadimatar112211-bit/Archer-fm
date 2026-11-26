@@ -184,6 +184,7 @@ class AuthoritativeMatchSession
     if (matchPlayer == null || matchPlayer.accountId != accountId) {
       throw StateError('Verified account does not own this match slot.');
     }
+    if (_accountHeroProgress.containsKey(player.id)) return;
     final loader = _loadAccountHeroProgress;
     if (loader == null) return;
     final progress = await loader(accountId);
