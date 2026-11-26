@@ -1,4 +1,5 @@
 import 'package:archer_fm/main.dart';
+import 'package:archer_fm/game/feedback/game_feedback_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -73,5 +74,18 @@ void main() {
       find.widgetWithText(SwitchListTile, 'الاهتزاز'),
     );
     expect(updated.value, isFalse);
+    expect(GameFeedbackPreferences.hapticsEnabled, isFalse);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('الإعدادات'));
+    await tester.pumpAndSettle();
+    final reopened = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, 'الاهتزاز'),
+    );
+    expect(reopened.value, isFalse);
+    await tester.tap(find.widgetWithText(SwitchListTile, 'الاهتزاز'));
+    await tester.pump();
+    expect(GameFeedbackPreferences.hapticsEnabled, isTrue);
   });
 }
