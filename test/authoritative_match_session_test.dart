@@ -1161,4 +1161,59 @@ void main() {
     expect((heroes['p1'] as Map)['weaponId'], ranger.weapons[1].id);
   });
 
+
+  test('failed match settlements retry and keep a finished room alive', () async {
+    var attempts = 0;
+    final settled = <String>{};
+    final session = AuthoritativeMatchSession(
+      code: 'retry01',
+      onMatchSettlement: ({
+        required matchId,
+        required accountId,
+        required standing,
+        required finishReason,
+      }) async {
+        attempts++;
+        if (accountId == 'retry-account-1' && !settled.contains(accountId)) {
+          throw StateError('temporary database outage');
+        }
+        settled.add(accountId);
+      },
+    );
+    final accounts = [
+      'retry-account-1',
+      'retry-account-2',
+      'retry-account-3',
+      'retry-account-4',
+    ];
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      });
+    }
+    session.handle(players.first, {'type': 'start'});
+    for (final player in players.take(3)) {
+      session.handle(player, {'type': 'forfeit'});
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(settled, hasLength(3));
+
+    for (final player in players) {
+      session.disconnect(player);
+    }
+    expect(session.shouldRemove, isFalse);
+    session.tick(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(settled, hasLength(4));
+    expect(attempts, 5);
+    expect(session.shouldRemove, isTrue);
+  });
+
 }
