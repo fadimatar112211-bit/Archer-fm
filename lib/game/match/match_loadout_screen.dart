@@ -12,6 +12,7 @@ import '../feedback/game_feedback_preferences.dart';
 import '../render3/arena_battlefield.dart';
 import '../heroes/hero_roster.dart';
 import '../network/game_client.dart';
+import '../auth/supabase_account_service.dart';
 
 class MatchLoadoutScreen extends StatefulWidget {
   const MatchLoadoutScreen({
@@ -81,7 +82,11 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     await _disposeClient();
     if (!mounted) return;
     _lastAttemptCreate = create;
-    final client = widget.clientFactory?.call(url) ?? GameClient(url);
+    final client = widget.clientFactory?.call(url) ??
+        GameClient(
+          url,
+          accessTokenProvider: SupabaseAccountService.instance?.accessToken,
+        );
     _client = client;
     _messages = client.messages.listen(_onMessage);
     _states = client.states.listen((state) {
