@@ -155,6 +155,12 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       'match_already_started': 'المباراة بدأت بالفعل',
       'player_unavailable': 'اللاعب غير متاح',
       'match_not_running': 'المباراة لم تبدأ',
+      'combat_not_configured': 'إعداد القتال غير متاح على هذا الخادم',
+      'invalid_target': 'الهدف المحدد غير صالح',
+      'attack_rejected': 'رفض الخادم الهجوم؛ تحقق من المدى والتبريد',
+      'ultimate_rejected': 'رفض الخادم الضربة الخاصة؛ تحقق من المستوى والتبريد',
+      'purchase_rejected': 'تعذّر الشراء؛ تحقق من الرصيد والسعة',
+      'invalid_movement': 'اتجاه الحركة غير صالح',
     };
     return labels[reason] ?? 'تعذّر تنفيذ الأمر: $reason';
   }
@@ -434,7 +440,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   bool _sendMove(Offset direction) {
     final client = _client;
-    if (client == null || !client.isConnected) return false;
+    if (client == null || !client.isConnected || _matchPhase != 'running') return false;
     return client.send('move', {'dx': direction.dx, 'dy': direction.dy});
   }
 
@@ -450,8 +456,8 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   void _sendCombat(String type, {int? ultimateIndex}) {
     final client = _client;
-    if (client == null || !client.isConnected) {
-      setState(() => _lastError = 'الاتصال بالخادم غير متاح');
+    if (client == null || !client.isConnected || _matchPhase != 'running') {
+      setState(() => _lastError = 'الاتصال أو المباراة غير جاهزين للقتال');
       return;
     }
     final targetId = _nearestEnemyTarget();
@@ -467,7 +473,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   void _sendPurchase(MonsterType type) {
     final client = _client;
-    if (client == null || !client.isConnected) return;
+    if (client == null || !client.isConnected || _matchPhase != 'running') return;
     if (!client.send('purchase', {'monsterType': type.name})) {
       setState(() => _lastError = 'تعذّر إرسال طلب شراء الوحدة');
     }
@@ -507,6 +513,8 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
         : 0;
     final myResources = _playerId == null ? null : resources[_playerId];
     final myCrystals = _playerId == null ? null : crystals[_playerId];
+    final hasCombat = combat.isNotEmpty;
+    final canAct = alive && hasCombat && _matchPhase == 'running' && _client?.isConnected == true;
 
     return _section(
       title: _matchPhase == 'finished' ? 'نتيجة المباراة' : 'لوحة المباراة المباشرة',
@@ -540,7 +548,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
               Column(
                 children: [
                   FilledButton(
-                    onPressed: alive && _client?.isConnected == true
+                    onPressed: canAct && (attackCooldown is! num || attackCooldown <= 0)
                         ? () => _sendCombat('attack')
                         : null,
                     child: const Text('هجوم'),
@@ -553,8 +561,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                         SizedBox(
                           width: 68,
                           child: OutlinedButton(
-                            onPressed: alive &&
-                                    _client?.isConnected == true &&
+                            onPressed: canAct &&
                                     (myLevel is num && myLevel >= _hero.ultimates[i].unlockLevel) &&
                                     (i >= ultimateCooldowns.length ||
                                         ultimateCooldowns[i] is! num ||
@@ -577,7 +584,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             children: [
               for (final type in MonsterType.values)
                 OutlinedButton(
-                  onPressed: alive && _client?.isConnected == true
+                  onPressed: canAct
                       ? () => _sendPurchase(type)
                       : null,
                   child: Text(switch (type) {
