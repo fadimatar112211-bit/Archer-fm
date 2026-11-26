@@ -337,7 +337,7 @@ class MatchCombatAuthority {
         positionXNow: () => world.playerPositions[hero.playerId]!.dx,
         positionYNow: () => world.playerPositions[hero.playerId]!.dy,
         applyDamage: (amount) {
-          hero.health = math.max(0, hero.health - amount);
+          hero.health = math.max(0, hero.health - amount).toDouble();
           return !hero.isAlive;
         },
       );
