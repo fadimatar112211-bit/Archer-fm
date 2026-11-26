@@ -119,6 +119,7 @@ void main() {
     final socket = await WebSocket.connect(host.uri.toString());
     final messages = _messages(socket).asBroadcastStream();
 
+    final stateFuture = _nextType(messages, 'state');
     socket.add(jsonEncode({'type': 'create'}));
     final welcome = await _nextType(messages, 'welcome');
     expect(welcome['code'], isA<String>());
@@ -126,16 +127,18 @@ void main() {
     expect(host.roomCount, 1);
     expect(host.connectedPlayerCount, 1);
 
-    final state = await _nextType(messages, 'state');
+    final state = await stateFuture;
     expect(state['players'], ['p1']);
 
+    final ackFuture = _nextType(messages, 'ack');
     socket.add(jsonEncode({'type': 'attack', 'seq': 1, 'target': 'p2'}));
-    final ack = await _nextType(messages, 'ack');
+    final ack = await ackFuture;
     expect(ack['error'], isNull);
     expect(factory.sessions.values.single.handledCommands, 1);
 
+    final duplicateFuture = _nextType(messages, 'ack');
     socket.add(jsonEncode({'type': 'attack', 'seq': 1, 'target': 'p2'}));
-    final duplicate = await _nextType(messages, 'ack');
+    final duplicate = await duplicateFuture;
     expect(duplicate['error'], 'duplicate');
     expect(factory.sessions.values.single.handledCommands, 1);
 
