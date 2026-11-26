@@ -394,8 +394,8 @@ class _ArenaPainter extends CustomPainter {
 
     // Painter order follows the map's north-to-south rows so nearer facets
     // naturally cover farther ones. Each cell is split along a diagonal.
-    for (var row = 0; row < grid - 1; row++) {
-      for (var col = 0; col < grid - 1; col++) {
+    for (var row = firstRow; row < lastRow; row++) {
+      for (var col = firstCol; col < lastCol; col++) {
         final a = vertex(col, row);
         final b = vertex(col + 1, row);
         final c = vertex(col, row + 1);
@@ -418,9 +418,9 @@ class _ArenaPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.55
       ..color = const Color(0x227C9272);
-    for (var row = 0; row < grid; row += 4) {
+    for (var row = firstRow; row <= lastRow; row += 4) {
       final path = Path();
-      for (var col = 0; col < grid; col++) {
+      for (var col = firstCol; col <= lastCol; col++) {
         final point = vertex(col, row);
         if (col == 0) {
           path.moveTo(point.dx, point.dy);
