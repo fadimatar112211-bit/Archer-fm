@@ -39,6 +39,19 @@ begin
     end if;
   end loop;
 
+  if not exists (
+    select 1
+    from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname = 'player_profiles'
+      and t.tgname = 'player_profiles_set_updated_at'
+      and not t.tgisinternal
+  ) then
+    raise exception 'player profile updated_at trigger is missing';
+  end if;
+
   if has_table_privilege('authenticated', 'public.player_profiles', 'UPDATE') then
     raise exception 'authenticated has broad profile UPDATE; only display_name should be writable';
   end if;
