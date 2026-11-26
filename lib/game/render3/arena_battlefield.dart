@@ -236,8 +236,9 @@ class _ArenaPainter extends CustomPainter {
     Offset Function(Offset) project,
   ) {
     const cell = 96.0;
-    final columns = (viewport.width / (viewport.width / 960.0)).ceil() ~/ 1 + 2;
-    final rows = (viewport.height / (viewport.height / 442.8)).ceil() ~/ 1 + 2;
+    // The projection uses a fixed 960x540 world-unit camera window.
+    final columns = (960.0 / cell).ceil() + 2;
+    final rows = (540.0 / cell).ceil() + 2;
     final startX = (cameraOrigin.dx / cell).floor() - 1;
     final startY = (cameraOrigin.dy / cell).floor() - 1;
     for (var gy = startY; gy < startY + rows; gy++) {
