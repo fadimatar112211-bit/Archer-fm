@@ -40,3 +40,12 @@ A clean working branch, `arena-safe-integration-audit`, was created from the cur
 ## Explicit non-claims
 
 This report does not claim the arena is already playable on a phone, that PR #11 or #15 has passed current CI, that the 3D models match the approved face references, or that any feature branch has been merged. No changes were made to `main`.
+
+
+## CI follow-up (2026-11-26)
+
+- The Monster Army Checks workflow on `heroes-complete` passed for commit `739627ac1b498d8c953ef248fcdfec82f550cae8`.
+- The separate Flutter validation workflow also passed on that branch at the earlier pipeline commit.
+- The Storm asset workflow failed before export because Ubuntu's apt package supplied Blender 3.0.1, while the checked-in `.blend` source files were saved by Blender 3.6.13. The log shows an explicit newer-file warning followed by a Blender segmentation fault (exit 139).
+- The workflow was updated on `heroes-complete` to install and verify Blender 3.6.13. The rerun is currently in progress; this is a fix attempt, not a verified successful export.
+- The latest successful visual-build run on `arena-scene-integration` ran only the Flame matrix job. Its workflow matrix currently lists Flame alone, so it is not evidence that all four hero sprite packs were rebuilt or validated.
