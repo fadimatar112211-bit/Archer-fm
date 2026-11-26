@@ -54,4 +54,5 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - Client messages may select a valid roster loadout, start the full lobby, or forfeit. Client-submitted score/crystal/reward mutations are not accepted.
 - The server-side `awardScore` and `updateLivingCrystals` methods are the only exposed paths for trusted combat/castle integrations to update match scoring and crystal counts.
 - The session snapshot includes lobby selections, match phase/clock, participant score/crystal state, and final standings.
+- A local development entry point is available at `tool/dev_game_server.dart`. Run it with `dart run tool/dev_game_server.dart`; it binds to loopback by default. Set `ARCHER_FM_BIND_ADDRESS` and `ARCHER_FM_PORT` only for controlled LAN testing. It has no TLS or account authentication and must not be exposed to the public internet.
 - This is a tested match-session foundation, not a complete live game server: movement, attacks, unit purchases, economy, damage simulation, authenticated accounts, and cloud persistence still require integration with the existing game systems.
