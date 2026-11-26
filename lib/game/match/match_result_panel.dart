@@ -6,10 +6,12 @@ class MatchResultPanel extends StatelessWidget {
     super.key,
     required this.result,
     required this.localPlayerId,
+    required this.onReturnHome,
   });
 
   final Map<String, dynamic> result;
   final String localPlayerId;
+  final VoidCallback onReturnHome;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +76,12 @@ class MatchResultPanel extends StatelessWidget {
                     ],
                   ),
                 ),
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: onReturnHome,
+              icon: const Icon(Icons.home_outlined),
+              label: const Text('العودة للقائمة الرئيسية'),
+            ),
           ],
         ),
       ),
