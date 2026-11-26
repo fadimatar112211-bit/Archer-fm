@@ -27,6 +27,8 @@ void main() {
     expect(find.text('القنص الأسطوري'), findsOneWidget);
     expect(find.textContaining('خمس ضربات متتابعة مستقلة'), findsOneWidget);
 
+    await tester.drag(find.byType(ListView), const Offset(0, 700));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('فارس اللهب'));
     await tester.pump();
 
