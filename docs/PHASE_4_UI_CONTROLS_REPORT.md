@@ -97,6 +97,14 @@
 
 - Added a return-to-home action to the authoritative match result panel, so players can leave the finished match and return to the main hub. Callback behavior is covered by a widget test. Commits: `188a5876b92b4dd6e3e01daed30d694ccaee3f3b`, `86eaf43435275361c6aefa6b8b737b62559c0297`, `8e966589680ab04e46e51b77ebb0ff4336a2bc7a`, `aae29afc04b073d2a81dd4cfd03a06b9558e8dba`, `8805c06f5f41c7c5eba453148eef272971dab291`.
 
+
+## Seventh implementation batch — reconnect and room-response correctness
+
+- Corrected a subtle timeout issue: the 12-second room-response deadline is no longer cancelled merely because the WebSocket transport connected. It remains active until the server sends the room welcome, preventing a silent stuck setup if the socket opens but the room handshake never completes.
+- Added an explicit Arabic message while automatic room reconnection is underway.
+- Session expiry now presents an actionable Arabic explanation to create or join another room.
+- Commit: `dea6d165cc96a8ebcd32e24ab367d0b6ad976b09` (deadline/session handling) and `454d111b8244baf1515c933b743af0248d85a269` (reconnect status UI).
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
