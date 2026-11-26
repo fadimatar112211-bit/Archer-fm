@@ -341,6 +341,62 @@ void main() {
     expect(secondScore, 5);
   });
 
+  test('Flame basic attacks apply live burn damage over time', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final flame = session.players[1];
+    final target = authority.armies
+        .firstWhere((army) => army.ownerId == 'p1')
+        .units.first;
+    final flamePosition = session.world!.playerPositions[flame.id]!;
+    target.positionX = flamePosition.dx;
+    target.positionY = flamePosition.dy;
+    final before = target.health;
+
+    expect(session.handle(flame, {
+      'type': 'attack',
+      'targetId': target.id,
+    }), isNull);
+    expect(target.health, before - 62);
+    authority.tick(const Duration(seconds: 1));
+    expect(target.health, before - 66);
+  });
+
+  test('Storm basic attacks stun an enemy hero and prevent movement temporarily', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final storm = session.players[3];
+    final victim = session.players[0];
+    final stormPosition = session.world!.playerPositions[storm.id]!;
+    session.world!.setPlayerPosition(
+      victim.id,
+      stormPosition + const Offset(1, 0),
+    );
+    final victimPosition = session.world!.playerPositions[victim.id]!;
+
+    expect(session.handle(storm, {
+      'type': 'attack',
+      'targetId': 'hero_${victim.id}',
+    }), isNull);
+    expect(
+      authority.moveHero(
+        victim.id,
+        const Offset(1, 0),
+        const Duration(seconds: 1),
+      ),
+      victimPosition,
+    );
+    authority.tick(const Duration(milliseconds: 300));
+    expect(
+      authority.moveHero(
+        victim.id,
+        const Offset(1, 0),
+        const Duration(milliseconds: 100),
+      ),
+      isNot(victimPosition),
+    );
+  });
+
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
     final session = _combatReadySession();
     final authority = session.combat!;
