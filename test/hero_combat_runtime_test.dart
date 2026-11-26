@@ -2,10 +2,19 @@ import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/heroes/hero_combat_runtime.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Map<String, int> _energyCosts({int cost = 20}) => {
+      for (final hero in archerFmHeroes)
+        for (final ultimate in hero.ultimates) ultimate.id: cost,
+    };
+
 void main() {
   group('HeroCombatRuntime', () {
     test('manual attacks form a five-hit combo and respect weapon cooldown', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200);
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200,
+          maxEnergy: 100,
+          energyRegenerationPerSecond: 1,
+          ultimateEnergyCosts: _energyCosts(),
+        );
       final first = runtime.attack();
       expect(first.accepted, isTrue);
       expect(first.comboIndex, 1);
@@ -22,6 +31,9 @@ void main() {
       final runtime = HeroCombatRuntime(
         hero: heroCombatById(HeroId.ranger),
         comboResetWindowMs: 1000,
+        maxEnergy: 100,
+        energyRegenerationPerSecond: 1,
+        ultimateEnergyCosts: _energyCosts(),
       );
       expect(runtime.attack().comboIndex, 1);
       runtime.advance(const Duration(milliseconds: 520));
@@ -34,7 +46,11 @@ void main() {
     });
 
     test('weapon selection changes attack cooldown and damage profile', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.flame), comboResetWindowMs: 1200);
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.flame), comboResetWindowMs: 1200,
+          maxEnergy: 100,
+          energyRegenerationPerSecond: 1,
+          ultimateEnergyCosts: _energyCosts(),
+        );
       final first = runtime.attack();
       runtime.advance(const Duration(seconds: 1));
       runtime.selectWeapon(1);
@@ -44,7 +60,11 @@ void main() {
     });
 
     test('Ultimate buttons enforce unlock level and independent cooldowns', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.shadow), comboResetWindowMs: 1200);
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.shadow), comboResetWindowMs: 1200,
+          maxEnergy: 100,
+          energyRegenerationPerSecond: 1,
+          ultimateEnergyCosts: _energyCosts(),
+        );
       expect(runtime.useUltimate(1).accepted, isFalse);
       expect(runtime.useUltimate(0).accepted, isTrue);
       expect(runtime.useUltimate(0).accepted, isFalse);
@@ -54,8 +74,33 @@ void main() {
       expect(runtime.useUltimate(0).accepted, isTrue);
     });
 
+    test('Ultimates spend configured energy and regenerate independently of cooldowns', () {
+      final runtime = HeroCombatRuntime(
+        hero: heroCombatById(HeroId.ranger),
+        comboResetWindowMs: 1200,
+        maxEnergy: 50,
+        energyRegenerationPerSecond: 10,
+        ultimateEnergyCosts: _energyCosts(cost: 40),
+      );
+      expect(runtime.energy, 50);
+      expect(runtime.useUltimate(0).accepted, isTrue);
+      expect(runtime.energy, 10);
+      expect(runtime.useUltimate(1).accepted, isFalse);
+      expect(runtime.energy, 10);
+      runtime.advance(const Duration(seconds: 2));
+      expect(runtime.energy, 30);
+      runtime.advance(const Duration(seconds: 2));
+      expect(runtime.energy, 50);
+      expect(runtime.useUltimate(1).accepted, isFalse);
+      expect(runtime.energy, 50);
+    });
+
     test('Ultimate is independent and does not consume the five-hit combo', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200);
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.ranger), comboResetWindowMs: 1200,
+          maxEnergy: 100,
+          energyRegenerationPerSecond: 1,
+          ultimateEnergyCosts: _energyCosts(),
+        );
       runtime.attack();
       expect(runtime.comboIndex, 1);
 
@@ -70,7 +115,11 @@ void main() {
     });
 
     test('XP levels the hero and stops at level 40', () {
-      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm), comboResetWindowMs: 1200);
+      final runtime = HeroCombatRuntime(hero: heroCombatById(HeroId.storm), comboResetWindowMs: 1200,
+          maxEnergy: 100,
+          energyRegenerationPerSecond: 1,
+          ultimateEnergyCosts: _energyCosts(),
+        );
       expect(runtime.gainExperience(150), 1);
       expect(runtime.level, 2);
       expect(runtime.health, 618);
@@ -85,6 +134,9 @@ void main() {
               hero: heroCombatById(id),
               level: 12,
               comboResetWindowMs: 1200,
+              maxEnergy: 100,
+              energyRegenerationPerSecond: 1,
+              ultimateEnergyCosts: _energyCosts(),
             ))
           .toList();
       expect(runtimes.map((runtime) => runtime.health).toSet(), hasLength(1));
@@ -96,6 +148,9 @@ void main() {
         hero: heroCombatById(HeroId.ranger),
         targetMaxHealth: 500,
         comboResetWindowMs: 1200,
+        maxEnergy: 100,
+        energyRegenerationPerSecond: 1,
+        ultimateEnergyCosts: _energyCosts(),
       );
       runtime.attack();
       runtime.resetTarget();
