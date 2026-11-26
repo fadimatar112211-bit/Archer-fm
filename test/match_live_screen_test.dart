@@ -134,6 +134,19 @@ void main() {
       expect(movementMessages.last['dy'], 0);
       expect(tester.takeException(), isNull);
 
+      await tester.tap(find.text('هجوم'));
+      await tester.pump();
+      await tester.runAsync(() => Future<void>.delayed(
+            const Duration(milliseconds: 40),
+          ));
+      expect(
+        received.any(
+          (message) =>
+              message['type'] == 'attack' && message['targetId'] == 'p2',
+        ),
+        isTrue,
+      );
+
       connectedSocket!.add(jsonEncode({
         'type': 'ack',
         'seq': 999,
