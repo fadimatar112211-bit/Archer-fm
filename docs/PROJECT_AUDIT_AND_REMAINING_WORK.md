@@ -148,3 +148,21 @@ Do not block technical integration on these decisions; implement configuration a
 - **Not started:** no implementation evidence found in this audit.
 
 Update this document after each meaningful batch with commit references, test commands/results, screenshots, and any changed decisions. Never mark a phase complete without its acceptance evidence.
+
+
+## 7. Phase 1 execution update — 2026-11-26
+
+- Rechecked the active branch after the latest asset-merge work: branch head at audit start was `6f6f2d471597929220ffc72b572e258f172ec4f8`; PR #20 remained open, Draft, unmerged, targeting `heroes-complete`.
+- Re-inventoried the complete recursive Git tree: 2,049 blobs, response not truncated.
+- Rechecked hero source/model files and Flutter registration. The roster still references four expected animated GLB paths under `assets/heroes/{id}/model/`; those four paths were not present in this branch tree at audit time. The tree showed Ranger source BLEND + `assets/heroes/ranger_new/ranger.glb`, Flame source BLEND, Shadow source BLEND, and `assets/heroes/storm/storm.glb`. Flame/Shadow/Storm expected animated output paths and Ranger expected output path need reconciliation with the actual merged deliverables before Phase 2 can be accepted.
+- `pubspec.yaml` currently registers the three hero render manifests/atlases (Ranger, Flame, Shadow) and `assets/monsters/legacy/`; no Storm render manifest or model paths are registered there.
+- Found stale `PROJECT_STATUS.md` header dated 2026-11-14 and updated its current-status banner. Historical dated entries remain intact.
+- CI trigger audit found Match Rules Checks did not trigger for many asset-only or test-only changes because its path filters were narrow. It now watches all `lib/**`, `test/**`, `assets/**`, `tool/**`, pubspec files and workflow changes on the active branch and PRs targeting `heroes-complete`.
+- Monster Army Checks previously targeted pushes to `monster-army-work` and PRs to `main`, so it did not cover this PR's base branch. It now also targets `feature/match-rules-foundation` pushes and PRs to `heroes-complete`, with monster source/tests/assets and pubspec changes as triggers.
+- Added workflow concurrency cancellation to prevent a queue of redundant validation runs for every successive commit.
+- CI validation no longer runs a formatter that mutates the checkout before tests. Formatting is not silently changed in the CI workspace; analyzer and tests run against the committed source.
+- The prior run `45840088636` failed: 228 tests passed, while `test/arena_battlefield_test.dart` timed out after 10 minutes during engine image readback. Updated the test to perform `RenderRepaintBoundary.toImage` and `toByteData` via `tester.runAsync` so engine readback does not wait inside the widget test fake-async zone.
+- The same audit found a fail-open visibility condition: when the local authoritative reveal position was absent, enemy monsters were still considered visible and could be painted over the fog. Changed the visibility predicate to fail closed and extended the pixel test to include an enemy monster with no local reveal position.
+- New CI runs were triggered by these commits. Phase 1 remains **in progress** until the latest required jobs finish green; do not treat queued/running workflows as passes.
+
+Current commit trail includes workflow trigger/concurrency corrections, the fog visibility correction, and the test readback correction. See GitHub history for exact commit SHAs; the completion report records the acceptance gate.
