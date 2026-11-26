@@ -162,6 +162,14 @@ void main() {
       }));
       expect((await ack)['error'], 'purchase_rejected');
 
+      ack = _next(streams.first, (m) => m['type'] == 'ack' && m['seq'] == 6);
+      sockets.first.add(jsonEncode({
+        'type': 'purchase',
+        'seq': 6,
+        'monsterType': 'runner',
+      }));
+      expect((await ack)['error'], 'duplicate');
+
       ack = _next(streams.first, (m) => m['type'] == 'ack' && m['seq'] == 7);
       sockets.first.add(jsonEncode({
         'type': 'awardScore',
