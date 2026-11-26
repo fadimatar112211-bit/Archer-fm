@@ -129,11 +129,11 @@
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
 2. Audit every player-facing string for English leaks, RTL issues, truncation and numeric formatting.
 3. Improve match setup connection lifecycle: reliable busy state, timeout/error feedback, retry affordances and explicit reconnect/session-expired messaging.
-4. Verify joystick, attack, Ultimate, manual target cycling and unit-purchase controls, including disabled reasons, touch hit areas and a visible arena highlight for the selected target.
+4. Verify joystick, attack, Ultimate, manual target cycling and unit-purchase controls, including disabled reasons, touch hit areas and a visible arena highlight for the selected target. Automated layout coverage now includes 640×360, 1280×540 and 1600×720 landscape viewports; physical touch-device verification remains outstanding.
 5. Add clear empty, loading, success/confirmation and match-finished states.
 6. The read-only armory now presents canonical weapons and Ultimates. Actual inventory ownership, unlock and upgrade transactions must remain server-authoritative and are not simulated in the UI.
 7. Connect actual audio assets and settings only when the assets/runtime exist; until then keep the limitation explicit.
-8. Add responsive widget tests for short landscape and wide landscape dimensions, including HUD/map overlap checks.
+8. Responsive widget coverage now exercises compact and wide landscape setup screens and the battlefield/selected-target layer. The visual-capture fixture now includes an actively selected enemy monster so the target-ring render path is exercised in CI. A full live-HUD overlap check with an authoritative running-match stream and physical device remains outstanding.
 
 **Do not mark Phase 4 complete** until the remaining flows and automated UI checks pass. Physical touch-device usability and audio verification remain device QA items; no emulator is run automatically during this phase.
 
@@ -196,3 +196,13 @@
 
 
 - Added the selected-target ID to the battlefield painter's repaint conditions, so changing targets redraws the crystal selection ring even when the authoritative snapshot itself has not changed. Commit: `7e9cf63016d71427925c0632131b26d56a5c65d8`.
+
+
+## Eleventh implementation batch — landscape responsiveness and purchase controls
+
+- Increased all four live unit-purchase buttons to a minimum 88×48 logical-pixel touch target, matching the accessibility baseline used by the combat controls.
+- Added Arabic screen-reader labels and contextual hints to each purchase button. The hint clarifies that the server checks match currency and capacity before accepting a purchase; the client does not simulate a successful purchase.
+- Added responsive match-setup widget coverage at 640×360, 1280×540 and 1600×720 landscape sizes, asserting that setup and army confirmation remain reachable without layout exceptions.
+- Added battlefield rendering coverage at compact and wide landscape sizes with a selected enemy crystal, and updated the 960×540 visual-capture fixture to render a selected enemy monster highlight.
+- Commits: `50121462eda27250bbaebecd1ae85bd74f08ed50` (purchase touch targets/semantics), `8acbd0356f30e0f4f7450abd07ba953e3df807b6` and `0a796e1671eb6c66edd987db79b2ba5178287740` (responsive setup tests), `d272514161460f56d1768b8546d4c30d5bba9ee0` (selected-target visual capture), `9fd0444063aad27d3c706264a9e41b82ebe631c3` and `42e98dbd027b83155065caf0c6933990e5cc891f` (battlefield responsive test and viewport cleanup).
+- These tests were added to the branch and require a fresh complete CI result. The capture workflow can prove that the renderer generated the selected-target scene; it does not replace visual review on a physical phone.
