@@ -240,3 +240,11 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - CI run [45912118016](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912118016) was triggered while this UI work was being committed. Its status must be checked against the latest branch head before calling the new screen validated.
 
 **Remaining account work:** the screen currently reads account history and profile data, but hero/weapon and monster upgrade commands still need server-authoritative APIs and owner-approved economy costs. The screen also requires a live Supabase deployment to display provisioned data; no live staging verification has occurred.
+
+## 17. Validation follow-up and database-side name safety — 2026-11-27
+
+- Workflow [45912232721](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912232721) exposed a Dart type-argument typo in the new currency-history query mapper. Flutter analysis stopped before tests or APK build; the diagnostics pointed to the incorrect `.map<...>` expression.
+- Corrected both history query mappers to use explicit row-to-model closures in `player_account_data_service.dart` (commit `278b38a45ea2acca7962cdf3cc5a22e5da52d67e`).
+- Added a database constraint for display names as well as client-side validation, so direct PostgREST calls cannot store whitespace-padded, control-character or Unicode bidirectional-override names.
+- Added a database trigger to maintain `player_profiles.updated_at` without granting the client permission to write timestamp columns, and added a read-only staging assertion for the trigger.
+- The correction is committed, but no completed CI run for the newest branch head has been observed yet. The previous failure must not be described as a passing validation.
