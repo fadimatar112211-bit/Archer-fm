@@ -17,7 +17,7 @@ import 'websocket_game_host.dart';
 /// forfeit. Scores and crystal counts are updated only through trusted
 /// server-side methods called by the authoritative combat/castle systems.
 class AuthoritativeMatchSession
-    implements GameServerSession, PlayerScopedSnapshotSession, AccountBoundGameServerSession {
+    implements PlayerScopedSnapshotSession, AccountBoundGameServerSession {
   AuthoritativeMatchSession({
     required this.code,
     int durationMinutes = 30,
