@@ -28,7 +28,12 @@ class HeroCombatRuntime {
     this.level = 1,
     this.targetMaxHealth = 100000,
     required this.comboResetWindowMs,
+    required this.maxEnergy,
+    required this.energyRegenerationPerSecond,
+    required Map<String, int> ultimateEnergyCosts,
   })  : targetHealth = targetMaxHealth,
+        energy = maxEnergy,
+        _ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts),
         selectedWeaponIndex = 0 {
     if (level < 1 || level > heroLevelCap) {
       throw RangeError.range(level, 1, heroLevelCap, 'level');
@@ -39,13 +44,28 @@ class HeroCombatRuntime {
     if (comboResetWindowMs <= 0) {
       throw RangeError.value(comboResetWindowMs, 'comboResetWindowMs');
     }
+    if (maxEnergy <= 0 ||
+        !energyRegenerationPerSecond.isFinite ||
+        energyRegenerationPerSecond < 0) {
+      throw ArgumentError('Hero energy configuration is invalid.');
+    }
+    final requiredUltimateIds = hero.ultimates.map((item) => item.id).toSet();
+    if (_ultimateEnergyCosts.keys.toSet().difference(requiredUltimateIds).isNotEmpty ||
+        requiredUltimateIds.difference(_ultimateEnergyCosts.keys.toSet()).isNotEmpty ||
+        _ultimateEnergyCosts.values.any((cost) => cost <= 0 || cost > maxEnergy)) {
+      throw ArgumentError('Every Ultimate requires a valid configured energy cost.');
+    }
   }
 
   final HeroCombatDefinition hero;
   final int targetMaxHealth;
   final int comboResetWindowMs;
+  final int maxEnergy;
+  final double energyRegenerationPerSecond;
+  final Map<String, int> _ultimateEnergyCosts;
   int _comboResetRemainingMs = 0;
   int targetHealth;
+  double energy;
   int level;
   int experience = 0;
   int selectedWeaponIndex;
@@ -58,6 +78,8 @@ class HeroCombatRuntime {
   HeroWeapon get selectedWeapon => hero.weapons[selectedWeaponIndex];
   List<int> get ultimateCooldowns =>
       List<int>.unmodifiable(_ultimateCooldowns);
+  int energyCostForUltimate(int index) =>
+      _ultimateEnergyCosts[hero.ultimates[index].id]!;
 
   int experienceToNextLevel(int currentLevel) =>
       currentLevel >= heroLevelCap ? 0 : 100 + currentLevel * 50;
@@ -69,6 +91,10 @@ class HeroCombatRuntime {
     if (milliseconds <= 0) return;
     attackCooldownRemainingMs =
         (attackCooldownRemainingMs - milliseconds).clamp(0, 1 << 30).toInt();
+    energy = (energy +
+            energyRegenerationPerSecond * milliseconds / 1000)
+        .clamp(0, maxEnergy.toDouble())
+        .toDouble();
     for (var i = 0; i < _ultimateCooldowns.length; i++) {
       _ultimateCooldowns[i] =
           (_ultimateCooldowns[i] - milliseconds).clamp(0, 1 << 30).toInt();
@@ -149,8 +175,17 @@ class HeroCombatRuntime {
         cooldownRemainingMs: remaining,
       );
     }
+    final energyCost = energyCostForUltimate(index);
+    if (energy < energyCost) {
+      return CombatActionResult(
+        accepted: false,
+        messageAr: 'الطاقة غير كافية',
+        targetHealth: targetHealth,
+      );
+    }
     final damage = (hero.damageAt(level) * ultimate.damageMultiplier).round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
+    energy -= energyCost;
     _ultimateCooldowns[index] = ultimate.cooldownMs;
     return CombatActionResult(
       accepted: true,
