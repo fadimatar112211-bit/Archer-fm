@@ -229,3 +229,16 @@
 - A recursive repository asset audit found no `.mp3`, `.wav`, `.ogg`, `.m4a`, `.aac` or `.flac` files and no `assets/audio`, `assets/sounds` or `assets/music` directories. The project also has no audio playback dependency configured. Therefore no genuine music or gameplay sound effects can be connected or verified without approved audio assets and a playback implementation; no placeholder audio is presented as finished.
 - On code head `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`, Android validation has now passed `flutter analyze --no-fatal-infos`, the full `flutter test` suite and `flutter build apk --debug`. Emulator setup and artifact upload are still pending at the time of this report update.
 - Match Rules, Monster Army and arena visual-capture workflows all passed on `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`. The new responsive widget tests are not covered by those earlier successful runs and need a fresh validation cycle.
+
+
+## Thirteenth implementation batch — immersive live match presentation
+
+- Replaced the running-match presentation embedded in the long setup ListView with a dedicated full-screen landscape battlefield.
+- The authoritative arena now fills the live screen. Health, level, five-hit combo, resources, crystal count, monster count and connection status are overlaid at the top.
+- The movement joystick is anchored bottom-left. Manual attack, target cycling, all four level-gated Ultimates and four unit-purchase controls are anchored bottom-right in a translucent control panel.
+- Kept the existing server-authoritative command path, target selection, cooldown/level gates and accessibility semantics; this is a presentation/layout change, not a client-side combat simulation.
+- Added a widget integration test using a local WebSocket host. It sends a real room welcome and running-state snapshot, then verifies that the live screen shows the arena and joystick/attack/target controls without the old setup AppBar or embedded HUD card.
+- Commits: `c517e62a9cae011a0188b2aac08c0e5e0fd6188d` (immersive live screen), `59e2605262c18f02fac46bc61c5c9dcc9e0a4155` (live screen WebSocket widget test).
+- The previous APK artifact belongs to pre-immersive code head `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`; it is not the release candidate for this latest screen. A fresh Android build and full test result are required for the new head.
+
+**Current Phase 4 status:** the running-match UI now uses the intended full-screen arena layout, but the latest integration/responsive tests must pass CI. Audio assets/playback and physical-device touch/audio verification remain outstanding. Do not mark Phase 4 complete yet.
