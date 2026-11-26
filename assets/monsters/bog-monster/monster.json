@@ -1,0 +1,114 @@
+{
+  "id": "bog-monster",
+  "title": "Bog Monster",
+  "role": "normal",
+  "file": "bog-monster.glb",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "height_m": 1.51,
+  "root_scale_baked": 0.7837,
+  "proportions": {
+    "head_scale": 1.7,
+    "thigh_scale": 0.78,
+    "arm_scale": 0.9,
+    "target_height_m": 1.5
+  },
+  "triangles_original": 93500,
+  "triangles": 17992,
+  "vertices": 18314,
+  "glb_bytes": 1685376,
+  "bones": 39,
+  "materials": [
+    "Claw",
+    "Root",
+    "Fur",
+    "Mushroom",
+    "Tooth_Old",
+    "Eye_Swamp",
+    "Hide"
+  ],
+  "textures": [
+    "bark.jpg",
+    "bark_normal.jpg",
+    "fur.jpg",
+    "fur_normal.jpg",
+    "eyeSwamp.jpg",
+    "skin.jpg",
+    "skin_normal.jpg"
+  ],
+  "animations": {
+    "Idle": {
+      "duration_s": 3.0,
+      "loop": true,
+      "source": "original"
+    },
+    "Walk": {
+      "duration_s": 1.6,
+      "loop": true,
+      "source": "original"
+    },
+    "Run": {
+      "duration_s": 0.9,
+      "loop": true,
+      "source": "original"
+    },
+    "Attack": {
+      "duration_s": 1.2,
+      "loop": false,
+      "source": "original"
+    },
+    "Roar": {
+      "duration_s": 2.6,
+      "loop": false,
+      "source": "original"
+    },
+    "Die": {
+      "duration_s": 2.2,
+      "loop": false,
+      "source": "original"
+    },
+    "Hit": {
+      "duration_s": 0.45,
+      "loop": false,
+      "source": "added_by_pipeline"
+    }
+  },
+  "estimates": {
+    "attack_impact_time_s": 0.62,
+    "attack_hand": "Hand_R",
+    "walk_ground_speed_mps": "0.33",
+    "run_ground_speed_mps": "0.91",
+    "note": "محسوبة من مسار العظام، تقريبية: راجعها بصرياً"
+  },
+  "animated_y_range_m": {
+    "Idle": [
+      0.0,
+      1.51
+    ],
+    "Walk": [
+      -0.0,
+      1.48
+    ],
+    "Run": [
+      -0.0,
+      1.43
+    ],
+    "Attack": [
+      -0.0,
+      1.75
+    ],
+    "Roar": [
+      -0.0,
+      1.51
+    ],
+    "Die": [
+      -0.02,
+      1.51
+    ],
+    "Hit": [
+      -0.0,
+      1.52
+    ]
+  }
+}

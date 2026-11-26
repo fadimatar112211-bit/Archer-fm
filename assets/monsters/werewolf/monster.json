@@ -1,0 +1,109 @@
+{
+  "id": "werewolf",
+  "title": "Werewolf",
+  "role": "fast",
+  "file": "werewolf.glb",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "height_m": 1.4,
+  "root_scale_baked": 0.7046,
+  "proportions": {
+    "head_scale": 1.7,
+    "thigh_scale": 0.78,
+    "arm_scale": 0.9,
+    "target_height_m": 1.4
+  },
+  "triangles_original": 110312,
+  "triangles": 20146,
+  "vertices": 21345,
+  "glb_bytes": 1802988,
+  "bones": 49,
+  "materials": [
+    "Claw",
+    "Tongue",
+    "Fur",
+    "Nose",
+    "Teeth",
+    "Eye_Amber"
+  ],
+  "textures": [
+    "fur.jpg",
+    "fur_normal.jpg",
+    "eyeAmber.jpg"
+  ],
+  "animations": {
+    "Idle": {
+      "duration_s": 3.0,
+      "loop": true,
+      "source": "original"
+    },
+    "Walk": {
+      "duration_s": 1.25,
+      "loop": true,
+      "source": "original"
+    },
+    "Run": {
+      "duration_s": 0.72,
+      "loop": true,
+      "source": "original"
+    },
+    "Attack": {
+      "duration_s": 1.2,
+      "loop": false,
+      "source": "original"
+    },
+    "Roar": {
+      "duration_s": 2.6,
+      "loop": false,
+      "source": "original"
+    },
+    "Die": {
+      "duration_s": 2.2,
+      "loop": false,
+      "source": "original"
+    },
+    "Hit": {
+      "duration_s": 0.45,
+      "loop": false,
+      "source": "added_by_pipeline"
+    }
+  },
+  "estimates": {
+    "attack_impact_time_s": 0.62,
+    "attack_hand": "Hand_R",
+    "walk_ground_speed_mps": "0.6",
+    "run_ground_speed_mps": "1.59",
+    "note": "محسوبة من مسار العظام، تقريبية: راجعها بصرياً"
+  },
+  "animated_y_range_m": {
+    "Idle": [
+      -0.0,
+      1.4
+    ],
+    "Walk": [
+      -0.0,
+      1.37
+    ],
+    "Run": [
+      -0.0,
+      1.31
+    ],
+    "Attack": [
+      -0.0,
+      1.53
+    ],
+    "Roar": [
+      -0.0,
+      1.51
+    ],
+    "Die": [
+      -0.06,
+      1.4
+    ],
+    "Hit": [
+      -0.0,
+      1.55
+    ]
+  }
+}
