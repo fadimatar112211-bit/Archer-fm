@@ -255,14 +255,20 @@ class MatchCombatAuthority {
       combatLoop: MonsterMatchCombatLoop(
         combat: const MonsterCombatController(),
         resolver: MonsterCombatResolver(
-          onKill: (attackerOwnerId, targetKind) =>
-              _onKill?.call(attackerOwnerId, targetKind),
+          onKill: (attackerOwnerId, targetKind) {
+            if (targetKind != MonsterTargetKind.crystal) {
+              _onKill?.call(attackerOwnerId, targetKind);
+            }
+          },
         ),
         rangedHandler: const MonsterRangedAttackHandler(),
         projectiles: projectileManager,
         projectileSpeed: configuration.projectileSpeed,
-        onProjectileKill: (attackerOwnerId, targetKind) =>
-            _onKill?.call(attackerOwnerId, targetKind),
+        onProjectileKill: (attackerOwnerId, targetKind) {
+          if (targetKind != MonsterTargetKind.crystal) {
+            _onKill?.call(attackerOwnerId, targetKind);
+          }
+        },
         projectileId: _projectileId,
         obstaclesFor: (_) => [
           for (final obstacle in world.map.obstacles)
