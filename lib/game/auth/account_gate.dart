@@ -153,7 +153,9 @@ class _ArcherFmAccountScreenState extends State<ArcherFmAccountScreen> {
                     helperText: '8 أحرف على الأقل',
                     border: OutlineInputBorder(),
                   ),
-                  onSubmitted: (_) {\n                    if (!_loading) _submit();\n                  },
+                  onSubmitted: (_) {
+                    if (!_loading) _submit();
+                  },
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
