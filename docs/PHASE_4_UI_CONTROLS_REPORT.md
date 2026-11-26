@@ -74,14 +74,22 @@
 - Added a short-landscape widget test for match setup scrollability and overflow safety.
 - Commits: `876ecfe9e5b654d996cc7b4c9d269079df17e4d1` (result panel), `fed8d80958d19e762fae784f81bb8867642f5f02` (HUD integration), `66ca033ccda26b7863611f90e8dcb4af06fe84e1` (result tests), `3e755b96363c60600172c555ba43287855c53c05` (compact landscape test).
 
+
+## Fifth implementation batch — live Ultimate controls
+
+- Replaced generic Ultimate labels in the live HUD with each selected hero's actual canonical Ultimate name.
+- Each button now exposes a tooltip with the ability name, its unlock level when locked, remaining cooldown when cooling down, or ready state.
+- Buttons remain disabled unless the player is alive, connected, in a running match, at the required level and past cooldown; the authoritative server still validates energy, range and all combat rules.
+- Commit: `2fee0a14bdebe62fb02b1282f07bebc3cb9db82d`.
+
 ## Remaining Phase 4 work
 
-1. Complete the home/profile/account and post-match navigation without inventing account functionality before Phase 5.
+1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
 2. Audit every player-facing string for English leaks, RTL issues, truncation and numeric formatting.
 3. Improve match setup connection lifecycle: reliable busy state, timeout/error feedback, retry affordances and explicit reconnect/session-expired messaging.
 4. Verify joystick, attack, Ultimate, target selection and unit-purchase controls, including disabled reasons and touch hit areas.
 5. Add clear empty, loading, success/confirmation and match-finished states.
-6. Complete inventory/equipment/weapon presentation using the existing canonical weapon data; do not create duplicate progression rules.
+6. The read-only armory now presents canonical weapons and Ultimates. Actual inventory ownership, unlock and upgrade transactions must remain server-authoritative and are not simulated in the UI.
 7. Connect actual audio assets and settings only when the assets/runtime exist; until then keep the limitation explicit.
 8. Add responsive widget tests for short landscape and wide landscape dimensions, including HUD/map overlap checks.
 
