@@ -82,6 +82,8 @@ class MatchHeroState {
     required int maxEnergy,
     required double energyRegenerationPerSecond,
     required Map<String, int> ultimateEnergyCosts,
+    required int weaponUpgradeLevel,
+    required double weaponUpgradeDamagePerLevel,
   }) : combat = HeroCombatRuntime(
           hero: definition,
           level: level,
@@ -89,6 +91,8 @@ class MatchHeroState {
           maxEnergy: maxEnergy,
           energyRegenerationPerSecond: energyRegenerationPerSecond,
           ultimateEnergyCosts: ultimateEnergyCosts,
+          weaponUpgradeLevel: weaponUpgradeLevel,
+          weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
         ) {
     final index = definition.weapons.indexWhere((weapon) => weapon.id == weaponId);
     if (index < 0) throw ArgumentError.value(weaponId, 'weaponId');
