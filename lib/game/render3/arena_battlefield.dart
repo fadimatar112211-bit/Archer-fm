@@ -695,17 +695,21 @@ class _ArenaPainter extends CustomPainter {
           ..lineTo(p.dx - 4, p.dy + 8)
           ..lineTo(p.dx - 7, p.dy - 1)
           ..close();
-        canvas.drawPath(
-          path,
-          Paint()
-            ..shader = hp > 0
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color.withOpacity(0.95), color, color.withOpacity(0.55)],
-                  ).createShader(path.getBounds())
-                : const Color(0xFF4A4540),
-        );
+        final crystalPaint = Paint();
+        if (hp > 0) {
+          crystalPaint.shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.95),
+              color,
+              color.withOpacity(0.55),
+            ],
+          ).createShader(path.getBounds());
+        } else {
+          crystalPaint.color = const Color(0xFF4A4540);
+        }
+        canvas.drawPath(path, crystalPaint);
         final facet = Path()
           ..moveTo(p.dx, p.dy - 8)
           ..lineTo(p.dx, p.dy + 7)
