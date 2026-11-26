@@ -50,10 +50,12 @@ class HeroCombatRuntime {
       throw ArgumentError('Hero energy configuration is invalid.');
     }
     final requiredUltimateIds = hero.ultimates.map((item) => item.id).toSet();
-    if (_ultimateEnergyCosts.keys.toSet().difference(requiredUltimateIds).isNotEmpty ||
-        requiredUltimateIds.difference(_ultimateEnergyCosts.keys.toSet()).isNotEmpty ||
-        _ultimateEnergyCosts.values.any((cost) => cost <= 0 || cost > maxEnergy)) {
-      throw ArgumentError('Every Ultimate requires a valid configured energy cost.');
+    if (requiredUltimateIds.difference(_ultimateEnergyCosts.keys.toSet()).isNotEmpty ||
+        requiredUltimateIds.any((id) {
+          final cost = _ultimateEnergyCosts[id];
+          return cost == null || cost <= 0 || cost > maxEnergy;
+        })) {
+      throw ArgumentError('Every hero Ultimate requires a valid configured energy cost.');
     }
   }
 
