@@ -8,6 +8,7 @@ import 'hero_stage.dart';
 import 'sprite_player.dart';
 import '../game/heroes/hero_roster.dart';
 import '../game/heroes/hero_combat_runtime.dart';
+import '../game/match/match_loadout_screen.dart';
 
 const List<String> heroStates = [
   'idle',
@@ -321,6 +322,15 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         foregroundColor: const Color(0xFFE4F2E7),
         title: Text('Archer FM · ${_hero.nameEn}'),
         actions: [
+          IconButton(
+            tooltip: 'تجهيز المباراة',
+            icon: const Icon(Icons.sports_esports),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MatchLoadoutScreen(),
+              ),
+            ),
+          ),
           if (manifest != null)
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 16),
