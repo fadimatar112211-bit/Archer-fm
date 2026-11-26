@@ -302,7 +302,7 @@ void main() {
     }));
     final welcome = await welcomeFuture;
     expect(welcome['id'], 'p1');
-    expect(factory.sessions.values.single.provisioningComplete, isTrue);
+    expect((factory.sessions.values.single as _FakeAccountSession).provisioningComplete, isTrue);
     await socket.close();
   });
 
@@ -328,10 +328,7 @@ void main() {
     }));
     final error = await errorFuture;
     expect(error['reason'], 'account_restore_failed');
-    expect(
-      messages.where((message) => message['type'] == 'welcome').isEmpty,
-      isTrue,
-    );
+    expect(accountHost.roomCount, 0);
     await socket.close();
   });
 
