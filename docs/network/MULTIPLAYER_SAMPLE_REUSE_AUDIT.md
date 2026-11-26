@@ -15,7 +15,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 | ZIP component | Decision | Reason |
 |---|---|---|
-| WebSocket client | Adapted into `lib/game/network/game_client.dart` | Useful transport only; it does not own game rules. Durable commands replay after sequence reconciliation; combat and movement inputs are dropped offline. |
+| WebSocket client | Adapted into `lib/game/network/game_client.dart` | Mobile client handles create/join/resume, reconnect, sequence reconciliation and replay of durable commands only. |
 | Reliable command replay | Improved | Only durable selection/progression/purchase commands replay; movement and combat inputs are dropped while offline. |
 | Progress/weapon ownership model | Adapted into `lib/game/progression/hero_progress.dart` | Uses the existing canonical hero roster and weapon IDs. Costs and level caps are injected, not copied from provisional ZIP balance. |
 | Joystick widget | Adapted into `lib/game/controls/virtual_joystick.dart` | Normalized input, dead zone, release-to-zero and retry while transport rejects movement are covered by widget tests. Final camera projection and HUD placement remain integration work. |
@@ -30,7 +30,9 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 ## Current implementation in this branch
 
 - `MatchRulesEngine` is an isolated four-player match-result/clock rules foundation.
-- `GameClient` is a mobile WebSocket transport, not yet connected to a server or game HUD.
+- `GameClient` is a mobile WebSocket transport.
+- `WebSocketGameHost` is a generic room gateway; it still needs the authoritative game-session adapter and account service.
+
 - `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
 - `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; no ZIP sample prices are hardcoded.
 - Monsters and map integration remain owned by OpenCode and are not modified here.
