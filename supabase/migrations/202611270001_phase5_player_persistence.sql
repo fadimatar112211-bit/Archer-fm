@@ -74,6 +74,8 @@ drop policy if exists player_profiles_update_own on public.player_profiles;
 create policy player_profiles_update_own on public.player_profiles
   for update to authenticated using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+revoke update on table public.player_profiles from authenticated;
+grant update (display_name) on table public.player_profiles to authenticated;
 
 -- Clients can read their own progression, but cannot write progression,
 -- balances, rewards or match results. Trusted backend uses service-role access.
