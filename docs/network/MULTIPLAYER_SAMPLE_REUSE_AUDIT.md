@@ -85,7 +85,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 ### Explicit integration boundaries still open
 
-- The development WebSocket server currently uses the lobby-only default factory. A trusted deployment must pass `combatConfiguration` through a configured `sessionFactory`; no unapproved monster balance values or arbitrary army composition have been silently selected.
+- The development WebSocket server currently uses the lobby-only default factory. `AuthoritativeMatchSession.configuredFactory(...)` is now provided for a trusted deployment to inject the approved `MatchCombatConfiguration` and weapon-ownership validator; no unapproved monster balance values or arbitrary army composition have been silently selected. Its factory path is covered by a session integration test.
 - The exact hit shapes/animations of line, chain, dash, persistent-damage and other hero Ultimates are not represented by the current `HeroUltimate` schema. The first integration uses the existing radius metadata as a generic target-centered area; each ability still needs its authored shape/effect implementation and 3D animation binding.
 - Hero ranged projectile visuals, hero death/respawn rules, kill scoring/rewards, monster permanent-level save loading, and the final mobile HUD/rendering hookup remain separate tasks.
 - The world-unit conversion and monster balance catalog must be supplied by the approved server configuration. The test fixture uses isolated synthetic values solely to verify integration behavior; they are not proposed production balance values.
@@ -95,3 +95,5 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 - The selected 20-unit pre-match army is a durable lobby choice. The mobile client now retains and replays `army_select` if the socket drops before the server acknowledges it.
 - Movement and combat remain transient and are never queued or replayed after reconnect. Unit purchases are also not replayed as lobby selections; their server-side sequence/ack handling remains authoritative.
+
+- Added `AuthoritativeMatchSession.configuredFactory(...)` as the explicit handoff point for a deployment to supply the approved monster catalog, unit capacity, projectile tuning, world-unit conversion and trusted weapon ownership validator. The default local development server remains lobby-only until those values and identity provider are configured.
