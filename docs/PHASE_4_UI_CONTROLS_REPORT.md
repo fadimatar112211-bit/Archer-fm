@@ -252,3 +252,11 @@
 - Extended the local WebSocket widget integration test to push a finished snapshot after a running snapshot and verify the winner/result view appears, with the joystick and attack button removed.
 - Commits: `2554e5f29a40aa3054457bdbe5f2b07dfba42010` (full-screen result overlay), `5b582389e26ba2605230fc32a1ed05f1a1619fb3` (finished-state integration coverage).
 - Fresh Flutter analysis, full tests and Android build are required for this newest code; earlier CI results do not validate these two commits.
+
+
+## Ultimate milestone regression coverage
+
+- Added an explicit regression test for all four heroes confirming the Ultimate unlock levels remain exactly 1, 10, 20 and 30.
+- The test instantiates the combat runtime at each unlock level and confirms the corresponding Ultimate is accepted; existing tests continue to verify locked-level rejection, independent cooldowns, energy spending and separation from the five-hit combo.
+- Commit: `648e8bb6a1a985beaf95589c5617e13f508a9027`.
+- This latest test addition requires fresh CI; no result is claimed until the workflow completes.
