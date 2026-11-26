@@ -119,17 +119,23 @@ class _ArenaPainter extends CustomPainter {
     return Offset(projectedX, projectedY);
   }
 
-  Offset _cameraOrigin(Map world, Size worldSize) {
+  Offset _cameraOrigin(Map world, Size worldSize, Size viewport) {
     const cameraWidth = 960.0;
-    const cameraHeight = 540.0;
+    const projectionYScale = 0.82;
+    final scale = math.min(
+      viewport.width / cameraWidth,
+      viewport.height / (540.0 * projectionYScale),
+    );
+    final visibleWidth = viewport.width / scale;
+    final visibleHeight = viewport.height / (scale * projectionYScale);
     final positions = _map(world['playerPositions']);
     final localPosition = _point(positions?[localPlayerId]);
     final focus = localPosition ?? Offset(worldSize.width / 2, worldSize.height / 2);
-    final left = (focus.dx - cameraWidth / 2)
-        .clamp(0.0, math.max(0.0, worldSize.width - cameraWidth))
+    final left = (focus.dx - visibleWidth / 2)
+        .clamp(0.0, math.max(0.0, worldSize.width - visibleWidth))
         .toDouble();
-    final top = (focus.dy - cameraHeight / 2)
-        .clamp(0.0, math.max(0.0, worldSize.height - cameraHeight))
+    final top = (focus.dy - visibleHeight / 2)
+        .clamp(0.0, math.max(0.0, worldSize.height - visibleHeight))
         .toDouble();
     return Offset(left, top);
   }
@@ -149,7 +155,7 @@ class _ArenaPainter extends CustomPainter {
       return;
     }
     final worldSize = Size(width, height);
-    final cameraOrigin = _cameraOrigin(world, worldSize);
+    final cameraOrigin = _cameraOrigin(world, worldSize, size);
     Offset project(Offset point) =>
         _screen(point, size, worldSize, cameraOrigin);
     final bounds = Offset.zero & size;
