@@ -91,6 +91,8 @@ class AuthoritativeMatchSession implements GameServerSession {
     for (final player in _players) {
       if (player.resumeToken == resumeToken) {
         player.connected = true;
+        player.moveX = 0;
+        player.moveY = 0;
         return player;
       }
     }
@@ -100,7 +102,11 @@ class AuthoritativeMatchSession implements GameServerSession {
   @override
   void disconnect(GameServerPlayer player) {
     final matchPlayer = _find(player.id);
-    if (matchPlayer != null) matchPlayer.connected = false;
+    if (matchPlayer != null) {
+      matchPlayer.connected = false;
+      matchPlayer.moveX = 0;
+      matchPlayer.moveY = 0;
+    }
   }
 
   @override
@@ -319,6 +325,10 @@ class AuthoritativeMatchSession implements GameServerSession {
     final rules = _rules;
     if (rules?.phase != MatchPhase.running) return;
     rules!.advance(elapsed);
+    if (rules.phase != MatchPhase.running) {
+      combat?.clear();
+      return;
+    }
     final authority = combat;
     if (authority != null) {
       for (final player in _players) {
