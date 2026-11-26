@@ -11,6 +11,15 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/flutter-android.yml'
+  pull_request:
+    branches: [heroes-complete]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/flutter-android.yml'
 
 jobs:
   flutter-test-and-apk:
