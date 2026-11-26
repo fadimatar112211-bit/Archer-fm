@@ -150,7 +150,12 @@ class AuthoritativeMatchSession
   }
 
   GameServerPlayer? _join({required String? accountId}) {
-    if (_rules != null || _players.length >= 4) return null;
+    if (_rules != null ||
+        _players.length >= 4 ||
+        (accountId != null &&
+            _players.any((player) => player.accountId == accountId))) {
+      return null;
+    }
     final number = _nextPlayerNumber++;
     final player = _MatchPlayer(
       id: 'p$number',
