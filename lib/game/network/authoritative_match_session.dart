@@ -316,6 +316,33 @@ class AuthoritativeMatchSession
           'cost': purchase.cost,
         };
         return null;
+      case 'rebuild_crystal':
+        if (_rules?.phase != MatchPhase.running) return 'match_not_running';
+        final x = message['x'];
+        final y = message['y'];
+        if (x is! num || y is! num ||
+            !x.toDouble().isFinite || !y.toDouble().isFinite) {
+          return 'invalid_rebuild_position';
+        }
+        // The owner is always the authenticated connection's server-side
+        // player identity. A client-supplied ownerId is deliberately ignored.
+        final rebuild = rebuildCrystal(
+          ownerId: current.id,
+          position: Offset(x.toDouble(), y.toDouble()),
+        );
+        switch (rebuild) {
+          case CrystalRebuildResult.ok:
+            current.lastRebuild = {'x': x.toDouble(), 'y': y.toDouble()};
+            return null;
+          case CrystalRebuildResult.notEnoughResources:
+            return 'rebuild_not_enough_resources';
+          case CrystalRebuildResult.atMax:
+            return 'rebuild_at_max';
+          case CrystalRebuildResult.outsideTerritory:
+            return 'rebuild_outside_territory';
+          case CrystalRebuildResult.blocked:
+            return 'rebuild_blocked';
+        }
       default:
         return 'unsupported_command';
     }
@@ -451,6 +478,7 @@ class AuthoritativeMatchSession
             if (player.lastCombatAction != null)
               'lastCombatAction': player.lastCombatAction,
             if (player.lastPurchase != null) 'lastPurchase': player.lastPurchase,
+            if (player.lastRebuild != null) 'lastRebuild': player.lastRebuild,
           },
       ],
       if (rules?.result case final result?)
@@ -753,4 +781,5 @@ class _MatchPlayer implements GameServerPlayer {
   double moveY = 0;
   Map<String, Object?>? lastCombatAction;
   Map<String, Object?>? lastPurchase;
+  Map<String, Object?>? lastRebuild;
 }
