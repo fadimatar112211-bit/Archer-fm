@@ -7,6 +7,7 @@ import '../../monsters/monster_army.dart';
 import '../../monsters/monster_combat.dart';
 import '../../monsters/monster_combat_resolver.dart';
 import '../../monsters/monster_external_entity_adapter.dart';
+import '../../monsters/monster_formation_movement.dart';
 import '../../monsters/monster_match_combat_loop.dart';
 import '../../monsters/monster_match_runtime.dart';
 import '../../monsters/monster_models.dart';
@@ -116,6 +117,17 @@ class MatchCombatAuthority {
         projectiles: projectileManager,
         projectileSpeed: configuration.projectileSpeed,
         projectileId: _projectileId,
+        obstaclesFor: (_) => [
+          for (final obstacle in world.map.obstacles)
+            MonsterMovementObstacle(
+              x: obstacle.position.dx,
+              y: obstacle.position.dy,
+              radius: obstacle.radius,
+            ),
+        ],
+        movementSpeedMultiplierFor: (unit) => world.map.movementFactorAt(
+          Offset(unit.positionX, unit.positionY),
+        ),
       ),
     );
     _random = random ?? math.Random();
@@ -156,7 +168,8 @@ class MatchCombatAuthority {
     final distance = hero.definition.moveSpeed *
         configuration.worldUnitsPerSecond *
         seconds *
-        math.min(1, length);
+        (length < 1 ? length : 1.0) *
+        world.map.movementFactorAt(world.playerPositions[playerId]!);
     final delta = direction / length * distance;
     return world.movePlayer(playerId, delta, 18);
   }
@@ -196,7 +209,7 @@ class MatchCombatAuthority {
     if (target.ownerId == playerId) return _rejected('لا يمكن استهداف حليف');
     final origin = world.playerPositions[playerId]!;
     if (_distance(origin.dx, origin.dy, target.x, target.y) >
-        hero.definition.attackRange * 3) {
+        hero.definition.attackRange) {
       return _rejected('الهدف خارج مدى المهارة');
     }
 
@@ -275,7 +288,7 @@ class MatchCombatAuthority {
         y: position.dy,
         alive: () => hero.isAlive,
         damage: (amount) {
-          hero.health = math.max(0, hero.health - amount);
+          hero.health = math.max(0, hero.health - amount).toDouble();
           return !hero.isAlive;
         },
       ));
