@@ -1692,5 +1692,6 @@ class _ArenaPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ArenaPainter oldDelegate) =>
       oldDelegate.snapshot != snapshot ||
-      oldDelegate.localPlayerId != localPlayerId;
+      oldDelegate.localPlayerId != localPlayerId ||
+      oldDelegate.selectedTargetId != selectedTargetId;
 }
