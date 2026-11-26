@@ -149,7 +149,6 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       'invalid_army_selection': 'تشكيلة الجيش غير صالحة؛ يجب أن يكون المجموع 20',
       'match_already_started': 'المباراة بدأت بالفعل',
       'player_unavailable': 'اللاعب غير متاح',
-      'all_players_must_select_army': 'يجب على كل اللاعبين اختيار جيشهم',
       'match_not_running': 'المباراة لم تبدأ',
     };
     return labels[reason] ?? 'تعذّر تنفيذ الأمر: $reason';
@@ -273,6 +272,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text('اللاعبون: $_playersCount / 4 · الحالة: ${_phaseLabel(_matchPhase)}'),
+                        if (_playerId != null) Text('معرّفك داخل الغرفة: $_playerId'),
                         Text(
                           _allPlayersReady ? 'كل اللاعبين أكملوا التجهيز' : 'بانتظار تجهيز بقية اللاعبين',
                           style: TextStyle(
