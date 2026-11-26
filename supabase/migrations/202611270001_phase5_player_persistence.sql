@@ -261,14 +261,16 @@ declare
   existing public.match_results%rowtype;
   transaction_id bigint;
   inserted_result_id uuid;
+  existing_reward bigint := 0;
+  existing_idempotency_key text;
 begin
   if p_match_id is null or char_length(p_match_id) not between 1 and 128
      or p_user_id is null
-     or p_placement not between 1 and 4
-     or p_score < 0
-     or p_crystals_remaining not between 0 and 7
+     or p_placement is null or p_placement not between 1 and 4
+     or p_score is null or p_score < 0
+     or p_crystals_remaining is null or p_crystals_remaining not between 0 and 7
      or p_finish_reason is null or char_length(p_finish_reason) not between 1 and 48
-     or p_reward_amount < 0
+     or p_reward_amount is null or p_reward_amount < 0
      or p_idempotency_key is null
      or char_length(p_idempotency_key) not between 1 and 128 then
     raise exception 'invalid_match_settlement' using errcode = '22023';
@@ -301,10 +303,18 @@ begin
     for update;
 
   if found then
+    if existing.reward_transaction_id is not null then
+      select amount, idempotency_key
+        into existing_reward, existing_idempotency_key
+        from public.currency_transactions
+        where id = existing.reward_transaction_id;
+    end if;
     if existing.placement <> p_placement
        or existing.score <> p_score
        or existing.crystals_remaining <> p_crystals_remaining
-       or existing.finish_reason <> p_finish_reason then
+       or existing.finish_reason <> p_finish_reason
+       or existing_reward <> p_reward_amount
+       or (p_reward_amount > 0 and existing_idempotency_key <> p_idempotency_key) then
       raise exception 'match_result_idempotency_conflict' using errcode = '23505';
     end if;
     return query select existing.id, existing.reward_transaction_id, current_currency;
