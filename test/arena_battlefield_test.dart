@@ -47,7 +47,11 @@ void main() {
                   'castles': [
                     {
                       'ownerId': 'p1',
+                      'fallen': false,
                       'anchor': {'x': 300, 'y': 300},
+                      'walls': [
+                        {'radius': 146, 'startAngle': 0.4, 'sweep': 1.2},
+                      ],
                       'crystals': [
                         {
                           'id': 'p1_c1',
@@ -60,7 +64,11 @@ void main() {
                     },
                     {
                       'ownerId': 'p2',
+                      'fallen': false,
                       'anchor': {'x': 1600, 'y': 800},
+                      'walls': [
+                        {'radius': 146, 'startAngle': 2.0, 'sweep': 1.2},
+                      ],
                       'crystals': [
                         {
                           'id': 'p2_c1',
@@ -89,6 +97,9 @@ void main() {
                     'p1': {'health': 100, 'maxHealth': 100, 'isAlive': true},
                     'p2': {'health': 75, 'maxHealth': 100, 'isAlive': true},
                   },
+                  'projectiles': [
+                    {'id': 'shot1', 'ownerId': 'p2', 'x': 850, 'y': 630},
+                  ],
                   'monsters': [
                     {
                       'id': 'm1',
