@@ -204,7 +204,9 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
       appBar: AppBar(title: const Text('تجهيز المباراة'), centerTitle: true),
       body: SafeArea(
         child: LayoutBuilder(
@@ -426,6 +428,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -526,6 +529,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           Text('مستواك: ${myLevel ?? '—'} · الكومبو: ${comboIndex ?? '—'} / 5 · تبريد الهجوم: ${attackCooldown ?? 0} ms'),
           const SizedBox(height: 10),
           Row(
+            textDirection: TextDirection.ltr,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               VirtualJoystick(
