@@ -32,3 +32,20 @@ A true 3D arena means world-space meshes and camera transforms, GPU depth testin
 ## Current status
 
 The project is still in the Canvas/CPU-projected 2.5D stage. The height-map terrain refinement and visual capture tests are in place. The true 3D renderer spike and migration steps above remain outstanding; no 3D dependency has been added and no engine migration is claimed.
+
+## Renderer candidate review (26 November 2026)
+
+The repository currently declares Dart SDK `>=3.4.0 <4.0.0` and only `flutter_svg` as a runtime package. The Android workflow uses the current stable Flutter channel, so the exact SDK version must be read from CI before choosing a renderer.
+
+| Candidate | Relevant capabilities | Risks / decision |
+|---|---|---|
+| `flutter_scene` | Flutter GPU renderer; glTF, PBR, shadows, skinned animation and physics | Current package documentation says Flutter 3.47.1+; do not adopt until CI's Flutter version is confirmed and Android GPU support is proven. |
+| `stage_3d` | Android Filament backend; GLB, animation, lighting, procedural terrain and spatial queries | Early beta and Android-first; promising prototype candidate, but validate plugin build, device/emulator support, lifecycle and license before adoption. |
+| `three_js` | Three.js-style scene graph, Android OpenGL/Vulkan and model viewing | Its package notes say GPU support is under development; not the preferred production candidate for a GPU-heavy arena yet. |
+| `flutter_fiber` | Native OpenGL ES scene graph and GLB loading | Documented limitations include no shadows, no directional/spot lights and glTF animation still on the roadmap; unsuitable for the required final visual target without substantial missing features. |
+
+### Current decision
+
+Do not add any of these packages to the production dependency graph yet. The next experiment should be an isolated Android-only prototype using Stage 3D/Filament, because its documented feature set most closely matches the immediate needs (GLB animation, terrain mesh, lights and shadows). In parallel, confirm the CI Flutter SDK before reconsidering Flutter GPU-based `flutter_scene`.
+
+A candidate is accepted only after a standalone CI test proves: Android compilation, emulator/device launch, a depth-tested terrain mesh, one animated skinned GLB, a shadow-casting light, resize/lifecycle recovery, and acceptable frame time. If the beta plugin fails any of these gates, discard the spike without changing the live battlefield renderer.
