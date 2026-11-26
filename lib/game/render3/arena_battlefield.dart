@@ -447,13 +447,18 @@ class _ArenaPainter extends CustomPainter {
           final c0 = vertex(a0, radii[ring + 1], heights[ring + 1]);
           final d = vertex(a1, radii[ring + 1], heights[ring + 1]);
           final tint = (i + ring * 2) % 5;
-          final faceColor = tint == 0 ? palette[0] : tint == 1 ? palette[1] : palette[0].withBlue((palette[0].blue + 8).clamp(0,255).toInt());
+          // Keep neighboring facets close in tone: strong per-wedge contrast
+          // produced radial "sunburst" bands in the arena capture.
+          final faceColor = Color.lerp(
+            palette[0], palette[1], tint == 0 ? 0.10 : 0.035,
+          )!;
+          final backFaceColor = Color.lerp(palette[0], palette[2], 0.075)!;
           canvas.drawPath(triangle(a, c0, d), Paint()..color = faceColor);
-          canvas.drawPath(triangle(a, d, b), Paint()..color = palette[1].withAlpha(0xD8));
+          canvas.drawPath(triangle(a, d, b), Paint()..color = backFaceColor);
           canvas.drawPath(triangle(a, c0, d), Paint()
-            ..color = const Color(0x0C3D3025)
+            ..color = const Color(0x073D3025)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.65);
+            ..strokeWidth = 0.4);
         }
       }
 
