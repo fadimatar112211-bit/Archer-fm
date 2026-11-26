@@ -11,7 +11,7 @@ class _FakePlayer implements GameServerPlayer {
   @override
   final String id;
   @override
-  final String resumeToken;
+  String resumeToken;
   @override
   int lastSequence = 0;
   @override
