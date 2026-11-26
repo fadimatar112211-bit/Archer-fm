@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
+import 'package:archer_fm/game/progression/hero_progress.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_progression.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
