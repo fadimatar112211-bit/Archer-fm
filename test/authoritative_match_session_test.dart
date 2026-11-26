@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
@@ -135,8 +136,28 @@ void main() {
     final session = _combatReadySession();
     final authority = session.combat!;
     final before = session.world!.playerPositions['p1']!;
+    const directions = [
+      Offset(1, 0),
+      Offset(-1, 0),
+      Offset(0, 1),
+      Offset(0, -1),
+      Offset(0.70710678118, 0.70710678118),
+      Offset(-0.70710678118, 0.70710678118),
+      Offset(0.70710678118, -0.70710678118),
+      Offset(-0.70710678118, -0.70710678118),
+    ];
+    final direction = directions.firstWhere(
+      (candidate) =>
+          (session.world!.map.slideMove(before, candidate * 11.2, 18) - before)
+                  .distance >
+              0,
+    );
     expect(
-      session.handle(session.players.first, {'type': 'move', 'dx': 1, 'dy': 0}),
+      session.handle(session.players.first, {
+        'type': 'move',
+        'dx': direction.dx,
+        'dy': direction.dy,
+      }),
       isNull,
     );
     session.tick(const Duration(milliseconds: 100));
