@@ -100,7 +100,8 @@ class MonsterProjectile {
     if (step >= distance) {
       positionX = targetX;
       positionY = targetY;
-      target.applyDamage(damage);
+      final defeatedNow = target.applyDamage(damage);
+      if (defeatedNow) onKill?.call(ownerId, target.kind);
       _resolved = true;
       return MonsterProjectileResult.hit;
     }
