@@ -56,6 +56,16 @@
 
 Configuration contract: [Match Combat Configuration](match/COMBAT_CONFIGURATION.md).
 
+## Explicit first-playtest balance baseline
+
+A committed, strict-schema development config now exists at [config/match-combat.example.json](../config/match-combat.example.json). It sets a 100-energy pool, 8 energy/second regeneration, Ultimate costs of 30/35/40/50 by unlock tier, a 1,200 ms combo window, and explicit stats/costs for all four monster types. The file is decoded in the Flutter test suite to prevent drift. The tuning rationale and full table are in [Phase 3 Balance Baseline](match/PHASE_3_BALANCE_BASELINE.md).
+
+Run locally with:
+
+```sh
+ARCHER_FM_COMBAT_CONFIG="$PWD/config/match-combat.example.json" dart run tool/dev_game_server.dart
+```
+
 ## Automated validation
 
 All code results below are from commit `7949380d98f551b0d83ab167c57aaab0f7f6b97b` or a later documentation-only commit containing the same code:
@@ -69,11 +79,11 @@ All code results below are from commit `7949380d98f551b0d83ab167c57aaab0f7f6b97b
 
 ## Explicitly unresolved — do not call the entire Phase 3 release-ready
 
-These items depend on owner-approved balance/design decisions or later infrastructure phases:
+These items remain open after selecting an initial development balance baseline:
 
-1. Permanent reward amounts, kill/crystal reward attribution and final scoring values are not approved. No reward/score values were invented.
-2. Weapon upgrade levels persist, but their combat stat-scaling curve is not approved and therefore is not applied as a guessed multiplier.
-3. Burn/poison stacking and freeze/stun durations/effects are not implemented as final runtime effects; Ultimate runtime currently validates unlock, energy, cooldown, damage and configured area.
+1. **Authoritative kill/reward pipeline remains unimplemented.** Score/currency amounts and kill attribution need server-side events that cannot double-award on repeated ticks. The balance baseline does not grant rewards prematurely.
+2. **Weapon upgrade combat scaling remains unimplemented.** Upgrade levels persist, but trusted account levels are not yet injected into match combat damage.
+3. **Status effects remain unimplemented in the live match runtime.** Burn/poison stacking and slow/freeze/stun durations, ticks and crowd-control behavior are not applied yet; Ultimate runtime currently validates unlock, energy, cooldown, damage and configured area.
 4. The local development gateway is not production authenticated. Account-linked weapon ownership/hero levels require the authenticated account context and cloud persistence planned for Phase 5.
 5. The server requires a reviewed external combat configuration. No production balance JSON has been supplied or committed.
 6. Phase 2 map quality is still pending an actual gameplay screenshot review. The earlier asset report filename was corrected: technical asset integration is Phase 1, map quality is Phase 2.
