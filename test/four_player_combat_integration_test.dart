@@ -116,12 +116,20 @@ void main() {
       expect((await startAck)['error'], isNull);
       final states = await Future.wait(runningStates);
 
-      for (final state in states) {
+      for (var i = 0; i < states.length; i++) {
+        final state = states[i];
+        final playerId = 'p${i + 1}';
         expect(state['durationMinutes'], 10);
         expect(state['phase'], MatchPhase.running.name);
+        expect(state['players'], hasLength(4));
         final combat = state['combat'] as Map;
-        expect((combat['heroes'] as Map).keys, hasLength(4));
-        expect(combat['monsters'], hasLength(80));
+        final visibleHeroes = combat['heroes'] as Map;
+        expect(visibleHeroes.containsKey(playerId), isTrue);
+        final visibleMonsters = (combat['monsters'] as List).cast<Map>();
+        expect(
+          visibleMonsters.where((unit) => unit['ownerId'] == playerId),
+          hasLength(20),
+        );
         final world = state['world'] as Map;
         expect((world['castles'] as List), hasLength(4));
         expect(world['livingCrystals'], hasLength(4));
