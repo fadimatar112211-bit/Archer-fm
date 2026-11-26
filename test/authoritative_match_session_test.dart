@@ -366,6 +366,46 @@ void main() {
     expect(target.health, before - 66);
   });
 
+  test('Flame burn damage can finish a target and awards the kill once', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final flame = session.players[1];
+    final target = authority.armies
+        .firstWhere((army) => army.ownerId == 'p1')
+        .units.first;
+    final flamePosition = session.world!.playerPositions[flame.id]!;
+    target.positionX = flamePosition.dx;
+    target.positionY = flamePosition.dy;
+    target.health = 64;
+    for (final army in authority.armies) {
+      for (final unit in army.units) {
+        if (unit.id != target.id) {
+          unit.positionX += 3000;
+          unit.positionY += 3000;
+        }
+      }
+    }
+
+    expect(session.handle(flame, {
+      'type': 'attack',
+      'targetId': target.id,
+    }), isNull);
+    expect(target.health, 2);
+    authority.tick(const Duration(seconds: 1));
+    expect(target.isAlive, isFalse);
+    expect(session.world!.resources[flame.id], 3);
+    final score = (session.snapshot()['participants'] as List)
+        .cast<Map>()
+        .firstWhere((item) => item['playerId'] == flame.id)['score'];
+    expect(score, 5);
+    authority.tick(const Duration(seconds: 2));
+    expect(session.world!.resources[flame.id], 3);
+    final finalScore = (session.snapshot()['participants'] as List)
+        .cast<Map>()
+        .firstWhere((item) => item['playerId'] == flame.id)['score'];
+    expect(finalScore, 5);
+  });
+
   test('Storm basic attacks stun an enemy hero and prevent movement temporarily', () {
     final session = _combatReadySession();
     final authority = session.combat!;
