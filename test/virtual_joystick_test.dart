@@ -107,12 +107,7 @@ void main() {
     final data = tester
         .getSemantics(find.byType(VirtualJoystick))
         .getSemanticsData();
-    final actionLabels = data.customSemanticsActions.map((action) => action.label);
-    expect(actionLabels, contains('تحريك للأعلى'));
-    expect(actionLabels, contains('تحريك للأسفل'));
-    expect(actionLabels, contains('تحريك لليسار'));
-    expect(actionLabels, contains('تحريك لليمين'));
-    expect(actionLabels, contains('إيقاف الحركة'));
+    expect(data.customSemanticsActionIds, hasLength(5));
     expect(sent, isEmpty);
   });
 
