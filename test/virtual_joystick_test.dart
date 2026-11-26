@@ -56,4 +56,33 @@ void main() {
     expect(attempts, greaterThan(1));
     await gesture.up();
   });
+
+  testWidgets('exposes an Arabic movement hint and stops on disposal', (
+    tester,
+  ) async {
+    final sent = <Offset>[];
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.rtl,
+        child: VirtualJoystick(
+          onMove: (direction) {
+            sent.add(direction);
+            return true;
+          },
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('عصا الحركة'), findsOneWidget);
+    final center = tester.getCenter(find.byType(VirtualJoystick));
+    final gesture = await tester.startGesture(center);
+    await gesture.moveTo(center + const Offset(70, 0));
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(sent.last, isNot(Offset.zero));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(sent.last, Offset.zero);
+    await gesture.cancel();
+  });
+
 }
