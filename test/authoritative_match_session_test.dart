@@ -294,7 +294,11 @@ void main() {
     );
     expect(ultimateAck, isNull);
     expect(authority.heroes['p1']!.combat.comboIndex, 1);
+    expect(authority.heroes['p1']!.combat.energy, 80);
     expect(enemy.health, lessThan(946));
+    final heroSnapshot = (session.snapshot()['combat'] as Map)['heroes'] as Map;
+    expect((heroSnapshot['p1'] as Map)['energy'], 80);
+    expect((heroSnapshot['p1'] as Map)['maxEnergy'], 100);
 
     expect(
       session.handle(
