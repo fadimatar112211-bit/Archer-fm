@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/controls/virtual_joystick.dart';
 
@@ -6,15 +6,14 @@ void main() {
   testWidgets('sends normalized movement and zero when released', (tester) async {
     final sent = <Offset>[];
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: VirtualJoystick(
-              onMove: (direction) {
-                sent.add(direction);
-                return true;
-              },
-            ),
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: VirtualJoystick(
+            onMove: (direction) {
+              sent.add(direction);
+              return true;
+            },
           ),
         ),
       ),
@@ -37,15 +36,14 @@ void main() {
   testWidgets('retries direction when transport rejects it', (tester) async {
     var attempts = 0;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: VirtualJoystick(
-              onMove: (_) {
-                attempts++;
-                return false;
-              },
-            ),
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: VirtualJoystick(
+            onMove: (_) {
+              attempts++;
+              return false;
+            },
           ),
         ),
       ),
