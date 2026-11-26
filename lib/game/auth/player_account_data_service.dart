@@ -100,6 +100,7 @@ class PlayerAccountDataService {
 
   static void validateDisplayName(String value) {
     if (value.isEmpty ||
+        value != value.trim() ||
         value.length > 32 ||
         value.runes.any((rune) =>
             rune < 32 || rune == 127 || (rune >= 0x202A && rune <= 0x202E))) {
