@@ -43,11 +43,14 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   String _connectionLabel = 'غير متصل';
   String? _lastError;
   bool _busy = false;
+  bool _lastAttemptCreate = true;
+  Timer? _connectionDeadline;
 
   int get _armyTotal => _counts.values.fold(0, (sum, value) => sum + value);
 
   @override
   void dispose() {
+    _connectionDeadline?.cancel();
     _messages?.cancel();
     _states?.cancel();
     _client?.dispose();
@@ -67,6 +70,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       return;
     }
     await _disposeClient();
+    _lastAttemptCreate = create;
     final client = GameClient(url);
     _client = client;
     _messages = client.messages.listen(_onMessage);
@@ -81,6 +85,14 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           GameConnectionState.closed => 'مغلق',
           GameConnectionState.disconnected => 'غير متصل',
         };
+        if (state == GameConnectionState.connected) {
+          _busy = false;
+          _connectionDeadline?.cancel();
+        } else if (state == GameConnectionState.sessionExpired ||
+            state == GameConnectionState.closed) {
+          _busy = false;
+          _connectionDeadline?.cancel();
+        }
       });
     });
     setState(() {
@@ -89,16 +101,24 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       _room = null;
       _events.clear();
     });
+    _connectionDeadline?.cancel();
+    _connectionDeadline = Timer(const Duration(seconds: 12), () {
+      if (!mounted || !identical(_client, client) || _room != null) return;
+      setState(() {
+        _busy = false;
+        _lastError = 'لم يصل رد الغرفة خلال المهلة؛ تحقق من عنوان الخادم ثم أعد المحاولة';
+      });
+    });
     if (create) {
       await client.create(durationMinutes: _durationMinutes);
     } else {
       await client.join(_roomCode.text.trim().toUpperCase());
     }
-    if (!mounted) return;
-    setState(() => _busy = false);
+    if (!mounted || !identical(_client, client)) return;
   }
 
   Future<void> _disposeClient() async {
+    _connectionDeadline?.cancel();
     await _messages?.cancel();
     await _states?.cancel();
     _messages = null;
@@ -113,12 +133,15 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     final type = message['type'];
     setState(() {
       if (type == 'welcome') {
+        _busy = false;
+        _connectionDeadline?.cancel();
         _room = message['code'] as String?;
         _playerId = message['id'] as String?;
         if (_room != null) _roomCode.text = _room!;
         _events.insert(0, 'تم دخول الغرفة ${_room ?? ''}');
         _sendLoadout();
       } else if (type == 'error') {
+        _busy = false;
         _lastError = _errorLabel(message['reason']?.toString() ?? 'unknown');
       } else if (type == 'ack') {
         final error = message['error'];
@@ -147,7 +170,8 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   String _errorLabel(String reason) {
     const labels = {
-      'connect_failed': 'تعذّر الاتصال بالخادم',
+      'connect_failed': 'تعذّر الاتصال بالخادم؛ تحقق من العنوان والشبكة ثم أعد المحاولة',
+      'no_session': 'انتهت صلاحية جلسة الغرفة؛ أنشئ غرفة جديدة أو اطلب رمز انضمام جديداً',
       'invalid_message': 'رسالة غير صالحة',
       'need_four_players': 'تحتاج المباراة إلى أربعة لاعبين',
       'all_players_must_select': 'يجب على كل اللاعبين اختيار البطل والسلاح',
@@ -293,8 +317,21 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                               icon: const Icon(Icons.save_alt),
                               label: const Text('إرسال التجهيز'),
                             ),
+                            if (!_busy && _client != null &&
+                                _connectionLabel != 'متصل' && _room == null)
+                              TextButton.icon(
+                                onPressed: () => _connect(create: _lastAttemptCreate),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('إعادة المحاولة'),
+                              ),
                           ],
                         ),
+                        if (_busy) ...[
+                          const SizedBox(height: 8),
+                          const LinearProgressIndicator(),
+                          const SizedBox(height: 4),
+                          const Text('جارٍ انتظار رد الخادم…', textAlign: TextAlign.center),
+                        ],
                         const SizedBox(height: 8),
                         Row(
                           children: [
