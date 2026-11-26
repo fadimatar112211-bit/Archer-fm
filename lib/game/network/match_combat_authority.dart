@@ -26,14 +26,21 @@ class MatchCombatConfiguration {
     required this.maxUnitsPerArmy,
     required this.worldUnitsPerSecond,
     required this.comboResetWindowMs,
+    required this.maxHeroEnergy,
+    required this.energyRegenerationPerSecond,
+    required Map<String, int> ultimateEnergyCosts,
     Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
-  }) : monsterProgressionByPlayer =
-           Map.unmodifiable(monsterProgressionByPlayer) {
+  })  : monsterProgressionByPlayer =
+           Map.unmodifiable(monsterProgressionByPlayer),
+        ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts) {
     if (!projectileSpeed.isFinite || projectileSpeed <= 0 ||
         maxActiveProjectiles <= 0 ||
         maxUnitsPerArmy < 20 ||
         !worldUnitsPerSecond.isFinite || worldUnitsPerSecond <= 0 ||
-        comboResetWindowMs <= 0) {
+        comboResetWindowMs <= 0 ||
+        maxHeroEnergy <= 0 ||
+        !energyRegenerationPerSecond.isFinite ||
+        energyRegenerationPerSecond < 0) {
       throw ArgumentError('Combat movement/projectile configuration is invalid.');
     }
   }
@@ -45,6 +52,9 @@ class MatchCombatConfiguration {
   final double worldUnitsPerSecond;
   /// Required approved time window for chaining the five manual attack taps.
   final int comboResetWindowMs;
+  final int maxHeroEnergy;
+  final double energyRegenerationPerSecond;
+  final Map<String, int> ultimateEnergyCosts;
   /// Trusted, already-loaded permanent monster progression for each account.
   /// The host remains responsible for loading and saving each profile.
   final Map<String, MonsterProgression> monsterProgressionByPlayer;
@@ -62,6 +72,9 @@ class MatchHeroState {
           hero: definition,
           level: level,
           comboResetWindowMs: comboResetWindowMs,
+          maxEnergy: maxHeroEnergy,
+          energyRegenerationPerSecond: energyRegenerationPerSecond,
+          ultimateEnergyCosts: ultimateEnergyCosts,
         ) {
     final index = definition.weapons.indexWhere((weapon) => weapon.id == weaponId);
     if (index < 0) throw ArgumentError.value(weaponId, 'weaponId');
