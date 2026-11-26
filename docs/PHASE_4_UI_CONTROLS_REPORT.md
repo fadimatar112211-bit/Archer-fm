@@ -65,6 +65,15 @@
 - Added widget coverage for the joystick semantics and disposal release.
 - Commits: `b786cf0083680a0660d02ac1acaba22fe16ceafa` (armory), `efee21efe9c45248b7b81dce7b6689a42cba98e4` (home route), `c6253fff32da3058818fa092a410002fe5d4bc6c` (armory tests), `194562379e912bc5c8564d477c1d5b3f97032115` (home route test), `26b72bdd550eed08475c651ce41473f9904b32be` (joystick semantics and release), `8b5116b8ab033811da68756ac634015bf34814f8` (joystick tests).
 
+
+## Fourth implementation batch — match results and compact landscape layout
+
+- Added a dedicated result panel consuming the match host's actual `result` payload: winner or tie, finish reason, ordered standings, rank, score, living crystals, forfeits and local-player marker.
+- Integrated the panel into the existing live match HUD only after the authoritative phase becomes `finished`. It does not infer a winner from local UI state.
+- Added widget tests for timed winner results, tied results and crystal-finish reason.
+- Added a short-landscape widget test for match setup scrollability and overflow safety.
+- Commits: `876ecfe9e5b654d996cc7b4c9d269079df17e4d1` (result panel), `fed8d80958d19e762fae784f81bb8867642f5f02` (HUD integration), `66ca033ccda26b7863611f90e8dcb4af06fe84e1` (result tests), `3e755b96363c60600172c555ba43287855c53c05` (compact landscape test).
+
 ## Remaining Phase 4 work
 
 1. Complete the home/profile/account and post-match navigation without inventing account functionality before Phase 5.
