@@ -282,14 +282,39 @@ class AuthoritativeMatchSession implements GameServerSession {
         },
       if (world case final matchWorld?)
         'world': {
+          'size': {
+            'width': matchWorld.map.size.width,
+            'height': matchWorld.map.size.height,
+          },
           'resources': matchWorld.resources,
           'livingCrystals': {
-            for (final id in _players) id.id: matchWorld.livingCrystals(id.id),
+            for (final player in _players)
+              player.id: matchWorld.livingCrystals(player.id),
           },
           'playerPositions': {
             for (final entry in matchWorld.playerPositions.entries)
               entry.key: {'x': entry.value.dx, 'y': entry.value.dy},
           },
+          'castles': [
+            for (final castle in matchWorld.castles.castles)
+              {
+                'ownerId': castle.ownerId,
+                'fallen': castle.fallen,
+                'anchor': {'x': castle.anchor.dx, 'y': castle.anchor.dy},
+                'crystals': [
+                  for (final crystal in castle.crystals)
+                    {
+                      'id': crystal.id,
+                      'slot': crystal.slot,
+                      'x': crystal.position.dx,
+                      'y': crystal.position.dy,
+                      'hp': crystal.hp,
+                      'maxHp': crystal.maxHp,
+                      'exposed': crystal.exposed,
+                    },
+                ],
+              },
+          ],
           'mines': [
             for (final mine in matchWorld.mines.mines)
               {
@@ -298,6 +323,16 @@ class AuthoritativeMatchSession implements GameServerSession {
                 'captureFraction': mine.captureFraction,
                 'x': mine.position.dx,
                 'y': mine.position.dy,
+                'size': mine.size.name,
+              },
+          ],
+          'resourcePickups': [
+            for (final pickup in matchWorld.mines.pickups)
+              {
+                'id': pickup.id,
+                'x': pickup.position.dx,
+                'y': pickup.position.dy,
+                'amount': pickup.amount,
               },
           ],
         },
