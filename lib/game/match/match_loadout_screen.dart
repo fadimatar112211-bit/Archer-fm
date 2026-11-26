@@ -41,6 +41,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   bool _allPlayersReady = false;
   String _matchPhase = 'waiting';
   Map<String, dynamic>? _latestState;
+  String? _selectedTargetId;
   String _connectionLabel = 'غير متصل';
   String? _lastError;
   bool _busy = false;
@@ -521,15 +522,41 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     return client.send('move', {'dx': direction.dx, 'dy': direction.dy});
   }
 
-  String? _nearestEnemyTarget() {
+  List<String> _availableEnemyTargets() {
     final state = _latestState;
     final playerId = _playerId;
-    if (state == null || playerId == null) return null;
-    return MatchTargetSelector.nearestEnemyTarget(
+    if (state == null || playerId == null) return const [];
+    return MatchTargetSelector.enemyTargets(
       snapshot: state,
       playerId: playerId,
     );
   }
+
+  String? _currentEnemyTarget() {
+    final targets = _availableEnemyTargets();
+    if (_selectedTargetId != null && targets.contains(_selectedTargetId)) {
+      return _selectedTargetId;
+    }
+    return targets.isEmpty ? null : targets.first;
+  }
+
+  void _cycleEnemyTarget() {
+    final targets = _availableEnemyTargets();
+    if (targets.isEmpty) {
+      setState(() {
+        _selectedTargetId = null;
+        _lastError = 'لا يوجد هدف عدو متاح للاختيار حالياً';
+      });
+      return;
+    }
+    final currentIndex = targets.indexOf(_currentEnemyTarget() ?? '');
+    final nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % targets.length;
+    setState(() {
+      _selectedTargetId = targets[nextIndex];
+      _lastError = null;
+    });
+  }
+
 
   void _sendCombat(String type, {int? ultimateIndex}) {
     final client = _client;
@@ -537,7 +564,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       setState(() => _lastError = 'الاتصال أو المباراة غير جاهزين للقتال');
       return;
     }
-    final targetId = _nearestEnemyTarget();
+    final targetId = _currentEnemyTarget();
     if (targetId == null) {
       setState(() => _lastError = 'لا يوجد هدف عدو ظاهر حالياً');
       return;
@@ -578,7 +605,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       button: true,
       enabled: enabled,
       label: ultimate.nameAr,
-      hint: '$hint · يستهدف أقرب عدو ظاهر تلقائياً',
+      hint: '$hint · يستهدف الهدف المحدد أو أقرب عدو تلقائياً',
       child: Tooltip(
         message: '${ultimate.nameAr} · $hint',
         child: SizedBox(
@@ -706,7 +733,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     enabled: canAct &&
                         (attackCooldown is! num || attackCooldown <= 0),
                     label: 'هجوم',
-                    hint: 'كل لمسة تنفذ ضربة واحدة وتستهدف أقرب عدو ظاهر تلقائياً',
+                    hint: 'كل لمسة تنفذ ضربة واحدة وتستهدف الهدف المحدد أو أقرب عدو تلقائياً',
                     child: FilledButton(
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(120, 56),
@@ -717,6 +744,29 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                           : null,
                       child: const Text('هجوم'),
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  Semantics(
+                    button: true,
+                    enabled: canAct && _availableEnemyTargets().isNotEmpty,
+                    label: 'تغيير الهدف',
+                    hint: 'ينتقل إلى العدو التالي؛ اضغط عدة مرات للتنقل بين الأهداف المتاحة',
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(120, 48),
+                      ),
+                      onPressed: canAct && _availableEnemyTargets().isNotEmpty
+                          ? _cycleEnemyTarget
+                          : null,
+                      icon: const Icon(Icons.swap_horiz),
+                      label: const Text('تغيير الهدف'),
+                    ),
+                  ),
+                  Text(
+                    _selectedTargetId == null
+                        ? 'الهدف: الأقرب تلقائياً'
+                        : 'الهدف: اختيار يدوي',
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                   const SizedBox(height: 6),
                   Wrap(
