@@ -29,6 +29,7 @@ class MatchCombatConfiguration {
     required this.maxHeroEnergy,
     required this.energyRegenerationPerSecond,
     required Map<String, int> ultimateEnergyCosts,
+    this.weaponUpgradeDamagePerLevel = 0,
     Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
   })  : monsterProgressionByPlayer =
            Map.unmodifiable(monsterProgressionByPlayer),
@@ -40,7 +41,10 @@ class MatchCombatConfiguration {
         comboResetWindowMs <= 0 ||
         maxHeroEnergy <= 0 ||
         !energyRegenerationPerSecond.isFinite ||
-        energyRegenerationPerSecond < 0) {
+        energyRegenerationPerSecond < 0 ||
+        !weaponUpgradeDamagePerLevel.isFinite ||
+        weaponUpgradeDamagePerLevel < 0 ||
+        weaponUpgradeDamagePerLevel > 0.25) {
       throw ArgumentError('Combat movement/projectile/energy configuration is invalid.');
     }
     final expectedUltimateIds = {
@@ -66,6 +70,8 @@ class MatchCombatConfiguration {
   final int maxHeroEnergy;
   final double energyRegenerationPerSecond;
   final Map<String, int> ultimateEnergyCosts;
+  /// Approved damage increase per permanent weapon upgrade level (0..25%).
+  final double weaponUpgradeDamagePerLevel;
   /// Trusted, already-loaded permanent monster progression for each account.
   /// The host remains responsible for loading and saving each profile.
   final Map<String, MonsterProgression> monsterProgressionByPlayer;
