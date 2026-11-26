@@ -7,6 +7,7 @@ Map<String, Object?> _validConfiguration() => {
   'maxActiveProjectiles': 128,
   'maxUnitsPerArmy': 100,
   'worldUnitsPerSecond': 100,
+  'comboResetWindowMs': 1200,
   'monsterCatalog': {
     for (final type in MonsterType.values)
       type.name: {
@@ -32,6 +33,7 @@ void main() {
     expect(config.maxActiveProjectiles, 128);
     expect(config.maxUnitsPerArmy, 100);
     expect(config.worldUnitsPerSecond, 100);
+    expect(config.comboResetWindowMs, 1200);
   });
 
   test('rejects a missing monster type instead of silently using defaults', () {
