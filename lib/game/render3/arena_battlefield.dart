@@ -18,16 +18,34 @@ class ArenaBattlefield extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final world = snapshot['world'];
+    final hasWorld = world is Map &&
+        world['size'] is Map &&
+        (world['size']['width'] is num) &&
+        (world['size']['height'] is num) &&
+        (world['size']['width'] as num) > 0 &&
+        (world['size']['height'] as num) > 0;
+    final waitingLabel = world == null
+        ? 'بانتظار بيانات ساحة المعركة'
+        : 'بيانات الخريطة غير مكتملة';
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: DecoratedBox(
           decoration: const BoxDecoration(color: Color(0xFF17271F)),
-          child: CustomPaint(
-            painter: _ArenaPainter(snapshot, localPlayerId),
-            child: const SizedBox.expand(),
-          ),
+          child: hasWorld
+              ? CustomPaint(
+                  painter: _ArenaPainter(snapshot, localPlayerId),
+                  child: const SizedBox.expand(),
+                )
+              : Center(
+                  child: Text(
+                    waitingLabel,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
         ),
       ),
     );
