@@ -214,3 +214,15 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - A preceding source revision `85b2642649c23eb2f695007a27a306581f3a1ec9` completed Android debug APK build and artifact upload successfully in workflow [45910645194](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45910645194). That successful artifact predates the final player-scoped snapshot test and later SQL/docs hardening; validate the current head's APK run before release.
 
 **Phase 5 remains IN PROGRESS.** Remaining blockers are a connected staging Supabase project and migration/RLS execution, owner-approved hero/monster economy values (including monster growth and upgrade costs), cloud profile/upgrade handlers, cross-device and cross-account E2E, durable recovery across a game-server process restart, and a real WSS deployment/device smoke test. PR #21 remains draft and unmerged.
+
+## 15. Disk-backed match settlement recovery — 2026-11-27
+
+- Added `FileMatchSettlementOutbox` at `lib/game/network/file_match_settlement_outbox.dart`. Each account's finalized result/reward is validated and persisted to a local JSON snapshot before its first Supabase delivery attempt.
+- The production gateway now uses the outbox for all match settlement callbacks, retries pending records every five seconds, drains the queue on startup and attempts a final drain on graceful shutdown.
+- Pending records survive process restarts. A crash after the database commits but before the local record is removed may cause a replay; the existing match/player idempotency key makes that replay safe against duplicate rewards.
+- Successful background delivery invalidates the hero progression store's cached revision, preventing a later save from using a revision made stale by settlement.
+- Added tests for persistence before network delivery, failed-delivery retention, recovery in a newly constructed outbox, successful removal after confirmed delivery, and conflicting reuse of an idempotency key.
+- The deployment guide now configures a private systemd state directory and documents `ARCHER_FM_SETTLEMENT_OUTBOX_PATH`. The file must live on persistent private storage. This implementation is single-gateway-instance local durability, not a replicated queue; multi-replica deployment needs a database-backed queue/lease.
+- CI has been triggered by the new commits; do not claim this addition is green until the latest branch-head analysis, tests and Android build/artifact complete.
+
+**Phase 5 remains IN PROGRESS.** This closes the previously identified process-restart gap for already-enqueued settlement records, but live Supabase acceptance, approved progression economy, full profile/upgrade API integration, cross-device E2E and production deployment remain open.
