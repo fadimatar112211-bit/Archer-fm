@@ -15,4 +15,4 @@ The engine does not own the map, castles, crystals, hero, monster, economy, UI, 
 ## Deliberately unresolved
 The product requirements do not define what should happen if all players lose every crystal, nor how to break a tie after both score and crystal count are equal. The engine exposes `allRemainingPlayersHaveNoCrystals` and returns a tied result rather than guessing.
 
-Hero death/respawn, 20% resource loss, 10-second respawn delay and 5-second protection belong to the hero/match runtime, not this match-result rules module.
+Hero lifecycle is owned by the authoritative combat runtime: a defeated hero loses 20% of the current wallet (integer loss rounded down), waits 10 seconds, respawns at the server-recorded spawn position with full health, and receives 5 seconds of damage protection. A death transition applies the wallet penalty once; reconnecting does not repeat it. Kill points/rewards remain intentionally unconfigured until their values and eligible kill events are approved.
