@@ -814,7 +814,7 @@ class _ArenaPainter extends CustomPainter {
             const Color(0xFFA0CB78), const Color(0xFF679A54), const Color(0xFF38673D));
         canvas.drawCircle(p + Offset(-r * 0.22, -r * 1.18), r * 0.07,
             Paint()..color = const Color(0xFFD0E6A1));
-      } else { else {
+      } else {
         canvas.drawCircle(
           p,
           r,
