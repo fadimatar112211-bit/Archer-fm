@@ -255,3 +255,9 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Flutter dependency resolution and `flutter analyze --no-fatal-infos` have both completed successfully in that run.
 - The full Flutter test suite was still running at the latest poll. Android debug APK build and artifact upload had not started yet.
 - This run validates the Dart account screen and service changes up through the corrected query mapping; SQL changes still require a live staging database to validate.
+
+## 19. Display-name validation regression fix — 2026-11-27
+
+- Workflow 45912332059 passed Flutter analysis but reported 322 tests passed and one failed: the test called the pure display-name validator with whitespace-only input, and the validator did not itself reject leading/trailing whitespace (the update method had trimmed it before validation).
+- Tightened `validateDisplayName` to reject values that differ from their trimmed form, making the validator consistent with the database constraint and safe when called independently.
+- This fix is committed as `e0b257a2c32d0c3615ec6134d64d83d41e1899bb`; a fresh full CI run is still required before the change can be considered green.
