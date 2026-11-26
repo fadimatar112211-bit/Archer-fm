@@ -3,7 +3,7 @@ name: Flutter Android validation
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'feature/**']
     paths:
       - 'lib/**'
       - 'test/**'
