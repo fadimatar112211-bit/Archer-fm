@@ -435,7 +435,15 @@ class _ArenaPainter extends CustomPainter {
   ) {
     final positions = _map(world['playerPositions']);
     final localPosition = _point(positions?[localPlayerId]);
-    if (localPosition == null) return;
+    if (localPosition == null) {
+      // Fail closed: without a trusted local position there is no safe
+      // reveal center, so do not expose the battlefield.
+      canvas.drawRect(
+        bounds,
+        Paint()..color = const Color(0xF0000807),
+      );
+      return;
+    }
 
     final center = project(localPosition);
     final radius = (project(localPosition + Offset(enemyVisibleRadius, 0)) -
@@ -563,7 +571,11 @@ class _ArenaPainter extends CustomPainter {
     // local reveal radius as the main battlefield view.
     final playerPositions = _map(world['playerPositions']);
     final localPosition = _point(playerPositions?[localPlayerId]);
-    if (localPosition != null) {
+    if (localPosition == null) {
+      // Match the main view's fail-closed behavior when local position is
+      // missing from a partial or stale snapshot.
+      canvas.drawRect(inner, Paint()..color = const Color(0xF0000807));
+    } else {
       final revealX = enemyVisibleRadius / worldSize.width * inner.width;
       final revealY = enemyVisibleRadius / worldSize.height * inner.height;
       final revealRadius = math.min(revealX, revealY);
