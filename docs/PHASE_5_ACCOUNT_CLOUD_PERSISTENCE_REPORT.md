@@ -248,3 +248,10 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Added a database constraint for display names as well as client-side validation, so direct PostgREST calls cannot store whitespace-padded, control-character or Unicode bidirectional-override names.
 - Added a database trigger to maintain `player_profiles.updated_at` without granting the client permission to write timestamp columns, and added a read-only staging assertion for the trigger.
 - The correction is committed, but no completed CI run for the newest branch head has been observed yet. The previous failure must not be described as a passing validation.
+
+## 18. Corrected account query validation — 2026-11-27
+
+- The corrected branch triggered [workflow 45912332059](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912332059).
+- Flutter dependency resolution and `flutter analyze --no-fatal-infos` have both completed successfully in that run.
+- The full Flutter test suite was still running at the latest poll. Android debug APK build and artifact upload had not started yet.
+- This run validates the Dart account screen and service changes up through the corrected query mapping; SQL changes still require a live staging database to validate.
