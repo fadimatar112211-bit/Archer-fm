@@ -1119,12 +1119,17 @@ void main() {
       weaponUpgradeLevels: {ranger.weapons[1].id: 2},
       heroLevels: {ranger.id.name: 7},
     );
+    final accounts = ['restore-a', 'restore-b', 'restore-c', 'restore-d'];
     final session = AuthoritativeMatchSession(
       code: 'restore1',
       combatConfiguration: _combatConfiguration(),
-      loadAccountHeroProgress: (_) async => progress,
+      loadAccountHeroProgress: (accountId) async => HeroProgress(
+        permanentCurrency: accountId == 'restore-a' ? 17 : 29,
+        unlockedWeaponIds: progress.unlockedWeaponIds,
+        weaponUpgradeLevels: progress.weaponUpgradeLevels,
+        heroLevels: progress.heroLevels,
+      ),
     );
-    final accounts = ['restore-a', 'restore-b', 'restore-c', 'restore-d'];
     final players = [
       for (final account in accounts) session.joinForAccount(account)!,
     ];
@@ -1159,6 +1164,10 @@ void main() {
     final heroes = (session.snapshot()['combat'] as Map)['heroes'] as Map;
     expect((heroes['p1'] as Map)['level'], 7);
     expect((heroes['p1'] as Map)['weaponId'], ranger.weapons[1].id);
+    final firstProfile = session.snapshotFor(players.first)['accountProgression'] as Map;
+    final secondProfile = session.snapshotFor(players[1])['accountProgression'] as Map;
+    expect(firstProfile['permanentCurrency'], 17);
+    expect(secondProfile['permanentCurrency'], 29);
   });
 
 
