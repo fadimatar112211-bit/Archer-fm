@@ -63,11 +63,12 @@ Implemented in this branch:
 - RLS schema, account profile bootstrap trigger, currency ledger and match-result tables.
 - Provider-neutral progression store interfaces and Supabase REST adapters for hero/monster JSON saves.
 - Revision-checked backend save RPCs to reject cross-server stale writes.
+- Verified account hero progression is fetched before a player enters a room; match loadout checks, hero level and weapon upgrade level use that cloud state.
 - Atomic, idempotent match-result and currency-reward settlement RPC, typed server adapter, and an authoritative match-finish callback that retries failed writes while the room remains alive.
 
 Still required before production use:
 - Create/link the actual Supabase project and apply the migration.
-- Wire cloud hero/monster progression loading and saving into all account profile and upgrade handlers; the stores exist, but the current match session does not yet hydrate all saved progression before match start.
+- Wire cloud monster progression hydration and all account profile/upgrade handlers. Hero progression is now loaded before match entry; monster growth parameters and upgrade cost policy are not present in the approved combat configuration, so monster levels are not yet applied to match combat.
 - Approve the rank reward schedule and configure `ARCHER_FM_MATCH_REWARDS_BY_RANK`; the default is zero rewards, not an invented economy balance.
 - Load cloud profile on login and migrate existing local saves with a tested conflict policy.
 - Add end-to-end tests against a staging Supabase project, including second-device recovery, concurrent/idempotent settlement and cross-account isolation.
