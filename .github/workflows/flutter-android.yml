@@ -3,7 +3,7 @@ name: Flutter Android validation
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/match-rules-foundation]
+    branches: [main, feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
     paths:
       - 'lib/**'
       - 'test/**'
