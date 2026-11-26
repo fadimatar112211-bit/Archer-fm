@@ -1,5 +1,6 @@
 {
   "projectileSpeed": 120,
+  "weaponUpgradeDamagePerLevel": 0.04,
   "maxActiveProjectiles": 128,
   "maxUnitsPerArmy": 100,
   "worldUnitsPerSecond": 100,
