@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/network/match_combat_configuration.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
@@ -29,6 +31,17 @@ Map<String, Object?> _validConfiguration() => {
 };
 
 void main() {
+  test('committed development balance file decodes through the strict server schema', () {
+    final json = jsonDecode(
+      File('config/match-combat.example.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    final config = decodeMatchCombatConfiguration(json);
+    expect(config.monsterCatalog.all, hasLength(4));
+    expect(config.ultimateEnergyCosts, hasLength(16));
+    expect(config.maxHeroEnergy, 100);
+    expect(config.energyRegenerationPerSecond, 8);
+  });
+
   test('decodes all four explicit monster definitions and runtime limits', () {
     final config = decodeMatchCombatConfiguration(_validConfiguration());
     expect(config.monsterCatalog.all, hasLength(4));
