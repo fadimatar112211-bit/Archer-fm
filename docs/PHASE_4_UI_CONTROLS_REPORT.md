@@ -346,5 +346,5 @@
 - Extended the virtual joystick's Arabic accessibility semantics with explicit move-up, move-down, move-left, move-right and stop actions. Screen-reader or switch-access users can now issue movement commands without performing a drag gesture; the same movement callback and server command path are used.
 - Kept the existing touch joystick behavior, sensitivity scaling, retry-on-rejected-send behavior and zero-vector stop on release/disposal.
 - Added widget coverage that verifies all five directional/stop actions are exposed in the semantics tree.
-- Commits: implementation and regression test recorded in the Git history for this batch.
+- Commits: `a06ad14f42ba539a31ec4f38bb1c91659b111922` (semantic movement actions), `bd8bf61d9651126e9759bcd125cf04fefed7e638` (accessibility regression test), and `0f8546d24d067d4ef158a891fe9055f9b5e6efdf` (apply configured sensitivity to assistive movement).
 - A fresh analyzer, full Flutter test run and Android build are required; this change is not considered verified until those checks finish. Physical-device assistive-technology review remains outstanding.
