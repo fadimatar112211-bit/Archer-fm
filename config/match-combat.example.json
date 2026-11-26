@@ -1,0 +1,66 @@
+{
+  "projectileSpeed": 120,
+  "weaponUpgradeDamagePerLevel": 0.04,
+  "monsterKillScore": 5,
+  "monsterKillResources": 3,
+  "heroKillScore": 15,
+  "heroKillResources": 10,
+  "maxActiveProjectiles": 128,
+  "maxUnitsPerArmy": 100,
+  "worldUnitsPerSecond": 100,
+  "comboResetWindowMs": 1200,
+  "maxHeroEnergy": 100,
+  "energyRegenerationPerSecond": 8,
+  "ultimateEnergyCosts": {
+    "ranger_starfall": 30,
+    "ranger_piercing": 35,
+    "ranger_nature": 40,
+    "ranger_apex": 50,
+    "flame_eruption": 30,
+    "flame_comet": 35,
+    "flame_brand": 40,
+    "flame_phoenix": 50,
+    "shadow_vanish": 30,
+    "shadow_cross": 35,
+    "shadow_poison": 40,
+    "shadow_execution": 50,
+    "storm_bolt": 30,
+    "storm_chain": 35,
+    "storm_field": 40,
+    "storm_tempest": 50
+  },
+  "monsterCatalog": {
+    "runner": {
+      "maxHealth": 550,
+      "damage": 20,
+      "moveSpeed": 26,
+      "attackRange": 28,
+      "attackCooldownMs": 900,
+      "purchaseCost": 10
+    },
+    "tank": {
+      "maxHealth": 1600,
+      "damage": 38,
+      "moveSpeed": 12,
+      "attackRange": 30,
+      "attackCooldownMs": 1400,
+      "purchaseCost": 25
+    },
+    "stalker": {
+      "maxHealth": 800,
+      "damage": 28,
+      "moveSpeed": 22,
+      "attackRange": 32,
+      "attackCooldownMs": 950,
+      "purchaseCost": 18
+    },
+    "ranged": {
+      "maxHealth": 650,
+      "damage": 24,
+      "moveSpeed": 16,
+      "attackRange": 180,
+      "attackCooldownMs": 1200,
+      "purchaseCost": 20
+    }
+  }
+}

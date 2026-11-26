@@ -8,6 +8,7 @@ import 'hero_stage.dart';
 import 'sprite_player.dart';
 import '../game/heroes/hero_roster.dart';
 import '../game/heroes/hero_combat_runtime.dart';
+import '../game/match/match_loadout_screen.dart';
 
 const List<String> heroStates = [
   'idle',
@@ -174,12 +175,28 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
 
   HeroTheme get _theme => _hero.theme;
 
+  /// Local visual-preview tuning only. Live matches always receive their
+  /// approved energy and combo values from the authoritative server config.
+  HeroCombatRuntime _createPreviewCombat(HeroDefinition hero) {
+    final definition = heroCombatById(_heroId(hero.id));
+    return HeroCombatRuntime(
+      hero: definition,
+      comboResetWindowMs: 1200,
+      maxEnergy: 100,
+      energyRegenerationPerSecond: 1,
+      ultimateEnergyCosts: {
+        for (final rosterHero in archerFmHeroes)
+          for (final ultimate in rosterHero.ultimates) ultimate.id: 20,
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _hero = widget.initialHero ?? heroCatalog.first;
     _loader = widget.loaderFactory(_hero);
-    _combat = HeroCombatRuntime(hero: heroCombatById(_heroId(_hero.id)));
+    _combat = _createPreviewCombat(_hero);
     _ticker = createTicker(_onTick)..start();
     _loadManifest();
   }
@@ -239,7 +256,7 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
     _loadToken++;
     setState(() {
       _hero = hero;
-      _combat = HeroCombatRuntime(hero: heroCombatById(_heroId(hero.id)));
+      _combat = _createPreviewCombat(hero);
       _loader = widget.loaderFactory(hero);
       _manifest = null;
       _sheet = null;
@@ -321,6 +338,15 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         foregroundColor: const Color(0xFFE4F2E7),
         title: Text('Archer FM · ${_hero.nameEn}'),
         actions: [
+          IconButton(
+            tooltip: 'تجهيز المباراة',
+            icon: const Icon(Icons.sports_esports),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MatchLoadoutScreen(),
+              ),
+            ),
+          ),
           if (manifest != null)
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 16),

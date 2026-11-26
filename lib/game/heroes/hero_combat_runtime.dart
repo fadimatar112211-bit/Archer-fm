@@ -27,7 +27,15 @@ class HeroCombatRuntime {
     required this.hero,
     this.level = 1,
     this.targetMaxHealth = 100000,
+    required this.comboResetWindowMs,
+    required this.maxEnergy,
+    required this.energyRegenerationPerSecond,
+    required Map<String, int> ultimateEnergyCosts,
+    this.weaponUpgradeLevel = 0,
+    this.weaponUpgradeDamagePerLevel = 0,
   })  : targetHealth = targetMaxHealth,
+        energy = maxEnergy.toDouble(),
+        _ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts),
         selectedWeaponIndex = 0 {
     if (level < 1 || level > heroLevelCap) {
       throw RangeError.range(level, 1, heroLevelCap, 'level');
@@ -35,11 +43,44 @@ class HeroCombatRuntime {
     if (targetMaxHealth <= 0) {
       throw RangeError.value(targetMaxHealth, 'targetMaxHealth');
     }
+    if (comboResetWindowMs <= 0) {
+      throw RangeError.value(comboResetWindowMs, 'comboResetWindowMs');
+    }
+    if (weaponUpgradeLevel < 0 || weaponUpgradeLevel > heroLevelCap ||
+        !weaponUpgradeDamagePerLevel.isFinite ||
+        weaponUpgradeDamagePerLevel < 0 || weaponUpgradeDamagePerLevel > 0.25) {
+      throw ArgumentError('Weapon upgrade damage configuration is invalid.');
+    }
+    if (maxEnergy <= 0 ||
+        !energyRegenerationPerSecond.isFinite ||
+        energyRegenerationPerSecond < 0) {
+      throw ArgumentError('Hero energy configuration is invalid.');
+    }
+    final requiredUltimateIds = hero.ultimates.map((item) => item.id).toSet();
+    if (requiredUltimateIds.difference(_ultimateEnergyCosts.keys.toSet()).isNotEmpty ||
+        requiredUltimateIds.any((id) {
+          final cost = _ultimateEnergyCosts[id];
+          return cost == null || cost <= 0 || cost > maxEnergy;
+        })) {
+      throw ArgumentError('Every hero Ultimate requires a valid configured energy cost.');
+    }
   }
 
   final HeroCombatDefinition hero;
   final int targetMaxHealth;
+  final int comboResetWindowMs;
+  final int maxEnergy;
+  final double energyRegenerationPerSecond;
+  final Map<String, int> _ultimateEnergyCosts;
+  /// Trusted permanent upgrade level for the selected weapon.
+  final int weaponUpgradeLevel;
+  /// Host-approved damage growth per permanent weapon level.
+  final double weaponUpgradeDamagePerLevel;
+  double get weaponUpgradeMultiplier =>
+      1 + weaponUpgradeLevel * weaponUpgradeDamagePerLevel;
+  int _comboResetRemainingMs = 0;
   int targetHealth;
+  double energy;
   int level;
   int experience = 0;
   int selectedWeaponIndex;
@@ -52,6 +93,8 @@ class HeroCombatRuntime {
   HeroWeapon get selectedWeapon => hero.weapons[selectedWeaponIndex];
   List<int> get ultimateCooldowns =>
       List<int>.unmodifiable(_ultimateCooldowns);
+  int energyCostForUltimate(int index) =>
+      _ultimateEnergyCosts[hero.ultimates[index].id]!;
 
   int experienceToNextLevel(int currentLevel) =>
       currentLevel >= heroLevelCap ? 0 : 100 + currentLevel * 50;
@@ -63,10 +106,26 @@ class HeroCombatRuntime {
     if (milliseconds <= 0) return;
     attackCooldownRemainingMs =
         (attackCooldownRemainingMs - milliseconds).clamp(0, 1 << 30).toInt();
+    energy = (energy +
+            energyRegenerationPerSecond * milliseconds / 1000)
+        .clamp(0, maxEnergy.toDouble())
+        .toDouble();
     for (var i = 0; i < _ultimateCooldowns.length; i++) {
       _ultimateCooldowns[i] =
           (_ultimateCooldowns[i] - milliseconds).clamp(0, 1 << 30).toInt();
     }
+    if (_comboResetRemainingMs > 0) {
+      _comboResetRemainingMs =
+          (_comboResetRemainingMs - milliseconds).clamp(0, 1 << 30).toInt();
+      if (_comboResetRemainingMs == 0) comboIndex = 0;
+    }
+  }
+
+  /// Damage, crowd-control interruption or other server-confirmed interruption
+  /// can reset the combo without changing Ultimate cooldowns.
+  void resetCombo() {
+    comboIndex = 0;
+    _comboResetRemainingMs = 0;
   }
 
   CombatActionResult selectWeapon(int index) {
@@ -74,7 +133,7 @@ class HeroCombatRuntime {
       throw RangeError.index(index, hero.weapons, 'index');
     }
     selectedWeaponIndex = index;
-    comboIndex = 0;
+    resetCombo();
     return CombatActionResult(
       accepted: true,
       messageAr: 'تم تجهيز ${selectedWeapon.nameAr}',
@@ -94,10 +153,12 @@ class HeroCombatRuntime {
     final currentHit = comboIndex;
     final raw = hero.damageAt(level) *
         selectedWeapon.damageMultiplier *
+        weaponUpgradeMultiplier *
         const [1.0, 1.05, 1.1, 1.2, 1.55][currentHit];
     final damage = raw.round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
     comboIndex = (comboIndex + 1) % comboHitCount;
+    _comboResetRemainingMs = comboResetWindowMs;
     attackCooldownRemainingMs = selectedWeapon.cooldownMs;
     return CombatActionResult(
       accepted: true,
@@ -130,8 +191,20 @@ class HeroCombatRuntime {
         cooldownRemainingMs: remaining,
       );
     }
-    final damage = (hero.damageAt(level) * ultimate.damageMultiplier).round();
+    final energyCost = energyCostForUltimate(index);
+    if (energy < energyCost) {
+      return CombatActionResult(
+        accepted: false,
+        messageAr: 'الطاقة غير كافية',
+        targetHealth: targetHealth,
+      );
+    }
+    final damage = (hero.damageAt(level) *
+            ultimate.damageMultiplier *
+            weaponUpgradeMultiplier)
+        .round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
+    energy -= energyCost;
     _ultimateCooldowns[index] = ultimate.cooldownMs;
     return CombatActionResult(
       accepted: true,
@@ -161,6 +234,6 @@ class HeroCombatRuntime {
 
   void resetTarget() {
     targetHealth = targetMaxHealth;
-    comboIndex = 0;
+    resetCombo();
   }
 }

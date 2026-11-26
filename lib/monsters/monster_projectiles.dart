@@ -51,6 +51,7 @@ class MonsterProjectile {
   MonsterProjectileResult update({
     required Duration elapsed,
     required MonsterDamageTarget? target,
+    MonsterKillCallback? onKill,
   }) {
     if (_resolved) return MonsterProjectileResult.alreadyResolved;
     if (elapsed.isNegative) return MonsterProjectileResult.invalidElapsed;
@@ -88,7 +89,8 @@ class MonsterProjectile {
       return MonsterProjectileResult.targetMissing;
     }
     if (distance == 0) {
-      target.applyDamage(damage);
+      final defeatedNow = target.applyDamage(damage);
+      if (defeatedNow) onKill?.call(ownerId, target.kind);
       _resolved = true;
       return MonsterProjectileResult.hit;
     }
@@ -98,7 +100,8 @@ class MonsterProjectile {
     if (step >= distance) {
       positionX = targetX;
       positionY = targetY;
-      target.applyDamage(damage);
+      final defeatedNow = target.applyDamage(damage);
+      if (defeatedNow) onKill?.call(ownerId, target.kind);
       _resolved = true;
       return MonsterProjectileResult.hit;
     }

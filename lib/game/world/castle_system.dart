@@ -140,11 +140,23 @@ class CastleController {
   CastleController({
     required this.map,
     this.localPlayerId = MineController.localPlayerId,
+    this.playerIds,
   }) {
+    if (playerIds != null &&
+        (playerIds!.length != map.castleAnchors.length ||
+            playerIds!.toSet().length != playerIds!.length ||
+            playerIds!.first != localPlayerId ||
+            playerIds!.any((id) => id.trim().isEmpty))) {
+      throw ArgumentError.value(
+        playerIds,
+        'playerIds',
+        'Player IDs must be unique, non-empty, match castle count, and start with localPlayerId.',
+      );
+    }
     castles = [
       for (var i = 0; i < map.castleAnchors.length; i++)
         CastleState(
-          ownerId: i == 0 ? localPlayerId : 'rival_$i',
+          ownerId: playerIds?[i] ?? (i == 0 ? localPlayerId : 'rival_$i'),
           anchor: map.castleAnchors[i],
           isLocal: i == 0,
         ),
@@ -157,6 +169,7 @@ class CastleController {
 
   final ArenaMap map;
   final String localPlayerId;
+  final List<String>? playerIds;
   late final List<CastleState> castles;
 
   CastleState get playerCastle => castles.first;

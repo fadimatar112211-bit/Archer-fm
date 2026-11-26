@@ -1,0 +1,1191 @@
+{
+ "name": "Archer FM Arena v1",
+ "units": "1 unit = 1 m = 1 nav cell",
+ "size": [
+  96,
+  96
+ ],
+ "origin": "map center; +X east, +Y north, +Z up",
+ "symmetry": "D4",
+ "players": [
+  {
+   "id": "P1",
+   "side": "P1 South",
+   "color": "#3b82f6",
+   "castle": [
+    -4,
+    -44,
+    4,
+    -36
+   ],
+   "spawn": [
+    0,
+    -33.5
+   ],
+   "cameraYawDeg": 45,
+   "crystals": [
+    {
+     "id": "P1-C1",
+     "tier": "heart",
+     "x": 0,
+     "y": -46,
+     "footprint": [
+      -1,
+      -47,
+      1,
+      -45
+     ],
+     "hp": 3500
+    },
+    {
+     "id": "P1-C2",
+     "tier": "inner",
+     "x": -8,
+     "y": -42,
+     "footprint": [
+      -9,
+      -43,
+      -7,
+      -41
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P1-C3",
+     "tier": "inner",
+     "x": 8,
+     "y": -42,
+     "footprint": [
+      7,
+      -43,
+      9,
+      -41
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P1-C4",
+     "tier": "mid",
+     "x": -13,
+     "y": -36,
+     "footprint": [
+      -14,
+      -37,
+      -12,
+      -35
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P1-C5",
+     "tier": "mid",
+     "x": 13,
+     "y": -36,
+     "footprint": [
+      12,
+      -37,
+      14,
+      -35
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P1-C6",
+     "tier": "outer",
+     "x": -11,
+     "y": -28,
+     "footprint": [
+      -12,
+      -29,
+      -10,
+      -27
+     ],
+     "hp": 1500
+    },
+    {
+     "id": "P1-C7",
+     "tier": "outer",
+     "x": 11,
+     "y": -28,
+     "footprint": [
+      10,
+      -29,
+      12,
+      -27
+     ],
+     "hp": 1500
+    }
+   ],
+   "towers": [
+    {
+     "id": "P1-TL",
+     "rect": [
+      -8,
+      -32,
+      -6,
+      -30
+     ],
+     "range": 9
+    },
+    {
+     "id": "P1-TR",
+     "rect": [
+      6,
+      -32,
+      8,
+      -30
+     ],
+     "range": 9
+    }
+   ]
+  },
+  {
+   "id": "P2",
+   "side": "P2 East",
+   "color": "#ef4444",
+   "castle": [
+    36,
+    -4,
+    44,
+    4
+   ],
+   "spawn": [
+    33.5,
+    0
+   ],
+   "cameraYawDeg": 135,
+   "crystals": [
+    {
+     "id": "P2-C1",
+     "tier": "heart",
+     "x": 46,
+     "y": 0,
+     "footprint": [
+      45,
+      -1,
+      47,
+      1
+     ],
+     "hp": 3500
+    },
+    {
+     "id": "P2-C2",
+     "tier": "inner",
+     "x": 42,
+     "y": -8,
+     "footprint": [
+      41,
+      -9,
+      43,
+      -7
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P2-C3",
+     "tier": "inner",
+     "x": 42,
+     "y": 8,
+     "footprint": [
+      41,
+      7,
+      43,
+      9
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P2-C4",
+     "tier": "mid",
+     "x": 36,
+     "y": -13,
+     "footprint": [
+      35,
+      -14,
+      37,
+      -12
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P2-C5",
+     "tier": "mid",
+     "x": 36,
+     "y": 13,
+     "footprint": [
+      35,
+      12,
+      37,
+      14
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P2-C6",
+     "tier": "outer",
+     "x": 28,
+     "y": -11,
+     "footprint": [
+      27,
+      -12,
+      29,
+      -10
+     ],
+     "hp": 1500
+    },
+    {
+     "id": "P2-C7",
+     "tier": "outer",
+     "x": 28,
+     "y": 11,
+     "footprint": [
+      27,
+      10,
+      29,
+      12
+     ],
+     "hp": 1500
+    }
+   ],
+   "towers": [
+    {
+     "id": "P2-TL",
+     "rect": [
+      30,
+      -8,
+      32,
+      -6
+     ],
+     "range": 9
+    },
+    {
+     "id": "P2-TR",
+     "rect": [
+      30,
+      6,
+      32,
+      8
+     ],
+     "range": 9
+    }
+   ]
+  },
+  {
+   "id": "P3",
+   "side": "P3 North",
+   "color": "#fabe1e",
+   "castle": [
+    -4,
+    36,
+    4,
+    44
+   ],
+   "spawn": [
+    0,
+    33.5
+   ],
+   "cameraYawDeg": 225,
+   "crystals": [
+    {
+     "id": "P3-C1",
+     "tier": "heart",
+     "x": 0,
+     "y": 46,
+     "footprint": [
+      -1,
+      45,
+      1,
+      47
+     ],
+     "hp": 3500
+    },
+    {
+     "id": "P3-C2",
+     "tier": "inner",
+     "x": 8,
+     "y": 42,
+     "footprint": [
+      7,
+      41,
+      9,
+      43
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P3-C3",
+     "tier": "inner",
+     "x": -8,
+     "y": 42,
+     "footprint": [
+      -9,
+      41,
+      -7,
+      43
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P3-C4",
+     "tier": "mid",
+     "x": 13,
+     "y": 36,
+     "footprint": [
+      12,
+      35,
+      14,
+      37
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P3-C5",
+     "tier": "mid",
+     "x": -13,
+     "y": 36,
+     "footprint": [
+      -14,
+      35,
+      -12,
+      37
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P3-C6",
+     "tier": "outer",
+     "x": 11,
+     "y": 28,
+     "footprint": [
+      10,
+      27,
+      12,
+      29
+     ],
+     "hp": 1500
+    },
+    {
+     "id": "P3-C7",
+     "tier": "outer",
+     "x": -11,
+     "y": 28,
+     "footprint": [
+      -12,
+      27,
+      -10,
+      29
+     ],
+     "hp": 1500
+    }
+   ],
+   "towers": [
+    {
+     "id": "P3-TL",
+     "rect": [
+      6,
+      30,
+      8,
+      32
+     ],
+     "range": 9
+    },
+    {
+     "id": "P3-TR",
+     "rect": [
+      -8,
+      30,
+      -6,
+      32
+     ],
+     "range": 9
+    }
+   ]
+  },
+  {
+   "id": "P4",
+   "side": "P4 West",
+   "color": "#a855f7",
+   "castle": [
+    -44,
+    -4,
+    -36,
+    4
+   ],
+   "spawn": [
+    -33.5,
+    0
+   ],
+   "cameraYawDeg": 315,
+   "crystals": [
+    {
+     "id": "P4-C1",
+     "tier": "heart",
+     "x": -46,
+     "y": 0,
+     "footprint": [
+      -47,
+      -1,
+      -45,
+      1
+     ],
+     "hp": 3500
+    },
+    {
+     "id": "P4-C2",
+     "tier": "inner",
+     "x": -42,
+     "y": 8,
+     "footprint": [
+      -43,
+      7,
+      -41,
+      9
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P4-C3",
+     "tier": "inner",
+     "x": -42,
+     "y": -8,
+     "footprint": [
+      -43,
+      -9,
+      -41,
+      -7
+     ],
+     "hp": 2500
+    },
+    {
+     "id": "P4-C4",
+     "tier": "mid",
+     "x": -36,
+     "y": 13,
+     "footprint": [
+      -37,
+      12,
+      -35,
+      14
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P4-C5",
+     "tier": "mid",
+     "x": -36,
+     "y": -13,
+     "footprint": [
+      -37,
+      -14,
+      -35,
+      -12
+     ],
+     "hp": 2000
+    },
+    {
+     "id": "P4-C6",
+     "tier": "outer",
+     "x": -28,
+     "y": 11,
+     "footprint": [
+      -29,
+      10,
+      -27,
+      12
+     ],
+     "hp": 1500
+    },
+    {
+     "id": "P4-C7",
+     "tier": "outer",
+     "x": -28,
+     "y": -11,
+     "footprint": [
+      -29,
+      -12,
+      -27,
+      -10
+     ],
+     "hp": 1500
+    }
+   ],
+   "towers": [
+    {
+     "id": "P4-TL",
+     "rect": [
+      -32,
+      6,
+      -30,
+      8
+     ],
+     "range": 9
+    },
+    {
+     "id": "P4-TR",
+     "rect": [
+      -32,
+      -8,
+      -30,
+      -6
+     ],
+     "range": 9
+    }
+   ]
+  }
+ ],
+ "walls": [
+  {
+   "id": "P1-WAL",
+   "rect": [
+    -11,
+    -40,
+    -4,
+    -38
+   ]
+  },
+  {
+   "id": "P1-WBL",
+   "rect": [
+    -16,
+    -34,
+    -10,
+    -32
+   ]
+  },
+  {
+   "id": "P1-WGL",
+   "rect": [
+    -6,
+    -32,
+    -4,
+    -30
+   ]
+  },
+  {
+   "id": "P1-WAR",
+   "rect": [
+    4,
+    -40,
+    11,
+    -38
+   ]
+  },
+  {
+   "id": "P1-WBR",
+   "rect": [
+    10,
+    -34,
+    16,
+    -32
+   ]
+  },
+  {
+   "id": "P1-WGR",
+   "rect": [
+    4,
+    -32,
+    6,
+    -30
+   ]
+  },
+  {
+   "id": "P2-WAL",
+   "rect": [
+    38,
+    -11,
+    40,
+    -4
+   ]
+  },
+  {
+   "id": "P2-WBL",
+   "rect": [
+    32,
+    -16,
+    34,
+    -10
+   ]
+  },
+  {
+   "id": "P2-WGL",
+   "rect": [
+    30,
+    -6,
+    32,
+    -4
+   ]
+  },
+  {
+   "id": "P2-WAR",
+   "rect": [
+    38,
+    4,
+    40,
+    11
+   ]
+  },
+  {
+   "id": "P2-WBR",
+   "rect": [
+    32,
+    10,
+    34,
+    16
+   ]
+  },
+  {
+   "id": "P2-WGR",
+   "rect": [
+    30,
+    4,
+    32,
+    6
+   ]
+  },
+  {
+   "id": "P3-WAL",
+   "rect": [
+    4,
+    38,
+    11,
+    40
+   ]
+  },
+  {
+   "id": "P3-WBL",
+   "rect": [
+    10,
+    32,
+    16,
+    34
+   ]
+  },
+  {
+   "id": "P3-WGL",
+   "rect": [
+    4,
+    30,
+    6,
+    32
+   ]
+  },
+  {
+   "id": "P3-WAR",
+   "rect": [
+    -11,
+    38,
+    -4,
+    40
+   ]
+  },
+  {
+   "id": "P3-WBR",
+   "rect": [
+    -16,
+    32,
+    -10,
+    34
+   ]
+  },
+  {
+   "id": "P3-WGR",
+   "rect": [
+    -6,
+    30,
+    -4,
+    32
+   ]
+  },
+  {
+   "id": "P4-WAL",
+   "rect": [
+    -40,
+    4,
+    -38,
+    11
+   ]
+  },
+  {
+   "id": "P4-WBL",
+   "rect": [
+    -34,
+    10,
+    -32,
+    16
+   ]
+  },
+  {
+   "id": "P4-WGL",
+   "rect": [
+    -32,
+    4,
+    -30,
+    6
+   ]
+  },
+  {
+   "id": "P4-WAR",
+   "rect": [
+    -40,
+    -11,
+    -38,
+    -4
+   ]
+  },
+  {
+   "id": "P4-WBR",
+   "rect": [
+    -34,
+    -16,
+    -32,
+    -10
+   ]
+  },
+  {
+   "id": "P4-WGR",
+   "rect": [
+    -32,
+    -6,
+    -30,
+    -4
+   ]
+  }
+ ],
+ "rocks": [
+  {
+   "id": "P1-RkL",
+   "rect": [
+    -9,
+    -27,
+    -6,
+    -25
+   ]
+  },
+  {
+   "id": "P1-RkR",
+   "rect": [
+    6,
+    -27,
+    9,
+    -25
+   ]
+  },
+  {
+   "id": "P2-RkL",
+   "rect": [
+    25,
+    -9,
+    27,
+    -6
+   ]
+  },
+  {
+   "id": "P2-RkR",
+   "rect": [
+    25,
+    6,
+    27,
+    9
+   ]
+  },
+  {
+   "id": "P3-RkL",
+   "rect": [
+    6,
+    25,
+    9,
+    27
+   ]
+  },
+  {
+   "id": "P3-RkR",
+   "rect": [
+    -9,
+    25,
+    -6,
+    27
+   ]
+  },
+  {
+   "id": "P4-RkL",
+   "rect": [
+    -27,
+    6,
+    -25,
+    9
+   ]
+  },
+  {
+   "id": "P4-RkR",
+   "rect": [
+    -27,
+    -9,
+    -25,
+    -6
+   ]
+  },
+  {
+   "id": "Mid-Rk1",
+   "rect": [
+    4,
+    -8,
+    8,
+    -4
+   ]
+  },
+  {
+   "id": "Cor-Rk1",
+   "rect": [
+    28,
+    -32,
+    32,
+    -28
+   ]
+  },
+  {
+   "id": "Mid-Rk2",
+   "rect": [
+    4,
+    4,
+    8,
+    8
+   ]
+  },
+  {
+   "id": "Cor-Rk2",
+   "rect": [
+    28,
+    28,
+    32,
+    32
+   ]
+  },
+  {
+   "id": "Mid-Rk3",
+   "rect": [
+    -8,
+    4,
+    -4,
+    8
+   ]
+  },
+  {
+   "id": "Cor-Rk3",
+   "rect": [
+    -32,
+    28,
+    -28,
+    32
+   ]
+  },
+  {
+   "id": "Mid-Rk4",
+   "rect": [
+    -8,
+    -8,
+    -4,
+    -4
+   ]
+  },
+  {
+   "id": "Cor-Rk4",
+   "rect": [
+    -32,
+    -32,
+    -28,
+    -28
+   ]
+  }
+ ],
+ "camps": [
+  {
+   "id": "P1-GobL",
+   "type": "goblin",
+   "x": -21,
+   "y": -37,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P1-GobR",
+   "type": "goblin",
+   "x": 21,
+   "y": -37,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P2-GobL",
+   "type": "goblin",
+   "x": 37,
+   "y": -21,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P2-GobR",
+   "type": "goblin",
+   "x": 37,
+   "y": 21,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P3-GobL",
+   "type": "goblin",
+   "x": 21,
+   "y": 37,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P3-GobR",
+   "type": "goblin",
+   "x": -21,
+   "y": 37,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P4-GobL",
+   "type": "goblin",
+   "x": -37,
+   "y": 21,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "P4-GobR",
+   "type": "goblin",
+   "x": -37,
+   "y": -21,
+   "count": 3,
+   "leash": 5,
+   "spawnSec": 30,
+   "respawnSec": 60
+  },
+  {
+   "id": "wolf1",
+   "type": "wolf",
+   "x": 25.5,
+   "y": -25.5,
+   "count": 2,
+   "leash": 5,
+   "spawnSec": 60,
+   "respawnSec": 90
+  },
+  {
+   "id": "golem1",
+   "type": "golem",
+   "x": 11,
+   "y": -11,
+   "count": 1,
+   "leash": 4,
+   "spawnSec": 120,
+   "respawnSec": 150
+  },
+  {
+   "id": "wolf2",
+   "type": "wolf",
+   "x": 25.5,
+   "y": 25.5,
+   "count": 2,
+   "leash": 5,
+   "spawnSec": 60,
+   "respawnSec": 90
+  },
+  {
+   "id": "golem2",
+   "type": "golem",
+   "x": 11,
+   "y": 11,
+   "count": 1,
+   "leash": 4,
+   "spawnSec": 120,
+   "respawnSec": 150
+  },
+  {
+   "id": "wolf3",
+   "type": "wolf",
+   "x": -25.5,
+   "y": 25.5,
+   "count": 2,
+   "leash": 5,
+   "spawnSec": 60,
+   "respawnSec": 90
+  },
+  {
+   "id": "golem3",
+   "type": "golem",
+   "x": -11,
+   "y": 11,
+   "count": 1,
+   "leash": 4,
+   "spawnSec": 120,
+   "respawnSec": 150
+  },
+  {
+   "id": "wolf4",
+   "type": "wolf",
+   "x": -25.5,
+   "y": -25.5,
+   "count": 2,
+   "leash": 5,
+   "spawnSec": 60,
+   "respawnSec": 90
+  },
+  {
+   "id": "golem4",
+   "type": "golem",
+   "x": -11,
+   "y": -11,
+   "count": 1,
+   "leash": 4,
+   "spawnSec": 120,
+   "respawnSec": 150
+  },
+  {
+   "id": "drake",
+   "type": "crystal_drake",
+   "x": 0,
+   "y": 0,
+   "count": 1,
+   "leash": 8,
+   "spawnSec": 300,
+   "respawnSec": 240
+  }
+ ],
+ "points": [
+  {
+   "id": "ManaWell1",
+   "x": 38,
+   "y": -38,
+   "captureRadius": 3
+  },
+  {
+   "id": "ManaWell2",
+   "x": 38,
+   "y": 38,
+   "captureRadius": 3
+  },
+  {
+   "id": "ManaWell3",
+   "x": -38,
+   "y": 38,
+   "captureRadius": 3
+  },
+  {
+   "id": "ManaWell4",
+   "x": -38,
+   "y": -38,
+   "captureRadius": 3
+  },
+  {
+   "id": "CentralAltar",
+   "x": 0,
+   "y": 0,
+   "captureRadius": 5
+  }
+ ],
+ "river": {
+  "centerRadius": "21 + 1.2*cos(4*theta)",
+  "width": 5,
+  "waterZ": -0.8
+ },
+ "bridges": [
+  {
+   "id": "Main1",
+   "center": [
+    0,
+    -22.2
+   ],
+   "width": 8
+  },
+  {
+   "id": "Main2",
+   "center": [
+    22.2,
+    0
+   ],
+   "width": 8
+  },
+  {
+   "id": "Main3",
+   "center": [
+    0,
+    22.2
+   ],
+   "width": 8
+  },
+  {
+   "id": "Main4",
+   "center": [
+    -22.2,
+    0
+   ],
+   "width": 8
+  },
+  {
+   "id": "Flank1",
+   "center": [
+    14,
+    -14
+   ],
+   "width": 4
+  },
+  {
+   "id": "Flank2",
+   "center": [
+    14,
+    14
+   ],
+   "width": 4
+  },
+  {
+   "id": "Flank3",
+   "center": [
+    -14,
+    14
+   ],
+   "width": 4
+  },
+  {
+   "id": "Flank4",
+   "center": [
+    -14,
+    -14
+   ],
+   "width": 4
+  }
+ ],
+ "validatedPathLengthsFromSpawn": {
+  "\u0627\u0644\u0645\u0631\u0643\u0632 (\u0627\u0644\u0645\u0630\u0628\u062d)": 33.0,
+  "\u0627\u0644\u062e\u0635\u0645 \u0639\u0644\u0649 \u0627\u0644\u064a\u0645\u064a\u0646": 50.2,
+  "\u0627\u0644\u062e\u0635\u0645 \u0627\u0644\u0645\u0642\u0627\u0628\u0644": 67.0,
+  "\u0627\u0644\u062e\u0635\u0645 \u0639\u0644\u0649 \u0627\u0644\u064a\u0633\u0627\u0631": 50.2,
+  "\u0623\u0642\u0631\u0628 goblin": 21.2,
+  "\u0623\u0642\u0631\u0628 wolf": 26.9,
+  "\u0623\u0642\u0631\u0628 golem": 26.1,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C1": 27.9,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C2": 17.7,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C3": 17.7,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C4": 11.4,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C5": 11.4,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C6": 11.2,
+  "\u0628\u0644\u0648\u0631\u062a\u0643 C7": 11.2
+ }
+}

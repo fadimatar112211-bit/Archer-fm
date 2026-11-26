@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'hero/hero_assets.dart';
 import 'hero/hero_catalog.dart';
-import 'hero/hero_viewer_screen.dart';
+import 'home/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class ArcherFmApp extends StatelessWidget {
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: HeroViewerScreen(
+        child: ArcherFmHomeScreen(
           loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
         ),
       ),

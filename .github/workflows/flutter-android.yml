@@ -3,26 +3,66 @@ name: Flutter Android validation
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/match-rules-foundation]
     paths:
       - 'lib/**'
       - 'test/**'
-      - 'assets/heroes/ranger/renders/**'
+      - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
+      - 'analysis_options.yaml'
+      - '.github/workflows/flutter-android.yml'
+  pull_request:
+    branches: [heroes-complete]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'analysis_options.yaml'
       - '.github/workflows/flutter-android.yml'
 
 jobs:
   flutter-test-and-apk:
-    runs-on: ubuntu-latest
+    # Pin the runner while Android Emulator boot on ubuntu-latest (26.04)
+    # is failing before ADB can discover emulator-5554.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          version: '3.47.8'
           cache: true
       - run: flutter create --platforms=android --project-name archer_fm --org com.archerfm --no-pub .
+      - name: Add Maven Central to Flutter's included Gradle build plugin repositories
+        shell: bash
+        run: |
+          FLUTTER_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
+          SETTINGS="$FLUTTER_ROOT/packages/flutter_tools/gradle/settings.gradle.kts"
+          test -f "$SETTINGS"
+          python3 - "$SETTINGS" <<'PY'
+          from pathlib import Path
+          import sys
+
+          settings = Path(sys.argv[1])
+          content = settings.read_text()
+          if "pluginManagement {" not in content:
+              content = """pluginManagement {
+                  repositories {
+                      google()
+                      mavenCentral()
+                      gradlePluginPortal()
+                  }
+              }
+
+          """ + content
+              settings.write_text(content)
+          elif "mavenCentral()" not in content.split("dependencyResolutionManagement", 1)[0]:
+              raise SystemExit("Flutter Gradle pluginManagement exists but does not include Maven Central")
+          PY
+          grep -A6 '^pluginManagement {' "$SETTINGS"
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
@@ -35,26 +75,54 @@ jobs:
           docker system prune --all --force || true
           echo "Disk space after cleanup:"
           df -h /
+      # Emulator execution is an explicit release/QA action only. Phase work and
+      # routine CI must not boot an Android emulator unless manually dispatched.
       - uses: reactivecircus/android-emulator-runner@v2
+        if: github.event_name == 'workflow_dispatch'
+        # GitHub-hosted Linux runners do not expose KVM to this job. The
+        # emulator exits immediately with "-accel off" unless TCG is explicitly
+        # opted into; keep the longer boot window for software CPU emulation.
+        env:
+          ANDROID_I_WANT_MY_TCG: "yes"
         with:
           api-level: 30
           arch: x86_64
           profile: pixel_2
-          emulator-boot-timeout: 600
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          emulator-boot-timeout: 900
+          # Give the software-rendered emulator enough CPU/RAM for Flutter's first frame.
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -memory 4096 -cores 4
           disable-animations: true
+          disable-linux-hardware-acceleration: true
           script: |
             adb devices
             adb get-state
             adb install build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
-            sleep 5
+            # TCG boot can leave System UI in an ANR dialog while Flutter is still
+            # extracting its first-run assets. Give the app time to finish startup.
+            sleep 60
             adb shell pidof com.archerfm.archer_fm
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
+            adb logcat -d -t 16000 > build/android-logcat-before-recovery.txt
+            adb shell screencap -p /sdcard/archer-fm-launch.png
+            adb pull /sdcard/archer-fm-launch.png build/archer-fm-launch.png
+            # If the emulator's System UI ANR prompt is still visible, choose Wait.
+            adb shell input tap 520 600 || true
+            sleep 45
+            adb shell pidof com.archerfm.archer_fm
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
+            adb shell screencap -p /sdcard/archer-fm-launch-recovered.png
+            adb pull /sdcard/archer-fm-launch-recovered.png build/archer-fm-launch-recovered.png
+            adb logcat -d -t 16000 > build/android-logcat-after-recovery.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: archer-fm-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: archer-fm-android-validation
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/archer-fm-launch.png
+            build/archer-fm-launch-recovered.png
+            build/android-logcat-before-recovery.txt
+            build/android-logcat-after-recovery.txt
           retention-days: 14

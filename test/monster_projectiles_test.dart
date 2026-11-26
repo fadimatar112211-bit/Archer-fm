@@ -84,6 +84,37 @@ void main() {
       ), MonsterProjectileResult.alreadyResolved);
     });
 
+    test('reports a projectile kill once to the firing owner', () {
+      final source = _ranged();
+      final target = _Target('fragile-enemy', 'p2', 0, 0, health: 5);
+      final projectile = MonsterProjectile(
+        id: 'kill-bolt',
+        source: source,
+        targetId: target.id,
+        projectileSpeed: 10,
+        positionX: 0,
+        positionY: 0,
+      );
+      final events = <String>[];
+      final result = projectile.update(
+        elapsed: Duration.zero,
+        target: target,
+        onKill: (ownerId, kind) => events.add('$ownerId:${kind.name}'),
+      );
+      expect(result, MonsterProjectileResult.hit);
+      expect(target.isAlive, isFalse);
+      expect(events, ['p1:hero']);
+      expect(
+        projectile.update(
+          elapsed: Duration.zero,
+          target: target,
+          onKill: (ownerId, kind) => events.add('$ownerId:${kind.name}'),
+        ),
+        MonsterProjectileResult.alreadyResolved,
+      );
+      expect(events, ['p1:hero']);
+    });
+
     test('cancels when target disappears, dies, or becomes friendly', () {
       final source = _ranged();
       MonsterProjectile make() => MonsterProjectile(
@@ -203,6 +234,121 @@ void main() {
   });
 
   group('Authoritative monster match combat loop', () {
+    test('reports melee and projectile kills to the owning player exactly once', () {
+      final ranged = _ranged();
+      final melee = MonsterArmy(
+        ownerId: 'p1',
+        idPrefix: 'kill-melee',
+        catalog: _catalog(),
+        selection: InitialArmySelection({
+          MonsterType.runner: 20, MonsterType.tank: 0,
+          MonsterType.stalker: 0, MonsterType.ranged: 0,
+        }),
+        castleX: 0, castleY: 0,
+      ).units.first;
+      final rangedTarget = _Target(
+        'kill-ranged-target', 'p2', ranged.positionX + 1,
+        ranged.positionY, health: 5,
+      );
+      final meleeTarget = _Target(
+        'kill-melee-target', 'p2', melee.positionX + 1,
+        melee.positionY, health: 5,
+      );
+      final targets = <String, _Target>{
+        rangedTarget.id: rangedTarget,
+        meleeTarget.id: meleeTarget,
+      };
+      final events = <String>[];
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 8);
+      var sequence = 0;
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: MonsterCombatResolver(
+          onKill: (ownerId, kind) => events.add('$ownerId:${kind.name}'),
+        ),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: manager,
+        projectileSpeed: 10,
+        projectileId: (_) => 'kill-bolt-${sequence++}',
+        onProjectileKill: (ownerId, kind) =>
+            events.add('$ownerId:${kind.name}'),
+      );
+
+      loop.update(
+        units: [ranged, melee],
+        candidatesFor: (unit) => [
+          MonsterTarget(
+            id: unit.type == MonsterType.ranged
+                ? rangedTarget.id : meleeTarget.id,
+            ownerId: 'p2',
+            kind: MonsterTargetKind.hero,
+            x: unit.type == MonsterType.ranged
+                ? rangedTarget.positionX : meleeTarget.positionX,
+            y: unit.type == MonsterType.ranged
+                ? rangedTarget.positionY : meleeTarget.positionY,
+            isAlive: true,
+          ),
+        ],
+        resolveDamageTarget: (id) => targets[id],
+        resolvePositionedTarget: (id) => targets[id],
+        now: DateTime.utc(2026, 3, 1),
+        elapsed: Duration.zero,
+      );
+      expect(meleeTarget.isAlive, isFalse);
+      expect(events, ['p1:hero']);
+
+      loop.update(
+        units: [ranged, melee],
+        candidatesFor: (_) => const [],
+        resolveDamageTarget: (id) => targets[id],
+        resolvePositionedTarget: (id) => targets[id],
+        now: DateTime.utc(2026, 3, 1).add(const Duration(seconds: 1)),
+        elapsed: const Duration(seconds: 1),
+      );
+      expect(rangedTarget.isAlive, isFalse);
+      expect(events, ['p1:hero', 'p1:hero']);
+    });
+
+    test('stunned or frozen units do not move, melee attack or launch projectiles', () {
+      final ranged = _ranged();
+      final target = _Target(
+        'paused-target', 'p2', ranged.positionX + 1, ranged.positionY,
+      );
+      final manager = MonsterProjectileManager(maxActiveProjectiles: 4);
+      final loop = MonsterMatchCombatLoop(
+        combat: const MonsterCombatController(),
+        resolver: const MonsterCombatResolver(),
+        rangedHandler: const MonsterRangedAttackHandler(),
+        projectiles: manager,
+        projectileSpeed: 10,
+        projectileId: (_) => 'paused-projectile',
+        canActFor: (_) => false,
+      );
+
+      final result = loop.update(
+        units: [ranged],
+        candidatesFor: (_) => [
+          MonsterTarget(
+            id: target.id,
+            ownerId: target.ownerId,
+            kind: target.kind,
+            x: target.positionX,
+            y: target.positionY,
+            isAlive: target.isAlive,
+          ),
+        ],
+        resolveDamageTarget: (_) => target,
+        resolvePositionedTarget: (_) => target,
+        now: DateTime.utc(2026, 3, 1),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(result.meleeHitsApplied, 0);
+      expect(result.rangedProjectilesCreated, 0);
+      expect(manager.activeCount, 0);
+      expect(target.health, 50);
+    });
+
     test('routes melee damage and ranged attacks through the projectile manager', () {
       final ranged = _ranged();
       final melee = MonsterArmy(

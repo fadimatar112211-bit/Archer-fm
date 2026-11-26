@@ -19,6 +19,17 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/heroes3d/
+    - assets/heroes/ranger/model/
+    - assets/heroes/flame/model/
+    - assets/heroes/shadow/model/
+    - assets/heroes/storm/model/
+    - assets/monsters/monsters_manifest.json
+    - assets/monsters/bog-monster/
+    - assets/monsters/werewolf/
+    - assets/monsters/stone-golem/
+    - assets/monsters/blind-stalker/
+    - assets/maps/arena/
     # Runtime needs only manifests and packed atlases. Raw per-frame PNGs,
     # source renders and reference images stay in the repository, not the APK.
     - assets/heroes/ranger/renders/ranger_manifest.json

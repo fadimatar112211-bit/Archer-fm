@@ -35,6 +35,8 @@ class MonsterMatchCombatLoop {
     this.alliesFor,
     this.obstaclesFor = _noObstacles,
     this.movementSpeedMultiplierFor = _normalMonsterMovementSpeed,
+    this.onProjectileKill,
+    this.canActFor,
     this.navigationGrid,
     MonsterPathfinder? pathfinder,
     MonsterAttackSlotCoordinator? attackSlots,
@@ -55,6 +57,11 @@ class MonsterMatchCombatLoop {
   final MonsterObstaclesLookup obstaclesFor;
   /// Map hosts can lower movement on water or other slow surfaces.
   final MonsterMovementSpeedMultiplier movementSpeedMultiplierFor;
+  /// Called only when a projectile changes a live target into a defeated one.
+  final MonsterKillCallback? onProjectileKill;
+  /// Allows the match host to pause stunned/frozen units without removing them
+  /// from targeting or presentation.
+  final bool Function(MonsterUnit unit)? canActFor;
   final MonsterNavigationGrid? navigationGrid;
   final MonsterPathfinder pathfinder;
   final MonsterAttackSlotCoordinator attackSlots;
@@ -100,6 +107,7 @@ class MonsterMatchCombatLoop {
     final projectileResults = projectiles.update(
       elapsed: elapsed,
       resolveTarget: resolvePositionedTarget,
+      onKill: onProjectileKill,
     );
 
     final candidatesByUnit = <String, List<MonsterTarget>>{};
@@ -136,6 +144,11 @@ class MonsterMatchCombatLoop {
 
     for (final unit in unitSnapshot) {
       if (!unit.isAlive) {
+        spatialIndex?.update(unit);
+        continue;
+      }
+      if (canActFor != null && !canActFor!(unit)) {
+        pathfinder.release(unit.id);
         spatialIndex?.update(unit);
         continue;
       }
