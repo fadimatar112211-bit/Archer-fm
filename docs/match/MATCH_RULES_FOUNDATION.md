@@ -5,6 +5,7 @@ This package implements only the confirmed four-player FFA match rules:
 - A single remaining non-forfeited player who still owns crystals wins immediately.
 - At time expiry, rank by score, then by living crystal count.
 - A complete tie remains explicitly unresolved; no hidden tiebreaker is invented.
+- Forfeits remove a player from eligibility; the last remaining crystal holder wins if exactly one remains.
 - Leaving an active match is a forfeit/loss.
 - Score values are supplied by the authoritative gameplay systems; this package does not invent reward amounts.
 
