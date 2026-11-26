@@ -438,3 +438,5 @@ Still to decide or test:
 
 - Validation follow-up: workflow 45912232721 caught an invalid typed map invocation in the new player account history queries; this stopped analysis before tests/APK build. Both query mappers were corrected. The latest branch head has not yet produced a completed CI result, so validation remains pending.
 - Player profile names now have database-side checks against whitespace padding, control characters and Unicode bidi overrides. A trigger maintains updated_at while keeping timestamp columns unwritable by the client; staging assertions check the trigger.
+
+- Corrected account-data query code has passed `flutter analyze --no-fatal-infos` in workflow 45912332059. The full Flutter test suite was still running at the latest poll; APK build remains pending.
