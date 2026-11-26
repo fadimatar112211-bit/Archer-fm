@@ -86,13 +86,14 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           GameConnectionState.closed => 'مغلق',
           GameConnectionState.disconnected => 'غير متصل',
         };
-        if (state == GameConnectionState.connected) {
-          _busy = false;
-          _connectionDeadline?.cancel();
-        } else if (state == GameConnectionState.sessionExpired ||
+        if (state == GameConnectionState.sessionExpired ||
             state == GameConnectionState.closed) {
           _busy = false;
           _connectionDeadline?.cancel();
+          if (state == GameConnectionState.sessionExpired) {
+            _lastError =
+                'انتهت صلاحية الغرفة؛ أنشئ غرفة جديدة أو انضم إلى غرفة أخرى';
+          }
         }
       });
     });
