@@ -603,6 +603,9 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     final myLevel = myHero is Map ? myHero['level'] : null;
     final comboIndex = myHero is Map ? myHero['comboIndex'] : null;
     final attackCooldown = myHero is Map ? myHero['attackCooldownMs'] : null;
+    final attackCooldownLabel = attackCooldown is num
+        ? '${(attackCooldown / 1000).toStringAsFixed(1)} ث'
+        : '—';
     final ultimateCooldowns = myHero is Map && myHero['ultimateCooldowns'] is List
         ? myHero['ultimateCooldowns'] as List
         : const [];
@@ -649,7 +652,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
               Text('الوحوش الحية: $monsters'),
             ],
           ),
-          Text('مستواك: ${myLevel ?? '—'} · الكومبو: ${comboIndex ?? '—'} / 5 · تبريد الهجوم: ${attackCooldown ?? 0} ms'),
+          Text('مستواك: ${myLevel ?? '—'} · الكومبو: ${comboIndex ?? '—'} / 5 · تبريد الهجوم: $attackCooldownLabel'),
           const SizedBox(height: 10),
           Row(
             textDirection: TextDirection.ltr,
