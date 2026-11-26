@@ -1168,6 +1168,7 @@ void main() {
     final secondProfile = session.snapshotFor(players[1])['accountProgression'] as Map;
     expect(firstProfile['permanentCurrency'], 17);
     expect(secondProfile['permanentCurrency'], 29);
+    expect(session.snapshot().containsKey('accountProgression'), isFalse);
   });
 
 
