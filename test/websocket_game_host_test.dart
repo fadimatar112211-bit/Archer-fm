@@ -81,11 +81,28 @@ class _FakeSession implements GameServerSession {
       };
 }
 
+class _FakeScopedSession extends _FakeSession
+    implements PlayerScopedSnapshotSession {
+  _FakeScopedSession(super.code);
+
+  @override
+  Map<String, Object?> snapshotFor(GameServerPlayer player) => {
+        'type': 'state',
+        'recipient': player.id,
+      };
+}
+
 class _FakeFactory {
   final Map<String, _FakeSession> sessions = {};
+  bool scopedSnapshots = false;
 
   GameServerSession create(String code, Map<String, dynamic> message) =>
-      sessions.putIfAbsent(code, () => _FakeSession(code));
+      sessions.putIfAbsent(
+        code,
+        () => scopedSnapshots
+            ? _FakeScopedSession(code)
+            : _FakeSession(code),
+      );
 }
 
 Future<Map<String, dynamic>> _nextType(
@@ -144,6 +161,35 @@ void main() {
     expect(factory.sessions.values.single.handledCommands, 1);
 
     await socket.close();
+  });
+
+  test('broadcasts recipient-specific snapshots to each connected player', () async {
+    factory.scopedSnapshots = true;
+    final first = await WebSocket.connect(host.uri.toString());
+    final firstMessages = _messages(first).asBroadcastStream();
+    final firstWelcomeFuture = _nextType(firstMessages, 'welcome');
+    first.add(jsonEncode({'type': 'create'}));
+    final firstWelcome = await firstWelcomeFuture;
+
+    final second = await WebSocket.connect(host.uri.toString());
+    final secondMessages = _messages(second).asBroadcastStream();
+    final secondWelcomeFuture = _nextType(secondMessages, 'welcome');
+    second.add(jsonEncode({
+      'type': 'join',
+      'code': firstWelcome['code'],
+    }));
+    final secondWelcome = await secondWelcomeFuture;
+    expect(firstWelcome['id'], 'p1');
+    expect(secondWelcome['id'], 'p2');
+
+    final firstStateFuture = _nextType(firstMessages, 'state');
+    final secondStateFuture = _nextType(secondMessages, 'state');
+    final states = await Future.wait([firstStateFuture, secondStateFuture]);
+    expect(states[0]['recipient'], 'p1');
+    expect(states[1]['recipient'], 'p2');
+
+    await first.close();
+    await second.close();
   });
 
   test('resumes the same player and returns the last accepted sequence', () async {
