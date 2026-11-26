@@ -47,6 +47,29 @@ void main() {
     expect(returnedHome, isTrue);
   });
 
+  testWidgets('announces the result panel as a named accessible region', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    addTearDown(semantics.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchResultPanel(
+          localPlayerId: 'p1',
+          onReturnHome: () {},
+          result: {
+            'reason': 'timeExpired',
+            'winnerId': 'p1',
+            'tiedPlayerIds': [],
+            'standings': const [],
+          },
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('نتيجة المباراة'), findsOneWidget);
+  });
+
   testWidgets('shows a tie and crystal victory reason without inventing a winner', (
     tester,
   ) async {
