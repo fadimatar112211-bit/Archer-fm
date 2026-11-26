@@ -9,6 +9,7 @@ on:
       - 'lib/game/world/**'
       - 'lib/game/progression/**'
       - 'lib/game/controls/**'
+      - 'lib/monsters/**'
       - 'tool/**'
       - 'test/match_rules_test.dart'
       - 'test/game_client_test.dart'
@@ -20,6 +21,7 @@ on:
       - 'test/hero_progression_service_test.dart'
       - 'test/file_hero_progress_store_test.dart'
       - 'test/file_monster_progress_store_test.dart'
+      - 'test/persistent_monster_progression_service_test.dart'
       - 'test/virtual_joystick_test.dart'
       - '.github/workflows/match-rules-checks.yml'
   pull_request:
@@ -53,6 +55,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format lib/game/match lib/game/network lib/monsters lib/game/world lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/websocket_game_host_test.dart test/authoritative_match_session_test.dart test/match_world_authority_test.dart test/game_client_reconnect_test.dart test/hero_progress_test.dart test/hero_progression_service_test.dart test/file_hero_progress_store_test.dart test/file_monster_progress_store_test.dart test/virtual_joystick_test.dart tool/dev_game_server.dart
+      - run: dart format lib/game/match lib/game/network lib/monsters lib/game/world lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/websocket_game_host_test.dart test/authoritative_match_session_test.dart test/match_world_authority_test.dart test/game_client_reconnect_test.dart test/hero_progress_test.dart test/hero_progression_service_test.dart test/file_hero_progress_store_test.dart test/file_monster_progress_store_test.dart test/persistent_monster_progression_service_test.dart test/virtual_joystick_test.dart tool/dev_game_server.dart
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
