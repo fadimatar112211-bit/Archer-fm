@@ -184,3 +184,12 @@
 - Latest code commit: `55e8923af290ce5f23432e8f10a3a2a0aa4f5b90`.
 - Flutter Android validation, Match Rules, Monster Army and arena visual capture must complete on this exact commit before the new target-selection code is considered verified.
 - No emulator/device result is claimed unless the corresponding workflow step actually runs and completes.
+
+
+### Manual-target visual feedback follow-up
+
+- Connected the currently selected target ID to the arena render layers.
+- Added a gold selection ring around selected enemy heroes and monsters in the 3D actor layer, and around selected crystals in the battlefield painter.
+- The ring follows the same snapshot positions and visibility-limited entities used by the arena renderers; it does not create client-side movement or alter server combat validation.
+- Commits: `1d7a1d4ab1853285031d49173551712ccbbe7456` (crystal highlight), `5816344468da84254c0afde59b5363570c79640d` (hero/monster highlight), `4150aab672943259851082e315a3fd18993db695` (wire selected target into arena).
+- Fresh Flutter analysis, widget/unit tests and arena visual capture are required for this renderer change. No screenshot or device result is claimed yet.
