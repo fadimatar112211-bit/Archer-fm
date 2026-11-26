@@ -18,12 +18,27 @@ void main() {
     expect(find.text('المباراة'), findsOneWidget);
     expect(find.text('الأبطال'), findsOneWidget);
     expect(find.text('الإعدادات'), findsOneWidget);
+    expect(find.text('ترسانة الأبطال'), findsOneWidget);
 
     await tester.tap(find.text('المباراة'));
     await tester.pumpAndSettle();
 
     expect(find.text('تجهيز المباراة'), findsOneWidget);
     expect(find.text('الاتصال بالغرفة'), findsOneWidget);
+  });
+
+  testWidgets('home hub opens the canonical armory', (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const ArcherFmApp());
+    await tester.tap(find.text('ترسانة الأبطال'));
+    await tester.pump();
+
+    expect(find.text('ترسانة الأبطال'), findsOneWidget);
+    expect(find.text('قوس الطاقة الخضراء'), findsOneWidget);
   });
 
   testWidgets('settings expose a working haptics switch and no fake audio toggle', (
