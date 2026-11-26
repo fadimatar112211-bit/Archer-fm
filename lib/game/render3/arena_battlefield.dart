@@ -137,6 +137,7 @@ class _ArenaPainter extends CustomPainter {
     _drawMines(canvas, world, project);
     _drawCastles(canvas, world, project);
     _drawMonsters(canvas, snapshot, project);
+    _drawProjectiles(canvas, snapshot, project);
     _drawHeroes(canvas, snapshot, world, project);
     canvas.restore();
   }
@@ -301,22 +302,53 @@ class _ArenaPainter extends CustomPainter {
       if (castle == null) continue;
       final anchor = _point(castle['anchor']);
       if (anchor == null) continue;
+      if (castle['fallen'] == true) continue;
       final center = project(anchor);
       final color = _ownerColor(castle['ownerId']?.toString(), snapshot);
       canvas.drawCircle(
         center,
-        34,
-        Paint()
-          ..color = color.withOpacity(0.18)
-          ..style = PaintingStyle.fill,
+        38,
+        Paint()..color = color.withOpacity(0.12),
       );
+      for (final wallRaw in _list(castle['walls'])) {
+        final wall = _map(wallRaw);
+        if (wall == null) continue;
+        final radius = _number(wall['radius']);
+        final start = _number(wall['startAngle']);
+        final sweep = _number(wall['sweep']);
+        if (radius == null || start == null || sweep == null) continue;
+        final edge = (project(anchor + Offset(radius, 0)) - center).distance;
+        final rect = Rect.fromCircle(center: center, radius: edge);
+        canvas.drawArc(
+          rect,
+          start,
+          sweep,
+          false,
+          Paint()
+            ..color = const Color(0xFF827D72)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 8
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawArc(
+          rect,
+          start,
+          sweep,
+          false,
+          Paint()
+            ..color = const Color(0xFFD1C1A2)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..strokeCap = StrokeCap.round,
+        );
+      }
       canvas.drawCircle(
         center,
-        28,
+        18,
         Paint()
           ..color = const Color(0xFFB7A58B)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 5,
+          ..strokeWidth = 4,
       );
       for (final crystalRaw in _list(castle['crystals'])) {
         final crystal = _map(crystalRaw);
@@ -384,6 +416,35 @@ class _ArenaPainter extends CustomPainter {
           Paint()..color = const Color(0xFF8DE36A),
         );
       }
+    }
+  }
+
+  void _drawProjectiles(
+    Canvas canvas,
+    Map<String, dynamic> state,
+    Offset Function(Offset) project,
+  ) {
+    final combat = _map(state['combat']);
+    for (final raw in _list(combat?['projectiles'])) {
+      final projectile = _map(raw);
+      if (projectile == null) continue;
+      final point = _point(projectile);
+      if (point == null) continue;
+      final p = project(point);
+      final color = _ownerColor(projectile['ownerId']?.toString(), state);
+      canvas.drawCircle(
+        p,
+        7,
+        Paint()..color = color.withOpacity(0.22),
+      );
+      canvas.drawCircle(
+        p,
+        3.2,
+        Paint()
+          ..color = const Color(0xFFFFF3C4)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      canvas.drawCircle(p, 2, Paint()..color = color);
     }
   }
 
