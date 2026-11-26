@@ -644,6 +644,33 @@ void main() {
     );
   });
 
+  test('server checks every non-starting weapon against trusted ownership', () {
+    for (final hero in archerFmHeroes) {
+      for (var index = 0; index < hero.weapons.length; index++) {
+        final session = AuthoritativeMatchSession(code: 'weapon${hero.id.name}$index');
+        final player = session.join()!;
+        final result = session.handle(player, {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': hero.weapons[index].id,
+        });
+        expect(
+          result,
+          index == 0 ? isNull : 'weapon_locked',
+          reason: '${hero.id.name}: weapon index $index',
+        );
+      }
+    }
+
+    final session = AuthoritativeMatchSession(code: 'crossweapon');
+    final player = session.join()!;
+    expect(session.handle(player, {
+      'type': 'select',
+      'heroId': HeroId.ranger.name,
+      'weaponId': heroCombatById(HeroId.flame).weapons.first.id,
+    }), 'invalid_loadout');
+  });
+
   test('disconnect permits one-time token-rotating resume', () {
     final session = AuthoritativeMatchSession(code: '222222');
     final player = session.join()!;
