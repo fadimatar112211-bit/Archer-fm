@@ -14,7 +14,13 @@ import '../heroes/hero_roster.dart';
 import '../network/game_client.dart';
 
 class MatchLoadoutScreen extends StatefulWidget {
-  const MatchLoadoutScreen({super.key});
+  const MatchLoadoutScreen({
+    super.key,
+    this.clientFactory,
+  });
+
+  /// Injectable transport factory for deterministic widget tests.
+  final GameClient Function(String url)? clientFactory;
 
   @override
   State<MatchLoadoutScreen> createState() => _MatchLoadoutScreenState();
@@ -75,7 +81,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     await _disposeClient();
     if (!mounted) return;
     _lastAttemptCreate = create;
-    final client = GameClient(url);
+    final client = widget.clientFactory?.call(url) ?? GameClient(url);
     _client = client;
     _messages = client.messages.listen(_onMessage);
     _states = client.states.listen((state) {
