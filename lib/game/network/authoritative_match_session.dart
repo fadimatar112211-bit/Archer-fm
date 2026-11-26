@@ -503,6 +503,53 @@ class AuthoritativeMatchSession implements GameServerSession {
             'width': matchWorld.map.size.width,
             'height': matchWorld.map.size.height,
           },
+          // Static geometry is part of the authoritative snapshot so every
+          // client renders the same randomized battlefield as the server.
+          'biomes': [
+            for (final biome in matchWorld.map.biomes)
+              {
+                'kind': biome.kind.name,
+                'x': biome.center.dx,
+                'y': biome.center.dy,
+                'radius': biome.radius,
+              },
+          ],
+          'rivers': [
+            for (final river in matchWorld.map.rivers)
+              {
+                'width': river.width,
+                'points': [
+                  for (final point in river.points)
+                    {'x': point.dx, 'y': point.dy},
+                ],
+                'bridges': [
+                  for (final bridge in river.bridges)
+                    {
+                      'x': bridge.center.dx,
+                      'y': bridge.center.dy,
+                      'width': bridge.width,
+                      'depth': bridge.depth,
+                    },
+                ],
+              },
+          ],
+          'obstacles': [
+            for (final obstacle in matchWorld.map.obstacles)
+              {
+                'kind': obstacle.kind.name,
+                'x': obstacle.position.dx,
+                'y': obstacle.position.dy,
+                'radius': obstacle.radius,
+              },
+          ],
+          'mapPickups': [
+            for (final pickup in matchWorld.map.pickups)
+              {
+                'kind': pickup.kind.name,
+                'x': pickup.position.dx,
+                'y': pickup.position.dy,
+              },
+          ],
           'resources': matchWorld.resources,
           'livingCrystals': {
             for (final player in _players)
