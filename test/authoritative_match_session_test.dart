@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
+import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 void main() {
   test('enforces four-player lobby, canonical loadouts and selected duration', () {
@@ -105,6 +109,71 @@ void main() {
     final resumed = session.resume(token);
     expect(resumed?.id, player.id);
     expect(resumed?.connected, isTrue);
+  });
+
+  test('runs a four-player lobby through the real WebSocket gateway', () async {
+    final host = WebSocketGameHost(
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      tickInterval: const Duration(milliseconds: 10),
+      broadcastInterval: const Duration(milliseconds: 20),
+      sessionFactory: AuthoritativeMatchSession.fromCreateMessage,
+    );
+    await host.start();
+    final sockets = <WebSocket>[];
+    final streams = <Stream<Map<String, dynamic>>>[];
+    try {
+      String? roomCode;
+      for (var i = 0; i < 4; i++) {
+        final socket = await WebSocket.connect(host.uri.toString());
+        sockets.add(socket);
+        final messages = socket
+            .map((raw) => jsonDecode(raw as String) as Map<String, dynamic>)
+            .asBroadcastStream();
+        streams.add(messages);
+        final welcomeFuture = messages.firstWhere(
+          (message) => message['type'] == 'welcome',
+        );
+        socket.add(jsonEncode(
+          i == 0
+              ? {'type': 'create', 'durationMinutes': 10}
+              : {'type': 'join', 'code': roomCode},
+        ));
+        final welcome = await welcomeFuture;
+        roomCode ??= welcome['code'] as String;
+      }
+
+      for (var i = 0; i < 4; i++) {
+        final hero = archerFmHeroes[i];
+        final ackFuture = streams[i].firstWhere(
+          (message) => message['type'] == 'ack' && message['seq'] == 1,
+        );
+        sockets[i].add(jsonEncode({
+          'type': 'select',
+          'seq': 1,
+          'heroId': hero.id.name,
+          'weaponId': hero.weapons.first.id,
+        }));
+        expect((await ackFuture)['error'], isNull);
+      }
+
+      final startAckFuture = streams.first.firstWhere(
+        (message) => message['type'] == 'ack' && message['seq'] == 2,
+      );
+      final runningStateFuture = streams.first.firstWhere(
+        (message) => message['type'] == 'state' && message['phase'] == 'running',
+      );
+      sockets.first.add(jsonEncode({'type': 'start', 'seq': 2}));
+      expect((await startAckFuture)['error'], isNull);
+      final runningState = await runningStateFuture;
+      expect(runningState['durationMinutes'], 10);
+      expect((runningState['players'] as List).length, 4);
+    } finally {
+      for (final socket in sockets) {
+        await socket.close();
+      }
+      await host.close();
+    }
   });
 
   test('match clock ends at the configured duration', () {
