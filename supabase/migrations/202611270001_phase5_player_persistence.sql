@@ -139,6 +139,9 @@ as $phase5$
 declare
   current_revision bigint;
 begin
+  if p_user_id is null or p_expected_revision is null or p_expected_revision < 0 then
+    raise exception 'invalid_hero_progress_revision' using errcode = '22023';
+  end if;
   if jsonb_typeof(p_data) is distinct from 'object' then
     raise exception 'invalid_progress_document' using errcode = '22023';
   end if;
@@ -185,6 +188,9 @@ as $phase5$
 declare
   current_revision bigint;
 begin
+  if p_user_id is null or p_expected_revision is null or p_expected_revision < 0 then
+    raise exception 'invalid_monster_progress_revision' using errcode = '22023';
+  end if;
   if jsonb_typeof(p_data) is distinct from 'object' then
     raise exception 'invalid_monster_progress_document' using errcode = '22023';
   end if;
