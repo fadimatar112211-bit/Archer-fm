@@ -44,7 +44,7 @@ typedef GameServerSessionFactory = GameServerSession Function(String roomCode);
 class WebSocketGameHost {
   WebSocketGameHost({
     required this.sessionFactory,
-    this.address = InternetAddress.anyIPv4,
+    this.address,
     this.port = 8080,
     this.maxRooms = 200,
     this.maxMessageCharacters = 4096,
@@ -61,7 +61,7 @@ class WebSocketGameHost {
         assert(broadcastInterval > Duration.zero);
 
   final GameServerSessionFactory sessionFactory;
-  final InternetAddress address;
+  final InternetAddress? address;
   final int port;
   final int maxRooms;
   final int maxMessageCharacters;
@@ -96,7 +96,7 @@ class WebSocketGameHost {
 
   Future<void> start() async {
     if (_server != null) throw StateError('WebSocketGameHost already started.');
-    final server = await HttpServer.bind(address, port);
+    final server = await HttpServer.bind(address ?? InternetAddress.anyIPv4, port);
     _server = server;
     _clock = Stopwatch()..start();
     _lastTick = Duration.zero;
