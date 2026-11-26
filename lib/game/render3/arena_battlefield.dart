@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import '../world/arena_map.dart' show enemyVisibleRadius;
 import 'arena_3d_asset_layer.dart';
@@ -10,6 +11,18 @@ import 'arena_3d_asset_layer.dart';
 /// The server owns all world positions and map geometry. This widget only
 /// projects and paints those values; it never simulates movement or combat.
 class ArenaBattlefield extends StatelessWidget {
+  static final Future<List<List<double>>> _heightMapFuture = _loadHeightMap();
+
+  static Future<List<List<double>>> _loadHeightMap() async {
+    final csv = await rootBundle.loadString('assets/maps/arena/height_map.csv');
+    final rows = csv.trim().split('\\n').map((line) =>
+      line.split(',').map((value) => double.parse(value.trim())).toList(growable: false)
+    ).toList(growable: false);
+    if (rows.length != 96 || rows.any((row) => row.length != 96)) {
+      throw FormatException('Arena height map must be 96x96.');
+    }
+    return rows;
+  }
   const ArenaBattlefield({
     super.key,
     required this.snapshot,
@@ -41,9 +54,16 @@ class ArenaBattlefield extends StatelessWidget {
               ? Stack(
                   fit: StackFit.expand,
                   children: [
-                    CustomPaint(
-                      painter: _ArenaPainter(snapshot, localPlayerId),
-                      child: const SizedBox.expand(),
+                    FutureBuilder<List<List<double>>>(
+                      future: _heightMapFuture,
+                      builder: (context, terrain) => CustomPaint(
+                        painter: _ArenaPainter(
+                          snapshot,
+                          localPlayerId,
+                          heightMap: terrain.data,
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
                     ),
                     Positioned.fill(
                       child: Arena3DAssetLayer(
@@ -67,7 +87,7 @@ class ArenaBattlefield extends StatelessWidget {
 }
 
 class _ArenaPainter extends CustomPainter {
-  _ArenaPainter(this.snapshot, this.localPlayerId);
+  _ArenaPainter(this.snapshot, this.localPlayerId, {this.heightMap});
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
@@ -192,6 +212,7 @@ class _ArenaPainter extends CustomPainter {
     // Real elevated mesh facets are rendered before gameplay overlays so
     // rivers, bridges, castles and actors remain readable and authoritative.
     _drawBaseTerrainMesh(canvas, world, worldSize, cameraOrigin, size, project);
+    _drawHeightfieldMesh(canvas, worldSize, cameraOrigin, size, project);
     _drawTerrain3D(canvas, world, project);
     _drawBiomes(canvas, world, project);
     _drawTerrainTexture(canvas, world, cameraOrigin, project);
@@ -309,6 +330,91 @@ class _ArenaPainter extends CustomPainter {
       }
     }
     return 'forest';
+  }
+
+
+  /// Draw the checked-in 96x96 authored height map as a continuous,
+  /// depth-ordered triangular terrain mesh. Gameplay coordinates remain
+  /// server-authoritative; this only adds a visual Z displacement.
+  void _drawHeightfieldMesh(
+    Canvas canvas,
+    Size worldSize,
+    Offset cameraOrigin,
+    Size viewport,
+    Offset Function(Offset) project,
+  ) {
+    final heights = heightMap;
+    if (heights == null || heights.length != 96) return;
+    const grid = 96;
+    const elevationPixels = 18.0;
+    final cellWidth = worldSize.width / grid;
+    final cellHeight = worldSize.height / grid;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    Offset vertex(int col, int row) {
+      final h = heights[row][col];
+      return project(Offset(col * cellWidth, row * cellHeight))
+          .translate(0, -h * elevationPixels);
+    }
+
+    Color terrainColor(double h, int face) {
+      final normalized = (h / 1.5).clamp(0.0, 1.0);
+      final low = const Color(0xFF477447);
+      final high = const Color(0xFF9AA49A);
+      final base = Color.lerp(low, high, normalized)!;
+      final lighting = face == 0 ? 1.0 : face == 1 ? 0.88 : 0.78;
+      return Color.fromARGB(
+        255,
+        (base.red * lighting).round().clamp(0, 255),
+        (base.green * lighting).round().clamp(0, 255),
+        (base.blue * lighting).round().clamp(0, 255),
+      );
+    }
+
+    Path triangle(Offset a, Offset b, Offset c) => Path()
+      ..moveTo(a.dx, a.dy)
+      ..lineTo(b.dx, b.dy)
+      ..lineTo(c.dx, c.dy)
+      ..close();
+
+    // Painter order follows the map's north-to-south rows so nearer facets
+    // naturally cover farther ones. Each cell is split along a diagonal.
+    for (var row = 0; row < grid - 1; row++) {
+      for (var col = 0; col < grid - 1; col++) {
+        final a = vertex(col, row);
+        final b = vertex(col + 1, row);
+        final c = vertex(col, row + 1);
+        final d = vertex(col + 1, row + 1);
+        final average = (heights[row][col] +
+            heights[row][col + 1] +
+            heights[row + 1][col] +
+            heights[row + 1][col + 1]) / 4;
+        final first = triangle(a, c, d);
+        final second = triangle(a, d, b);
+        paint.color = terrainColor(average, (row + col) % 3);
+        canvas.drawPath(first, paint);
+        paint.color = terrainColor(average, (row + col + 1) % 3);
+        canvas.drawPath(second, paint);
+      }
+    }
+
+    // Fine contour highlights make changes in elevation legible at mobile scale.
+    final contourPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.55
+      ..color = const Color(0x227C9272);
+    for (var row = 0; row < grid; row += 4) {
+      final path = Path();
+      for (var col = 0; col < grid; col++) {
+        final point = vertex(col, row);
+        if (col == 0) {
+          path.moveTo(point.dx, point.dy);
+        } else {
+          path.lineTo(point.dx, point.dy);
+        }
+      }
+      canvas.drawPath(path, contourPaint);
+    }
   }
 
   /// Software-rendered 3D terrain mesh. Each biome is built from lit triangular
