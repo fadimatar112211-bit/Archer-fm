@@ -105,6 +105,9 @@
 - Session expiry now presents an actionable Arabic explanation to create or join another room.
 - Commit: `dea6d165cc96a8ebcd32e24ab367d0b6ad976b09` (deadline/session handling) and `454d111b8244baf1515c933b743af0248d85a269` (reconnect status UI).
 
+
+- Added live combat guidance beneath the HUD stats: explains one-tap/one-hit behavior and the five-hit combo, and gives Arabic reasons when controls are unavailable due to respawn, connection loss, non-running phase or attack cooldown. Commits: `ee765490f8c5f6ad52b543ef1952ae8d73149098`, `43061e83eadf9cd8449f828c2086643d123405a3`.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
