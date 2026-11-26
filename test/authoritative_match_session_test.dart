@@ -243,6 +243,9 @@ void main() {
     expect(p3.level, 30);
     expect(p1.combat.useUltimate(1).accepted, isTrue);
     expect(p1.combat.useUltimate(2).accepted, isFalse);
+    p1.combat.energy = 0;
+    expect(p1.combat.useUltimate(0).accepted, isFalse);
+    expect(p1.combat.ultimateCooldowns[0], 0);
 
     final enemy = session.combat!.armies
         .firstWhere((army) => army.ownerId == 'p2')
