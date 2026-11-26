@@ -113,6 +113,27 @@ void main() {
       expect(received.any((message) => message['type'] == 'create'), isTrue);
       expect(tester.takeException(), isNull);
 
+      final joystickCenter = tester.getCenter(find.byType(VirtualJoystick));
+      final gesture = await tester.startGesture(joystickCenter);
+      await gesture.moveBy(const Offset(34, 0));
+      await tester.pump(const Duration(milliseconds: 80));
+      await tester.runAsync(() => Future<void>.delayed(
+            const Duration(milliseconds: 40),
+          ));
+      await gesture.up();
+      await tester.pump();
+      await tester.runAsync(() => Future<void>.delayed(
+            const Duration(milliseconds: 40),
+          ));
+      final movementMessages = received
+          .where((message) => message['type'] == 'move')
+          .toList();
+      expect(movementMessages, isNotEmpty);
+      expect(movementMessages.any((message) => (message['dx'] as num) > 0), isTrue);
+      expect(movementMessages.last['dx'], 0);
+      expect(movementMessages.last['dy'], 0);
+      expect(tester.takeException(), isNull);
+
       connectedSocket!.add(jsonEncode({
         'type': 'ack',
         'seq': 999,
