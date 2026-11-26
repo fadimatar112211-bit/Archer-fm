@@ -128,6 +128,10 @@ void main() {
 
   testWidgets('fails closed when the local reveal position is missing',
       (tester) async {
+    tester.view.physicalSize = const Size(1000, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final boundaryKey = GlobalKey();
     await tester.pumpWidget(
       MaterialApp(
