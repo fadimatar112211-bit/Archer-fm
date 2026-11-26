@@ -6,7 +6,6 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
-import 'package:archer_fm/monsters/monster_army.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
@@ -29,8 +28,6 @@ MatchCombatConfiguration _combatConfiguration() {
         ),
       ),
   });
-  final counts = {for (final type in MonsterType.values) type: 0};
-  counts[MonsterType.runner] = 20;
   return MatchCombatConfiguration(
     monsterCatalog: catalog,
     projectileSpeed: 120,
@@ -189,6 +186,38 @@ void main() {
       beforeCount + 1,
     );
     expect(session.world!.resources['p1'], 90);
+  });
+
+
+  test('requires a valid individual twenty-unit army before a configured match starts', () {
+    final session = AuthoritativeMatchSession(
+      code: 'army01',
+      combatConfiguration: _combatConfiguration(),
+      mapFactory: () => ArenaMap.generate(Random(321)),
+    );
+    final players = [for (var i = 0; i < 4; i++) session.join()!];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      });
+    }
+    expect(
+      session.handle(players.first, {'type': 'army_select', 'counts': {'runner': 19}}),
+      'invalid_army_selection',
+    );
+    expect(
+      session.handle(players.first, {'type': 'army_select', 'counts': {'unknown': 20}}),
+      'invalid_army_selection',
+    );
+    expect(
+      session.handle(players.first, {'type': 'army_select', 'counts': {'runner': 20}}),
+      isNull,
+    );
+    expect(session.handle(players.first, {'type': 'start'}), 'all_players_must_select_army');
+    expect(session.combat, isNull);
   });
 
   test('enforces four-player lobby, canonical loadouts and selected duration', () {
