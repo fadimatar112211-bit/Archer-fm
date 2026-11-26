@@ -56,6 +56,7 @@ class AuthoritativeMatchSession
     String roomCode,
     Map<String, dynamic> message, {
     bool Function(String playerId, String weaponId)? canUseWeapon,
+    int Function(String playerId, String heroId)? heroLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
   }) {
