@@ -15,7 +15,7 @@ class ArenaBattlefield extends StatelessWidget {
 
   static Future<List<List<double>>> _loadHeightMap() async {
     final csv = await rootBundle.loadString('assets/maps/arena/height_map.csv');
-    final rows = csv.trim().split('\\n').map((line) =>
+    final rows = csv.trim().split('\n').map((line) =>
       line.split(',').map((value) => double.parse(value.trim())).toList(growable: false)
     ).toList(growable: false);
     if (rows.length != 96 || rows.any((row) => row.length != 96)) {
