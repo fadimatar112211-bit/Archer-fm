@@ -87,7 +87,6 @@ class SupabaseRestClient {
     throw const FormatException('Supabase did not return a progression revision.');
   }
 
-
   /// Atomically records a match result and applies its server-calculated reward.
   /// The account UUID must come from the verified access-token subject.
   Future<Map<String, dynamic>> finalizeMatchPlayerResult({
@@ -113,40 +112,7 @@ class SupabaseRestClient {
     final decoded = await _request(
       'POST',
       baseUri.replace(
-        path: '${baseUri.path.replaceFirst(RegExp(r'/+
-    String method,
-    Uri uri, {
-    Map<String, Object?>? body,
-  }) async {
-    final request = await _httpClient.openUrl(method, uri).timeout(timeout);
-    request.headers
-      ..set('apikey', serviceRoleKey)
-      ..set(HttpHeaders.authorizationHeader, 'Bearer $serviceRoleKey')
-      ..set(HttpHeaders.acceptHeader, 'application/json');
-    if (body != null) {
-      request.headers.contentType = ContentType.json;
-      request.write(jsonEncode(body));
-    }
-    final response = await request.close().timeout(timeout);
-    final responseBody = await response.transform(utf8.decoder).join().timeout(timeout);
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      // Keep credentials out of exception messages and logs.
-      throw HttpException(
-        'Supabase request failed with HTTP ${response.statusCode}.',
-        uri: uri,
-      );
-    }
-    if (responseBody.isEmpty) return null;
-    return jsonDecode(responseBody);
-  }
-
-  bool _isUuid(String value) => RegExp(
-        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
-      ).hasMatch(value);
-
-  void close() => _httpClient.close(force: true);
-}
-), '')}/rest/v1/rpc/finalize_match_player_result',
+        path: '${baseUri.path.replaceFirst(RegExp(r'/+$'), '')}/rest/v1/rpc/finalize_match_player_result',
       ),
       body: {
         'p_match_id': matchId,
