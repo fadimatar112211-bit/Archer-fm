@@ -277,3 +277,11 @@
 - The same integration test now taps the manual attack control and verifies that the transmitted attack includes the currently selected enemy target ID (`p2`); the server remains responsible for range, cooldown, ownership and damage checks.
 - The arena screenshot workflow passed on code head `bfc1be2f4b37f40200caf00eaadb5a7fd6134314`. Android validation had completed `flutter analyze --no-fatal-infos` and was running the full test suite; the latest movement/attack additions require a new run and are not yet validated.
 - Commits: `d9e98e1b65de600c6c3702bf76d295ab84a7cc38` (joystick movement/release integration test), `7090c0bfb2c04e2a5582e9720e945af84c1ccc28` (attack target integration test).
+
+
+## Compact-landscape controls safety
+
+- Capped the live action panel to 84% of available height and made its contents vertically scrollable. This prevents the four Ultimates and four unit-purchase controls from forcing a RenderFlex overflow on shorter landscape devices while preserving the battlefield, joystick and top HUD.
+- Extended the local live-match widget test to resize the running arena from 640×360 to compact 568×320 and wide 1280×720, checking for layout exceptions at both sizes.
+- Commits: `8753220b6beef198eb62eeb7f77f5c42ca1d5ac8` (bounded scrollable controls panel), `4701778832341f96857dde45d532196b230e67c7` (compact/wide live-screen coverage).
+- The latest Flutter validation must confirm syntax, full tests and Android packaging before these changes can be called verified.
