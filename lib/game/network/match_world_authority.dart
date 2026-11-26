@@ -59,6 +59,12 @@ class MatchWorldAuthority {
   /// shallow-water rules. Clients submit intent, never a trusted world pos.
   Offset movePlayer(String playerId, Offset desiredDelta, double radius) {
     _requirePlayer(playerId);
+    if (!desiredDelta.dx.isFinite ||
+        !desiredDelta.dy.isFinite ||
+        !radius.isFinite ||
+        radius <= 0) {
+      throw ArgumentError('Movement delta and radius must be finite; radius must be positive.');
+    }
     final current = _positions[playerId]!;
     final target = map.slideMove(current, desiredDelta, radius);
     _positions[playerId] = target;
@@ -125,6 +131,10 @@ class MatchWorldAuthority {
     if (target == null) return const CrystalDamageResult.unknownCrystal();
     if (target.ownerId == attackerId) {
       return const CrystalDamageResult.friendlyTarget();
+    }
+    final targetCastle = castles.castleOf(target.ownerId);
+    if (target.destroyed || targetCastle == null || targetCastle.fallen) {
+      return const CrystalDamageResult.alreadyDestroyed();
     }
     if (amount <= 0 || !amount.isFinite) {
       return const CrystalDamageResult.invalidDamage();
@@ -197,6 +207,8 @@ class CrystalDamageResult {
       : this._(accepted: false, error: 'unknown_crystal');
   const CrystalDamageResult.friendlyTarget()
       : this._(accepted: false, error: 'friendly_target');
+  const CrystalDamageResult.alreadyDestroyed()
+      : this._(accepted: false, error: 'already_destroyed');
   const CrystalDamageResult.invalidDamage()
       : this._(accepted: false, error: 'invalid_damage');
 
