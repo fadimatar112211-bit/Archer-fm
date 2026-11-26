@@ -256,7 +256,10 @@ class MatchRulesEngine {
       return const MatchCommandResult.rejected('اللاعب انسحب مسبقاً');
     }
     player.hasForfeited = true;
-    _finishIfOneNonForfeitedPlayerRemains();
+    _finishIfOneCrystalHolderRemains();
+    if (phase != MatchPhase.finished) {
+      _finishIfOneNonForfeitedPlayerRemains();
+    }
     return const MatchCommandResult.accepted();
   }
 
