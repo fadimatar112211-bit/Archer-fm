@@ -1,0 +1,23 @@
+name: arena_3d_spike
+description: Isolated Android Filament renderer spike for Archer FM. Not part of the production app.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  stage_3d: 0.1.0-beta.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/ranger_animated.glb
+    - assets/stone-golem.glb
