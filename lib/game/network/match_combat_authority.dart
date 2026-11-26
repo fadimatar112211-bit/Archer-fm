@@ -122,7 +122,6 @@ class MatchHeroState {
   final HeroCombatDefinition definition;
   final String weaponId;
   final HeroCombatRuntime combat;
-  final MatchStatusEffectRuntime statusEffects = MatchStatusEffectRuntime();
   int get level => combat.level;
   late double health;
   Duration respawnRemaining = Duration.zero;
@@ -312,7 +311,7 @@ class MatchCombatAuthority {
   Offset moveHero(String playerId, Offset direction, Duration elapsed) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) throw StateError('A defeated hero cannot move.');
-    if (hero.statusEffects.isActionDisabled) {
+    if (_statusEffects[hero.entityId]?.isActionDisabled ?? false) {
       return world.playerPositions[playerId]!;
     }
     if (elapsed.isNegative ||
@@ -333,7 +332,7 @@ class MatchCombatAuthority {
         seconds *
         (length < 1 ? length : 1.0) *
         world.map.movementFactorAt(world.playerPositions[playerId]!) *
-        hero.statusEffects.movementMultiplier;
+        (_statusEffects[hero.entityId]?.movementMultiplier ?? 1);
     final delta = direction / length * distance;
     return world.movePlayer(playerId, delta, 18);
   }
@@ -361,7 +360,7 @@ class MatchCombatAuthority {
     final defeatedNow = target.applyDamage(result.damage.toDouble());
     if (defeatedNow && target.kind != MonsterTargetKind.crystal) {
       _onKill?.call(playerId, target.kind);
-    } else if (target.isAlive) {
+    } else if (target.isAlive && target.kind != MonsterTargetKind.crystal) {
       final effect = _basicAttackEffect(hero.definition.id);
       if (effect != null) _applyStatusEffect(target.id, playerId, effect);
     }
@@ -400,7 +399,8 @@ class MatchCombatAuthority {
         final defeatedNow = candidate.applyDamage(result.damage.toDouble());
         if (defeatedNow && candidate.kind != MonsterTargetKind.crystal) {
           _onKill?.call(playerId, candidate.kind);
-        } else if (candidate.isAlive) {
+        } else if (candidate.isAlive &&
+            candidate.kind != MonsterTargetKind.crystal) {
           final effect = _ultimateEffect(hero.definition.id, ultimateIndex);
           if (effect != null) {
             _applyStatusEffect(candidate.id, playerId, effect);
