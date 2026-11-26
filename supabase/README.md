@@ -11,7 +11,8 @@
    supabase db push
    ```
 4. Confirm the migration `202611270001_phase5_player_persistence.sql` is applied.
-5. In the Supabase dashboard, keep Row Level Security enabled for every public table.
+5. Run `supabase/validation/phase5_privileges.sql` in the SQL editor and require every assertion to pass.
+6. In the Supabase dashboard, keep Row Level Security enabled for every public table.
 
 ## Mobile build configuration
 
@@ -62,7 +63,8 @@ Implemented in this branch:
 - Access-token refresh callback on every game socket handshake/reconnect.
 - Server-side Supabase Auth token verification.
 - Match room player slots and reconnect tokens bound to the verified account UUID.
-- RLS schema, account profile bootstrap trigger, currency ledger and match-result tables.
+- RLS schema, account profile bootstrap trigger, currency ledger and match-result tables, with explicit minimum table/sequence grants.
+- A read-only staging SQL validation script checks RLS enablement, client role privileges and server-only RPC grants.
 - Provider-neutral progression store interfaces and Supabase REST adapters for hero/monster JSON saves.
 - Revision-checked backend save RPCs to reject cross-server stale writes.
 - Verified account hero progression is fetched before a player enters a room; match loadout checks, hero level and weapon upgrade level use that cloud state.
