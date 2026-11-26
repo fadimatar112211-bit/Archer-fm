@@ -79,6 +79,9 @@ class MatchHeroState {
     required this.spawnPosition,
     required int level,
     required int comboResetWindowMs,
+    required int maxEnergy,
+    required double energyRegenerationPerSecond,
+    required Map<String, int> ultimateEnergyCosts,
   }) : combat = HeroCombatRuntime(
           hero: definition,
           level: level,
@@ -191,6 +194,9 @@ class MatchCombatAuthority {
         spawnPosition: world.playerPositions[playerId]!,
         level: heroLevels[playerId]!,
         comboResetWindowMs: configuration.comboResetWindowMs,
+        maxEnergy: configuration.maxHeroEnergy,
+        energyRegenerationPerSecond: configuration.energyRegenerationPerSecond,
+        ultimateEnergyCosts: configuration.ultimateEnergyCosts,
       );
       _heroes[playerId] = heroState;
       armies.add(MonsterArmy(
