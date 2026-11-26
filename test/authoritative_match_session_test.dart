@@ -48,6 +48,7 @@ MatchCombatConfiguration _combatConfiguration({int p1RunnerLevel = 1}) {
     maxActiveProjectiles: 128,
     maxUnitsPerArmy: 100,
     worldUnitsPerSecond: 100,
+    comboResetWindowMs: 1200,
     monsterProgressionByPlayer: p1RunnerLevel == 1
         ? const {}
         : {'p1': progression},
