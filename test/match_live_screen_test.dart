@@ -113,6 +113,17 @@ void main() {
       expect(received.any((message) => message['type'] == 'create'), isTrue);
       expect(tester.takeException(), isNull);
 
+      tester.view.physicalSize = const Size(568, 320);
+      await tester.pump();
+      expect(find.byType(ArenaBattlefield), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      tester.view.physicalSize = const Size(1280, 720);
+      await tester.pump();
+      expect(find.byType(VirtualJoystick), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      tester.view.physicalSize = const Size(640, 360);
+      await tester.pump();
+
       final joystickCenter = tester.getCenter(find.byType(VirtualJoystick));
       final gesture = await tester.startGesture(joystickCenter);
       await gesture.moveBy(const Offset(34, 0));
