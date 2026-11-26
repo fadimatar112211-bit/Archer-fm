@@ -8,6 +8,7 @@ on:
       - 'lib/game/network/**'
       - 'lib/game/progression/**'
       - 'test/match_rules_test.dart'
+      - 'test/file_hero_progress_store_test.dart'
       - 'test/game_client_test.dart'
       - 'test/hero_progress_test.dart'
       - '.github/workflows/match-rules-checks.yml'
@@ -34,4 +35,4 @@ jobs:
       - run: flutter pub get
       - run: dart format lib/game/match/match_rules.dart test/match_rules_test.dart
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart
+      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart
