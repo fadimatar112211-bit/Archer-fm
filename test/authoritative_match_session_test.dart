@@ -82,6 +82,8 @@ void main() {
     enemy.positionY = p1Position.dy;
 
     session.tick(const Duration(milliseconds: 500));
+    expect(enemy.targetId, 'hero_p1');
+    expect(authority.monsters.lastResult!.meleeHitsApplied, greaterThan(0));
     expect(authority.heroes['p1']!.health, lessThan(600));
 
     final attackAck = session.handle(
@@ -125,6 +127,8 @@ void main() {
 
     session.tick(const Duration(milliseconds: 500));
 
+    expect(enemy.targetId, crystal.id);
+    expect(authority.monsters.lastResult!.meleeHitsApplied, greaterThan(0));
     expect(crystal.hp, lessThan(initialHp));
     final p1Standing = (session.snapshot()['participants'] as List)
         .cast<Map>()
