@@ -90,3 +90,16 @@ These items remain open after selecting an initial development balance baseline:
 7. Physical-device QA and release build/install checks remain in Phase 6.
 
 **Conclusion:** the implemented core match/combat rules are now covered by passing automated tests, including four real WebSocket clients. Phase 3 remains partially open for the explicitly listed design-dependent systems; this report does not claim the entire game or production multiplayer is finished.
+
+## Live battlefield visual pass — 2026-11-26
+
+The requested Phase 3 scope explicitly includes a visual improvement pass for the live map. The live battlefield painter now has:
+
+- A layered forest-ground gradient instead of a single flat green fill.
+- Deterministic world-anchored grass tufts, small stones and ground flecks. Detail is generated only for the fixed 960x540 camera window and does not use random state or external textures.
+- Layered river water with a darker bank, deeper base water and a lighter inner water surface.
+- More readable tree silhouettes with visible trunks and overlapping canopy masses; rock obstacles now have layered highlights and ground shadows.
+
+These are presentation-only changes. The authoritative world snapshot, movement, collision, visibility/fog rules, resource ownership, castle state and combat remain the source of truth. The map is still a 2D projected terrain painter with skinned 3D actors layered above it; this pass does not claim a fully volumetric 3D terrain mesh.
+
+The visual code change is committed on `feature/match-rules-foundation`. CI must pass on the final branch head, and a real landscape gameplay screenshot still needs human visual review before map quality can be signed off.
