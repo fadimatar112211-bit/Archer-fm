@@ -22,6 +22,7 @@ ARCHER_FM_COMBAT_CONFIG=/etc/archer-fm/match-combat.json
 ARCHER_FM_MATCH_REWARDS_BY_RANK=[0,0,0,0]
 ARCHER_FM_BIND_ADDRESS=127.0.0.1
 ARCHER_FM_PORT=8080
+ARCHER_FM_SETTLEMENT_OUTBOX_PATH=/var/lib/archer-fm/pending-match-settlements.json
 ```
 
 The reward array above intentionally grants zero currency until the game owner approves and tests a rank reward schedule. Store the combat configuration outside the repository and review all gameplay/economy values before deployment.
@@ -45,6 +46,8 @@ EnvironmentFile=/etc/archer-fm/server.env
 ExecStart=/usr/bin/dart run tool/prod_game_server.dart
 Restart=on-failure
 RestartSec=5
+StateDirectory=archer-fm
+StateDirectoryMode=0700
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
@@ -114,5 +117,7 @@ Configure DNS, certificate renewal, HSTS after validating the HTTPS site, reques
 - [ ] Approved rank reward schedule configured and reconciled with the currency ledger.
 - [ ] Android release APK built, installed and smoke-tested on physical devices.
 - [ ] Monitoring, log retention, alerting, backup and restore drill completed.
+
+Match settlements are first written to a disk-backed JSON outbox at `ARCHER_FM_SETTLEMENT_OUTBOX_PATH` (default `/var/lib/archer-fm/pending-match-settlements.json`) before being sent to Supabase. The service retries queued items after restart and every five seconds; keep this path on persistent private storage, include it in protected backups, and do not place it under the web root. Database idempotency keys make replay after a crash between database commit and local queue deletion safe. This is single-instance local durability, not a replicated queue; do not run multiple gateway replicas against the same outbox file.
 
 The current gateway does not expose a dedicated HTTP health endpoint or built-in metrics exporter. Until those are implemented, monitor the systemd process, proxy errors, Supabase availability and structured service logs; do not mistake an open TCP port for full game readiness.
