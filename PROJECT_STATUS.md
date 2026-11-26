@@ -431,3 +431,7 @@ Still to decide or test:
 - New CI is expected from the latest commits; verify the exact latest head run before claiming this batch passed.
 
 - Settlement outbox CI correction: an initial analysis failure from a missing explicit `dart:async` import was fixed. The corrected source passed Flutter analysis and all tests in Android workflow [45911700825](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911700825); debug APK compilation was still running at the latest check.
+
+- Added an Arabic player-account screen to the authenticated home menu. It reads the signed-in player's profile, wallet balance, currency ledger and recent match history through own-row RLS; players can edit only their display name and sign out. No client-side reward or progression writes were added.
+- Supabase access tokens are refreshed when within 30 seconds of expiry before game handshakes/reconnects.
+- Added typed account data models and validation tests. Latest CI must be checked at the current branch head before marking these changes verified.
