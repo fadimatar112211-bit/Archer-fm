@@ -156,3 +156,13 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Supabase migration execution, live database concurrency/idempotency verification, production runtime wiring, save import, second-device restore and account-isolation E2E remain open.
 
 **Current acceptance status: IN PROGRESS — not ready for production or phase closure.**
+
+
+## 10. CI correction after settlement client addition — 2026-11-27
+
+- The first Match Rules run for settlement commit `804d3e1969464352545eb5fd1e24869613201b9c` failed during analysis because the REST client method insertion was malformed. The workflow logs were inspected; this was a source-editing defect, not a test or backend failure.
+- Rebuilt `supabase_rest_client.dart` as a complete file and verified the final method boundaries and regular expressions in the fetched source. Fix commit: `19306b11ed55f8f719d7f0ed92f69d503b4386ee`.
+- Revalidation for that corrected source is running: Match Rules [45908955504](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955504) and Android validation [45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588). Neither was complete at this checkpoint. Do not claim the correction has passed until both report their final results.
+- Android workflow runs [45908962413](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908962413) and [45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588) are both attached to the corrected source commit; verify APK build and artifact upload, not only analysis/tests.
+
+**Acceptance remains IN PROGRESS.**
