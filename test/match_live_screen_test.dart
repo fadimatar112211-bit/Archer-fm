@@ -20,26 +20,37 @@ void main() {
     GameFeedbackPreferences.setMovementSensitivity(1.3);
     addTearDown(() => GameFeedbackPreferences.setMovementSensitivity(1.0));
 
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     WebSocket? connectedSocket;
     final received = <Map<String, dynamic>>[];
-    server.listen((request) async {
-      final socket = await WebSocketTransformer.upgrade(request);
-      connectedSocket = socket;
-      socket.listen((raw) {
-        if (raw is! String) return;
-        final message = jsonDecode(raw) as Map<String, dynamic>;
-        received.add(message);
-        if (message['type'] == 'create') {
-          socket.add(jsonEncode({
-            'type': 'welcome',
-            'id': 'p1',
-            'token': 'test-resume-token',
-            'code': '123456',
-            'lastSeq': 0,
-          }));
-          socket.add(jsonEncode({
-            'type': 'state',
+    final server = (await tester.runAsync(() async {
+      final bound = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      // Register the listener in the real async zone so WebSocket upgrade and
+      // socket events are serviced while the widget test advances frames.
+      bound.listen((request) async {
+        final socket = await WebSocketTransformer.upgrade(request);
+        connectedSocket = socket;
+        void send(Map<String, dynamic> payload) {
+          if (socket.readyState != WebSocket.open) return;
+          try {
+            socket.add(jsonEncode(payload));
+          } on StateError {
+            // The client may close while the test is tearing down.
+          }
+        }
+        socket.listen((raw) {
+          if (raw is! String) return;
+          final message = jsonDecode(raw) as Map<String, dynamic>;
+          received.add(message);
+          if (message['type'] == 'create') {
+            send({
+              'type': 'welcome',
+              'id': 'p1',
+              'token': 'test-resume-token',
+              'code': '123456',
+              'lastSeq': 0,
+            });
+            send({
+              'type': 'state',
             'phase': 'running',
             'players': [
               {'id': 'p1', 'heroId': 'ranger', 'weaponId': 'ranger_bow'},
@@ -78,16 +89,18 @@ void main() {
               },
               'monsters': [],
             },
-          }));
-        } else if (message['seq'] is int) {
-          socket.add(jsonEncode({
-            'type': 'ack',
-            'seq': message['seq'],
-            'error': null,
-          }));
-        }
+            });
+          } else if (message['seq'] is int) {
+            send({
+              'type': 'ack',
+              'seq': message['seq'],
+              'error': null,
+            });
+          }
+        });
       });
-    });
+      return bound;
+    }))!;
 
     try {
       await tester.pumpWidget(
@@ -163,7 +176,10 @@ void main() {
         isTrue,
       );
 
-      connectedSocket!.add(jsonEncode({
+      final rejectionSocket = connectedSocket;
+      expect(rejectionSocket, isNotNull);
+      expect(rejectionSocket!.readyState, WebSocket.open);
+      rejectionSocket.add(jsonEncode({
         'type': 'ack',
         'seq': 999,
         'error': 'attack_rejected',
@@ -183,7 +199,8 @@ void main() {
         findsNothing,
       );
 
-      connectedSocket!.add(jsonEncode({
+      expect(rejectionSocket.readyState, WebSocket.open);
+      rejectionSocket.add(jsonEncode({
         'type': 'state',
         'phase': 'finished',
         'players': [
@@ -228,8 +245,10 @@ void main() {
       expect(tester.takeException(), isNull);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
-      await connectedSocket?.close();
-      await server.close(force: true);
+      await tester.runAsync(() async {
+        await connectedSocket?.close();
+        await server.close(force: true);
+      });
     }
   });
 }
