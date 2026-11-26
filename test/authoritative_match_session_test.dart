@@ -173,6 +173,33 @@ void main() {
   });
 
 
+  test('hero death applies one resource penalty and respawns with protection', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final hero = authority.heroes['p1']!;
+    final spawn = session.world!.playerPositions['p1']!;
+    session.world!.creditResources('p1', 100);
+    hero.health = 5;
+
+    final enemyArmy = authority.armies.firstWhere((army) => army.ownerId == 'p2');
+    final enemy = enemyArmy.units.first;
+    enemy.positionX = spawn.dx;
+    enemy.positionY = spawn.dy;
+    enemy.order = MonsterOrder.advance;
+
+    session.tick(const Duration(milliseconds: 500));
+    expect(hero.isAlive, isFalse);
+    expect(hero.respawnRemaining, const Duration(seconds: 10));
+    expect(session.world!.resources['p1'], 80);
+
+    session.tick(const Duration(seconds: 10));
+    expect(hero.isAlive, isTrue);
+    expect(hero.health, hero.maxHealth);
+    expect(hero.protectionRemaining, const Duration(seconds: 5));
+    expect(session.world!.playerPositions['p1'], spawn);
+    expect(session.world!.resources['p1'], 80);
+  });
+
   test('defeated heroes cannot attack, cast Ultimates or purchase units', () {
     final session = _combatReadySession();
     final authority = session.combat!;
