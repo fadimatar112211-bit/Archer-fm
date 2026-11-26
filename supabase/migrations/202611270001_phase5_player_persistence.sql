@@ -14,7 +14,7 @@ create table if not exists public.player_profiles (
 create table if not exists public.hero_progress (
   user_id uuid primary key references auth.users(id) on delete cascade,
   schema_version integer not null default 1 check (schema_version = 1),
-  data jsonb not null default '{"schemaVersion":1,"permanentCurrency":0,"unlockedWeaponIds":[],"weaponUpgradeLevels":{},"heroLevels":{},"heroExperience":{}}'::jsonb,
+  data jsonb not null default '{"schemaVersion":1,"permanentCurrency":0,"unlockedWeaponIds":["ranger_greenbow","flame_greatsword","shadow_twinfangs","storm_spear"],"weaponUpgradeLevels":{},"heroLevels":{},"heroExperience":{}}'::jsonb,
   revision bigint not null default 0 check (revision >= 0),
   updated_at timestamptz not null default now(),
   constraint hero_progress_data_object check (jsonb_typeof(data) = 'object')
@@ -23,7 +23,7 @@ create table if not exists public.hero_progress (
 create table if not exists public.monster_progress (
   user_id uuid primary key references auth.users(id) on delete cascade,
   schema_version integer not null default 1 check (schema_version = 1),
-  data jsonb not null default '{"version":1,"levels":{}}'::jsonb,
+  data jsonb not null default '{"version":1,"levels":{"runner":1,"tank":1,"stalker":1,"ranged":1}}'::jsonb,
   revision bigint not null default 0 check (revision >= 0),
   updated_at timestamptz not null default now(),
   constraint monster_progress_data_object check (jsonb_typeof(data) = 'object')
