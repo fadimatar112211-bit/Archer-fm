@@ -17,7 +17,7 @@ import 'websocket_game_host.dart';
 /// forfeit. Scores and crystal counts are updated only through trusted
 /// server-side methods called by the authoritative combat/castle systems.
 class AuthoritativeMatchSession
-    implements GameServerSession, PlayerScopedSnapshotSession {
+    implements GameServerSession, PlayerScopedSnapshotSession, AccountBoundGameServerSession {
   AuthoritativeMatchSession({
     required this.code,
     int durationMinutes = 30,
@@ -112,15 +112,33 @@ class AuthoritativeMatchSession
           _players.every((player) => !player.connected));
 
   @override
-  GameServerPlayer? join() {
+  GameServerPlayer? join() => _join(accountId: null);
+
+  @override
+  GameServerPlayer? joinForAccount(String accountId) {
+    if (accountId.trim().isEmpty || accountId.length > 180) return null;
+    return _join(accountId: accountId);
+  }
+
+  GameServerPlayer? _join({required String? accountId}) {
     if (_rules != null || _players.length >= 4) return null;
     final number = _nextPlayerNumber++;
     final player = _MatchPlayer(
       id: 'p$number',
       resumeToken: _token(),
+      accountId: accountId,
     );
     _players.add(player);
     return player;
+  }
+
+  @override
+  bool ownsResumeToken(String resumeToken, String accountId) {
+    final player = _players.cast<_MatchPlayer?>().firstWhere(
+          (candidate) => candidate?.resumeToken == resumeToken,
+          orElse: () => null,
+        );
+    return player != null && player.accountId == accountId;
   }
 
   @override
@@ -792,12 +810,13 @@ class AuthoritativeMatchSession
 }
 
 class _MatchPlayer implements GameServerPlayer {
-  _MatchPlayer({required this.id, required this.resumeToken});
+  _MatchPlayer({required this.id, required this.resumeToken, this.accountId});
 
   @override
   final String id;
   @override
   String resumeToken;
+  final String? accountId;
   @override
   int lastSequence = 0;
   @override
