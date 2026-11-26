@@ -242,3 +242,13 @@
 - The previous APK artifact belongs to pre-immersive code head `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`; it is not the release candidate for this latest screen. A fresh Android build and full test result are required for the new head.
 
 **Current Phase 4 status:** the running-match UI now uses the intended full-screen arena layout, but the latest integration/responsive tests must pass CI. Audio assets/playback and physical-device touch/audio verification remain outstanding. Do not mark Phase 4 complete yet.
+
+
+## Fourteenth implementation batch — full-screen match completion
+
+- The immersive arena presentation now remains active when the authoritative match phase changes from `running` to `finished`.
+- At match end, movement, attack, target cycling, Ultimate and unit-purchase controls are removed rather than left visible as disabled combat UI.
+- The arena is dimmed behind a centered, scrollable final-results panel. It displays the authoritative winner/tie, end reason, rankings, scores and remaining crystal counts; the return-to-menu action remains available.
+- Extended the local WebSocket widget integration test to push a finished snapshot after a running snapshot and verify the winner/result view appears, with the joystick and attack button removed.
+- Commits: `2554e5f29a40aa3054457bdbe5f2b07dfba42010` (full-screen result overlay), `5b582389e26ba2605230fc32a1ed05f1a1619fb3` (finished-state integration coverage).
+- Fresh Flutter analysis, full tests and Android build are required for this newest code; earlier CI results do not validate these two commits.
