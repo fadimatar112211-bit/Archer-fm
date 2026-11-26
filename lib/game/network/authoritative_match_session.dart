@@ -489,7 +489,13 @@ class AuthoritativeMatchSession
           ],
           'dyingMonsters': [
             for (final unit in matchCombat.monsters.dyingUnits)
-              {'id': unit.id, 'ownerId': unit.ownerId, 'type': unit.type.name},
+              {
+                'id': unit.id,
+                'ownerId': unit.ownerId,
+                'type': unit.type.name,
+                'x': unit.positionX,
+                'y': unit.positionY,
+              },
           ],
           'projectiles': [
             for (final projectile in matchCombat.monsters.projectileManager.active)
