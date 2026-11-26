@@ -93,6 +93,19 @@ void main() {
     expect(world['rivers'], isA<List>());
     expect(world['obstacles'], isA<List>());
     expect(world['mapPickups'], isA<List>());
+    expect(world['playerPositions'], isA<Map>());
+    expect(world['castles'], hasLength(4));
+
+    final castles = (world['castles'] as List).cast<Map>();
+    for (final castle in castles) {
+      expect(castle['walls'], isA<List>());
+      expect(castle['crystals'], hasLength(7));
+      for (final wall in (castle['walls'] as List).cast<Map>()) {
+        expect(wall['radius'], isA<num>());
+        expect(wall['startAngle'], isA<num>());
+        expect(wall['sweep'], isA<num>());
+      }
+    }
 
     final rivers = (world['rivers'] as List).cast<Map>();
     for (final river in rivers) {
