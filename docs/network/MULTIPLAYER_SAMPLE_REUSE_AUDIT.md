@@ -31,7 +31,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 - `MatchRulesEngine` is an isolated four-player match-result/clock rules foundation.
 - `GameClient` is a mobile WebSocket transport.
-- `WebSocketGameHost` is a generic room gateway; it still needs the authoritative game-session adapter and account service.
+- `WebSocketGameHost` is the transport/room gateway, and `AuthoritativeMatchSession` now supplies a concrete four-player lobby, canonical hero/weapon selection validation, match clock/results, reconnect identity, and forfeit handling. The session factory receives the room creation message so the selected approved match duration is applied.
 
 - `VirtualJoystick` is a reusable control widget; final HUD placement and camera/world-axis projection remain pending.
 - `HeroProgress` stores permanent currency, weapon ownership, and per-weapon upgrade levels in a serializable domain model. `HeroProgressionService` applies unlock/upgrade transactions using server-supplied costs and caps; no ZIP sample prices are hardcoded.
@@ -40,8 +40,18 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 ## Not yet implemented
 
 - Authenticated account service and cloud persistence.
-- Authoritative server session wired to the current canonical combat/world/castle/mine systems.
+- Wire `AuthoritativeMatchSession` into the app/server entry point and connect its trusted score/crystal update methods to the canonical combat/world/castle systems. Client movement, attacks, damage, purchases, and rewards are deliberately rejected until those existing authorities are connected.
 - Matchmaking, private room invite flow, friend invitations, and player removal.
 - Local Wi-Fi hotspot/LAN hosting and reconnect/host migration policy.
 - Final landscape selection screen and HUD connected to current 3D/2.5D renderer.
 - Server-side validation of progression transactions using approved economy configuration.
+
+
+## Concrete match-session contract added
+
+- Create a room with `durationMinutes` (defaults to 30; accepted values are validated against the approved duration list).
+- A room accepts at most four players. The match cannot start until all four have selected a hero and one of that hero's canonical weapons.
+- Client messages may select a valid roster loadout, start the full lobby, or forfeit. Client-submitted score/crystal/reward mutations are not accepted.
+- The server-side `awardScore` and `updateLivingCrystals` methods are the only exposed paths for trusted combat/castle integrations to update match scoring and crystal counts.
+- The session snapshot includes lobby selections, match phase/clock, participant score/crystal state, and final standings.
+- This is a tested match-session foundation, not a complete live game server: movement, attacks, unit purchases, economy, damage simulation, authenticated accounts, and cloud persistence still require integration with the existing game systems.
