@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
+import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
@@ -31,6 +33,39 @@ void main() {
     expect(session.rules!.phase, MatchPhase.running);
     expect(session.rules!.duration.minutes, 10);
     expect(session.snapshot()['phase'], 'running');
+  });
+
+  test('session owns the four castles and updates match tiebreaks on crystal loss', () {
+    final session = AuthoritativeMatchSession(
+      code: 'world01',
+      mapFactory: () => ArenaMap.generate(Random(123)),
+    );
+    final players = [for (var i = 0; i < 4; i++) session.join()!];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      });
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    expect(session.world, isNotNull);
+    expect(session.world!.castles.castles.map((castle) => castle.ownerId),
+        ['p1', 'p2', 'p3', 'p4']);
+
+    final target = session.world!.castles.castleOf('p2')!.crystals.first;
+    final result = session.damageCrystal(
+      attackerId: 'p1',
+      crystalId: target.id,
+      amount: target.maxHp + 1,
+    );
+    expect(result.destroyedNow, isTrue);
+    final standings = session.snapshot()['participants'] as List;
+    final p2 = standings.firstWhere((item) => (item as Map)['playerId'] == 'p2')
+        as Map;
+    expect(p2['livingCrystals'], 6);
+    expect((session.snapshot()['world'] as Map)['livingCrystals']['p2'], 6);
   });
 
   test('rejects incomplete lobby, invalid loadout and client-side score spoofing', () {
