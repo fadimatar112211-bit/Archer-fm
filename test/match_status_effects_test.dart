@@ -100,7 +100,7 @@ void main() {
           sourcePlayerId: 'p2',
           spec: const MatchStatusEffectSpec(
             type: MatchStatusEffectType.slow,
-            duration: Duration(seconds: 1),
+            duration: Duration(seconds: 2),
             movementMultiplier: 0.8,
           ),
         );
