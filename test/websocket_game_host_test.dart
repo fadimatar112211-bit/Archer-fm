@@ -84,7 +84,7 @@ class _FakeSession implements GameServerSession {
 class _FakeFactory {
   final Map<String, _FakeSession> sessions = {};
 
-  GameServerSession create(String code) =>
+  GameServerSession create(String code, Map<String, dynamic> message) =>
       sessions.putIfAbsent(code, () => _FakeSession(code));
 }
 
