@@ -84,6 +84,23 @@ AuthoritativeMatchSession _combatReadySession({int p1RunnerLevel = 1}) {
 }
 
 void main() {
+  test('snapshot publishes deterministic static arena geometry for clients', () {
+    final session = _combatReadySession();
+    final world = session.snapshot()['world'] as Map;
+
+    expect(world['size'], isA<Map>());
+    expect(world['biomes'], isA<List>());
+    expect(world['rivers'], isA<List>());
+    expect(world['obstacles'], isA<List>());
+    expect(world['mapPickups'], isA<List>());
+
+    final rivers = (world['rivers'] as List).cast<Map>();
+    for (final river in rivers) {
+      expect(river['points'], isA<List>());
+      expect(river['bridges'], isA<List>());
+    }
+  });
+
 
   test('configured factory creates combat-enabled WebSocket room sessions', () {
     final factory = AuthoritativeMatchSession.configuredFactory(
