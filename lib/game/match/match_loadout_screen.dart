@@ -545,6 +545,43 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
     }
   }
 
+  Widget _ultimateButton({
+    required int index,
+    required bool canAct,
+    required num? level,
+    required List cooldowns,
+  }) {
+    final ultimate = _hero.ultimates[index];
+    final remainingMs = index < cooldowns.length && cooldowns[index] is num
+        ? (cooldowns[index] as num).toInt()
+        : 0;
+    final unlocked = level != null && level >= ultimate.unlockLevel;
+    final ready = remainingMs <= 0;
+    final hint = !unlocked
+        ? 'يفتح عند المستوى ${ultimate.unlockLevel}'
+        : !ready
+            ? 'متبقي ${(remainingMs / 1000).ceil()} ث'
+            : 'جاهزة للاستخدام';
+    return Tooltip(
+      message: '${ultimate.nameAr} · $hint',
+      child: SizedBox(
+        width: 88,
+        child: OutlinedButton(
+          onPressed: canAct && unlocked && ready
+              ? () => _sendCombat('ultimate', ultimateIndex: index)
+              : null,
+          child: Text(
+            ultimate.nameAr,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 10),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLiveHud() {
     final state = _latestState ?? const <String, dynamic>{};
     final participants = state['participants'] is List
@@ -636,18 +673,11 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     spacing: 4,
                     children: [
                       for (var i = 0; i < _hero.ultimates.length; i++)
-                        SizedBox(
-                          width: 68,
-                          child: OutlinedButton(
-                            onPressed: canAct &&
-                                    (myLevel is num && myLevel >= _hero.ultimates[i].unlockLevel) &&
-                                    (i >= ultimateCooldowns.length ||
-                                        ultimateCooldowns[i] is! num ||
-                                        (ultimateCooldowns[i] as num) <= 0)
-                                ? () => _sendCombat('ultimate', ultimateIndex: i)
-                                : null,
-                            child: Text('خاصة ${i + 1}'),
-                          ),
+                        _ultimateButton(
+                          index: i,
+                          canAct: canAct,
+                          level: myLevel is num ? myLevel : null,
+                          cooldowns: ultimateCooldowns,
                         ),
                     ],
                   ),
