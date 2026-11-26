@@ -4,6 +4,11 @@ import 'monster_models.dart';
 import 'monster_formation_movement.dart';
 
 class InitialArmySelection {
+  /// Selection for armies whose units are supplied directly (map camps).
+  factory InitialArmySelection.empty() => InitialArmySelection._empty();
+
+  InitialArmySelection._empty() : counts = const <MonsterType, int>{};
+
   InitialArmySelection(Map<MonsterType, int> counts)
       : counts = Map.unmodifiable(counts) {
     if (MonsterType.values.any((type) => (this.counts[type] ?? 0) < 0)) {
@@ -57,6 +62,39 @@ class MonsterArmy {
     _spawnCursor = _nextId;
   }
 
+  /// Builds an army from already-authored units (map camps spawn exact counts
+  /// instead of the 20-unit starting composition used by the battle demo).
+  factory MonsterArmy.fromUnits({
+    required String ownerId,
+    String? idPrefix,
+    required MonsterCatalog catalog,
+    required Iterable<MonsterUnit> units,
+    required double castleX,
+    required double castleY,
+    int? maxUnits,
+  }) {
+    final army = MonsterArmy(
+      ownerId: ownerId,
+      idPrefix: idPrefix,
+      catalog: catalog,
+      selection: InitialArmySelection.empty(),
+      castleX: castleX,
+      castleY: castleY,
+      maxUnits: maxUnits,
+    );
+    for (final unit in units) {
+      if (unit.ownerId != ownerId) {
+        throw ArgumentError(
+          'Camp unit ${unit.id} belongs to ${unit.ownerId}, not $ownerId.',
+        );
+      }
+      army._units.add(unit);
+    }
+    army._nextId = army._units.length;
+    army._spawnCursor = army._nextId;
+    return army;
+  }
+
   final String ownerId;
   final String idPrefix;
   final MonsterCatalog catalog;
@@ -82,8 +120,33 @@ class MonsterArmy {
       _units.where((unit) => unit.type == type && unit.isAlive).length;
   bool get canPurchase => maxUnits == null || aliveCount < maxUnits!;
 
-  MonsterUnit _createUnit(MonsterType type, int index) {
-    final slot = index % 8;
+  /// Adds one camp-spawned unit at an authoritative world position.
+  MonsterUnit addUnit(
+    MonsterType type, {
+    required double positionX,
+    required double positionY,
+    MonsterStats? stats,
+    String? id,
+  }) {
+    if (!positionX.isFinite || !positionY.isFinite) {
+      throw ArgumentError('Spawn position must be finite.');
+    }
+    final resolvedStats = stats ?? statsForType?.call(type) ?? catalog[type].baseStats;
+    resolvedStats.validate();
+    final unit = MonsterUnit(
+      id: id ?? '$idPrefix-spawn-${_nextId++}',
+      ownerId: ownerId,
+      type: type,
+      positionX: positionX,
+      positionY: positionY,
+      stats: resolvedStats,
+      order: MonsterOrder.defend,
+    );
+    _units.add(unit);
+    return unit;
+  }
+
+  MonsterUnit _createUnit(MonsterType type, int index) {    final slot = index % 8;
     final ring = index ~/ 8;
     final angle = slot * (math.pi / 4);
     final radius = 34.0 + ring * 24.0;

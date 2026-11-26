@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'arena/arena_screen.dart';
 import 'hero/hero_catalog.dart';
-import 'hero/hero_viewer_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +35,7 @@ class ArcherFmApp extends StatelessWidget {
       ),
       home: const Directionality(
         textDirection: TextDirection.rtl,
-        child: HeroViewerScreen(),
+        child: ArenaScreen(),
       ),
     );
   }
