@@ -565,6 +565,14 @@ class AuthoritativeMatchSession implements GameServerSession {
                 'ownerId': castle.ownerId,
                 'fallen': castle.fallen,
                 'anchor': {'x': castle.anchor.dx, 'y': castle.anchor.dy},
+                'walls': [
+                  for (final wall in castle.walls)
+                    {
+                      'radius': wall.radius,
+                      'startAngle': wall.startAngle,
+                      'sweep': wall.sweep,
+                    },
+                ],
                 'crystals': [
                   for (final crystal in castle.crystals)
                     {
