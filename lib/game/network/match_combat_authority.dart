@@ -45,6 +45,7 @@ class MatchHeroState {
     required this.playerId,
     required this.definition,
     required this.weaponId,
+    required this.spawnPosition,
     this.level = 1,
   }) : combat = HeroCombatRuntime(hero: definition, level: level) {
     final index = definition.weapons.indexWhere((weapon) => weapon.id == weaponId);
@@ -61,7 +62,7 @@ class MatchHeroState {
   late double health;
   Duration respawnRemaining = Duration.zero;
   Duration protectionRemaining = Duration.zero;
-  late final Offset spawnPosition;
+  final Offset spawnPosition;
 
   double get maxHealth => definition.healthAt(level).toDouble();
   bool get isAlive => health > 0;
@@ -131,8 +132,8 @@ class MatchCombatAuthority {
         playerId: playerId,
         definition: hero,
         weaponId: weaponId,
+        spawnPosition: world.playerPositions[playerId]!,
       );
-      heroState.spawnPosition = world.playerPositions[playerId]!;
       _heroes[playerId] = heroState;
       armies.add(MonsterArmy(
         ownerId: playerId,
