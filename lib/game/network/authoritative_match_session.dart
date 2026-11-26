@@ -512,6 +512,8 @@ class AuthoritativeMatchSession
                 'weaponId': entry.value.combat.selectedWeapon.id,
                 'comboIndex': entry.value.combat.comboIndex,
                 'attackCooldownMs': entry.value.combat.attackCooldownRemainingMs,
+                'energy': entry.value.combat.energy,
+                'maxEnergy': entry.value.combat.maxEnergy,
                 'ultimateCooldowns': entry.value.combat.ultimateCooldowns,
               },
           },
