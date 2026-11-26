@@ -8,11 +8,18 @@ on:
       - 'lib/game/render3/arena_battlefield.dart'
       - 'lib/game/render3/arena_3d_asset_layer.dart'
       - '.github/workflows/phase3-arena-visual-capture.yml'
+  pull_request:
+    branches: [heroes-complete]
+    paths:
+      - 'test/arena_battlefield_visual_capture_test.dart'
+      - 'lib/game/render3/arena_battlefield.dart'
+      - 'lib/game/render3/arena_3d_asset_layer.dart'
+      - '.github/workflows/phase3-arena-visual-capture.yml'
   workflow_dispatch:
 
 jobs:
   render-arena-capture:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
