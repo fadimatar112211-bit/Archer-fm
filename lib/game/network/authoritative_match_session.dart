@@ -109,6 +109,10 @@ class AuthoritativeMatchSession
   GameServerPlayer? resume(String resumeToken) {
     for (final player in _players) {
       if (player.resumeToken == resumeToken) {
+        // Rotate the bearer token on every successful resume. A captured
+        // token can therefore be used only once, not replayed to hijack a
+        // later connection.
+        player.resumeToken = _token();
         player.connected = true;
         player.moveX = 0;
         player.moveY = 0;
@@ -724,7 +728,7 @@ class _MatchPlayer implements GameServerPlayer {
   @override
   final String id;
   @override
-  final String resumeToken;
+  String resumeToken;
   @override
   int lastSequence = 0;
   @override
