@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:archer_fm/monsters/monster3d.dart';
@@ -19,7 +21,7 @@ void main() {
 
       monster.update(
         0.05,
-        moveDir: const Offset(1, 0),
+        moveDir: const ui.Offset(1, 0),
         moveSpeed: 20,
       );
       expect(monster.anim, isNot('Idle'), reason: '$id should animate movement');
