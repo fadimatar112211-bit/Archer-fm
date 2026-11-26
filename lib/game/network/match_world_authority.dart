@@ -72,6 +72,28 @@ class MatchWorldAuthority {
     _resources[playerId] = _resources[playerId]! + amount;
   }
 
+  /// Removes a fraction of the current wallet after a server-confirmed
+  /// hero defeat. The amount is rounded down because resources are integral.
+  int loseResourcesFraction(String playerId, double fraction) {
+    _requirePlayer(playerId);
+    if (!fraction.isFinite || fraction < 0 || fraction > 1) {
+      throw ArgumentError.value(fraction, 'fraction');
+    }
+    final balance = _resources[playerId]!;
+    final lost = (balance * fraction).floor();
+    _resources[playerId] = balance - lost;
+    return lost;
+  }
+
+  /// Teleports a respawning hero to its server-recorded spawn location.
+  void setPlayerPosition(String playerId, Offset position) {
+    _requirePlayer(playerId);
+    if (!position.dx.isFinite || !position.dy.isFinite) {
+      throw ArgumentError('Player position must be finite.');
+    }
+    _positions[playerId] = map.clampToBounds(position, 18);
+  }
+
   /// Applies an authoritative movement result using the map's collision and
   /// shallow-water rules. Clients submit intent, never a trusted world pos.
   Offset movePlayer(String playerId, Offset desiredDelta, double radius) {
