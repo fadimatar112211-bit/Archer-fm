@@ -46,6 +46,13 @@ typedef GameServerSessionFactory = GameServerSession Function(
   Map<String, dynamic> createMessage,
 );
 
+abstract interface class AccountBoundGameServerSession {
+  GameServerPlayer? joinForAccount(String accountId);
+  bool ownsResumeToken(String resumeToken, String accountId);
+}
+
+typedef GameAccessTokenVerifier = Future<String?> Function(String accessToken);
+
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
 ///
 /// It handles room codes, four-player transport sessions, reconnect tokens,
@@ -62,6 +69,7 @@ class WebSocketGameHost {
     this.rateLimitRefillPerSecond = 40,
     this.tickInterval = const Duration(milliseconds: 50),
     this.broadcastInterval = const Duration(milliseconds: 100),
+    this.accessTokenVerifier,
   })  : assert(port >= 0 && port <= 65535),
         assert(maxRooms > 0),
         assert(maxMessageCharacters > 0),
@@ -71,6 +79,7 @@ class WebSocketGameHost {
         assert(broadcastInterval > Duration.zero);
 
   final GameServerSessionFactory sessionFactory;
+  final GameAccessTokenVerifier? accessTokenVerifier;
   final InternetAddress? address;
   final int port;
   final int maxRooms;
@@ -79,6 +88,9 @@ class WebSocketGameHost {
   final int rateLimitRefillPerSecond;
   final Duration tickInterval;
   final Duration broadcastInterval;
+
+  /// When set, all handshakes require a verified token and account-bound room.
+  /// Keep null only for isolated local development and tests.
 
   final Map<String, GameServerSession> _rooms = {};
   final Map<String, WebSocket> _sockets = {};
@@ -170,6 +182,7 @@ class WebSocketGameHost {
     final refillClock = Stopwatch()..start();
     GameServerSession? room;
     GameServerPlayer? player;
+    var handshakePending = false;
 
     void detach() {
       final currentPlayer = player;
@@ -208,10 +221,12 @@ class WebSocketGameHost {
           }
           final message = decoded;
           if (player == null) {
-            _handshake(socket, message, (session, joined) {
+            if (handshakePending) return;
+            handshakePending = true;
+            unawaited(_handshake(socket, message, (session, joined) {
               room = session;
               player = joined;
-            });
+            }).whenComplete(() => handshakePending = false));
             return;
           }
 
@@ -253,64 +268,100 @@ class WebSocketGameHost {
     );
   }
 
-  void _handshake(
+  Future<void> _handshake(
     WebSocket socket,
     Map<String, dynamic> message,
     void Function(GameServerSession, GameServerPlayer) attach,
-  ) {
-    final type = message['type'];
-    GameServerSession? room;
-    GameServerPlayer? player;
-
-    switch (type) {
-      case 'create':
-        if (_rooms.length >= maxRooms) {
-          _send(socket, {'type': 'error', 'reason': 'server_full'});
+  ) async {
+    try {
+      final verifier = accessTokenVerifier;
+      String? accountId;
+      if (verifier != null) {
+        final accessToken = message['accessToken'];
+        if (accessToken is! String) {
+          _send(socket, {'type': 'error', 'reason': 'unauthorized'});
           return;
         }
-        final code = _newRoomCode();
-        room = sessionFactory(code, message);
-        _rooms[code] = room;
-        player = room.join();
-        break;
-      case 'join':
-        final code = message['code'];
-        if (code is String) room = _rooms[code];
-        player = room?.join();
-        break;
-      case 'resume':
-        final code = message['code'];
-        final token = message['token'];
-        if (code is String) room = _rooms[code];
-        if (token is String) player = room?.resume(token);
-        break;
-      default:
-        _send(socket, {'type': 'error', 'reason': 'bad_handshake'});
+        accountId = await verifier(accessToken);
+        if (accountId == null || accountId.isEmpty) {
+          _send(socket, {'type': 'error', 'reason': 'unauthorized'});
+          return;
+        }
+      }
+
+      GameServerSession? room;
+      GameServerPlayer? player;
+      GameServerPlayer? joinRoom(GameServerSession session) {
+        if (verifier == null) return session.join();
+        if (session is! AccountBoundGameServerSession) return null;
+        return session.joinForAccount(accountId!);
+      }
+
+      switch (message['type']) {
+        case 'create':
+          if (_rooms.length >= maxRooms) {
+            _send(socket, {'type': 'error', 'reason': 'server_full'});
+            return;
+          }
+          final code = _newRoomCode();
+          room = sessionFactory(code, message);
+          player = joinRoom(room!);
+          if (player == null) {
+            _send(socket, {'type': 'error', 'reason': 'account_binding_unavailable'});
+            return;
+          }
+          _rooms[code] = room!;
+          break;
+        case 'join':
+          final code = message['code'];
+          if (code is String) room = _rooms[code];
+          if (room != null) player = joinRoom(room!);
+          break;
+        case 'resume':
+          final code = message['code'];
+          final token = message['token'];
+          if (code is String) room = _rooms[code];
+          if (room != null && token is String) {
+            if (verifier == null) {
+              player = room!.resume(token);
+            } else if (room is AccountBoundGameServerSession &&
+                (room as AccountBoundGameServerSession).ownsResumeToken(token, accountId!)) {
+              player = room!.resume(token);
+            }
+          }
+          break;
+        default:
+          _send(socket, {'type': 'error', 'reason': 'bad_handshake'});
+          return;
+      }
+
+      if (room == null || player == null) {
+        _send(socket, {'type': 'error', 'reason': 'no_session'});
         return;
+      }
+      if (socket.readyState != WebSocket.open) {
+        room!.disconnect(player!);
+        return;
+      }
+      player!.connected = true;
+      final oldSocket = _sockets[player!.id];
+      _sockets[player!.id] = socket;
+      oldSocket?.close();
+      attach(room!, player!);
+      _send(socket, {
+        'type': 'welcome',
+        'id': player!.id,
+        'token': player!.resumeToken,
+        'code': room!.code,
+        'lastSeq': player!.lastSequence,
+      });
+      final initialSnapshot = room is PlayerScopedSnapshotSession
+          ? (room as PlayerScopedSnapshotSession).snapshotFor(player!)
+          : room!.snapshot();
+      _send(socket, initialSnapshot);
+    } catch (_) {
+      _send(socket, {'type': 'error', 'reason': 'handshake_failed'});
     }
-
-    if (room == null || player == null) {
-      _send(socket, {'type': 'error', 'reason': 'no_session'});
-      return;
-    }
-
-    player.connected = true;
-    final oldSocket = _sockets[player.id];
-    _sockets[player.id] = socket;
-    oldSocket?.close();
-
-    attach(room, player);
-    _send(socket, {
-      'type': 'welcome',
-      'id': player.id,
-      'token': player.resumeToken,
-      'code': room.code,
-      'lastSeq': player.lastSequence,
-    });
-    final initialSnapshot = room is PlayerScopedSnapshotSession
-        ? (room as PlayerScopedSnapshotSession).snapshotFor(player)
-        : room.snapshot();
-    _send(socket, initialSnapshot);
   }
 
   String _newRoomCode() {
