@@ -63,7 +63,15 @@ class MatchResultPanel extends StatelessWidget {
             const Divider(),
             for (var index = 0; index < standings.length; index++)
               if (standings[index] is Map)
-                Padding(
+                Semantics(
+                  container: true,
+                  excludeSemantics: true,
+                  label: 'المركز ${standings[index]['rank'] ?? 'غير محدد'}، '
+                      '${_playerLabel(standings[index]['playerId'], standings)}، '
+                      'النقاط ${standings[index]['score'] ?? 0}، '
+                      'البلورات ${standings[index]['livingCrystals'] ?? 0} من 7'
+                      '${standings[index]['hasForfeited'] == true ? '، انسحب' : ''}',
+                  child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   child: Row(
                     children: [
@@ -86,6 +94,7 @@ class MatchResultPanel extends StatelessWidget {
                       const SizedBox(width: 10),
                       Text('البلورات ${standings[index]['livingCrystals'] ?? 0}/7'),
                     ],
+                  ),
                   ),
                 ),
             const SizedBox(height: 10),
