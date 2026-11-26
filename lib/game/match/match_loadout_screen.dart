@@ -245,6 +245,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_matchPhase == 'running') return _buildLiveMatchScreen();
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -625,6 +626,225 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 10),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLiveMatchScreen() {
+    final state = _latestState ?? const <String, dynamic>{};
+    final combat = state['combat'] is Map ? state['combat'] as Map : const {};
+    final heroes = combat['heroes'] is Map ? combat['heroes'] as Map : const {};
+    final world = state['world'] is Map ? state['world'] as Map : const {};
+    final resources = world['resources'] is Map ? world['resources'] as Map : const {};
+    final crystals = world['livingCrystals'] is Map ? world['livingCrystals'] as Map : const {};
+    final myHero = _playerId == null ? null : heroes[_playerId];
+    final health = myHero is Map ? myHero['health'] : null;
+    final maxHealth = myHero is Map ? myHero['maxHealth'] : null;
+    final level = myHero is Map ? myHero['level'] : null;
+    final combo = myHero is Map ? myHero['comboIndex'] : null;
+    final attackCooldown = myHero is Map ? myHero['attackCooldownMs'] : null;
+    final cooldowns = myHero is Map && myHero['ultimateCooldowns'] is List
+        ? myHero['ultimateCooldowns'] as List
+        : const [];
+    final alive = myHero is Map && myHero['isAlive'] == true;
+    final respawnMs = myHero is Map && myHero['respawnRemainingMs'] is num
+        ? (myHero['respawnRemainingMs'] as num).toInt()
+        : 0;
+    final myResources = _playerId == null ? null : resources[_playerId];
+    final myCrystals = _playerId == null ? null : crystals[_playerId];
+    final monsters = combat['monsters'] is List ? (combat['monsters'] as List).length : 0;
+    final canAct = alive && combat.isNotEmpty && _client?.isConnected == true;
+    final targetsAvailable = _availableEnemyTargets().isNotEmpty;
+    final attackReady = attackCooldown is! num || attackCooldown <= 0;
+    final targetLabel = _selectedTargetId != null &&
+            _availableEnemyTargets().contains(_selectedTargetId)
+        ? 'الهدف: اختيار يدوي'
+        : 'الهدف: الأقرب تلقائياً';
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF101A18),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final panelWidth = (constraints.maxWidth * 0.58)
+                  .clamp(300.0, 380.0)
+                  .toDouble();
+              final joystickSize = constraints.maxHeight < 400 ? 104.0 : 116.0;
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (_playerId != null)
+                    ArenaBattlefield(
+                      snapshot: state,
+                      localPlayerId: _playerId!,
+                      selectedTargetId: _currentEnemyTarget(),
+                    )
+                  else
+                    const Center(child: Text('بانتظار بيانات اللاعب')),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Material(
+                        color: const Color(0xD91A2525),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 14,
+                            runSpacing: 5,
+                            children: [
+                              Text('الصحة: ${health ?? '—'} / ${maxHealth ?? '—'}'),
+                              Text('المستوى: ${level ?? '—'}'),
+                              Text('الكومبو: ${combo ?? '—'} / 5'),
+                              Text('الموارد: ${myResources ?? '—'}'),
+                              Text('البلورات: ${myCrystals ?? '—'} / 7'),
+                              Text('الوحوش: $monsters'),
+                              Text(_connectionLabel),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: VirtualJoystick(
+                      size: joystickSize,
+                      onMove: _sendMove,
+                    ),
+                  ),
+                  Positioned(
+                    right: 12,
+                    bottom: 12,
+                    child: SizedBox(
+                      width: panelWidth,
+                      child: Material(
+                        color: const Color(0xE61A2525),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  Semantics(
+                                    button: true,
+                                    enabled: canAct && attackReady,
+                                    label: 'هجوم',
+                                    hint: 'كل لمسة تنفذ ضربة واحدة وتستهدف الهدف المحدد أو أقرب عدو تلقائياً',
+                                    child: FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        minimumSize: const Size(120, 56),
+                                      ),
+                                      onPressed: canAct && attackReady
+                                          ? () => _sendCombat('attack')
+                                          : null,
+                                      child: const Text('هجوم'),
+                                    ),
+                                  ),
+                                  Semantics(
+                                    button: true,
+                                    enabled: canAct && targetsAvailable,
+                                    label: 'تغيير الهدف',
+                                    hint: 'ينتقل إلى العدو التالي؛ اضغط للتنقل بين الأهداف المتاحة',
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize: const Size(120, 48),
+                                      ),
+                                      onPressed: canAct && targetsAvailable
+                                          ? _cycleEnemyTarget
+                                          : null,
+                                      icon: const Icon(Icons.swap_horiz),
+                                      label: const Text('تغيير الهدف'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  !alive
+                                      ? 'الإحياء: ${(respawnMs / 1000).ceil()} ث'
+                                      : attackCooldown is num && attackCooldown > 0
+                                          ? 'الهجوم بعد ${(attackCooldown / 1000).toStringAsFixed(1)} ث · $targetLabel'
+                                          : targetLabel,
+                                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: [
+                                  for (var i = 0; i < _hero.ultimates.length; i++)
+                                    _ultimateButton(
+                                      index: i,
+                                      canAct: canAct,
+                                      level: level is num ? level : null,
+                                      cooldowns: cooldowns,
+                                    ),
+                                ],
+                              ),
+                              const Divider(height: 12),
+                              const Text('شراء وحدات', textAlign: TextAlign.right),
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: [
+                                  for (final type in MonsterType.values)
+                                    Semantics(
+                                      button: true,
+                                      enabled: canAct,
+                                      label: switch (type) {
+                                        MonsterType.runner => 'شراء عدّاء',
+                                        MonsterType.tank => 'شراء مدرّع',
+                                        MonsterType.stalker => 'شراء متسلّل',
+                                        MonsterType.ranged => 'شراء رامٍ',
+                                      },
+                                      hint: canAct
+                                          ? 'يرسل طلب الشراء إلى الخادم؛ يتحقق من الرصيد والسعة قبل الخصم'
+                                          : 'الشراء متاح أثناء المباراة عند الاتصال وبقاء بطلك حياً',
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(88, 48),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        ),
+                                        onPressed: canAct ? () => _sendPurchase(type) : null,
+                                        child: Text(switch (type) {
+                                          MonsterType.runner => 'عدّاء',
+                                          MonsterType.tank => 'مدرّع',
+                                          MonsterType.stalker => 'متسلّل',
+                                          MonsterType.ranged => 'رامٍ',
+                                        }),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
