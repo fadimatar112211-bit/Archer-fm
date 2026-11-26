@@ -108,6 +108,8 @@
 
 - Added live combat guidance beneath the HUD stats: explains one-tap/one-hit behavior and the five-hit combo, and gives Arabic reasons when controls are unavailable due to respawn, connection loss, non-running phase or attack cooldown. Commits: `ee765490f8c5f6ad52b543ef1952ae8d73149098`, `43061e83eadf9cd8449f828c2086643d123405a3`.
 
+- The room retry action now remains visible even when the WebSocket reports connected but the server never completes the room welcome handshake. Commit: `dd51d5c6cda0cdce3b82fd0a5e486f3a45fe2318`.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
