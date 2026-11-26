@@ -102,6 +102,7 @@ class AuthoritativeMatchSession
 
   @override
   final String code;
+  late final String matchId = '$code-${_token()}';
   final MatchDuration duration;
   final ArenaMap Function()? _mapFactory;
   final MatchCombatConfiguration? _combatConfiguration;
@@ -863,7 +864,7 @@ class AuthoritativeMatchSession
       for (final pending in _pendingSettlements.values.toList()) {
         try {
           await handler(
-            matchId: code,
+            matchId: matchId,
             accountId: pending.accountId,
             standing: pending.standing,
             finishReason: pending.finishReason,
