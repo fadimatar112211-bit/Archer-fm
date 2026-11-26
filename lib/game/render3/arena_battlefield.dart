@@ -379,7 +379,7 @@ class _ArenaPainter extends CustomPainter {
   ) {
     // Higher angular resolution removes the oversized wedge facets visible at 16:9.
     // Keep the ring count modest so the projected painter remains mobile-friendly.
-    const segmentCount = 56;
+    const segmentCount = 72;
     const palettes = <String, List<Color>>{
       'forest': [Color(0xFF557C43), Color(0xFF315D3B), Color(0xFF24452F)],
       'desert': [Color(0xFFD5B16C), Color(0xFFB8874D), Color(0xFF8B603D)],
@@ -400,8 +400,12 @@ class _ArenaPainter extends CustomPainter {
       final kind = biome['kind']?.toString() ?? 'forest';
       final palette = palettes[kind] ?? palettes['forest']!;
       final phase = (biome['seed'] is num ? (biome['seed'] as num).toDouble() : center.dx * 0.013 + center.dy * 0.017);
-      final heights = <double>[0, radius * 0.075, radius * 0.13, radius * 0.045];
-      final radii = <double>[0.0, 0.34, 0.72, 1.0];
+      // Shallow, closely spaced elevation rings avoid giant radial wedges.
+      final heights = <double>[
+        0, radius * 0.018, radius * 0.052, radius * 0.086,
+        radius * 0.10, radius * 0.065, radius * 0.012,
+      ];
+      final radii = <double>[0.0, 0.12, 0.28, 0.48, 0.70, 0.87, 1.0];
 
       // Exposed cliff wall: dark vertical side faces create real depth.
       for (var i = 0; i < segmentCount; i++) {
@@ -446,19 +450,17 @@ class _ArenaPainter extends CustomPainter {
           final b = vertex(a1, radii[ring], heights[ring]);
           final c0 = vertex(a0, radii[ring + 1], heights[ring + 1]);
           final d = vertex(a1, radii[ring + 1], heights[ring + 1]);
-          final tint = (i + ring * 2) % 5;
-          // Keep neighboring facets close in tone: strong per-wedge contrast
-          // produced radial "sunburst" bands in the arena capture.
-          final faceColor = Color.lerp(
-            palette[0], palette[1], tint == 0 ? 0.10 : 0.035,
-          )!;
-          final backFaceColor = Color.lerp(palette[0], palette[2], 0.075)!;
-          canvas.drawPath(triangle(a, c0, d), Paint()..color = faceColor);
-          canvas.drawPath(triangle(a, d, b), Paint()..color = backFaceColor);
-          canvas.drawPath(triangle(a, c0, d), Paint()
-            ..color = const Color(0x073D3025)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.4);
+          final ringShade = 0.965 + ring * 0.006;
+          Color soften(Color color) => Color.fromARGB(
+            color.alpha,
+            (color.red * ringShade).round().clamp(0, 255),
+            (color.green * ringShade).round().clamp(0, 255),
+            (color.blue * ringShade).round().clamp(0, 255),
+          );
+          // Continuous tone with no per-wedge outlines: the landform reads
+          // as a softly sculpted surface rather than a radial paper fan.
+          canvas.drawPath(triangle(a, c0, d), Paint()..color = soften(palette[0]));
+          canvas.drawPath(triangle(a, d, b), Paint()..color = soften(palette[1]).withAlpha(0xE8));
         }
       }
 
