@@ -515,9 +515,9 @@ class _Arena3DActorPainter extends CustomPainter {
       }
     }
 
-    final heroes = _map(combat?['heroes']) ?? const {};
+    final heroStates = _map(combat?['heroes']) ?? const {};
     final positions = _map(world['playerPositions']) ?? const {};
-    final heroEntries = heroes.entries.toList()
+    final heroEntries = heroStates.entries.toList()
       ..sort((a, b) {
         final pa = _point(positions[a.key]);
         final pb = _point(positions[b.key]);
