@@ -7,13 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
+import 'package:archer_fm/monsters/monster_progression.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 
-MatchCombatConfiguration _combatConfiguration() {
+MatchCombatConfiguration _combatConfiguration({int p1RunnerLevel = 1}) {
   final catalog = MonsterCatalog({
     for (final type in MonsterType.values)
       type: MonsterDefinition(
@@ -28,20 +29,36 @@ MatchCombatConfiguration _combatConfiguration() {
         ),
       ),
   });
+  final progression = MonsterProgression(
+    catalog: catalog,
+    growth: {
+      for (final type in MonsterType.values)
+        type: const MonsterUpgradeGrowth(
+          healthPerLevel: 0.1,
+          damagePerLevel: 0.05,
+          speedPerLevel: 0.02,
+        ),
+    },
+    costForLevel: (_, level) => level * 10,
+    levels: {MonsterType.runner: p1RunnerLevel},
+  );
   return MatchCombatConfiguration(
     monsterCatalog: catalog,
     projectileSpeed: 120,
     maxActiveProjectiles: 128,
     maxUnitsPerArmy: 100,
     worldUnitsPerSecond: 100,
+    monsterProgressionByPlayer: p1RunnerLevel == 1
+        ? const {}
+        : {'p1': progression},
   );
 }
 
-AuthoritativeMatchSession _combatReadySession() {
+AuthoritativeMatchSession _combatReadySession({int p1RunnerLevel = 1}) {
   final session = AuthoritativeMatchSession(
     code: 'combat1',
     mapFactory: () => ArenaMap.generate(Random(123)),
-    combatConfiguration: _combatConfiguration(),
+    combatConfiguration: _combatConfiguration(p1RunnerLevel: p1RunnerLevel),
   );
   final players = [for (var i = 0; i < 4; i++) session.join()!];
   for (var i = 0; i < players.length; i++) {
@@ -98,6 +115,22 @@ void main() {
     expect(session.combat, isNotNull);
     expect(session.combat!.armies, hasLength(4));
     expect(session.rules!.duration.minutes, 10);
+  });
+
+  test('loaded permanent monster progression scales only its owner army', () {
+    final session = _combatReadySession(p1RunnerLevel: 3);
+    final p1Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p1');
+    final p2Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p2');
+
+    expect(p1Army.units.first.stats.maxHealth, 1200);
+    expect(p1Army.units.first.stats.damage, closeTo(5.5, 1e-9));
+    expect(p2Army.units.first.stats.maxHealth, 1000);
+    expect(
+      session.combat!.configuration.monsterProgressionByPlayer['p1']!.levelOf(
+        MonsterType.runner,
+      ),
+      3,
+    );
   });
 
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
