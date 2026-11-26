@@ -401,3 +401,10 @@ Still to decide or test:
 - The settlement primitive is not yet called by the authoritative match lifecycle. Runtime composition, trusted reward policy, durable retry handling, cloud profile restore and live Supabase acceptance remain incomplete.
 - Current Android CI run: [45908839341](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908839341), still running at this checkpoint. The latest successful Match Rules workflow predates the newest settlement changes; do not infer the new commit is green.
 - **Phase 5 remains IN PROGRESS.** No phase closure or production-readiness claim until latest CI passes and staging database/auth/reconnect/isolation tests are complete.
+
+
+## Phase 5 CI checkpoint — 2026-11-27
+
+- Corrected settlement REST client source passed Match Rules CI: Flutter analysis and the full test suite are green on commit `19306b11ed55f8f719d7f0ed92f69d503b4386ee` ([run 45908955504](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955504)).
+- Android workflow on the same source commit has passed analysis and tests; APK build is still running ([run 45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588)).
+- PostgreSQL migration has not been applied to a live Supabase project. Atomic settlement RPC is implemented but not yet invoked by the authoritative match lifecycle. Phase 5 remains open.
