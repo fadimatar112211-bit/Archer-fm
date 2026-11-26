@@ -86,7 +86,7 @@ class MatchHeroState {
           hero: definition,
           level: level,
           comboResetWindowMs: comboResetWindowMs,
-          maxEnergy: maxHeroEnergy,
+          maxEnergy: maxEnergy,
           energyRegenerationPerSecond: energyRegenerationPerSecond,
           ultimateEnergyCosts: ultimateEnergyCosts,
         ) {
