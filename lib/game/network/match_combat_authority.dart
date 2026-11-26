@@ -59,10 +59,45 @@ class MatchHeroState {
   final int level;
   final HeroCombatRuntime combat;
   late double health;
+  Duration respawnRemaining = Duration.zero;
+  Duration protectionRemaining = Duration.zero;
+  late final Offset spawnPosition;
 
   double get maxHealth => definition.healthAt(level).toDouble();
   bool get isAlive => health > 0;
+  bool get isRespawning => !isAlive && respawnRemaining > Duration.zero;
+  bool get isProtected => protectionRemaining > Duration.zero;
   String get entityId => 'hero_$playerId';
+
+  bool applyDamage(double amount) {
+    if (!amount.isFinite || amount <= 0 || !isAlive || isProtected) {
+      return false;
+    }
+    health = math.max(0, health - amount).toDouble();
+    if (health > 0) return false;
+    respawnRemaining = const Duration(seconds: 10);
+    return true;
+  }
+
+  void advanceLifecycle(Duration elapsed) {
+    if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
+    if (protectionRemaining > Duration.zero) {
+      protectionRemaining = protectionRemaining > elapsed
+          ? protectionRemaining - elapsed
+          : Duration.zero;
+    }
+    if (isAlive || respawnRemaining == Duration.zero) return;
+    respawnRemaining = respawnRemaining > elapsed
+        ? respawnRemaining - elapsed
+        : Duration.zero;
+  }
+
+  bool get respawnReady => !isAlive && respawnRemaining == Duration.zero;
+
+  void respawn() {
+    health = maxHealth;
+    protectionRemaining = const Duration(seconds: 5);
+  }
 }
 
 /// The authoritative combat bridge. It adapts real match heroes and crystals
@@ -97,6 +132,7 @@ class MatchCombatAuthority {
         definition: hero,
         weaponId: weaponId,
       );
+      heroState.spawnPosition = world.playerPositions[playerId]!;
       _heroes[playerId] = heroState;
       armies.add(MonsterArmy(
         ownerId: playerId,
@@ -249,6 +285,11 @@ class MatchCombatAuthority {
     if (elapsed.isNegative) throw ArgumentError.value(elapsed, 'elapsed');
     for (final hero in _heroes.values) {
       hero.combat.advance(elapsed);
+      hero.advanceLifecycle(elapsed);
+      if (hero.respawnReady) {
+        world.setPlayerPosition(hero.playerId, hero.spawnPosition);
+        hero.respawn();
+      }
     }
     _now = _now.add(elapsed);
     final result = monsters.tick(
@@ -293,10 +334,7 @@ class MatchCombatAuthority {
         x: position.dx,
         y: position.dy,
         alive: () => hero.isAlive,
-        damage: (amount) {
-          hero.health = math.max(0, hero.health - amount).toDouble();
-          return !hero.isAlive;
-        },
+        damage: (amount) => _damageHero(hero, amount),
       ));
     }
     for (final army in monsters.armies) {
@@ -329,6 +367,14 @@ class MatchCombatAuthority {
     return targets;
   }
 
+  bool _damageHero(MatchHeroState hero, double amount) {
+    final defeatedNow = hero.applyDamage(amount);
+    if (defeatedNow) {
+      world.loseResourcesFraction(hero.playerId, 0.20);
+    }
+    return defeatedNow;
+  }
+
   Iterable<MonsterExternalEntityAdapter> _externalEntities() sync* {
     for (final hero in _heroes.values) {
       final position = world.playerPositions[hero.playerId]!;
@@ -342,10 +388,7 @@ class MatchCombatAuthority {
         isAliveNow: () => hero.isAlive,
         positionXNow: () => world.playerPositions[hero.playerId]!.dx,
         positionYNow: () => world.playerPositions[hero.playerId]!.dy,
-        applyDamage: (amount) {
-          hero.health = math.max(0, hero.health - amount).toDouble();
-          return !hero.isAlive;
-        },
+        applyDamage: (amount) => _damageHero(hero, amount),
       );
     }
 
