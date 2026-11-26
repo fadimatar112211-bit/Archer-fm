@@ -34,6 +34,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
   int _playersCount = 0;
   bool _allPlayersReady = false;
   String _matchPhase = 'waiting';
+  Map<String, dynamic>? _latestState;
   String _connectionLabel = 'غير متصل';
   String? _lastError;
   bool _busy = false;
@@ -122,6 +123,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
           _events.insert(0, 'تم تأكيد الأمر');
         }
       } else if (type == 'state') {
+        _latestState = message;
         final players = message['players'];
         if (players is List) {
           _playersCount = players.length;
@@ -284,6 +286,10 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (_matchPhase == 'running' || _matchPhase == 'finished') ...[
+                    const SizedBox(height: 12),
+                    _buildLiveHud(),
+                  ],
                   _section(
                     title: 'اختيار البطل والسلاح',
                     child: Column(
@@ -416,6 +422,72 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLiveHud() {
+    final state = _latestState ?? const <String, dynamic>{};
+    final participants = state['participants'] is List
+        ? state['participants'] as List
+        : const [];
+    final combat = state['combat'] is Map
+        ? state['combat'] as Map
+        : const {};
+    final heroes = combat['heroes'] is Map ? combat['heroes'] as Map : const {};
+    final world = state['world'] is Map ? state['world'] as Map : const {};
+    final resources =
+        world['resources'] is Map ? world['resources'] as Map : const {};
+    final crystals = world['livingCrystals'] is Map
+        ? world['livingCrystals'] as Map
+        : const {};
+    final myHero = _playerId == null ? null : heroes[_playerId];
+    final myHealth = myHero is Map ? myHero['health'] : null;
+    final myMaxHealth = myHero is Map ? myHero['maxHealth'] : null;
+    final alive = myHero is Map ? myHero['isAlive'] == true : false;
+    final respawnMs =
+        myHero is Map && myHero['respawnRemainingMs'] is num
+            ? (myHero['respawnRemainingMs'] as num).toInt()
+            : 0;
+    final monsters = combat['monsters'] is List
+        ? (combat['monsters'] as List).length
+        : 0;
+    final myResources = _playerId == null ? null : resources[_playerId];
+    final myCrystals = _playerId == null ? null : crystals[_playerId];
+
+    return _section(
+      title: _matchPhase == 'finished' ? 'نتيجة المباراة' : 'لوحة المباراة المباشرة',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 14,
+            runSpacing: 8,
+            children: [
+              Text('صحتك: ${myHealth ?? '—'} / ${myMaxHealth ?? '—'}'),
+              Text(alive
+                  ? 'الحالة: حي'
+                  : 'الإحياء: ${(respawnMs / 1000).ceil()} ث'),
+              Text('مواردك: ${myResources ?? '—'}'),
+              Text('بلوراتك: ${myCrystals ?? '—'} / 7'),
+              Text('الوحوش الحية: $monsters'),
+            ],
+          ),
+          const Divider(),
+          for (final item in participants)
+            if (item is Map)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('اللاعب ${item['playerId']}')),
+                    Text('النقاط ${item['score'] ?? 0}'),
+                    const SizedBox(width: 12),
+                    Text('البلورات ${item['livingCrystals'] ?? 0}/7'),
+                  ],
+                ),
+              ),
+        ],
       ),
     );
   }
