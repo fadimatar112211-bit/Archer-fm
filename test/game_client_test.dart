@@ -8,8 +8,8 @@ import 'package:archer_fm/game/network/game_client.dart';
 void main() {
   late HttpServer server;
   late GameClient client;
-  late WebSocket socket;
-  late StreamSubscription<dynamic> socketSubscription;
+  WebSocket? socket;
+  StreamSubscription<dynamic>? socketSubscription;
   final received = <Map<String, dynamic>>[];
   late Completer<void> messageReceived;
 
@@ -18,7 +18,7 @@ void main() {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
       socket = await WebSocketTransformer.upgrade(request);
-      socketSubscription = socket.listen((raw) {
+      socketSubscription = socket!.listen((raw) {
         received.add(jsonDecode(raw as String) as Map<String, dynamic>);
         if (!messageReceived.isCompleted) messageReceived.complete();
       });
@@ -29,8 +29,8 @@ void main() {
 
   tearDown(() async {
     await client.dispose();
-    await socketSubscription.cancel();
-    await socket.close();
+    await socketSubscription?.cancel();
+    await socket?.close();
     await server.close(force: true);
   });
 
@@ -52,6 +52,8 @@ void main() {
     expect(welcome['code'], '123456');
     expect(client.isConnected, isTrue);
 
+    received.clear();
+    messageReceived = Completer<void>();
     expect(client.send('attack', {'target': 'p2'}), isTrue);
     await messageReceived.future;
     expect(received.single['type'], 'attack');
