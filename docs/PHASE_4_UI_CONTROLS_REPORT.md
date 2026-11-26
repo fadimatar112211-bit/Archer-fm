@@ -206,3 +206,11 @@
 - Added battlefield rendering coverage at compact and wide landscape sizes with a selected enemy crystal, and updated the 960×540 visual-capture fixture to render a selected enemy monster highlight.
 - Commits: `50121462eda27250bbaebecd1ae85bd74f08ed50` (purchase touch targets/semantics), `8acbd0356f30e0f4f7450abd07ba953e3df807b6` and `0a796e1671eb6c66edd987db79b2ba5178287740` (responsive setup tests), `d272514161460f56d1768b8546d4c30d5bba9ee0` (selected-target visual capture), `9fd0444063aad27d3c706264a9e41b82ebe631c3` and `42e98dbd027b83155065caf0c6933990e5cc891f` (battlefield responsive test and viewport cleanup).
 - These tests were added to the branch and require a fresh complete CI result. The capture workflow can prove that the renderer generated the selected-target scene; it does not replace visual review on a physical phone.
+
+
+## Validation evidence for the eleventh batch
+
+- Latest branch head recorded with this report: `c8f4432d0b60e9a7e46f7371b974de94e85eddf7`.
+- On this exact commit, Match Rules checks passed (run `45899552735`), Monster Army checks passed (run `45899552683`), and the arena visual-capture workflow passed (run `45899552810`).
+- The Android workflow `45899552698` has completed `flutter analyze --no-fatal-infos` and the full `flutter test` suite successfully. Its debug APK build is still running; artifact upload and final workflow completion are not yet confirmed.
+- No emulator or physical-device execution is claimed. The emulator step remains guarded for manual dispatch.
