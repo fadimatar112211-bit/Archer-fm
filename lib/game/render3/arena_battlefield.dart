@@ -91,6 +91,7 @@ class _ArenaPainter extends CustomPainter {
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
+  final List<List<double>>? heightMap;
 
   static const _playerColors = <String, Color>{
     'ranger': Color(0xFF9BE845),
