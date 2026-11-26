@@ -4,12 +4,162 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
+import 'package:archer_fm/game/network/match_combat_authority.dart';
+import 'package:archer_fm/monsters/monster_army.dart';
+import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
+
+MatchCombatConfiguration _combatConfiguration() {
+  final catalog = MonsterCatalog({
+    for (final type in MonsterType.values)
+      type: MonsterDefinition(
+        type: type,
+        baseStats: const MonsterStats(
+          maxHealth: 1000,
+          damage: 5,
+          moveSpeed: 12,
+          attackRange: 10,
+          attackCooldown: Duration(milliseconds: 500),
+          purchaseCost: 10,
+        ),
+      ),
+  });
+  final counts = {for (final type in MonsterType.values) type: 0};
+  counts[MonsterType.runner] = 20;
+  return MatchCombatConfiguration(
+    monsterCatalog: catalog,
+    initialArmies: {
+      for (var i = 1; i <= 4; i++)
+        'p$i': InitialArmySelection(counts),
+    },
+    projectileSpeed: 120,
+    maxActiveProjectiles: 128,
+    worldUnitsPerSecond: 100,
+  );
+}
+
+AuthoritativeMatchSession _combatReadySession() {
+  final session = AuthoritativeMatchSession(
+    code: 'combat1',
+    mapFactory: () => ArenaMap.generate(Random(123)),
+    combatConfiguration: _combatConfiguration(),
+  );
+  final players = [for (var i = 0; i < 4; i++) session.join()!];
+  for (var i = 0; i < players.length; i++) {
+    final hero = archerFmHeroes[i];
+    expect(
+      session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      }),
+      isNull,
+    );
+  }
+  expect(session.handle(players.first, {'type': 'start'}), isNull);
+  return session;
+}
+
 void main() {
+  test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    expect(authority.armies, hasLength(4));
+    expect(authority.armies.fold<int>(
+      0, (sum, army) => sum + army.aliveCount,
+    ), 80);
+
+    final p1Position = session.world!.playerPositions['p1']!;
+    final enemy = authority.armies
+        .firstWhere((army) => army.ownerId == 'p2')
+        .units.first;
+    enemy.positionX = p1Position.dx;
+    enemy.positionY = p1Position.dy;
+
+    session.tick(const Duration(milliseconds: 500));
+    expect(authority.heroes['p1']!.health, lessThan(600));
+
+    final attackAck = session.handle(
+      session.players.first,
+      {'type': 'attack', 'targetId': enemy.id},
+    );
+    expect(attackAck, isNull);
+    expect(enemy.health, 946);
+    expect(authority.heroes['p1']!.combat.comboIndex, 1);
+
+    final ultimateAck = session.handle(
+      session.players.first,
+      {'type': 'ultimate', 'index': 0, 'targetId': enemy.id},
+    );
+    expect(ultimateAck, isNull);
+    expect(authority.heroes['p1']!.combat.comboIndex, 1);
+    expect(enemy.health, lessThan(946));
+
+    expect(
+      session.handle(
+        session.players.first,
+        {'type': 'attack', 'targetId': enemy.id},
+      ),
+      'attack_rejected',
+    );
+  });
+
+  test('connects monster AI attacks directly to canonical crystal HP', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final enemyArmy = authority.armies.firstWhere((army) => army.ownerId == 'p2');
+    final enemy = enemyArmy.units.first;
+    for (final unit in enemyArmy.units.skip(1).toList()) {
+      unit.applyDamage(unit.health);
+      enemyArmy.removeDefeated(unit.id);
+    }
+    final crystal = session.world!.castles.castleOf('p1')!.crystals.first;
+    enemy.positionX = crystal.position.dx;
+    enemy.positionY = crystal.position.dy;
+    final initialHp = crystal.hp;
+
+    session.tick(const Duration(milliseconds: 500));
+
+    expect(crystal.hp, lessThan(initialHp));
+    final p1Standing = (session.snapshot()['participants'] as List)
+        .cast<Map>()
+        .firstWhere((item) => item['playerId'] == 'p1');
+    expect(p1Standing['livingCrystals'], 7);
+  });
+
+  test('server movement is speed-capped and purchases debit the match wallet', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final before = session.world!.playerPositions['p1']!;
+    expect(
+      session.handle(session.players.first, {'type': 'move', 'dx': 1, 'dy': 0}),
+      isNull,
+    );
+    session.tick(const Duration(milliseconds: 100));
+    final after = session.world!.playerPositions['p1']!;
+    expect((after - before).distance, lessThanOrEqualTo(11.21));
+    expect((after - before).distance, greaterThan(0));
+
+    session.world!.creditResources('p1', 100);
+    final beforeCount = authority.armies.firstWhere((a) => a.ownerId == 'p1').aliveCount;
+    expect(
+      session.handle(
+        session.players.first,
+        {'type': 'purchase', 'monsterType': 'runner'},
+      ),
+      isNull,
+    );
+    expect(
+      authority.armies.firstWhere((a) => a.ownerId == 'p1').aliveCount,
+      beforeCount + 1,
+    );
+    expect(session.world!.resources['p1'], 90);
+  });
+
   test('enforces four-player lobby, canonical loadouts and selected duration', () {
     final session = AuthoritativeMatchSession.fromCreateMessage(
       '123456',
