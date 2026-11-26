@@ -1,0 +1,6 @@
+analyzer:
+  exclude:
+    # The Filament experiment is a self-contained Flutter package with its
+    # own pubspec and dependency graph. Do not analyze it as part of the
+    # production application's package.
+    - tools/arena_3d_spike/**
