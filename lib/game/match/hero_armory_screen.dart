@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../game/heroes/hero_roster.dart';
+import '../heroes/hero_roster.dart';
 
 /// Read-only catalogue backed by the canonical combat definitions.
 /// Ownership, unlock prices and upgrades are intentionally not simulated here:
