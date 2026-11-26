@@ -156,7 +156,7 @@ class WebSocketGameHost {
         final socket = _sockets[player.id];
         if (socket == null) continue;
         final snapshot = room is PlayerScopedSnapshotSession
-            ? room.snapshotFor(player)
+            ? (room as PlayerScopedSnapshotSession).snapshotFor(player)
             : sharedSnapshot!;
         _send(socket, snapshot);
       }
