@@ -353,6 +353,9 @@ class WebSocketGameHost {
               .prepareAccount(joinedPlayer, accountId);
         } on Object {
           joinedRoom.leave(joinedPlayer);
+          if (joinedRoom.players.isEmpty) {
+            _rooms.remove(joinedRoom.code);
+          }
           _send(socket, {'type': 'error', 'reason': 'account_restore_failed'});
           return;
         }
