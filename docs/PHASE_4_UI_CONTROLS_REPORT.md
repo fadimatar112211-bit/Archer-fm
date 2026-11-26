@@ -269,3 +269,11 @@
 - Extended the local WebSocket integration test to inject an authoritative `attack_rejected` acknowledgement, verify the Arabic error message, dismiss it, then proceed to the finished-match result assertion.
 - Commits: `bfddea54fa3ad8ddde06db3e3769caa7805c704f` (live error banner), `436e2fe682c0e2581dd4def0ad7a0ffaa4332022` (banner integration coverage).
 - The latest commits need a fresh complete Flutter/Android CI pass.
+
+
+## Input-path integration coverage — movement and attack
+
+- Extended the real local-WebSocket live-match test to drag the on-screen joystick and assert that a positive movement vector reaches the server, followed by an explicit `dx=0, dy=0` stop command on release.
+- The same integration test now taps the manual attack control and verifies that the transmitted attack includes the currently selected enemy target ID (`p2`); the server remains responsible for range, cooldown, ownership and damage checks.
+- The arena screenshot workflow passed on code head `bfc1be2f4b37f40200caf00eaadb5a7fd6134314`. Android validation had completed `flutter analyze --no-fatal-infos` and was running the full test suite; the latest movement/attack additions require a new run and are not yet validated.
+- Commits: `d9e98e1b65de600c6c3702bf76d295ab84a7cc38` (joystick movement/release integration test), `7090c0bfb2c04e2a5582e9720e945af84c1ccc28` (attack target integration test).
