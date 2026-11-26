@@ -87,7 +87,7 @@ The following are findings from the repository tree and source files inspected f
 
 **Status update (2026-11-26): CORE AUTOMATED VERIFICATION PASSED; FULL PHASE 3 STILL PARTIALLY OPEN.** The implementation now has passing analysis/full tests (265 tests) and a four-client WebSocket combat integration test. Verified items include combo timing/interruption, Ultimate unlock/energy/cooldowns, trusted hero-level loading, persistent hero XP, weapon ownership gates, authoritative recruitment/rebuild, mine pickups, crystal/castle rules and replay/forgery rejection. See [Phase 3 Report](PHASE_3_CORE_MATCH_COMBAT_REPORT.md).
 
-Remaining Phase 3 design-dependent items are explicitly not fabricated: permanent rewards/kill attribution and score values; weapon-upgrade stat scaling; burn/poison/freeze/stun runtime effect values/behavior. Account-linked ownership/levels and cloud persistence belong to Phase 5.
+Remaining Phase 3 implementation gates are now tracked with a concrete first-playtest balance file (`config/match-combat.example.json`) and baseline note (`docs/match/PHASE_3_BALANCE_BASELINE.md`). The following live systems still need implementation and verification: permanent rewards/kill attribution and score values; weapon-upgrade stat scaling; burn/poison/freeze/stun runtime effect values/behavior. Account-linked ownership/levels and cloud persistence belong to Phase 5.
 
 ### Phase 4 — UI, controls, accessibility and audio
 1. Inventory every route/screen and identify missing home, profile/account, hero, weapon, inventory/equipment, settings and match-end flows.
