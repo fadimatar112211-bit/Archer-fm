@@ -142,8 +142,15 @@ class _Arena3DAssetLayerState extends State<Arena3DAssetLayer>
         _heroes[playerId] = model;
         model.load().then((_) {
           if (mounted) setState(() {});
-        }).catchError((Object _) {
-          // The battlefield painter keeps a readable fallback marker.
+        }).catchError((Object error, StackTrace stackTrace) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stackTrace,
+              library: 'Archer FM 3D asset loading',
+              context: ErrorDescription('while loading hero "$heroId"'),
+            ),
+          );
         });
       }
     }
@@ -178,8 +185,15 @@ class _Arena3DAssetLayerState extends State<Arena3DAssetLayer>
         _monsters[id] = model;
         model.load().then((_) {
           if (mounted) setState(() {});
-        }).catchError((Object _) {
-          // A simple fallback marker is painted if an asset cannot load.
+        }).catchError((Object error, StackTrace stackTrace) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stackTrace,
+              library: 'Archer FM 3D asset loading',
+              context: ErrorDescription('while loading monster "$modelId"'),
+            ),
+          );
         });
       }
     }
