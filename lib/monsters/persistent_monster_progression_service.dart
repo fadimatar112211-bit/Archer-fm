@@ -50,7 +50,7 @@ class PersistentMonsterProgressionService {
   Future<PersistentMonsterUpgrade> upgrade(
     String trustedAccountId, {
     required MonsterType type,
-    required int currentCurrency,
+    required int Function() readCurrency,
     required bool Function(int amount) tryDebit,
     required void Function(int amount) refund,
   }) =>
@@ -58,11 +58,15 @@ class PersistentMonsterProgressionService {
         final progression = _restore(
           await store.loadData(trustedAccountId),
         );
+        final balance = readCurrency();
+        if (balance < 0) {
+          throw ArgumentError.value(balance, 'currencyBalance');
+        }
         final currentLevel = progression.levelOf(type);
         if (currentLevel >= MonsterProgression.maxLevel) {
           return PersistentMonsterUpgrade(
             result: MonsterUpgradeResult.maxLevelReached,
-            currencyBalance: currentCurrency,
+            currencyBalance: balance,
             level: currentLevel,
           );
         }
@@ -74,14 +78,14 @@ class PersistentMonsterProgressionService {
 
         final result = progression.upgrade(
           type: type,
-          currentCurrency: currentCurrency,
+          currentCurrency: balance,
           tryDebit: tryDebit,
           refund: refund,
         );
         if (result != MonsterUpgradeResult.upgraded) {
           return PersistentMonsterUpgrade(
             result: result,
-            currencyBalance: currentCurrency,
+            currencyBalance: balance,
             level: progression.levelOf(type),
           );
         }
@@ -96,7 +100,7 @@ class PersistentMonsterProgressionService {
         }
         return PersistentMonsterUpgrade(
           result: result,
-          currencyBalance: currentCurrency - cost,
+          currencyBalance: balance - cost,
           level: progression.levelOf(type),
         );
       });
