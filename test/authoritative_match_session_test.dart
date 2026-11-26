@@ -67,6 +67,39 @@ AuthoritativeMatchSession _combatReadySession() {
 }
 
 void main() {
+
+  test('configured factory creates combat-enabled WebSocket room sessions', () {
+    final factory = AuthoritativeMatchSession.configuredFactory(
+      combatConfiguration: _combatConfiguration(),
+      mapFactory: () => ArenaMap.generate(Random(777)),
+    );
+    final session = factory('configured1', {'durationMinutes': 10})
+        as AuthoritativeMatchSession;
+    final players = [for (var i = 0; i < 4; i++) session.join()!];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(
+        session.handle(players[i], {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': hero.weapons.first.id,
+        }),
+        isNull,
+      );
+      expect(
+        session.handle(players[i], {
+          'type': 'army_select',
+          'counts': {'runner': 20},
+        }),
+        isNull,
+      );
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    expect(session.combat, isNotNull);
+    expect(session.combat!.armies, hasLength(4));
+    expect(session.rules!.duration.minutes, 10);
+  });
+
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
     final session = _combatReadySession();
     final authority = session.combat!;
