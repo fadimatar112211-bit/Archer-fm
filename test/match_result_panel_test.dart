@@ -10,6 +10,7 @@ void main() {
       const MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p2',
+          onReturnHome: () {},
           result: {
             'reason': 'timeExpired',
             'winnerId': 'p2',
@@ -40,6 +41,7 @@ void main() {
     expect(find.textContaining('اللاعب p2 (أنت)'), findsOneWidget);
     expect(find.text('النقاط 120'), findsOneWidget);
     expect(find.text('البلورات 5/7'), findsOneWidget);
+    expect(find.text('العودة للقائمة الرئيسية'), findsOneWidget);
   });
 
   testWidgets('shows a tie and crystal victory reason without inventing a winner', (
@@ -49,6 +51,7 @@ void main() {
       const MaterialApp(
         home: MatchResultPanel(
           localPlayerId: 'p4',
+          onReturnHome: () {},
           result: {
             'reason': 'lastCrystalHolder',
             'winnerId': null,
