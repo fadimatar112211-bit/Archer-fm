@@ -256,15 +256,18 @@ class WebSocketGameHost {
         room = sessionFactory(code);
         _rooms[code] = room;
         player = room.join();
+        break;
       case 'join':
         final code = message['code'];
         if (code is String) room = _rooms[code];
         player = room?.join();
+        break;
       case 'resume':
         final code = message['code'];
         final token = message['token'];
         if (code is String) room = _rooms[code];
         if (token is String) player = room?.resume(token);
+        break;
       default:
         _send(socket, {'type': 'error', 'reason': 'bad_handshake'});
         return;
