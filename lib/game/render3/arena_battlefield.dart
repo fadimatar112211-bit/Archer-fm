@@ -99,14 +99,39 @@ class _ArenaPainter extends CustomPainter {
     return index >= 0 ? palette[index % palette.length] : const Color(0xFFE7D7B5);
   }
 
-  Offset _screen(Offset world, Size size, Size worldSize) {
+  Offset _screen(
+    Offset world,
+    Size size,
+    Size worldSize,
+    Offset cameraOrigin,
+  ) {
+    // The arena map is larger than the visible camera window. Follow the
+    // local hero with a 960x540 world-unit viewport, matching the game's
+    // landscape battle camera rather than shrinking the entire map to fit.
+    const cameraWidth = 960.0;
+    const cameraHeight = 540.0;
     final scale = math.min(
-      size.width / worldSize.width,
-      size.height / (worldSize.height * 0.82),
-    ) * 0.94;
-    final projectedX = (world.dx - worldSize.width / 2) * scale;
-    final projectedY = (world.dy - worldSize.height / 2) * scale * 0.82;
-    return Offset(size.width / 2 + projectedX, size.height / 2 + projectedY);
+      size.width / cameraWidth,
+      size.height / (cameraHeight * 0.82),
+    );
+    final projectedX = (world.dx - cameraOrigin.dx) * scale;
+    final projectedY = (world.dy - cameraOrigin.dy) * scale * 0.82;
+    return Offset(projectedX, projectedY);
+  }
+
+  Offset _cameraOrigin(Map world, Size worldSize) {
+    const cameraWidth = 960.0;
+    const cameraHeight = 540.0;
+    final positions = _map(world['playerPositions']);
+    final localPosition = _point(positions?[localPlayerId]);
+    final focus = localPosition ?? Offset(worldSize.width / 2, worldSize.height / 2);
+    final left = (focus.dx - cameraWidth / 2)
+        .clamp(0.0, math.max(0.0, worldSize.width - cameraWidth))
+        .toDouble();
+    final top = (focus.dy - cameraHeight / 2)
+        .clamp(0.0, math.max(0.0, worldSize.height - cameraHeight))
+        .toDouble();
+    return Offset(left, top);
   }
 
   @override
@@ -124,7 +149,9 @@ class _ArenaPainter extends CustomPainter {
       return;
     }
     final worldSize = Size(width, height);
-    Offset project(Offset point) => _screen(point, size, worldSize);
+    final cameraOrigin = _cameraOrigin(world, worldSize);
+    Offset project(Offset point) =>
+        _screen(point, size, worldSize, cameraOrigin);
     final bounds = Offset.zero & size;
     canvas.save();
     canvas.clipRect(bounds);
@@ -139,6 +166,7 @@ class _ArenaPainter extends CustomPainter {
     _drawMonsters(canvas, snapshot, project);
     _drawProjectiles(canvas, snapshot, project);
     _drawHeroes(canvas, snapshot, world, project);
+    _drawMinimap(canvas, snapshot, worldSize);
     canvas.restore();
   }
 
@@ -417,6 +445,88 @@ class _ArenaPainter extends CustomPainter {
         );
       }
     }
+  }
+
+  void _drawMinimap(Canvas canvas, Map<String, dynamic> state, Size worldSize) {
+    final world = _map(state['world']);
+    if (world == null) return;
+    const width = 132.0;
+    const height = 74.0;
+    const margin = 10.0;
+    final rect = Rect.fromLTWH(
+      canvas.getLocalClipBounds().width - width - margin,
+      margin,
+      width,
+      height,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(7)),
+      Paint()..color = const Color(0xDD101A17),
+    );
+    final inner = rect.deflate(5);
+    canvas.drawRect(inner, Paint()..color = const Color(0xFF36513A));
+    Offset miniPoint(Offset point) => Offset(
+          inner.left + point.dx / worldSize.width * inner.width,
+          inner.top + point.dy / worldSize.height * inner.height,
+        );
+    for (final raw in _list(world['rivers'])) {
+      final river = _map(raw);
+      if (river == null) continue;
+      final points = _list(river['points']).map(_point).whereType<Offset>().toList();
+      if (points.length < 2) continue;
+      final path = Path()..moveTo(miniPoint(points.first).dx, miniPoint(points.first).dy);
+      for (final point in points.skip(1)) {
+        final p = miniPoint(point);
+        path.lineTo(p.dx, p.dy);
+      }
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFF4A9EC4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+    for (final raw in _list(world['castles'])) {
+      final castle = _map(raw);
+      final anchor = _point(_map(castle)?['anchor']);
+      if (castle == null || anchor == null || castle['fallen'] == true) continue;
+      canvas.drawCircle(
+        miniPoint(anchor),
+        3.5,
+        Paint()..color = _ownerColor(castle['ownerId']?.toString(), state),
+      );
+    }
+    final positions = _map(world['playerPositions']) ?? const {};
+    for (final entry in positions.entries) {
+      final point = _point(entry.value);
+      if (point == null) continue;
+      final p = miniPoint(point);
+      canvas.drawCircle(
+        p,
+        entry.key == localPlayerId ? 3.5 : 2.5,
+        Paint()..color = entry.key == localPlayerId
+            ? const Color(0xFFFFFFFF)
+            : const Color(0xFFFFC36A),
+      );
+    }
+    final combat = _map(state['combat']);
+    for (final raw in _list(combat?['monsters'])) {
+      final point = _point(raw);
+      if (point == null) continue;
+      canvas.drawCircle(
+        miniPoint(point),
+        1.5,
+        Paint()..color = const Color(0xFFFF6D5F),
+      );
+    }
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(7)),
+      Paint()
+        ..color = const Color(0x99FFFFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
   }
 
   void _drawProjectiles(
