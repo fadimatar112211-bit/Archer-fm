@@ -15,7 +15,10 @@ import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 
-MatchCombatConfiguration _combatConfiguration({int p1RunnerLevel = 1}) {
+MatchCombatConfiguration _combatConfiguration({
+  int p1RunnerLevel = 1,
+  double weaponUpgradeDamagePerLevel = 0,
+}) {
   final catalog = MonsterCatalog({
     for (final type in MonsterType.values)
       type: MonsterDefinition(
@@ -56,6 +59,7 @@ MatchCombatConfiguration _combatConfiguration({int p1RunnerLevel = 1}) {
       for (final hero in archerFmHeroes)
         for (final ultimate in hero.ultimates) ultimate.id: 20,
     },
+    weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
     monsterProgressionByPlayer: p1RunnerLevel == 1
         ? const {}
         : {'p1': progression},
@@ -260,6 +264,44 @@ void main() {
     expect(p1.combat.comboIndex, 1);
     p1.applyDamage(1);
     expect(p1.combat.comboIndex, 0);
+  });
+
+  test('selected weapon upgrades are loaded only from trusted server context', () {
+    final session = AuthoritativeMatchSession(
+      code: 'weapon-upgrades',
+      mapFactory: () => ArenaMap.generate(Random(901)),
+      combatConfiguration: _combatConfiguration(
+        weaponUpgradeDamagePerLevel: 0.05,
+      ),
+      weaponUpgradeLevelForPlayer: (playerId, weaponId) =>
+          playerId == 'p1' ? 2 : 0,
+    );
+    final players = [for (var i = 0; i < 4; i++) session.join()!];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+        // Untrusted extra fields are ignored by the server.
+        'weaponUpgradeLevel': 40,
+      }), isNull);
+      expect(session.handle(players[i], {
+        'type': 'army_select',
+        'counts': {'runner': 20},
+      }), isNull);
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+
+    final upgraded = session.combat!.heroes['p1']!.combat;
+    final baseline = session.combat!.heroes['p2']!.combat;
+    expect(upgraded.weaponUpgradeLevel, 2);
+    expect(baseline.weaponUpgradeLevel, 0);
+    expect(upgraded.weaponUpgradeMultiplier, closeTo(1.1, 1e-9));
+    expect(
+      upgraded.attack().damage,
+      (baseline.attack().damage * 1.1).round(),
+    );
   });
 
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
