@@ -27,10 +27,12 @@ class ArenaBattlefield extends StatelessWidget {
     super.key,
     required this.snapshot,
     required this.localPlayerId,
+    this.selectedTargetId,
   });
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
+  final String? selectedTargetId;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class ArenaBattlefield extends StatelessWidget {
                         painter: _ArenaPainter(
                           snapshot,
                           localPlayerId,
+                          selectedTargetId: selectedTargetId,
                           heightMap: terrain.data,
                         ),
                         child: const SizedBox.expand(),
@@ -69,6 +72,7 @@ class ArenaBattlefield extends StatelessWidget {
                       child: Arena3DAssetLayer(
                         snapshot: snapshot,
                         localPlayerId: localPlayerId,
+                        selectedTargetId: selectedTargetId,
                       ),
                     ),
                   ],
@@ -87,10 +91,12 @@ class ArenaBattlefield extends StatelessWidget {
 }
 
 class _ArenaPainter extends CustomPainter {
-  _ArenaPainter(this.snapshot, this.localPlayerId, {this.heightMap});
+  _ArenaPainter(this.snapshot, this.localPlayerId,
+      {this.heightMap, this.selectedTargetId});
 
   final Map<String, dynamic> snapshot;
   final String localPlayerId;
+  final String? selectedTargetId;
   final List<List<double>>? heightMap;
 
   static const _playerColors = <String, Color>{
@@ -220,7 +226,7 @@ class _ArenaPainter extends CustomPainter {
     _drawObstacles(canvas, world, project);
     _drawPickups(canvas, world, project);
     _drawMines(canvas, world, project);
-    _drawCastles(canvas, world, project);
+    _drawCastles(canvas, world, project, selectedTargetId: selectedTargetId);
     _drawFogOfWar(canvas, world, project, bounds);
     _drawProjectiles(canvas, snapshot, project);
     _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
@@ -1244,7 +1250,8 @@ class _ArenaPainter extends CustomPainter {
       ..strokeWidth = 1.1);
   }
 
-  void _drawCastles(Canvas canvas, Map world, Offset Function(Offset) project) {
+  void _drawCastles(Canvas canvas, Map world, Offset Function(Offset) project,
+      {String? selectedTargetId}) {
     for (final raw in _list(world['castles'])) {
       final castle = _map(raw);
       if (castle == null) continue;
@@ -1362,6 +1369,21 @@ class _ArenaPainter extends CustomPainter {
         final point = _point(crystal);
         if (point == null) continue;
         final p = project(point);
+        if (crystal['id']?.toString() == selectedTargetId) {
+          canvas.drawCircle(
+            p,
+            19,
+            Paint()..color = const Color(0x44FFD66B),
+          );
+          canvas.drawCircle(
+            p,
+            19,
+            Paint()
+              ..color = const Color(0xFFFFD66B)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.6,
+          );
+        }
         final hp = _number(crystal['hp']) ?? 0;
         final maxHp = _number(crystal['maxHp']) ?? 1;
         final fraction = (hp / maxHp).clamp(0.0, 1.0);
