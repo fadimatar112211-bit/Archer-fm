@@ -50,7 +50,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 ## Concrete match-session contract added
 
 - Create a room with `durationMinutes` (defaults to 30; accepted values are validated against the approved duration list).
-- A room accepts at most four players. The match cannot start until all four have selected a hero and one of that hero's canonical weapons.
+- A room accepts at most four players. The match cannot start until all four have selected a hero and one of that hero's canonical weapons. By default only the hero's starting weapon is selectable; other weapons require an injected trusted progression ownership validator.
 - Client messages may select a valid roster loadout, start the full lobby, or forfeit. Client-submitted score/crystal/reward mutations are not accepted.
 - The server-side `awardScore` and `updateLivingCrystals` methods are the only exposed paths for trusted combat/castle integrations to update match scoring and crystal counts.
 - The session snapshot includes lobby selections, match phase/clock, participant score/crystal state, and final standings.
