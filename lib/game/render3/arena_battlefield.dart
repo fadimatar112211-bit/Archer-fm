@@ -343,14 +343,6 @@ class _ArenaPainter extends CustomPainter {
         final second = lit(palette[1], illumination * 0.94);
         canvas.drawPath(triangle(a, b, d), Paint()..color = first);
         canvas.drawPath(triangle(a, d, e), Paint()..color = second);
-        canvas.drawPath(triangle(a, b, d), Paint()
-          ..color = const Color(0x18312B22)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.45);
-        canvas.drawPath(triangle(a, b, d), Paint()
-          ..color = const Color(0x12312A22)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.45);
       }
     }
   }
@@ -372,24 +364,20 @@ class _ArenaPainter extends CustomPainter {
   /// faces with explicit world height; it is not a flat tinted circle.
   /// Simulation coordinates stay unchanged and all gameplay overlays are
   /// painted afterwards using the same ground projection.
+  /// Smooth organic biome landforms layered over the continuous height-map
+  /// ground. Avoids radial triangle fans: the surface is shaded with a soft
+  /// gradient and a gently irregular contour instead of spokes or wedge faces.
   void _drawTerrain3D(
     Canvas canvas,
     Map world,
     Offset Function(Offset) project,
   ) {
-    // Higher angular resolution removes the oversized wedge facets visible at 16:9.
-    // Keep the ring count modest so the projected painter remains mobile-friendly.
-    const segmentCount = 72;
     const palettes = <String, List<Color>>{
-      'forest': [Color(0xFF557C43), Color(0xFF315D3B), Color(0xFF24452F)],
-      'desert': [Color(0xFFD5B16C), Color(0xFFB8874D), Color(0xFF8B603D)],
-      'snow': [Color(0xFFDDEAF0), Color(0xFF9FBCC9), Color(0xFF718E9D)],
-      'volcanic': [Color(0xFF805044), Color(0xFF563A35), Color(0xFF342B2A)],
+      'forest': [Color(0x66577E48), Color(0x22345D3A), Color(0x00345D3A)],
+      'desert': [Color(0x66D5B16C), Color(0x22B8874D), Color(0x00B8874D)],
+      'snow': [Color(0x66DDEAF0), Color(0x229FBCC9), Color(0x009FBCC9)],
+      'volcanic': [Color(0x66805044), Color(0x22563A35), Color(0x00563A35)],
     };
-    Offset elevated(Offset point, double height) =>
-        project(point) + Offset(0, -height);
-    Path triangle(Offset a, Offset b, Offset c) =>
-        Path()..moveTo(a.dx, a.dy)..lineTo(b.dx, b.dy)..lineTo(c.dx, c.dy)..close();
 
     for (final raw in _list(world['biomes'])) {
       final biome = _map(raw);
@@ -397,88 +385,83 @@ class _ArenaPainter extends CustomPainter {
       final center = _point(biome);
       final radius = _number(biome['radius']);
       if (center == null || radius == null || radius < 48) continue;
+
       final kind = biome['kind']?.toString() ?? 'forest';
       final palette = palettes[kind] ?? palettes['forest']!;
-      final phase = (biome['seed'] is num ? (biome['seed'] as num).toDouble() : center.dx * 0.013 + center.dy * 0.017);
-      // Shallow, closely spaced elevation rings avoid giant radial wedges.
-      final heights = <double>[
-        0, radius * 0.018, radius * 0.052, radius * 0.086,
-        radius * 0.10, radius * 0.065, radius * 0.012,
-      ];
-      final radii = <double>[0.0, 0.12, 0.28, 0.48, 0.70, 0.87, 1.0];
+      final seed = biome['seed'] is num
+          ? (biome['seed'] as num).toDouble()
+          : center.dx * 0.013 + center.dy * 0.017;
+      final projectedCenter = project(center);
+      final projectedRadius = (project(center + Offset(radius, 0)) -
+              projectedCenter)
+          .distance;
+      if (!projectedRadius.isFinite || projectedRadius <= 0) continue;
 
-      // Exposed cliff wall: dark vertical side faces create real depth.
-      for (var i = 0; i < segmentCount; i++) {
-        final a0 = i * math.pi * 2 / segmentCount;
-        final a1 = (i + 1) * math.pi * 2 / segmentCount;
-        final wobble0 = 1 + 0.035 * math.sin(a0 * 5 + phase);
-        final wobble1 = 1 + 0.035 * math.sin(a1 * 5 + phase);
-        final p0 = center + Offset(math.cos(a0), math.sin(a0)) * radius * wobble0;
-        final p1 = center + Offset(math.cos(a1), math.sin(a1)) * radius * wobble1;
-        final top0 = elevated(p0, heights.last);
-        final top1 = elevated(p1, heights.last);
-        final foot0 = project(p0);
-        final foot1 = project(p1);
-        final side = Path()
-          ..moveTo(foot0.dx, foot0.dy)
-          ..lineTo(foot1.dx, foot1.dy)
-          ..lineTo(top1.dx, top1.dy)
-          ..lineTo(top0.dx, top0.dy)
-          ..close();
-        final shade = i % 3 == 0 ? palette[2] : palette[1];
-        canvas.drawPath(side, Paint()..color = shade);
-        canvas.drawLine(top0, top1, Paint()
-          ..color = palette[0].withAlpha(0xAA)
-          ..strokeWidth = 1.1);
+      // A low-frequency contour gives each biome a natural silhouette without
+      // repeating circular rings or angular radial wedges.
+      const segments = 64;
+      final contour = <Offset>[];
+      for (var i = 0; i < segments; i++) {
+        final angle = i * math.pi * 2 / segments;
+        final organic = 1 +
+            0.045 * math.sin(angle * 3 + seed) +
+            0.022 * math.cos(angle * 5 - seed * 0.7) +
+            0.012 * math.sin(angle * 8 + seed * 1.3);
+        final worldPoint = center +
+            Offset(math.cos(angle), math.sin(angle)) * (radius * organic);
+        contour.add(project(worldPoint));
       }
 
-      // Concentric triangulated rings. Each vertex has a distinct elevation;
-      // directional face shading makes the mesh read as a sculpted landform.
-      for (var ring = 0; ring < radii.length - 1; ring++) {
-        for (var i = 0; i < segmentCount; i++) {
-          final a0 = i * math.pi * 2 / segmentCount;
-          final a1 = (i + 1) * math.pi * 2 / segmentCount;
-          Offset vertex(double angle, double radial, double baseHeight) {
-            final ridge = 1 + 0.035 * math.sin(angle * 5 + phase) +
-                0.018 * math.cos(angle * 9 - phase);
-            final point = center + Offset(math.cos(angle), math.sin(angle)) *
-                (radius * radial * ridge);
-            final local = (math.sin(angle * 3 + phase) + 1) * 0.5;
-            return elevated(point, baseHeight * (0.82 + local * 0.18));
-          }
-          final a = vertex(a0, radii[ring], heights[ring]);
-          final b = vertex(a1, radii[ring], heights[ring]);
-          final c0 = vertex(a0, radii[ring + 1], heights[ring + 1]);
-          final d = vertex(a1, radii[ring + 1], heights[ring + 1]);
-          final ringShade = 0.965 + ring * 0.006;
-          Color soften(Color color) => Color.fromARGB(
-            color.alpha,
-            (color.red * ringShade).round().clamp(0, 255),
-            (color.green * ringShade).round().clamp(0, 255),
-            (color.blue * ringShade).round().clamp(0, 255),
-          );
-          // Continuous tone with no per-wedge outlines: the landform reads
-          // as a softly sculpted surface rather than a radial paper fan.
-          canvas.drawPath(triangle(a, c0, d), Paint()..color = soften(palette[0]));
-          canvas.drawPath(triangle(a, d, b), Paint()..color = soften(palette[1]).withAlpha(0xE8));
+      final path = Path()..moveTo(
+          (contour.first.dx + contour.last.dx) * 0.5,
+          (contour.first.dy + contour.last.dy) * 0.5,
+        );
+      for (var i = 0; i < contour.length; i++) {
+        final current = contour[i];
+        final next = contour[(i + 1) % contour.length];
+        final midpoint = Offset(
+          (current.dx + next.dx) * 0.5,
+          (current.dy + next.dy) * 0.5,
+        );
+        path.quadraticBezierTo(
+          current.dx,
+          current.dy,
+          midpoint.dx,
+          midpoint.dy,
+        );
+      }
+      path.close();
+
+      final bounds = Rect.fromCircle(
+        center: projectedCenter,
+        radius: projectedRadius * 1.08,
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader = RadialGradient(
+            colors: palette,
+            stops: const [0.0, 0.68, 1.0],
+            radius: 1.0,
+          ).createShader(bounds),
+      );
+
+      // A restrained lower-edge shadow anchors the landform without outlining
+      // every segment or obscuring the world-anchored biome ground details.
+      final shadow = Path();
+      for (var i = 0; i < contour.length; i++) {
+        final point = contour[i].translate(0, 3.5);
+        if (i == 0) {
+          shadow.moveTo(point.dx, point.dy);
+        } else {
+          shadow.lineTo(point.dx, point.dy);
         }
       }
-
-      // Small raised stone outcrops sit on the landform as faceted mesh peaks.
-      for (var rock = 0; rock < 7; rock++) {
-        final angle = rock * 2.399963229728653 + phase;
-        final distance = radius * (0.25 + (rock % 3) * 0.19);
-        final point = center + Offset(math.cos(angle), math.sin(angle)) * distance;
-        final base = project(point);
-        final scale = math.max(2.5, radius * 0.035);
-        final peak = base + Offset(0, -scale * (1.7 + (rock % 3) * 0.35));
-        final left = base + Offset(-scale, -scale * 0.45);
-        final right = base + Offset(scale, -scale * 0.45);
-        final back = base + Offset(0, -scale * 0.9);
-        canvas.drawPath(triangle(left, back, peak), Paint()..color = palette[0]);
-        canvas.drawPath(triangle(back, right, peak), Paint()..color = palette[1]);
-        canvas.drawPath(triangle(left, right, base), Paint()..color = palette[2]);
-      }
+      shadow.close();
+      canvas.drawPath(
+        shadow,
+        Paint()..color = const Color(0x12302018),
+      );
     }
   }
 
