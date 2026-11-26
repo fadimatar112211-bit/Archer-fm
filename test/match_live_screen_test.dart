@@ -18,6 +18,7 @@ class _FakeGameClient extends GameClient {
   final sent = <Map<String, Object?>>[];
   GameConnectionState _connectionState = GameConnectionState.disconnected;
   bool created = false;
+  bool _disposed = false;
 
   @override
   Stream<Map<String, dynamic>> get messages => _messageController.stream;
@@ -56,9 +57,12 @@ class _FakeGameClient extends GameClient {
 
   @override
   Future<void> dispose({bool leave = false}) async {
+    if (_disposed) return;
+    _disposed = true;
     _connectionState = GameConnectionState.closed;
     await _messageController.close();
     await _stateController.close();
+    await super.dispose(leave: leave);
   }
 
   static final Map<String, dynamic> _runningSnapshot = {
