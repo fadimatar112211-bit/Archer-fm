@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -10,6 +11,13 @@ import 'match_combat_authority.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_army.dart';
 import 'websocket_game_host.dart';
+
+typedef MatchSettlementHandler = Future<void> Function({
+  required String matchId,
+  required String accountId,
+  required MatchStanding standing,
+  required MatchFinishReason finishReason,
+});
 
 /// Concrete four-player match session used by [WebSocketGameHost].
 ///
@@ -27,7 +35,11 @@ class AuthoritativeMatchSession
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
-  })  : _mapFactory = mapFactory,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
+  })  : _onMatchSettlement = onMatchSettlement,
+        _onMatchSettlementError = onMatchSettlementError,
+        _mapFactory = mapFactory,
         _combatConfiguration = combatConfiguration,
         duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
@@ -44,6 +56,8 @@ class AuthoritativeMatchSession
     int Function(String playerId, String heroId)? heroLevelForPlayer,
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
   }) {
     return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
           roomCode,
@@ -53,6 +67,8 @@ class AuthoritativeMatchSession
           weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
           mapFactory: mapFactory,
           combatConfiguration: combatConfiguration,
+          onMatchSettlement: onMatchSettlement,
+          onMatchSettlementError: onMatchSettlementError,
         );
   }
 
@@ -64,6 +80,8 @@ class AuthoritativeMatchSession
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
   }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
@@ -77,6 +95,8 @@ class AuthoritativeMatchSession
       weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
       mapFactory: mapFactory,
       combatConfiguration: combatConfiguration,
+      onMatchSettlement: onMatchSettlement,
+      onMatchSettlementError: onMatchSettlementError,
     );
   }
 
@@ -85,6 +105,12 @@ class AuthoritativeMatchSession
   final MatchDuration duration;
   final ArenaMap Function()? _mapFactory;
   final MatchCombatConfiguration? _combatConfiguration;
+  final MatchSettlementHandler? _onMatchSettlement;
+  final void Function(Object error)? _onMatchSettlementError;
+  final Map<String, _PendingMatchSettlement> _pendingSettlements = {};
+  bool _settlementInFlight = false;
+  bool _settlementsQueued = false;
+  Duration _settlementRetryElapsed = Duration.zero;
   MatchCombatAuthority? combat;
   MatchWorldAuthority? world;
   int _worldNowMs = 0;
@@ -299,6 +325,7 @@ class AuthoritativeMatchSession
         final rules = _rules;
         if (rules == null || rules.phase != MatchPhase.running) return 'match_not_running';
         final result = rules.forfeit(current.id);
+        if (result.accepted) _queueFinishedSettlements();
         return result.accepted ? null : 'forfeit_rejected';
       case 'move':
         if (_rules?.phase != MatchPhase.running) return 'match_not_running';
@@ -460,10 +487,19 @@ class AuthoritativeMatchSession
   @override
   void tick(Duration elapsed) {
     final rules = _rules;
+    if (rules?.phase == MatchPhase.finished) {
+      _settlementRetryElapsed += elapsed;
+      if (_settlementRetryElapsed >= const Duration(seconds: 1)) {
+        _settlementRetryElapsed = Duration.zero;
+        _attemptPendingSettlements();
+      }
+      return;
+    }
     if (rules?.phase != MatchPhase.running) return;
     rules!.advance(elapsed);
     if (rules.phase != MatchPhase.running) {
       combat?.clear();
+      _queueFinishedSettlements();
       return;
     }
     final authority = combat;
@@ -788,6 +824,59 @@ class AuthoritativeMatchSession
     return result;
   }
 
+  void _queueFinishedSettlements() {
+    if (_settlementsQueued) return;
+    final result = _rules?.result;
+    final handler = _onMatchSettlement;
+    if (result == null || handler == null) return;
+    _settlementsQueued = true;
+    for (final standing in result.standings) {
+      final player = _find(standing.playerId);
+      final accountId = player?.accountId;
+      if (accountId == null || accountId.isEmpty) continue;
+      _pendingSettlements[accountId] = _PendingMatchSettlement(
+        accountId: accountId,
+        standing: standing,
+        finishReason: result.reason,
+      );
+    }
+    _attemptPendingSettlements();
+  }
+
+  void _attemptPendingSettlements() {
+    final handler = _onMatchSettlement;
+    if (_settlementInFlight || handler == null || _pendingSettlements.isEmpty) {
+      return;
+    }
+    unawaited(_persistPendingSettlements(handler));
+  }
+
+  Future<void> _persistPendingSettlements(
+    MatchSettlementHandler handler,
+  ) async {
+    if (_settlementInFlight) return;
+    _settlementInFlight = true;
+    try {
+      for (final pending in _pendingSettlements.values.toList()) {
+        try {
+          await handler(
+            matchId: code,
+            accountId: pending.accountId,
+            standing: pending.standing,
+            finishReason: pending.finishReason,
+          );
+          _pendingSettlements.remove(pending.accountId);
+        } on Object catch (error) {
+          _onMatchSettlementError?.call(error);
+          // Keep the entry queued. The host's next ticks retry it; the
+          // database RPC is idempotent if the previous response was lost.
+        }
+      }
+    } finally {
+      _settlementInFlight = false;
+    }
+  }
+
   void _syncCrystalStandings() {
     final rules = _rules;
     final matchWorld = world;
@@ -830,4 +919,16 @@ class _MatchPlayer implements GameServerPlayer {
   Map<String, Object?>? lastCombatAction;
   Map<String, Object?>? lastPurchase;
   Map<String, Object?>? lastRebuild;
+}
+
+class _PendingMatchSettlement {
+  const _PendingMatchSettlement({
+    required this.accountId,
+    required this.standing,
+    required this.finishReason,
+  });
+
+  final String accountId;
+  final MatchStanding standing;
+  final MatchFinishReason finishReason;
 }
