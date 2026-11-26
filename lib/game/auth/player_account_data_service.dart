@@ -79,7 +79,7 @@ class PlayerAccountDataService {
         .order('created_at', ascending: false)
         .limit(limit);
     return rows
-        .map<PlayerCurrencyTransaction.fromJson)
+        .map((row) => PlayerCurrencyTransaction.fromJson(row))
         .toList(growable: false);
   }
 
@@ -95,7 +95,7 @@ class PlayerAccountDataService {
         .eq('user_id', _userId)
         .order('completed_at', ascending: false)
         .limit(limit);
-    return rows.map(PlayerMatchResult.fromJson).toList(growable: false);
+    return rows.map((row) => PlayerMatchResult.fromJson(row)).toList(growable: false);
   }
 
   static void validateDisplayName(String value) {
