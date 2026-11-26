@@ -176,8 +176,21 @@ class _ArenaPainter extends CustomPainter {
     canvas.save();
     canvas.clipRect(bounds);
 
-    canvas.drawRect(bounds, Paint()..color = const Color(0xFF263C2C));
+    canvas.drawRect(
+      bounds,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF344F38),
+            Color(0xFF263F30),
+            Color(0xFF1D3429),
+          ],
+        ).createShader(bounds),
+    );
     _drawBiomes(canvas, world, project);
+    _drawTerrainTexture(canvas, size, cameraOrigin, project);
     _drawRivers(canvas, world, project);
     _drawObstacles(canvas, world, project);
     _drawPickups(canvas, world, project);
@@ -212,6 +225,78 @@ class _ArenaPainter extends CustomPainter {
     }
   }
 
+  /// Adds deterministic, camera-stable ground detail without introducing
+  /// textures, random state, or per-frame allocations outside the visible map.
+  /// Every mark is derived from its world-grid coordinate, so the terrain
+  /// appears anchored while the follow camera moves.
+  void _drawTerrainTexture(
+    Canvas canvas,
+    Size viewport,
+    Offset cameraOrigin,
+    Offset Function(Offset) project,
+  ) {
+    const cell = 96.0;
+    final columns = (viewport.width / (viewport.width / 960.0)).ceil() ~/ 1 + 2;
+    final rows = (viewport.height / (viewport.height / 442.8)).ceil() ~/ 1 + 2;
+    final startX = (cameraOrigin.dx / cell).floor() - 1;
+    final startY = (cameraOrigin.dy / cell).floor() - 1;
+    for (var gy = startY; gy < startY + rows; gy++) {
+      for (var gx = startX; gx < startX + columns; gx++) {
+        final seed = (gx * 73856093) ^ (gy * 19349663);
+        final x = gx * cell + 17 + (seed.abs() % 57).toDouble();
+        final y = gy * cell + 13 + ((seed >> 5).abs() % 61).toDouble();
+        final point = project(Offset(x, y));
+        final variant = seed.abs() % 5;
+        if (variant == 0 || variant == 3) {
+          final tuft = Path()
+            ..moveTo(point.dx - 3, point.dy + 2)
+            ..quadraticBezierTo(
+              point.dx - 1,
+              point.dy - 4,
+              point.dx,
+              point.dy - 1,
+            )
+            ..quadraticBezierTo(
+              point.dx + 2,
+              point.dy - 5,
+              point.dx + 4,
+              point.dy + 2,
+            );
+          canvas.drawPath(
+            tuft,
+            Paint()
+              ..color = variant == 0
+                  ? const Color(0x553F8050)
+                  : const Color(0x444F8A51)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.25
+              ..strokeCap = StrokeCap.round,
+          );
+        } else if (variant == 1) {
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: point,
+              width: 4.5,
+              height: 2.4,
+            ),
+            Paint()..color = const Color(0x335F7650),
+          );
+          canvas.drawCircle(
+            point.translate(-0.7, -0.5),
+            0.7,
+            Paint()..color = const Color(0x447F9360),
+          );
+        } else {
+          canvas.drawCircle(
+            point,
+            1.1,
+            Paint()..color = const Color(0x334D7650),
+          );
+        }
+      }
+    }
+  }
+
   void _drawRivers(Canvas canvas, Map world, Offset Function(Offset) project) {
     for (final raw in _list(world['rivers'])) {
       final river = _map(raw);
@@ -227,12 +312,31 @@ class _ArenaPainter extends CustomPainter {
       final start = project(points.first);
       final end = project(points.last);
       final projectedWidth = (project(points.first + Offset(width, 0)) - start).distance;
+      // A darker, soft bank separates the water from grass and stone.
       canvas.drawPath(
         path,
         Paint()
-          ..color = const Color(0xFF286F9A)
+          ..color = const Color(0x66302F27)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = projectedWidth * 1.32
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFF205B7B)
           ..style = PaintingStyle.stroke
           ..strokeWidth = projectedWidth
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFF367FA0)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = projectedWidth * 0.72
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
@@ -279,17 +383,66 @@ class _ArenaPainter extends CustomPainter {
       final p = project(point);
       final r = math.max(4.0, (project(point + Offset(radius, 0)) - p).distance).toDouble();
       final tree = obstacle['kind'] == 'tree';
-      canvas.drawCircle(p + const Offset(0, 3), r, Paint()..color = const Color(0x66000000));
-      canvas.drawCircle(
-        p,
-        r,
-        Paint()..color = tree ? const Color(0xFF315B37) : const Color(0xFF777C78),
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: p + Offset(r * 0.12, r * 0.72),
+          width: r * 2.15,
+          height: r * 0.82,
+        ),
+        Paint()..color = const Color(0x55302D24),
       );
-      canvas.drawCircle(
-        p + Offset(-r * 0.25, -r * 0.25),
-        r * 0.58,
-        Paint()..color = tree ? const Color(0xFF54864B) : const Color(0xFFADB0A8),
-      );
+      if (tree) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: p + Offset(0, r * 0.42),
+              width: r * 0.34,
+              height: r * 0.95,
+            ),
+            Radius.circular(r * 0.12),
+          ),
+          Paint()..color = const Color(0xFF76543A),
+        );
+        canvas.drawCircle(
+          p + Offset(-r * 0.32, -r * 0.12),
+          r * 0.72,
+          Paint()..color = const Color(0xFF315B37),
+        );
+        canvas.drawCircle(
+          p + Offset(r * 0.3, -r * 0.18),
+          r * 0.68,
+          Paint()..color = const Color(0xFF3C7040),
+        );
+        canvas.drawCircle(
+          p + Offset(-r * 0.08, -r * 0.48),
+          r * 0.72,
+          Paint()..color = const Color(0xFF54864B),
+        );
+        canvas.drawCircle(
+          p + Offset(-r * 0.28, -r * 0.68),
+          r * 0.2,
+          Paint()..color = const Color(0xFF79A95D),
+        );
+      } else {
+        canvas.drawCircle(
+          p,
+          r,
+          Paint()..color = const Color(0xFF666F6B),
+        );
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: p + Offset(-r * 0.2, -r * 0.28),
+            width: r * 1.05,
+            height: r * 0.58,
+          ),
+          Paint()..color = const Color(0xFFADB0A8),
+        );
+        canvas.drawCircle(
+          p + Offset(r * 0.34, r * 0.18),
+          r * 0.2,
+          Paint()..color = const Color(0xFF858B83),
+        );
+      }
     }
   }
 
