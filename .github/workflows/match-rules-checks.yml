@@ -28,6 +28,7 @@ on:
       - 'test/match_rules_test.dart'
       - 'test/game_client_test.dart'
       - 'test/websocket_game_host_test.dart'
+      - 'test/authoritative_match_session_test.dart'
       - 'test/game_client_reconnect_test.dart'
       - 'test/hero_progress_test.dart'
       - 'test/hero_progression_service_test.dart'
