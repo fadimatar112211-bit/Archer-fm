@@ -69,11 +69,15 @@ MatchCombatConfiguration _combatConfiguration({
   );
 }
 
-AuthoritativeMatchSession _combatReadySession({int p1RunnerLevel = 1}) {
+AuthoritativeMatchSession _combatReadySession({
+  int p1RunnerLevel = 1,
+  int Function(String playerId, String heroId)? heroLevelForPlayer,
+}) {
   final session = AuthoritativeMatchSession(
     code: 'combat1',
     mapFactory: () => ArenaMap.generate(Random(123)),
     combatConfiguration: _combatConfiguration(p1RunnerLevel: p1RunnerLevel),
+    heroLevelForPlayer: heroLevelForPlayer,
   );
   final players = [for (var i = 0; i < 4; i++) session.join()!];
   for (var i = 0; i < players.length; i++) {
@@ -392,6 +396,73 @@ void main() {
       authority.moveHero(
         victim.id,
         const Offset(1, 0),
+        const Duration(milliseconds: 100),
+      ),
+      isNot(victimPosition),
+    );
+  });
+
+  test('Shadow basic attacks apply live poison ticks and preserve kill attribution', () {
+    final session = _combatReadySession();
+    final authority = session.combat!;
+    final shadow = session.players[2];
+    final target = authority.armies
+        .firstWhere((army) => army.ownerId == 'p1')
+        .units.first;
+    final shadowPosition = session.world!.playerPositions[shadow.id]!;
+    target.positionX = shadowPosition.dx;
+    target.positionY = shadowPosition.dy;
+    for (final army in authority.armies) {
+      for (final unit in army.units) {
+        if (unit.id != target.id) {
+          unit.positionX += 3000;
+          unit.positionY += 3000;
+        }
+      }
+    }
+    final before = target.health;
+    expect(session.handle(shadow, {
+      'type': 'attack',
+      'targetId': target.id,
+    }), isNull);
+    final afterHit = target.health;
+    expect(afterHit, lessThan(before));
+    authority.tick(const Duration(seconds: 1));
+    expect(target.health, afterHit - 3);
+  });
+
+  test('Storm level-30 freeze Ultimate disables enemy actions until expiry', () {
+    final session = _combatReadySession(
+      heroLevelForPlayer: (playerId, _) => playerId == 'p4' ? 30 : 1,
+    );
+    final authority = session.combat!;
+    final storm = session.players[3];
+    final victim = session.players.first;
+    final stormPosition = session.world!.playerPositions[storm.id]!;
+    session.world!.setPlayerPosition(
+      victim.id,
+      stormPosition + const Offset(1, 0),
+    );
+    final victimPosition = session.world!.playerPositions[victim.id]!;
+
+    expect(session.handle(storm, {
+      'type': 'ultimate',
+      'index': 2,
+      'targetId': 'hero_${victim.id}',
+    }), isNull);
+    expect(
+      authority.moveHero(
+        victim.id,
+        const Offset(0, 1),
+        const Duration(milliseconds: 200),
+      ),
+      victimPosition,
+    );
+    authority.tick(const Duration(milliseconds: 900));
+    expect(
+      authority.moveHero(
+        victim.id,
+        const Offset(0, 1),
         const Duration(milliseconds: 100),
       ),
       isNot(victimPosition),
