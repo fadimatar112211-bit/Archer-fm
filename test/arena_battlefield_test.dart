@@ -180,12 +180,13 @@ void main() {
       () => boundary.toImage(pixelRatio: 1),
     );
     expect(image, isNotNull);
+    final renderedImage = image!;
     final bytes = await tester.runAsync(
-      () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      () => renderedImage.toByteData(format: ui.ImageByteFormat.rawRgba),
     );
     expect(bytes, isNotNull);
-    final centerOffset = (image.width * (image.height ~/ 2) +
-            (image.width ~/ 2)) *
+    final centerOffset = (renderedImage.width * (renderedImage.height ~/ 2) +
+            (renderedImage.width ~/ 2)) *
         4;
     expect(bytes!.getUint8(centerOffset), lessThan(40));
     expect(bytes.getUint8(centerOffset + 1), lessThan(40));
@@ -195,18 +196,18 @@ void main() {
     // reveal center; sample away from its frame and labels.
     const minimapX = 880;
     const minimapY = 50;
-    final minimapOffset = (image.width * minimapY + minimapX) * 4;
+    final minimapOffset = (renderedImage.width * minimapY + minimapX) * 4;
     expect(bytes.getUint8(minimapOffset), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 1), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 2), lessThan(40));
 
     // An enemy monster must not be painted over the opaque fog when the
     // local player's authoritative reveal position is missing.
-    const hiddenMonsterOffset = (image.width * 221 + 480) * 4;
+    final hiddenMonsterOffset = (renderedImage.width * 221 + 480) * 4;
     expect(bytes.getUint8(hiddenMonsterOffset), lessThan(40));
     expect(bytes.getUint8(hiddenMonsterOffset + 1), lessThan(40));
     expect(bytes.getUint8(hiddenMonsterOffset + 2), lessThan(40));
-    image!.dispose();
+    renderedImage.dispose();
   });
 
   testWidgets('shows a waiting label when no authoritative world exists',
