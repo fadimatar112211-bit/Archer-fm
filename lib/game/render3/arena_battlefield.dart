@@ -203,25 +203,92 @@ class _ArenaPainter extends CustomPainter {
   }
 
   void _drawBiomes(Canvas canvas, Map world, Offset Function(Offset) project) {
+    // Biomes tint the terrain subtly instead of appearing as hard-edged
+    // translucent discs. Their falloff keeps the battlefield readable while
+    // still distinguishing forest, desert, snow and volcanic regions.
     const colors = {
-      'forest': Color(0x553B7846),
-      'desert': Color(0x55C59A52),
-      'snow': Color(0x559AB9C7),
-      'volcanic': Color(0x557A3830),
+      'forest': Color(0x263B7846),
+      'desert': Color(0x24C59A52),
+      'snow': Color(0x259AB9C7),
+      'volcanic': Color(0x267A3830),
     };
     for (final raw in _list(world['biomes'])) {
       final biome = _map(raw);
       if (biome == null) continue;
       final center = _point(biome);
       final radius = _number(biome['radius']);
-      if (center == null || radius == null) continue;
+      if (center == null || radius == null || radius <= 0) continue;
       final p = project(center);
       final scaleRadius = (project(center + Offset(radius, 0)) - p).distance;
+      if (!scaleRadius.isFinite || scaleRadius <= 0) continue;
+      final color = colors[biome['kind']] ?? const Color(0x223F6044);
+      final bounds = Rect.fromCircle(center: p, radius: scaleRadius);
       canvas.drawCircle(
         p,
         scaleRadius,
-        Paint()..color = colors[biome['kind']] ?? const Color(0x443F6044),
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color,
+              color.withAlpha(0x18),
+              color.withAlpha(0),
+            ],
+            stops: const [0, 0.72, 1],
+          ).createShader(bounds),
       );
+      canvas.drawCircle(
+        p,
+        scaleRadius * 0.96,
+        Paint()
+          ..color = color.withAlpha(0x28)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+
+      // Small biome-specific ground marks make each region feel distinct
+      // without drawing a solid colored boundary over tactical objects.
+      final kind = biome['kind']?.toString();
+      for (var mark = 0; mark < 14; mark++) {
+        final angle = mark * 2.399963229728653;
+        final distance = scaleRadius * (0.18 + (mark % 5) * 0.13);
+        final point = p + Offset(math.cos(angle), math.sin(angle)) * distance;
+        switch (kind) {
+          case 'forest':
+            canvas.drawOval(
+              Rect.fromCenter(
+                center: point,
+                width: 5.5,
+                height: 2.6,
+              ),
+              Paint()..color = const Color(0x335A9654),
+            );
+            break;
+          case 'desert':
+            canvas.drawLine(
+              point.translate(-3, 1),
+              point.translate(3, -1),
+              Paint()
+                ..color = const Color(0x447E6540)
+                ..strokeWidth = 1.2
+                ..strokeCap = StrokeCap.round,
+            );
+            break;
+          case 'snow':
+            canvas.drawCircle(
+              point,
+              1.5,
+              Paint()..color = const Color(0x66E4F2F5),
+            );
+            break;
+          case 'volcanic':
+            canvas.drawCircle(
+              point,
+              1.6,
+              Paint()..color = const Color(0x669A5137),
+            );
+            break;
+        }
+      }
     }
   }
 
@@ -236,22 +303,22 @@ class _ArenaPainter extends CustomPainter {
   ) {
     // A deterministic 48-unit ground grid gives the battlefield a richer
     // hand-painted texture while keeping every detail anchored to world space.
-    const cell = 48.0;
-    const columns = 22;
-    const rows = 15;
+    const cell = 38.0;
+    const columns = 29;
+    const rows = 20;
     final startX = (cameraOrigin.dx / cell).floor() - 1;
     final startY = (cameraOrigin.dy / cell).floor() - 1;
     for (var gy = startY; gy < startY + rows; gy++) {
       for (var gx = startX; gx < startX + columns; gx++) {
         final seed = (gx * 73856093) ^ (gy * 19349663);
-        final x = gx * cell + 8 + (seed.abs() % 31).toDouble();
-        final y = gy * cell + 7 + ((seed >> 5).abs() % 29).toDouble();
+        final x = gx * cell + 6 + (seed.abs() % 25).toDouble();
+        final y = gy * cell + 6 + ((seed >> 5).abs() % 23).toDouble();
         final point = project(Offset(x, y));
         final variant = seed.abs() % 7;
         final patchRect = Rect.fromCenter(
           center: point,
-          width: 13 + (variant % 3) * 4.0,
-          height: 6 + (variant % 2) * 3.0,
+          width: 16 + (variant % 3) * 4.5,
+          height: 8 + (variant % 2) * 3.0,
         );
         if (variant == 0 || variant == 4) {
           // Soft moss/grass patches break up the flat base without obscuring
