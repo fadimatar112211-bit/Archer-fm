@@ -10,6 +10,7 @@ on:
       - 'lib/game/controls/**'
       - 'test/match_rules_test.dart'
       - 'test/game_client_test.dart'
+      - 'test/game_client_reconnect_test.dart'
       - 'test/hero_progress_test.dart'
       - 'test/file_hero_progress_store_test.dart'
       - 'test/virtual_joystick_test.dart'
@@ -23,6 +24,7 @@ on:
       - 'lib/game/controls/**'
       - 'test/match_rules_test.dart'
       - 'test/game_client_test.dart'
+      - 'test/game_client_reconnect_test.dart'
       - 'test/hero_progress_test.dart'
       - 'test/file_hero_progress_store_test.dart'
       - 'test/virtual_joystick_test.dart'
@@ -38,6 +40,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format lib/game/match lib/game/network lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart
+      - run: dart format lib/game/match lib/game/network lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/game_client_reconnect_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart
+      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/game_client_reconnect_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart
