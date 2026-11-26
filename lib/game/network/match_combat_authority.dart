@@ -272,8 +272,6 @@ class MatchCombatAuthority {
         },
         canActFor: (unit) =>
             !(_statusEffects[unit.id]?.isActionDisabled ?? false),
-        movementSpeedMultiplierFor: (unit) =>
-            _statusEffects[unit.id]?.movementMultiplier ?? 1,
         projectileId: _projectileId,
         obstaclesFor: (_) => [
           for (final obstacle in world.map.obstacles)
@@ -283,9 +281,11 @@ class MatchCombatAuthority {
               radius: obstacle.radius,
             ),
         ],
-        movementSpeedMultiplierFor: (unit) => world.map.movementFactorAt(
-          Offset(unit.positionX, unit.positionY),
-        ),
+        movementSpeedMultiplierFor: (unit) =>
+            world.map.movementFactorAt(
+              Offset(unit.positionX, unit.positionY),
+            ) *
+            (_statusEffects[unit.id]?.movementMultiplier ?? 1),
       ),
     );
   }
