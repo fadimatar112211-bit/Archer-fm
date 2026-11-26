@@ -114,4 +114,32 @@ void main() {
     expect(scrollable, findsWidgets);
   });
 
+
+  testWidgets('setup remains scrollable at three landscape aspect sizes',
+      (tester) async {
+    for (final size in [
+      const Size(640, 360),
+      const Size(1280, 540),
+      const Size(1600, 720),
+    ]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: MatchLoadoutScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('تجهيز المباراة'), findsOneWidget);
+      expect(find.text('الاتصال بالغرفة'), findsOneWidget);
+      expect(find.byType(Scrollable), findsWidgets);
+      expect(tester.takeException(), isNull,
+          reason: 'No setup overflow at $size.');
+    }
+  });
+
+
 }
