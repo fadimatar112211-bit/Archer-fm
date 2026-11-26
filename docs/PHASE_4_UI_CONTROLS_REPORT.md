@@ -260,3 +260,12 @@
 - The test instantiates the combat runtime at each unlock level and confirms the corresponding Ultimate is accepted; existing tests continue to verify locked-level rejection, independent cooldowns, energy spending and separation from the five-hit combo.
 - Commit: `648e8bb6a1a985beaf95589c5617e13f508a9027`.
 - This latest test addition requires fresh CI; no result is claimed until the workflow completes.
+
+
+## Live combat feedback
+
+- Server-side rejection and connection/action errors are now surfaced in a compact, dismissible Arabic banner above the live arena controls instead of remaining only in internal screen state.
+- The banner is width-constrained for landscape layouts and does not cover the joystick or action panel; users can dismiss it with an accessible close control.
+- Extended the local WebSocket integration test to inject an authoritative `attack_rejected` acknowledgement, verify the Arabic error message, dismiss it, then proceed to the finished-match result assertion.
+- Commits: `bfddea54fa3ad8ddde06db3e3769caa7805c704f` (live error banner), `436e2fe682c0e2581dd4def0ad7a0ffaa4332022` (banner integration coverage).
+- The latest commits need a fresh complete Flutter/Android CI pass.
