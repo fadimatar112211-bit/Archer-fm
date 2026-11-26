@@ -2,42 +2,20 @@ name: Monster Army Checks
 
 on:
   push:
-    branches: [monster-army-work]
+    branches: [monster-army-work, feature/match-rules-foundation]
     paths:
       - 'lib/monsters/**'
-      - 'test/monster_army_test.dart'
-      - 'test/monster_projectiles_test.dart'
-      - 'test/monster_match_health_integration_test.dart'
-      - 'test/monster_formation_movement_test.dart'
-      - 'test/monster_animation_test.dart'
-      - 'test/monster_sprite_view_test.dart'
-      - 'test/monster_animation_catalog_test.dart'
-      - 'test/monster_navigation_and_formation_test.dart'
-      - 'test/monster_spatial_index_test.dart'
-      - 'test/monster_progression_test.dart'
-      - 'test/monster_match_world_test.dart'
-      - 'test/monster_battle_layer_test.dart'
-      - 'test/monster_match_runtime_test.dart'
+      - 'test/monster_*_test.dart'
+      - 'assets/monsters/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
   pull_request:
-    branches: [main]
+    branches: [main, heroes-complete]
     paths:
       - 'lib/monsters/**'
-      - 'test/monster_army_test.dart'
-      - 'test/monster_projectiles_test.dart'
-      - 'test/monster_match_health_integration_test.dart'
-      - 'test/monster_formation_movement_test.dart'
-      - 'test/monster_animation_test.dart'
-      - 'test/monster_sprite_view_test.dart'
-      - 'test/monster_animation_catalog_test.dart'
-      - 'test/monster_navigation_and_formation_test.dart'
-      - 'test/monster_spatial_index_test.dart'
-      - 'test/monster_progression_test.dart'
-      - 'test/monster_match_world_test.dart'
-      - 'test/monster_battle_layer_test.dart'
-      - 'test/monster_match_runtime_test.dart'
+      - 'test/monster_*_test.dart'
+      - 'assets/monsters/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/monster-army-checks.yml'
@@ -46,13 +24,15 @@ on:
 jobs:
   flutter-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter --version
       - run: flutter pub get
-      - run: dart format lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart test/monster_animation_catalog_test.dart test/monster_navigation_and_formation_test.dart test/monster_spatial_index_test.dart test/monster_progression_test.dart test/monster_match_world_test.dart test/monster_battle_layer_test.dart test/monster_match_runtime_test.dart
-      - run: flutter analyze lib/monsters test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart test/monster_animation_catalog_test.dart test/monster_navigation_and_formation_test.dart test/monster_spatial_index_test.dart test/monster_progression_test.dart test/monster_match_world_test.dart test/monster_battle_layer_test.dart test/monster_match_runtime_test.dart
+      - run: dart format --output=none --set-exit-if-changed lib/monsters test
+      - run: flutter analyze lib/monsters test
       - run: flutter test test/monster_army_test.dart test/monster_projectiles_test.dart test/monster_match_health_integration_test.dart test/monster_formation_movement_test.dart test/monster_animation_test.dart test/monster_sprite_view_test.dart test/monster_animation_catalog_test.dart test/monster_navigation_and_formation_test.dart test/monster_spatial_index_test.dart test/monster_progression_test.dart test/monster_match_world_test.dart test/monster_battle_layer_test.dart test/monster_match_runtime_test.dart
