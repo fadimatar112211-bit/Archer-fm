@@ -184,6 +184,9 @@ Current commit trail includes workflow trigger/concurrency corrections, the fog 
 - **Phase 1 acceptance is met for repository audit, workflow coverage and automated CI validation.** It does not certify runtime model integration; those technical asset path mismatches are explicitly handed to Phase 2.
 
 
+
+- Phase 4 second batch: match-room connection now has a bounded 12-second welcome deadline, visible progress, retry for create/join, and clearer expired-session/connect-failure messaging; widget coverage checks malformed server addresses. See `docs/PHASE_4_UI_CONTROLS_REPORT.md`. CI is running; these new changes are not yet certified by the full Flutter test suite.
+
 ## 9. Phase 3 handoff and Phase 4 execution — 2026-11-26
 
 - Phase 3 core gameplay implementation now includes authoritative combo/Ultimate combat, trusted weapon-upgrade scaling, kill attribution/rewards, live status effects, crystal/mine/economy rules and four-client integration coverage. The Match Rules and Monster Army suites have passed on recent heads; the remaining production acceptance items are final live-device visual/touch QA and approved competitive balance, not a reason to duplicate the existing gameplay systems.
