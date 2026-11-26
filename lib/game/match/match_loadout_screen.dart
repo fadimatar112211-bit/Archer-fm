@@ -245,7 +245,9 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_matchPhase == 'running') return _buildLiveMatchScreen();
+    if (_matchPhase == 'running' || _matchPhase == 'finished') {
+      return _buildLiveMatchScreen();
+    }
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -714,6 +716,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                       ),
                     ),
                   ),
+                  if (_matchPhase == 'running')
                   Positioned(
                     left: 12,
                     bottom: 12,
@@ -722,6 +725,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                       onMove: _sendMove,
                     ),
                   ),
+                  if (_matchPhase == 'running')
                   Positioned(
                     right: 12,
                     bottom: 12,
@@ -842,6 +846,51 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                       ),
                     ),
                   ),
+                  if (_matchPhase == 'finished')
+                    Positioned.fill(
+                      child: ColoredBox(
+                        color: const Color(0xC9000000),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: constraints.maxWidth < 560
+                                  ? constraints.maxWidth - 24
+                                  : 536,
+                              maxHeight: constraints.maxHeight - 24,
+                            ),
+                            child: SingleChildScrollView(
+                              child: _playerId != null &&
+                                      state['result'] is Map
+                                  ? MatchResultPanel(
+                                      result: Map<String, dynamic>.from(
+                                        state['result'] as Map,
+                                      ),
+                                      localPlayerId: _playerId!,
+                                      onReturnHome: () =>
+                                          Navigator.of(context).pop(),
+                                    )
+                                  : Card(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text('انتهت المباراة'),
+                                            const SizedBox(height: 12),
+                                            FilledButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text('العودة للقائمة الرئيسية'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
