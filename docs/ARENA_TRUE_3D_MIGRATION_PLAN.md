@@ -49,3 +49,25 @@ The repository currently declares Dart SDK `>=3.4.0 <4.0.0` and only `flutter_sv
 Do not add any of these packages to the production dependency graph yet. The next experiment should be an isolated Android-only prototype using Stage 3D/Filament, because its documented feature set most closely matches the immediate needs (GLB animation, terrain mesh, lights and shadows). In parallel, confirm the CI Flutter SDK before reconsidering Flutter GPU-based `flutter_scene`.
 
 A candidate is accepted only after a standalone CI test proves: Android compilation, emulator/device launch, a depth-tested terrain mesh, one animated skinned GLB, a shadow-casting light, resize/lifecycle recovery, and acceptable frame time. If the beta plugin fails any of these gates, discard the spike without changing the live battlefield renderer.
+
+
+## Isolated Android Filament spike — 26 November 2026
+
+A standalone experiment now lives under `tools/arena_3d_spike/`; it is not imported by the production app and does not modify the production `pubspec.yaml` or renderer.
+
+- Candidate pinned for the experiment: `stage_3d 0.1.0-beta.2`, MIT licensed. Its documented Android backend is Google Filament and advertises GLB model instances, skinned animation playback, directional/point lights, procedural meshes and shadows. The package is explicitly experimental beta, with an unverified publisher and API stability risk; this is why it is isolated rather than a production dependency.
+- The spike scene loads the existing Ranger animated GLB and Stone Golem GLB directly from the repository. CI copies them into the spike app's temporary asset folder at runtime, so no duplicate binary assets are committed.
+- The scene contains a procedural ground plane, two separated GLB actors, a directional light, orbit camera, environment settings, and a visible renderer/animation status label. The Ranger animation clip is queried and the first available clip is started.
+- Added workflow `.github/workflows/arena-3d-spike.yml`: creates an Android runner only inside the isolated spike folder, resolves its own dependency graph, analyzes it, builds a debug APK, boots the API 30 emulator, installs/launches the app, checks its process, captures a screenshot, and uploads APK + screenshot as artifacts.
+- The spike dependency does not enter the production app dependency graph, and no production rendering path is switched.
+
+### Acceptance gates still pending
+
+The spike is **implemented but not yet validated**. Do not accept Stage 3D until its dedicated workflow proves Android compilation and launch, a non-empty Ranger animation list with successful playback, visible Filament output/screenshot, depth-tested actor/terrain occlusion, and acceptable frame time. The first screenshot must be reviewed; a process ID alone is not visual proof. If dependency resolution or native compilation fails, record the exact error and discard/replace the spike without changing the production app.
+
+### External package evidence reviewed
+
+- pub.dev package page and feature/platform/status disclosure: https://pub.dev/packages/stage_3d
+- Example scene and viewport lifecycle: https://pub.dev/packages/stage_3d/example
+- Package license: https://pub.dev/packages/stage_3d/license
+
