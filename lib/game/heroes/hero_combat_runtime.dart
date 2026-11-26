@@ -32,7 +32,7 @@ class HeroCombatRuntime {
     required this.energyRegenerationPerSecond,
     required Map<String, int> ultimateEnergyCosts,
   })  : targetHealth = targetMaxHealth,
-        energy = maxEnergy,
+        energy = maxEnergy.toDouble(),
         _ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts),
         selectedWeaponIndex = 0 {
     if (level < 1 || level > heroLevelCap) {
