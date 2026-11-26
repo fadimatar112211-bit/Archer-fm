@@ -24,6 +24,7 @@ class AuthoritativeMatchSession
     Random? random,
     bool Function(String playerId, String weaponId)? canUseWeapon,
     int Function(String playerId, String heroId)? heroLevelForPlayer,
+    int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
   })  : _mapFactory = mapFactory,
@@ -31,7 +32,8 @@ class AuthoritativeMatchSession
         duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
         _canUseWeapon = canUseWeapon,
-        _heroLevelForPlayer = heroLevelForPlayer;
+        _heroLevelForPlayer = heroLevelForPlayer,
+        _weaponUpgradeLevelForPlayer = weaponUpgradeLevelForPlayer;
 
   /// Creates the production-style room factory with an explicitly supplied
   /// approved combat catalog and tuning. No provisional balance is selected
@@ -40,6 +42,7 @@ class AuthoritativeMatchSession
     required MatchCombatConfiguration combatConfiguration,
     bool Function(String playerId, String weaponId)? canUseWeapon,
     int Function(String playerId, String heroId)? heroLevelForPlayer,
+    int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
   }) {
     return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
@@ -47,6 +50,7 @@ class AuthoritativeMatchSession
           message,
           canUseWeapon: canUseWeapon,
           heroLevelForPlayer: heroLevelForPlayer,
+          weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
           mapFactory: mapFactory,
           combatConfiguration: combatConfiguration,
         );
@@ -69,6 +73,7 @@ class AuthoritativeMatchSession
       durationMinutes: requestedDuration as int? ?? 30,
       canUseWeapon: canUseWeapon,
       heroLevelForPlayer: heroLevelForPlayer,
+      weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
       mapFactory: mapFactory,
       combatConfiguration: combatConfiguration,
     );
@@ -87,6 +92,9 @@ class AuthoritativeMatchSession
   /// Server-only lookup. The callback must resolve the authenticated account
   /// from trusted connection context; never accept account IDs from messages.
   final int Function(String playerId, String heroId)? _heroLevelForPlayer;
+  /// Trusted account lookup; never populated from a client message.
+  final int Function(String playerId, String weaponId)?
+      _weaponUpgradeLevelForPlayer;
   final List<_MatchPlayer> _players = [];
   MatchRulesEngine? _rules;
   int _nextPlayerNumber = 1;
@@ -235,6 +243,12 @@ class AuthoritativeMatchSession
                   item.id: item.initialArmySelection!,
               },
               configuration: config,
+              weaponUpgradeLevels: {
+                for (final item in _players)
+                  item.id: _weaponUpgradeLevelForPlayer
+                          ?.call(item.id, item.weaponId!) ??
+                      0,
+              },
               random: _random,
             );
           } on ArgumentError {
