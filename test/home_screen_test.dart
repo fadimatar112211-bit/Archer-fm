@@ -34,10 +34,10 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const ArcherFmApp());
-    await tester.ensureVisible(find.text('ترسانة الأبطال'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ترسانة الأبطال'));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
 
     expect(find.text('ترسانة الأبطال'), findsOneWidget);
     expect(find.text('قوس الطاقة الخضراء'), findsOneWidget);
@@ -53,8 +53,6 @@ void main() {
 
     await tester.pumpWidget(const ArcherFmApp());
     await tester.tap(find.text('الإعدادات'));
-    await tester.pump();
-    await tester.ensureVisible(find.text('الاهتزاز'));
     await tester.pumpAndSettle();
 
     expect(find.text('الاهتزاز'), findsOneWidget);
