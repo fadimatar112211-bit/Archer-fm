@@ -61,6 +61,7 @@ class AuthoritativeMatchSession
     Map<String, dynamic> message, {
     bool Function(String playerId, String weaponId)? canUseWeapon,
     int Function(String playerId, String heroId)? heroLevelForPlayer,
+    int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
   }) {
