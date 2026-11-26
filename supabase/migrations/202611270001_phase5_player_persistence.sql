@@ -11,6 +11,26 @@ create table if not exists public.player_profiles (
     check (display_name is null or char_length(display_name) between 1 and 32)
 );
 
+-- Keep profile timestamps accurate without granting clients permission to
+-- modify created_at/updated_at directly.
+create or replace function public.set_player_profile_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  new.updated_at = now();
+  return new;
+end;
+$;
+
+drop trigger if exists player_profiles_set_updated_at on public.player_profiles;
+create trigger player_profiles_set_updated_at
+  before update on public.player_profiles
+  for each row execute procedure public.set_player_profile_updated_at();
+revoke all on function public.set_player_profile_updated_at()
+  from public, anon, authenticated;
+
 create table if not exists public.hero_progress (
   user_id uuid primary key references auth.users(id) on delete cascade,
   schema_version integer not null default 1 check (schema_version = 1),
