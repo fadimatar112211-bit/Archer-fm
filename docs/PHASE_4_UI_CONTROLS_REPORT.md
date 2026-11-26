@@ -331,3 +331,11 @@
 - The available Flutter Android run `45901549385` was triggered for the earlier pre-sensitivity checkpoint (`5f23f64...`), not this latest batch. At the last check, `flutter analyze --no-fatal-infos` had passed and `flutter test` was still running; APK build had not started. This is not a passing validation for the sensitivity changes.
 - The arena visual-capture run `45901549353` completed successfully, but it validates only the earlier arena capture test, not the latest settings/joystick changes.
 - A fresh full Flutter test run and Android APK build against the latest branch head are still required. Physical-device touch and haptics QA remains outstanding.
+
+
+## Seventeenth implementation batch — sensitivity behavior regression coverage
+
+- Added a focused virtual-joystick widget test proving the sensitivity value changes the emitted movement vector before the joystick clamps it to the allowed unit circle.
+- Added unit tests proving movement sensitivity is clamped to the supported 50%–150% range and haptics can be disabled independently.
+- Commits: `823e6c80ce9ed4312b31776c21f1136b3a09c2ab` (joystick scaling test), `5f3a42299e5435ca3b6689703d1c6715cd6dd74f` (shared preference tests).
+- Validation for this batch still requires a fresh successful Flutter analysis, full test suite and Android debug APK build on the current branch head.
