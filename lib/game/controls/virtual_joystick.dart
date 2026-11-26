@@ -81,9 +81,13 @@ class _VirtualJoystickState extends State<VirtualJoystick> {
   }
 
   void _sendAccessibleDirection(Offset direction) {
-    setState(() => _value = direction);
-    if (widget.onMove(direction)) {
-      _lastSent = direction;
+    var scaledDirection = direction * widget.sensitivity;
+    if (scaledDirection.distance > 1) {
+      scaledDirection = scaledDirection / scaledDirection.distance;
+    }
+    setState(() => _value = scaledDirection);
+    if (widget.onMove(scaledDirection)) {
+      _lastSent = scaledDirection;
       _lastSentAt = DateTime.now();
     }
   }
