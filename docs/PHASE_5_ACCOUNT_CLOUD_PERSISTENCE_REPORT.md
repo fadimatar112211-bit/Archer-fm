@@ -201,3 +201,16 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Monster progression remains stored in Supabase but is not yet applied to match combat: the approved combat JSON currently contains monster base stats but does not define the per-level growth policy needed to interpret saved monster levels. This must be configured and approved rather than guessed.
 
 **Current status: significant local implementation progress; CI for the newest commit and live Supabase acceptance still pending.**
+
+
+## 14. Security, player-scoped restore and deployment preparation — 2026-11-27
+
+- The verified player's cloud hero progression is now included only in that recipient's private snapshot. Shared room snapshots do not contain currency, unlocked weapons or private profile progression. Tests assert different accounts receive their own balances and that the shared snapshot contains no account progression.
+- WebSocket handshake tests cover the order of operations: token verification, account profile hydration, then welcome/snapshot. A failed cloud restore rejects the handshake and removes an empty newly-created room.
+- Supabase migration now explicitly revokes broad/default grants from `PUBLIC`, `anon` and `authenticated`, grants only authenticated reads plus the permitted `display_name` column update, and grants the trusted service role the backend table/ledger-sequence access it needs.
+- Added read-only staging assertions at `supabase/validation/phase5_privileges.sql` for RLS, client table privileges, server-only RPC execution and ledger sequence permissions. This script has not been run against a live Supabase project yet.
+- Added `docs/deployment/PRODUCTION_GATEWAY.md` with systemd, Nginx WSS proxy, firewall, server secret-file, backup and release-acceptance templates. No live server deployment is claimed.
+- CI for source commit `c429c4ae0bff7813b529e90b335530a018258ca6`: Flutter analysis and the full Flutter test suite passed. The Android debug APK build is still running in workflow [45911146621](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911146621).
+- A preceding source revision `85b2642649c23eb2f695007a27a306581f3a1ec9` completed Android debug APK build and artifact upload successfully in workflow [45910645194](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45910645194). That successful artifact predates the final player-scoped snapshot test and later SQL/docs hardening; validate the current head's APK run before release.
+
+**Phase 5 remains IN PROGRESS.** Remaining blockers are a connected staging Supabase project and migration/RLS execution, owner-approved hero/monster economy values (including monster growth and upgrade costs), cloud profile/upgrade handlers, cross-device and cross-account E2E, durable recovery across a game-server process restart, and a real WSS deployment/device smoke test. PR #21 remains draft and unmerged.
