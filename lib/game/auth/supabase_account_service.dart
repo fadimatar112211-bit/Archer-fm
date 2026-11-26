@@ -44,8 +44,17 @@ class SupabaseAccountService {
 
   /// The game client calls this before every socket handshake and reconnect,
   /// allowing the Supabase SDK to refresh an expired access token first.
-  Future<String?> accessToken() async =>
-      _client.auth.currentSession?.accessToken;
+  Future<String?> accessToken() async {
+    final session = _client.auth.currentSession;
+    if (session == null) return null;
+    final expiresAt = session.expiresAt;
+    final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    if (expiresAt != null && expiresAt <= nowSeconds + 30) {
+      final refreshed = await _client.auth.refreshSession();
+      return refreshed.session?.accessToken;
+    }
+    return session.accessToken;
+  }
 
   Future<AuthResponse> signUpWithEmail({
     required String email,
