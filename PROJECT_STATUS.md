@@ -420,3 +420,12 @@ Still to decide or test:
 - Latest checked head before this status update: `c429c4ae0bff7813b529e90b335530a018258ca6`; Flutter analyze and tests passed, current Android APK build was still running. Earlier Android build success is recorded in the Phase 5 report.
 - Phase 5 is still open pending live Supabase staging execution, approved progression economy configuration, profile/upgrade handlers, cross-device/cross-account E2E, durable process-restart recovery and production deployment/device testing.
 - PR #21 remains Draft and unmerged; `main` and PR #20 remain untouched.
+
+## Phase 5 durable settlement follow-up — 2026-11-27
+
+- Added a disk-backed settlement outbox. Match results/rewards are persisted locally before Supabase delivery, retried every five seconds, restored on gateway startup and drained during graceful shutdown.
+- The outbox uses the existing database idempotency key so a crash after database commit but before local acknowledgement cannot award currency twice.
+- Added automated tests for offline retention, restart recovery, confirmed delivery cleanup and conflicting idempotency-key reuse.
+- Deployment template now provisions `/var/lib/archer-fm` as a private systemd state directory and documents the persistent outbox path.
+- This is durable for one gateway instance on persistent local storage. Multi-replica operation still requires a shared database queue/lease; do not share one JSON file across replicas.
+- New CI is expected from the latest commits; verify the exact latest head run before claiming this batch passed.
