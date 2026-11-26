@@ -71,6 +71,7 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       return;
     }
     await _disposeClient();
+    if (!mounted) return;
     _lastAttemptCreate = create;
     final client = GameClient(url);
     _client = client;
