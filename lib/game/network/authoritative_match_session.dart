@@ -660,7 +660,23 @@ class AuthoritativeMatchSession
       return dx * dx + dy * dy <= enemyVisibleRadius * enemyVisibleRadius;
     }
 
+    // Enemy hero locations and their live combat telemetry obey the same
+    // reveal radius as enemy units. Public standings remain available.
+    final worldCopy = Map<String, Object?>.from(worldData);
+    final scopedPositions = Map<String, Object?>.from(
+      positions is Map ? positions : const {},
+    )..removeWhere((id, point) => id != player.id && !visibleToPlayer(point));
+    worldCopy['playerPositions'] = scopedPositions;
+    result['world'] = worldCopy;
+
     final scopedCombat = Map<String, Object?>.from(combatData);
+    final heroes = combatData['heroes'];
+    if (heroes is Map) {
+      final scopedHeroes = Map<String, Object?>.from(heroes);
+      scopedHeroes.removeWhere((id, _) =>
+          id != player.id && !scopedPositions.containsKey(id));
+      scopedCombat['heroes'] = scopedHeroes;
+    }
     final monsters = combatData['monsters'];
     if (monsters is List) {
       scopedCombat['monsters'] = monsters.where(visibleToPlayer).toList();
