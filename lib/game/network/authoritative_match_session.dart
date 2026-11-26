@@ -119,7 +119,7 @@ class AuthoritativeMatchSession implements GameServerSession {
         if (heroId is! String || weaponId is! String) {
           return 'invalid_loadout';
         }
-        final hero = archerFmHeroes.where((item) => item.id == heroId);
+        final hero = archerFmHeroes.where((item) => item.id.name == heroId);
         if (hero.isEmpty ||
             !hero.single.weapons.any((weapon) => weapon.id == weaponId)) {
           return 'invalid_loadout';
