@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/match_combat_configuration.dart';
+import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 /// Local development gateway only. It has no TLS or account authentication
