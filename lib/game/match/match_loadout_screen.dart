@@ -664,6 +664,19 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             ],
           ),
           Text('مستواك: ${myLevel ?? '—'} · الكومبو: ${comboIndex ?? '—'} / 5 · تبريد الهجوم: $attackCooldownLabel'),
+          const SizedBox(height: 4),
+          Text(
+            !alive
+                ? 'أنت خارج القتال مؤقتاً حتى يكتمل الإحياء'
+                : !_client!.isConnected
+                    ? 'الاتصال غير مستقر؛ ستعود الأوامر عند استعادة الاتصال'
+                    : _matchPhase != 'running'
+                        ? 'التحكم القتالي متاح أثناء المباراة فقط'
+                        : attackCooldown is num && attackCooldown > 0
+                            ? 'الهجوم التالي بعد $attackCooldownLabel · كل لمسة تنفذ ضربة واحدة'
+                            : 'كل لمسة لزر الهجوم تنفذ ضربة واحدة · الكومبو خمس ضربات',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
           const SizedBox(height: 10),
           Row(
             textDirection: TextDirection.ltr,
