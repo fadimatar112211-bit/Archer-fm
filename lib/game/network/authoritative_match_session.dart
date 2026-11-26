@@ -23,13 +23,15 @@ class AuthoritativeMatchSession
     int durationMinutes = 30,
     Random? random,
     bool Function(String playerId, String weaponId)? canUseWeapon,
+    int Function(String playerId, String heroId)? heroLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
   })  : _mapFactory = mapFactory,
         _combatConfiguration = combatConfiguration,
         duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
-        _canUseWeapon = canUseWeapon;
+        _canUseWeapon = canUseWeapon,
+        _heroLevelForPlayer = heroLevelForPlayer;
 
   /// Creates the production-style room factory with an explicitly supplied
   /// approved combat catalog and tuning. No provisional balance is selected
@@ -37,12 +39,14 @@ class AuthoritativeMatchSession
   static GameServerSessionFactory configuredFactory({
     required MatchCombatConfiguration combatConfiguration,
     bool Function(String playerId, String weaponId)? canUseWeapon,
+    int Function(String playerId, String heroId)? heroLevelForPlayer,
     ArenaMap Function()? mapFactory,
   }) {
     return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
           roomCode,
           message,
           canUseWeapon: canUseWeapon,
+          heroLevelForPlayer: heroLevelForPlayer,
           mapFactory: mapFactory,
           combatConfiguration: combatConfiguration,
         );
@@ -63,6 +67,7 @@ class AuthoritativeMatchSession
       code: roomCode,
       durationMinutes: requestedDuration as int? ?? 30,
       canUseWeapon: canUseWeapon,
+      heroLevelForPlayer: heroLevelForPlayer,
       mapFactory: mapFactory,
       combatConfiguration: combatConfiguration,
     );
@@ -78,6 +83,9 @@ class AuthoritativeMatchSession
   int _worldNowMs = 0;
   final Random _random;
   final bool Function(String playerId, String weaponId)? _canUseWeapon;
+  /// Server-only lookup. The callback must resolve the authenticated account
+  /// from trusted connection context; never accept account IDs from messages.
+  final int Function(String playerId, String heroId)? _heroLevelForPlayer;
   final List<_MatchPlayer> _players = [];
   MatchRulesEngine? _rules;
   int _nextPlayerNumber = 1;
@@ -216,6 +224,10 @@ class AuthoritativeMatchSession
               },
               weaponIds: {
                 for (final item in _players) item.id: item.weaponId!,
+              },
+              heroLevels: {
+                for (final item in _players)
+                  item.id: _heroLevelForPlayer?.call(item.id, item.heroId!) ?? 1,
               },
               initialArmies: {
                 for (final item in _players)
