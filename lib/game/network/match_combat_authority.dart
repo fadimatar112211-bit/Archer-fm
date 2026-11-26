@@ -30,6 +30,10 @@ class MatchCombatConfiguration {
     required this.energyRegenerationPerSecond,
     required Map<String, int> ultimateEnergyCosts,
     this.weaponUpgradeDamagePerLevel = 0,
+    this.monsterKillScore = 0,
+    this.monsterKillResources = 0,
+    this.heroKillScore = 0,
+    this.heroKillResources = 0,
     Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
   })  : monsterProgressionByPlayer =
            Map.unmodifiable(monsterProgressionByPlayer),
@@ -44,7 +48,9 @@ class MatchCombatConfiguration {
         energyRegenerationPerSecond < 0 ||
         !weaponUpgradeDamagePerLevel.isFinite ||
         weaponUpgradeDamagePerLevel < 0 ||
-        weaponUpgradeDamagePerLevel > 0.25) {
+        weaponUpgradeDamagePerLevel > 0.25 ||
+        [monsterKillScore, monsterKillResources, heroKillScore, heroKillResources]
+            .any((value) => value < 0)) {
       throw ArgumentError('Combat movement/projectile/energy configuration is invalid.');
     }
     final expectedUltimateIds = {
@@ -72,6 +78,11 @@ class MatchCombatConfiguration {
   final Map<String, int> ultimateEnergyCosts;
   /// Approved damage increase per permanent weapon upgrade level (0..25%).
   final double weaponUpgradeDamagePerLevel;
+  /// Configured first-playtest rewards; values are supplied by the trusted host.
+  final int monsterKillScore;
+  final int monsterKillResources;
+  final int heroKillScore;
+  final int heroKillResources;
   /// Trusted, already-loaded permanent monster progression for each account.
   /// The host remains responsible for loading and saving each profile.
   final Map<String, MonsterProgression> monsterProgressionByPlayer;
@@ -166,6 +177,7 @@ class MatchCombatAuthority {
     required Map<String, int> heroLevels,
     required this.configuration,
     Map<String, int> weaponUpgradeLevels = const {},
+    void Function(String playerId, MonsterTargetKind targetKind)? onKill,
     math.Random? random,
   }) {
     if (heroes.length != world.playerIds.length ||
@@ -259,6 +271,7 @@ class MatchCombatAuthority {
         ),
       ),
     );
+    _onKill = onKill;
     _random = random ?? math.Random();
   }
 
@@ -267,6 +280,7 @@ class MatchCombatAuthority {
   final Map<String, MatchHeroState> _heroes = {};
   late final MonsterMatchRuntime monsters;
   late final math.Random _random;
+  final void Function(String playerId, MonsterTargetKind targetKind)? _onKill;
   int _nextProjectileId = 1;
   DateTime _now = DateTime.utc(2026, 1, 1);
 
@@ -320,7 +334,10 @@ class MatchCombatAuthority {
     }
     final result = hero.combat.attack();
     if (!result.accepted) return result;
-    target.applyDamage(result.damage.toDouble());
+    final defeatedNow = target.applyDamage(result.damage.toDouble());
+    if (defeatedNow && target.kind != MonsterTargetKind.crystal) {
+      _onKill?.call(playerId, target.kind);
+    }
     return result;
   }
 
@@ -350,7 +367,10 @@ class MatchCombatAuthority {
     for (final candidate in _allTargets()) {
       if (candidate.ownerId == playerId || !candidate.isAlive) continue;
       if (_distance(candidate.x, candidate.y, target.x, target.y) <= radius) {
-        candidate.applyDamage(result.damage.toDouble());
+        final defeatedNow = candidate.applyDamage(result.damage.toDouble());
+        if (defeatedNow && candidate.kind != MonsterTargetKind.crystal) {
+          _onKill?.call(playerId, candidate.kind);
+        }
       }
     }
     return result;
