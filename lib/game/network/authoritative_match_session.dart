@@ -14,8 +14,10 @@ class AuthoritativeMatchSession implements GameServerSession {
     required this.code,
     int durationMinutes = 30,
     Random? random,
+    bool Function(String playerId, String weaponId)? canUseWeapon,
   })  : duration = MatchDuration.fromMinutes(durationMinutes),
-        _random = random ?? Random.secure();
+        _random = random ?? Random.secure(),
+        _canUseWeapon = canUseWeapon;
 
   factory AuthoritativeMatchSession.fromCreateMessage(
     String roomCode,
@@ -35,6 +37,7 @@ class AuthoritativeMatchSession implements GameServerSession {
   final String code;
   final MatchDuration duration;
   final Random _random;
+  final bool Function(String playerId, String weaponId)? _canUseWeapon;
   final List<_MatchPlayer> _players = [];
   MatchRulesEngine? _rules;
   int _nextPlayerNumber = 1;
@@ -107,6 +110,10 @@ class AuthoritativeMatchSession implements GameServerSession {
         if (hero.isEmpty ||
             !hero.single.weapons.any((weapon) => weapon.id == weaponId)) {
           return 'invalid_loadout';
+        }
+        final isStartingWeapon = hero.single.weapons.first.id == weaponId;
+        if (!isStartingWeapon && !(_canUseWeapon?.call(current.id, weaponId) ?? false)) {
+          return 'weapon_locked';
         }
         current.heroId = heroId;
         current.weaponId = weaponId;
