@@ -166,3 +166,12 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Android workflow runs [45908962413](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908962413) and [45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588) are both attached to the corrected source commit; verify APK build and artifact upload, not only analysis/tests.
 
 **Acceptance remains IN PROGRESS.**
+
+
+## 11. Corrected-source CI result — 2026-11-27
+
+- Match Rules CI on corrected source commit `19306b11ed55f8f719d7f0ed92f69d503b4386ee` completed successfully: dependency resolution, `flutter analyze --no-fatal-infos`, and the full Flutter test suite all passed (run [45908955504](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955504)).
+- Android validation on the same source commit has also passed dependency resolution, analysis and the full Flutter test suite; debug APK compilation is still in progress (run [45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588)). Emulator and artifact-upload steps have not yet run.
+- This verifies Dart source/tests for the new settlement adapter, but does not validate the PostgreSQL migration against a live Supabase instance or wire the settlement call into the match lifecycle.
+
+**Acceptance remains IN PROGRESS.**
