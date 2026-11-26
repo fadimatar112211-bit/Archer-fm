@@ -182,3 +182,14 @@ Current commit trail includes workflow trigger/concurrency corrections, the fog 
 - The final Monster Army Checks run on the same head completed successfully: run [45843157554](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45843157554). Monster-specific analysis and all configured monster tests passed.
 - PR #20 remains open, Draft, unmerged, with base `heroes-complete`; branch head is `e9d61832639331a5be7bcbd78b89d2bcf2ddc2f5`.
 - **Phase 1 acceptance is met for repository audit, workflow coverage and automated CI validation.** It does not certify runtime model integration; those technical asset path mismatches are explicitly handed to Phase 2.
+
+
+## 9. Phase 3 handoff and Phase 4 execution — 2026-11-26
+
+- Phase 3 core gameplay implementation now includes authoritative combo/Ultimate combat, trusted weapon-upgrade scaling, kill attribution/rewards, live status effects, crystal/mine/economy rules and four-client integration coverage. The Match Rules and Monster Army suites have passed on recent heads; the remaining production acceptance items are final live-device visual/touch QA and approved competitive balance, not a reason to duplicate the existing gameplay systems.
+- The latest 16:9 arena capture was reviewed as a renderer test fixture. It confirms the revised terrain contour presentation, but it is not a live four-player gameplay screenshot and does not replace physical-device sign-off.
+- Phase 4 has started. The first batch adds an Arabic home hub routing to match setup, the four-hero viewer and settings; adds a working haptics control; discloses that audio is not yet connected; and preserves the no-ad requirement.
+- New Phase 4 widget tests cover home navigation, match setup routing and the haptics control. Their CI result is pending at this update.
+- Android emulator execution is now gated to an explicit manual `workflow_dispatch`. Routine push/PR validation continues without booting an emulator. A previously started emulator job may continue because this GitHub connection does not provide a cancel-running-workflow action.
+- Detailed work and remaining acceptance items: [Phase 4 UI/Controls Report](PHASE_4_UI_CONTROLS_REPORT.md).
+- Phase 4 remains **in progress**. Do not claim profile/account, inventory/equipment, audio playback, full touch-device usability or match-end navigation complete until implemented and tested.
