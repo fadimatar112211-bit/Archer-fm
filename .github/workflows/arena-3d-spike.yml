@@ -1,0 +1,69 @@
+name: Isolated Android 3D renderer spike
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/match-rules-foundation]
+    paths:
+      - 'tools/arena_3d_spike/**'
+      - '.github/workflows/arena-3d-spike.yml'
+      - 'assets/heroes/ranger/model/ranger_animated.glb'
+      - 'assets/monsters/stone-golem/stone-golem.glb'
+
+jobs:
+  android-filament-spike:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Stage existing GLB assets without committing duplicate binaries
+        run: |
+          mkdir -p tools/arena_3d_spike/assets
+          cp assets/heroes/ranger/model/ranger_animated.glb tools/arena_3d_spike/assets/ranger_animated.glb
+          cp assets/monsters/stone-golem/stone-golem.glb tools/arena_3d_spike/assets/stone-golem.glb
+      - name: Generate isolated Android runner
+        working-directory: tools/arena_3d_spike
+        run: flutter create --platforms=android --project-name arena_3d_spike --org com.archerfm --no-pub .
+      - name: Resolve spike-only dependencies
+        working-directory: tools/arena_3d_spike
+        run: flutter pub get
+      - name: Analyze spike
+        working-directory: tools/arena_3d_spike
+        run: flutter analyze --no-fatal-infos
+      - name: Build spike APK
+        working-directory: tools/arena_3d_spike
+        run: flutter build apk --debug
+      - name: Free runner disk space for emulator
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          docker system prune --all --force || true
+      - uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ANDROID_I_WANT_MY_TCG: "yes"
+        with:
+          api-level: 30
+          arch: x86_64
+          profile: pixel_2
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          disable-animations: true
+          disable-linux-hardware-acceleration: true
+          script: |
+            adb install tools/arena_3d_spike/build/app/outputs/flutter-apk/app-debug.apk
+            adb shell am start -n com.archerfm.arena_3d_spike/.MainActivity
+            sleep 12
+            adb shell pidof com.archerfm.arena_3d_spike
+            adb shell screencap -p /sdcard/arena-3d-spike.png
+            adb pull /sdcard/arena-3d-spike.png tools/arena_3d_spike/arena-3d-spike.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: archer-fm-android-3d-spike
+          path: |
+            tools/arena_3d_spike/build/app/outputs/flutter-apk/app-debug.apk
+            tools/arena_3d_spike/arena-3d-spike.png
+          retention-days: 14
