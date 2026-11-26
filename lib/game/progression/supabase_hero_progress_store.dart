@@ -13,6 +13,11 @@ class SupabaseHeroProgressStore implements HeroProgressStore {
   final SupabaseRestClient client;
   final Map<String, int> _revisions = {};
 
+  /// Drop a cached revision after another atomic server RPC changes the row.
+  void invalidateRevision(String trustedAccountId) {
+    _revisions.remove(trustedAccountId);
+  }
+
   @override
   Future<HeroProgress> load(String trustedAccountId) async {
     final row = await client.loadProgressionRow(
