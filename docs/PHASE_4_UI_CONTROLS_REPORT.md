@@ -54,6 +54,17 @@
 - Commit: `87e7e66ad5b6d4fc9da30f48f2f931f8f73382a9` — bounded room connection feedback and retry.
 - Commit: `89c7152fadd8b9925a30f10d502a96d9bff66661` — connection address validation test.
 
+
+## Third implementation batch — armory catalogue and safer touch controls
+
+- Added an Arabic armory screen backed directly by the canonical `archerFmHeroes` combat definitions. It lists all three weapons and four Ultimates for the selected hero, their descriptions/ranges/cooldowns and unlock levels.
+- Added an armory entry to the home hub and widget tests for home navigation, weapon data and changing between heroes.
+- The armory is explicitly read-only: no fake unlock/upgrade buttons or invented prices. Weapon purchases remain authoritative server transactions and account persistence is a later phase.
+- Improved the virtual joystick accessibility semantics with an Arabic label and movement hint.
+- The joystick now sends a neutral movement command when disposed while a direction is active, preventing stale movement if the gameplay overlay/control is removed mid-gesture.
+- Added widget coverage for the joystick semantics and disposal release.
+- Commits: `b786cf0083680a0660d02ac1acaba22fe16ceafa` (armory), `efee21efe9c45248b7b81dce7b6689a42cba98e4` (home route), `c6253fff32da3058818fa092a410002fe5d4bc6c` (armory tests), `194562379e912bc5c8564d477c1d5b3f97032115` (home route test), `26b72bdd550eed08475c651ce41473f9904b32be` (joystick semantics and release), `8b5116b8ab033811da68756ac634015bf34814f8` (joystick tests).
+
 ## Remaining Phase 4 work
 
 1. Complete the home/profile/account and post-match navigation without inventing account functionality before Phase 5.
