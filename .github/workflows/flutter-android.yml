@@ -14,7 +14,9 @@ on:
 
 jobs:
   flutter-test-and-apk:
-    runs-on: ubuntu-latest
+    # Pin the runner while Android Emulator boot on ubuntu-latest (26.04)
+    # is failing before ADB can discover emulator-5554.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
