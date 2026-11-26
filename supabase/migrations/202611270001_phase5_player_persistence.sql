@@ -139,7 +139,7 @@ as $
 declare
   current_revision bigint;
 begin
-  if jsonb_typeof(p_data) <> 'object' then
+  if jsonb_typeof(p_data) is distinct from 'object' then
     raise exception 'invalid_progress_document' using errcode = '22023';
   end if;
 
