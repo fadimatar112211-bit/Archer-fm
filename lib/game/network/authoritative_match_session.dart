@@ -17,6 +17,20 @@ class AuthoritativeMatchSession implements GameServerSession {
   })  : duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure();
 
+  factory AuthoritativeMatchSession.fromCreateMessage(
+    String roomCode,
+    Map<String, dynamic> message,
+  ) {
+    final requestedDuration = message['durationMinutes'];
+    if (requestedDuration != null && requestedDuration is! int) {
+      throw const FormatException('durationMinutes must be an integer.');
+    }
+    return AuthoritativeMatchSession(
+      code: roomCode,
+      durationMinutes: requestedDuration as int? ?? 30,
+    );
+  }
+
   @override
   final String code;
   final MatchDuration duration;
