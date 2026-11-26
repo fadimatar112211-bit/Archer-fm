@@ -963,6 +963,35 @@ class _ArenaPainter extends CustomPainter {
         if (radius == null || start == null || sweep == null) continue;
         final edge = (project(anchor + Offset(radius, 0)) - center).distance;
         final rect = Rect.fromCircle(center: center, radius: edge);
+        // Extruded stone curtain wall: render a shaded vertical face beneath
+        // the parapet, segmented into masonry panels along the curved rampart.
+        final wallSegments = math.max(4, (sweep.abs() * radius / 24).round());
+        for (var segment = 0; segment < wallSegments; segment++) {
+          final a0 = start + sweep * segment / wallSegments;
+          final a1 = start + sweep * (segment + 1) / wallSegments;
+          final base0 = project(anchor + Offset(math.cos(a0), math.sin(a0)) * radius);
+          final base1 = project(anchor + Offset(math.cos(a1), math.sin(a1)) * radius);
+          final top0 = base0.translate(0, -8);
+          final top1 = base1.translate(0, -8);
+          final face = Path()
+            ..moveTo(base0.dx, base0.dy)
+            ..lineTo(base1.dx, base1.dy)
+            ..lineTo(top1.dx, top1.dy)
+            ..lineTo(top0.dx, top0.dy)
+            ..close();
+          canvas.drawPath(face, Paint()
+            ..color = segment.isEven
+                ? const Color(0xFF6D685F)
+                : const Color(0xFF777168));
+          canvas.drawLine(top0, top1, Paint()
+            ..color = const Color(0xFFD1C1A2)
+            ..strokeWidth = 2.2);
+          if (segment % 2 == 0) {
+            canvas.drawLine(base0, top0, Paint()
+              ..color = const Color(0x55332E28)
+              ..strokeWidth = 0.8);
+          }
+        }
         canvas.drawArc(
           rect,
           start,
