@@ -128,7 +128,9 @@ class HeroProgress {
   /// Awards permanent XP after a server-validated match/reward transaction.
   /// The caller supplies the award amount; this method never invents rewards.
   int awardHeroExperience(String heroId, int amount) {
-    if (!_allHeroIds.contains(heroId)) return -1;
+    if (!_allHeroIds.contains(heroId)) {
+      throw ArgumentError.value(heroId, 'heroId', 'Unknown hero.');
+    }
     if (amount < 0) throw RangeError.value(amount, 'amount');
     var level = heroLevel(heroId);
     if (level >= heroLevelCap || amount == 0) return 0;
