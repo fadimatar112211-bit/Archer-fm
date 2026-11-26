@@ -190,7 +190,7 @@ class _ArenaPainter extends CustomPainter {
         ).createShader(bounds),
     );
     _drawBiomes(canvas, world, project);
-    _drawTerrainTexture(canvas, cameraOrigin, project);
+    _drawTerrainTexture(canvas, world, cameraOrigin, project);
     _drawRivers(canvas, world, project);
     _drawObstacles(canvas, world, project);
     _drawPickups(canvas, world, project);
@@ -236,15 +236,6 @@ class _ArenaPainter extends CustomPainter {
             stops: const [0, 0.72, 1],
           ).createShader(bounds),
       );
-      canvas.drawCircle(
-        p,
-        scaleRadius * 0.96,
-        Paint()
-          ..color = color.withAlpha(0x28)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
-      );
-
       // Small biome-specific ground marks make each region feel distinct
       // without drawing a solid colored boundary over tactical objects.
       final kind = biome['kind']?.toString();
@@ -298,98 +289,188 @@ class _ArenaPainter extends CustomPainter {
   /// appears anchored while the follow camera moves.
   void _drawTerrainTexture(
     Canvas canvas,
+    Map world,
     Offset cameraOrigin,
     Offset Function(Offset) project,
   ) {
-    // A deterministic 48-unit ground grid gives the battlefield a richer
-    // hand-painted texture while keeping every detail anchored to world space.
-    const cell = 38.0;
-    const columns = 29;
-    const rows = 20;
+    // A deterministic 32-unit ground grid keeps biome detail anchored to
+    // world space while remaining stable as the follow camera moves.
+    const cell = 32.0;
+    const columns = 34;
+    const rows = 22;
+    final biomes = _list(world['biomes'])
+        .map(_map)
+        .whereType<Map>()
+        .map((biome) => (
+              kind: biome['kind']?.toString() ?? 'forest',
+              center: _point(biome),
+              radius: _number(biome['radius']) ?? 0,
+            ))
+        .where((biome) => biome.center != null && biome.radius > 0)
+        .toList(growable: false);
     final startX = (cameraOrigin.dx / cell).floor() - 1;
     final startY = (cameraOrigin.dy / cell).floor() - 1;
     for (var gy = startY; gy < startY + rows; gy++) {
       for (var gx = startX; gx < startX + columns; gx++) {
         final seed = (gx * 73856093) ^ (gy * 19349663);
-        final x = gx * cell + 6 + (seed.abs() % 25).toDouble();
-        final y = gy * cell + 6 + ((seed >> 5).abs() % 23).toDouble();
-        final point = project(Offset(x, y));
-        final variant = seed.abs() % 7;
+        final x = gx * cell + 5 + (seed.abs() % 21).toDouble();
+        final y = gy * cell + 5 + ((seed >> 5).abs() % 21).toDouble();
+        final worldPoint = Offset(x, y);
+        final point = project(worldPoint);
+        final variant = seed.abs() % 9;
+        var biomeKind = 'forest';
+        var nearestDistance = double.infinity;
+        for (final biome in biomes) {
+          final center = biome.center!;
+          final distance = (worldPoint - center).distanceSquared;
+          if (distance <= biome.radius * biome.radius &&
+              distance < nearestDistance) {
+            nearestDistance = distance;
+            biomeKind = biome.kind;
+          }
+        }
         final patchRect = Rect.fromCenter(
           center: point,
-          width: 16 + (variant % 3) * 4.5,
-          height: 8 + (variant % 2) * 3.0,
+          width: 18 + (variant % 4) * 4.0,
+          height: 8 + (variant % 3) * 3.0,
         );
-        if (variant == 0 || variant == 4) {
-          // Soft moss/grass patches break up the flat base without obscuring
-          // tactical silhouettes or the fog-of-war layer.
-          canvas.drawOval(
-            patchRect,
-            Paint()
-              ..shader = RadialGradient(
-                colors: [
-                  const Color(0x443F8050),
-                  const Color(0x003F8050),
-                ],
-              ).createShader(patchRect),
-          );
-          for (var blade = 0; blade < 3; blade++) {
-            final bx = point.dx + (blade - 1) * 2.8;
-            canvas.drawLine(
-              Offset(bx, point.dy + 2),
-              Offset(bx - 1.1, point.dy - 2.5 - (blade % 2)),
-              Paint()
-                ..color = const Color(0x665C9656)
-                ..strokeWidth = 0.9
-                ..strokeCap = StrokeCap.round,
-            );
-          }
-        } else if (variant == 1 || variant == 5) {
-          // Tiny pebbles with a lit upper edge create a more tactile ground.
-          canvas.drawOval(
-            Rect.fromCenter(
-              center: point.translate(1, 1),
-              width: 5.5,
-              height: 3.2,
-            ),
-            Paint()..color = const Color(0x44302720),
-          );
-          canvas.drawOval(
-            Rect.fromCenter(center: point, width: 5, height: 2.8),
-            Paint()..color = const Color(0x557C806F),
-          );
-          canvas.drawLine(
-            point.translate(-1.2, -0.6),
-            point.translate(1.2, -0.6),
-            Paint()
-              ..color = const Color(0x667E927B)
-              ..strokeWidth = 0.7,
-          );
-        } else if (variant == 2) {
-          // A sparse flower cluster adds color at ground level only.
-          canvas.drawLine(
-            point.translate(0, 2),
-            point.translate(0, -2),
-            Paint()
-              ..color = const Color(0x665E8A4D)
-              ..strokeWidth = 1,
-          );
-          canvas.drawCircle(
-            point.translate(-2, -2),
-            1.15,
-            Paint()..color = const Color(0x99F0D58B),
-          );
-          canvas.drawCircle(
-            point.translate(2, -2),
-            1.15,
-            Paint()..color = const Color(0x99E7B9C5),
-          );
-        } else {
-          canvas.drawCircle(
-            point,
-            1.1,
-            Paint()..color = const Color(0x334D7650),
-          );
+
+        switch (biomeKind) {
+          case 'desert':
+            if (variant == 0 || variant == 4 || variant == 7) {
+              canvas.drawOval(
+                patchRect,
+                Paint()..color = const Color(0x2BC9A66A),
+              );
+            }
+            if (variant == 1 || variant == 5) {
+              for (var ripple = 0; ripple < 2; ripple++) {
+                final yOffset = (ripple - 0.5) * 3.2;
+                canvas.drawLine(
+                  point.translate(-5, yOffset),
+                  point.translate(4, yOffset - 1.2),
+                  Paint()
+                    ..color = const Color(0x557B6748)
+                    ..strokeWidth = 0.8
+                    ..strokeCap = StrokeCap.round,
+                );
+              }
+            } else if (variant == 2 || variant == 8) {
+              canvas.drawOval(
+                Rect.fromCenter(
+                  center: point.translate(1, 1),
+                  width: 5.5,
+                  height: 3.0,
+                ),
+                Paint()..color = const Color(0x887D7462),
+              );
+            }
+            break;
+          case 'snow':
+            if (variant == 0 || variant == 4 || variant == 7) {
+              canvas.drawOval(
+                patchRect,
+                Paint()..color = const Color(0x338BC2D4),
+              );
+            }
+            if (variant == 1 || variant == 5 || variant == 8) {
+              canvas.drawCircle(
+                point,
+                1.5 + (variant % 2) * 0.6,
+                Paint()..color = const Color(0x99E8F7FC),
+              );
+              canvas.drawLine(
+                point.translate(-3, 0),
+                point.translate(3, 0),
+                Paint()
+                  ..color = const Color(0x668BC5D8)
+                  ..strokeWidth = 0.8,
+              );
+            }
+            break;
+          case 'volcanic':
+            if (variant == 0 || variant == 4 || variant == 7) {
+              canvas.drawOval(
+                patchRect,
+                Paint()..color = const Color(0x443E302C),
+              );
+            }
+            if (variant == 1 || variant == 5) {
+              final crack = Path()
+                ..moveTo(point.dx - 5, point.dy - 2)
+                ..lineTo(point.dx - 1, point.dy + 1)
+                ..lineTo(point.dx + 1, point.dy - 1)
+                ..lineTo(point.dx + 5, point.dy + 2);
+              canvas.drawPath(
+                crack,
+                Paint()
+                  ..color = const Color(0x887D5140)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 1.1
+                  ..strokeCap = StrokeCap.round,
+              );
+            } else if (variant == 2 || variant == 8) {
+              canvas.drawCircle(
+                point,
+                1.4,
+                Paint()..color = const Color(0xAAE18A48),
+              );
+            }
+            break;
+          default:
+            if (variant == 0 || variant == 4 || variant == 7) {
+              canvas.drawOval(
+                patchRect,
+                Paint()
+                  ..shader = RadialGradient(
+                    colors: [
+                      const Color(0x554A9654),
+                      const Color(0x004A9654),
+                    ],
+                  ).createShader(patchRect),
+              );
+            }
+            if (variant == 1 || variant == 5) {
+              for (var blade = 0; blade < 4; blade++) {
+                final bx = point.dx + (blade - 1.5) * 2.6;
+                canvas.drawLine(
+                  Offset(bx, point.dy + 2),
+                  Offset(bx - 1.0, point.dy - 2.5 - (blade % 2)),
+                  Paint()
+                    ..color = const Color(0x775C9656)
+                    ..strokeWidth = 1.0
+                    ..strokeCap = StrokeCap.round,
+                );
+              }
+            } else if (variant == 2) {
+              canvas.drawLine(
+                point.translate(0, 2),
+                point.translate(0, -2),
+                Paint()
+                  ..color = const Color(0x775E8A4D)
+                  ..strokeWidth = 1,
+              );
+              canvas.drawCircle(
+                point.translate(-2, -2),
+                1.2,
+                Paint()..color = const Color(0xBBF0D58B),
+              );
+              canvas.drawCircle(
+                point.translate(2, -2),
+                1.2,
+                Paint()..color = const Color(0xBBE7B9C5),
+              );
+            } else if (variant == 3 || variant == 6 || variant == 8) {
+              canvas.drawOval(
+                Rect.fromCenter(
+                  center: point.translate(1, 1),
+                  width: 5.5,
+                  height: 3.2,
+                ),
+                Paint()..color = const Color(0x557C806F),
+              );
+            }
+            break;
         }
       }
     }
