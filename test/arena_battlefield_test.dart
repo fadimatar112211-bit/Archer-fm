@@ -150,6 +150,19 @@ void main() {
                       'size': {'width': 2000, 'height': 1200},
                       'playerPositions': {},
                     },
+                    'combat': {
+                      'monsters': [
+                        {
+                          'id': 'enemy-hidden-without-local-position',
+                          'ownerId': 'p2',
+                          'type': 'tank',
+                          'x': 1000,
+                          'y': 600,
+                          'health': 100,
+                          'maxHealth': 100,
+                        },
+                      ],
+                    },
                   },
                 ),
               ),
@@ -186,6 +199,13 @@ void main() {
     expect(bytes.getUint8(minimapOffset), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 1), lessThan(40));
     expect(bytes.getUint8(minimapOffset + 2), lessThan(40));
+
+    // An enemy monster must not be painted over the opaque fog when the
+    // local player's authoritative reveal position is missing.
+    const hiddenMonsterOffset = (image.width * 221 + 480) * 4;
+    expect(bytes.getUint8(hiddenMonsterOffset), lessThan(40));
+    expect(bytes.getUint8(hiddenMonsterOffset + 1), lessThan(40));
+    expect(bytes.getUint8(hiddenMonsterOffset + 2), lessThan(40));
     image!.dispose();
   });
 
