@@ -163,28 +163,37 @@ void main() {
     await socket.close();
   });
 
-  test('broadcasts recipient-specific snapshots to each connected player', () async {
+  test('sends recipient-specific snapshots at handshake and during broadcasts', () async {
     factory.scopedSnapshots = true;
     final first = await WebSocket.connect(host.uri.toString());
     final firstMessages = _messages(first).asBroadcastStream();
     final firstWelcomeFuture = _nextType(firstMessages, 'welcome');
+    final firstInitialStateFuture = _nextType(firstMessages, 'state');
     first.add(jsonEncode({'type': 'create'}));
     final firstWelcome = await firstWelcomeFuture;
+    final firstInitialState = await firstInitialStateFuture;
+    expect(firstWelcome['id'], 'p1');
+    expect(firstInitialState['recipient'], 'p1');
 
     final second = await WebSocket.connect(host.uri.toString());
     final secondMessages = _messages(second).asBroadcastStream();
     final secondWelcomeFuture = _nextType(secondMessages, 'welcome');
+    final secondInitialStateFuture = _nextType(secondMessages, 'state');
     second.add(jsonEncode({
       'type': 'join',
       'code': firstWelcome['code'],
     }));
     final secondWelcome = await secondWelcomeFuture;
-    expect(firstWelcome['id'], 'p1');
+    final secondInitialState = await secondInitialStateFuture;
     expect(secondWelcome['id'], 'p2');
+    expect(secondInitialState['recipient'], 'p2');
 
-    final firstStateFuture = _nextType(firstMessages, 'state');
-    final secondStateFuture = _nextType(secondMessages, 'state');
-    final states = await Future.wait([firstStateFuture, secondStateFuture]);
+    final firstBroadcastFuture = _nextType(firstMessages, 'state');
+    final secondBroadcastFuture = _nextType(secondMessages, 'state');
+    final states = await Future.wait([
+      firstBroadcastFuture,
+      secondBroadcastFuture,
+    ]);
     expect(states[0]['recipient'], 'p1');
     expect(states[1]['recipient'], 'p2');
 
