@@ -1105,6 +1105,18 @@ class _ArenaPainter extends CustomPainter {
           ..lineTo(p.dx - 4, p.dy + 8)
           ..lineTo(p.dx - 7, p.dy - 1)
           ..close();
+        // A darker offset silhouette beneath the crown creates a visible
+        // crystal body thickness; side facets remain distinct from the lit face.
+        final lowerBody = path.shift(const Offset(2.8, 4.2));
+        canvas.drawPath(lowerBody, Paint()..color = const Color(0xFF273B4A));
+        final crystalSide = Path()
+          ..moveTo(p.dx + 7, p.dy - 1)
+          ..lineTo(p.dx + 4.8, p.dy + 12.2)
+          ..lineTo(p.dx - 1.2, p.dy + 12.2)
+          ..lineTo(p.dx + 4, p.dy + 8)
+          ..close();
+        canvas.drawPath(crystalSide, Paint()
+          ..color = hp > 0 ? color.withOpacity(0.72) : const Color(0xFF393B3A));
         final crystalPaint = Paint();
         if (hp > 0) {
           crystalPaint.shader = LinearGradient(
