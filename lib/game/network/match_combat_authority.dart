@@ -122,6 +122,7 @@ class MatchHeroState {
   final HeroCombatDefinition definition;
   final String weaponId;
   final HeroCombatRuntime combat;
+  final MatchStatusEffectRuntime statusEffects = MatchStatusEffectRuntime();
   int get level => combat.level;
   late double health;
   Duration respawnRemaining = Duration.zero;
