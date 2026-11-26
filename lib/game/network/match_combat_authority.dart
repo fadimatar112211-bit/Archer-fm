@@ -54,11 +54,12 @@ class MatchHeroState {
 
   final String playerId;
   final HeroCombatDefinition definition;
+  final String weaponId;
   final int level;
   final HeroCombatRuntime combat;
   late double health;
 
-  double get maxHealth => definition.healthAt(level);
+  double get maxHealth => definition.healthAt(level).toDouble();
   bool get isAlive => health > 0;
   String get entityId => 'hero_$playerId';
 }
@@ -137,7 +138,7 @@ class MatchCombatAuthority {
   final MatchCombatConfiguration configuration;
   final Map<String, MatchHeroState> _heroes = {};
   late final MonsterMatchRuntime monsters;
-  final math.Random _random;
+  late final math.Random _random;
   int _nextProjectileId = 1;
   DateTime _now = DateTime.utc(2026, 1, 1);
 
@@ -190,7 +191,7 @@ class MatchCombatAuthority {
     }
     final result = hero.combat.attack();
     if (!result.accepted) return result;
-    target.applyDamage(result.damage);
+    target.applyDamage(result.damage.toDouble());
     return result;
   }
 
@@ -219,7 +220,7 @@ class MatchCombatAuthority {
     for (final candidate in _allTargets()) {
       if (candidate.ownerId == playerId || !candidate.isAlive) continue;
       if (_distance(candidate.x, candidate.y, target.x, target.y) <= radius) {
-        candidate.applyDamage(result.damage);
+        candidate.applyDamage(result.damage.toDouble());
       }
     }
     return result;
