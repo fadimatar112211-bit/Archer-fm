@@ -44,6 +44,10 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
 
   final weaponUpgradeDamagePerLevel =
       _number(json, 'weaponUpgradeDamagePerLevel');
+  final monsterKillScore = _integer(json, 'monsterKillScore');
+  final monsterKillResources = _integer(json, 'monsterKillResources');
+  final heroKillScore = _integer(json, 'heroKillScore');
+  final heroKillResources = _integer(json, 'heroKillResources');
   final projectileSpeed = _number(json, 'projectileSpeed');
   final maxActiveProjectiles = _integer(json, 'maxActiveProjectiles');
   final maxUnitsPerArmy = _integer(json, 'maxUnitsPerArmy');
@@ -70,6 +74,10 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     energyRegenerationPerSecond: energyRegenerationPerSecond,
     ultimateEnergyCosts: ultimateEnergyCosts,
     weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
+    monsterKillScore: monsterKillScore,
+    monsterKillResources: monsterKillResources,
+    heroKillScore: heroKillScore,
+    heroKillResources: heroKillResources,
   );
 }
 
