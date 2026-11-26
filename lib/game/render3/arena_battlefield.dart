@@ -377,7 +377,9 @@ class _ArenaPainter extends CustomPainter {
     Map world,
     Offset Function(Offset) project,
   ) {
-    const segmentCount = 28;
+    // Higher angular resolution removes the oversized wedge facets visible at 16:9.
+    // Keep the ring count modest so the projected painter remains mobile-friendly.
+    const segmentCount = 56;
     const palettes = <String, List<Color>>{
       'forest': [Color(0xFF557C43), Color(0xFF315D3B), Color(0xFF24452F)],
       'desert': [Color(0xFFD5B16C), Color(0xFFB8874D), Color(0xFF8B603D)],
@@ -449,7 +451,7 @@ class _ArenaPainter extends CustomPainter {
           canvas.drawPath(triangle(a, c0, d), Paint()..color = faceColor);
           canvas.drawPath(triangle(a, d, b), Paint()..color = palette[1].withAlpha(0xD8));
           canvas.drawPath(triangle(a, c0, d), Paint()
-            ..color = const Color(0x183D3025)
+            ..color = const Color(0x0C3D3025)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.65);
         }
