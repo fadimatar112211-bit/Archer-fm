@@ -69,19 +69,22 @@ jobs:
             adb install build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.archerfm.archer_fm || true
             adb shell am start -n com.archerfm.archer_fm/.MainActivity
-            sleep 20
+            # TCG boot can leave System UI in an ANR dialog while Flutter is still
+            # extracting its first-run assets. Give the app time to finish startup.
+            sleep 60
             adb shell pidof com.archerfm.archer_fm
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
-            adb logcat -d -t 12000 > build/android-logcat-before-recovery.txt
+            adb logcat -d -t 16000 > build/android-logcat-before-recovery.txt
             adb shell screencap -p /sdcard/archer-fm-launch.png
             adb pull /sdcard/archer-fm-launch.png build/archer-fm-launch.png
-            # A system-UI ANR dialog can cover a healthy foreground app on TCG.
-            # Save diagnostics first, then dismiss it and capture the recovered frame.
-            adb shell input keyevent 4 || true
-            sleep 8
+            # If the emulator's System UI ANR prompt is still visible, choose Wait.
+            adb shell input tap 520 600 || true
+            sleep 45
+            adb shell pidof com.archerfm.archer_fm
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'
             adb shell screencap -p /sdcard/archer-fm-launch-recovered.png
             adb pull /sdcard/archer-fm-launch-recovered.png build/archer-fm-launch-recovered.png
-            adb logcat -d -t 12000 > build/android-logcat-after-recovery.txt
+            adb logcat -d -t 16000 > build/android-logcat-after-recovery.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
