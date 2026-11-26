@@ -130,7 +130,7 @@ void main() {
       expect(match.addScore('p2', 20).accepted, isFalse);
     });
 
-    test('last non-forfeited player wins even without a crystal', () {
+    test('forfeits leave the final crystal holder as winner', () {
       final match = MatchRulesEngine(
         duration: MatchDuration.ten,
         participants: fourPlayers(),
@@ -138,11 +138,12 @@ void main() {
 
       match.forfeit('p2');
       match.forfeit('p3');
+      expect(match.phase, MatchPhase.running);
       match.forfeit('p4');
 
       expect(match.phase, MatchPhase.finished);
       expect(match.result?.winnerId, 'p1');
-      expect(match.result?.reason, MatchFinishReason.lastPlayerRemaining);
+      expect(match.result?.reason, MatchFinishReason.lastCrystalHolder);
     });
 
     test('negative time, score and invalid crystal counts are rejected', () {
