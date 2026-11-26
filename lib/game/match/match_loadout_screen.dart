@@ -717,7 +717,60 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
                     ),
                   ),
                   if (_matchPhase == 'running')
-                  Positioned(
+                  if (_lastError != null)
+                    Positioned(
+                      top: 62,
+                      left: 12,
+                      right: 12,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: Material(
+                            color: const Color(0xEE6B2525),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _lastError!,
+                                      textAlign: TextAlign.right,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    tooltip: 'إغلاق التنبيه',
+                                    onPressed: () => setState(() => _lastError = null),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_matchPhase == 'running')
+                    Positioned(
                     left: 12,
                     bottom: 12,
                     child: VirtualJoystick(
