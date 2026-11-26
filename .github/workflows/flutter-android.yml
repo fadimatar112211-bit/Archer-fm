@@ -10,6 +10,7 @@ on:
       - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
+      - 'analysis_options.yaml'
       - '.github/workflows/flutter-android.yml'
   pull_request:
     branches: [heroes-complete]
