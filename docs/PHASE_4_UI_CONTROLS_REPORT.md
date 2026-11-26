@@ -193,3 +193,6 @@
 - The ring follows the same snapshot positions and visibility-limited entities used by the arena renderers; it does not create client-side movement or alter server combat validation.
 - Commits: `1d7a1d4ab1853285031d49173551712ccbbe7456` (crystal highlight), `5816344468da84254c0afde59b5363570c79640d` (hero/monster highlight), `4150aab672943259851082e315a3fd18993db695` (wire selected target into arena).
 - Fresh Flutter analysis, widget/unit tests and arena visual capture are required for this renderer change. No screenshot or device result is claimed yet.
+
+
+- Added the selected-target ID to the battlefield painter's repaint conditions, so changing targets redraws the crystal selection ring even when the authoritative snapshot itself has not changed. Commit: `7e9cf63016d71427925c0632131b26d56a5c65d8`.
