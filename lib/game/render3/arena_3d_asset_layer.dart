@@ -412,12 +412,13 @@ class _Arena3DActorPainter extends CustomPainter {
     for (final raw in players) {
       final player = _map(raw);
       if (player?['id'] == id || player?['playerId'] == id) {
-        return const {
-              'ranger': Color(0xFF9BE845),
-              'flame': Color(0xFFFF8A24),
-              'shadow': Color(0xFFB98CF0),
-              'storm': Color(0xFF48C8FF),
-            }[player?['heroId']] ??
+        const colors = <String, Color>{
+          'ranger': Color(0xFF9BE845),
+          'flame': Color(0xFFFF8A24),
+          'shadow': Color(0xFFB98CF0),
+          'storm': Color(0xFF48C8FF),
+        };
+        return colors[player?['heroId']?.toString()] ??
             const Color(0xFFE7D7B5);
       }
     }
