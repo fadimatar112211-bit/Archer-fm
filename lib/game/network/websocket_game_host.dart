@@ -293,7 +293,7 @@ class WebSocketGameHost {
       GameServerPlayer? joinRoom(GameServerSession session) {
         if (verifier == null) return session.join();
         if (session is! AccountBoundGameServerSession) return null;
-        return session.joinForAccount(accountId!);
+        return (session as AccountBoundGameServerSession).joinForAccount(accountId!);
       }
 
       switch (message['type']) {
