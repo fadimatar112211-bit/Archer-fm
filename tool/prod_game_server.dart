@@ -72,7 +72,14 @@ Future<void> main() async {
   }
 
   final port = int.tryParse(Platform.environment['ARCHER_FM_PORT'] ?? '') ?? 8080;
-  final rewardSchedule = _decodeRewardSchedule(rawRewardSchedule);
+  late final List<int> rewardSchedule;
+  try {
+    rewardSchedule = _decodeRewardSchedule(rawRewardSchedule);
+  } on FormatException catch (error) {
+    stderr.writeln('Invalid match reward configuration: $error');
+    exitCode = 65;
+    return;
+  }
   final persistenceClient = SupabaseRestClient(
     supabaseUrl: supabaseUrl,
     serviceRoleKey: serviceRoleKey,
