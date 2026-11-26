@@ -33,10 +33,6 @@ MatchCombatConfiguration _combatConfiguration() {
   counts[MonsterType.runner] = 20;
   return MatchCombatConfiguration(
     monsterCatalog: catalog,
-    initialArmies: {
-      for (var i = 1; i <= 4; i++)
-        'p$i': InitialArmySelection(counts),
-    },
     projectileSpeed: 120,
     maxActiveProjectiles: 128,
     maxUnitsPerArmy: 100,
@@ -58,6 +54,13 @@ AuthoritativeMatchSession _combatReadySession() {
         'type': 'select',
         'heroId': hero.id.name,
         'weaponId': hero.weapons.first.id,
+      }),
+      isNull,
+    );
+    expect(
+      session.handle(players[i], {
+        'type': 'army_select',
+        'counts': {'runner': 20},
       }),
       isNull,
     );
