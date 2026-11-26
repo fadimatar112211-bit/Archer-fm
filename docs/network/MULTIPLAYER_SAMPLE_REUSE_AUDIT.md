@@ -40,11 +40,13 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 ## Not yet implemented
 
 - Authenticated account service and cloud persistence.
-- Wire `AuthoritativeMatchSession` into the app/server entry point and connect its trusted score/crystal update methods to the canonical combat/world/castle systems. Client movement, attacks, damage, purchases, and rewards are deliberately rejected until those existing authorities are connected.
+- `AuthoritativeMatchSession` now creates a per-match `MatchWorldAuthority` at match start. It maps the four session player IDs to the four canonical castle anchors, creates seven crystals per player, advances the canonical mine controller, exposes server-side movement through map collision/terrain rules, applies crystal damage and rebuild checks, and synchronizes living-crystal counts into match standings. Client movement, attacks, damage, purchases, and rewards are still rejected at the transport boundary until authenticated server-side input handlers and the monster/hero combat adapters are connected.
 - Matchmaking, private room invite flow, friend invitations, and player removal.
 - Local Wi-Fi hotspot/LAN hosting and reconnect/host migration policy.
 - Final landscape selection screen and HUD connected to current 3D/2.5D renderer.
-- Server-side validation of progression transactions using approved economy configuration.
+- Server-side progression transaction endpoint that authenticates the account, loads/saves `HeroProgress`, and supplies the unlocked-weapon validator to session creation.
+- Connect `MatchWorldAuthority` to the existing monster combat adapters so monster attacks and hero attacks resolve against live crystals/units in the same authoritative tick.
+- Client input protocol and server-side movement-intent processing with the approved hero speed/world-unit conversion.
 
 
 ## Concrete match-session contract added
@@ -56,3 +58,14 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 - The session snapshot includes lobby selections, match phase/clock, participant score/crystal state, and final standings.
 - A local development entry point is available at `tool/dev_game_server.dart`. Run it with `dart run tool/dev_game_server.dart`; it binds to loopback by default. Set `ARCHER_FM_BIND_ADDRESS` and `ARCHER_FM_PORT` only for controlled LAN testing. It has no TLS or account authentication and must not be exposed to the public internet.
 - This is a tested match-session foundation, not a complete live game server: movement, attacks, unit purchases, economy, damage simulation, authenticated accounts, and cloud persistence still require integration with the existing game systems.
+
+
+## Canonical world bridge added
+
+- `MatchWorldAuthority` wraps the existing `ArenaMap`, `CastleController`, and `MineController`; it does not introduce duplicate map, crystal, or mine rules.
+- The castle controller now accepts an optional ordered player-ID list while preserving the original offline/default ownership behavior.
+- A four-player session creates exactly four player-owned castles and seven crystals per castle, with player IDs matching the room's actual server IDs.
+- Server-side movement uses `ArenaMap.slideMove` for bounds/obstacle collision. The client transport still does not accept raw position writes.
+- Mine capture and production are advanced from the authoritative player-position map; only pickups touched by a player are added to that player's match wallet.
+- Crystal damage rejects friendly/unknown targets and updates the match's living-crystal tiebreak count. Rebuild attempts use the canonical territory, collision, seven-crystal cap and wallet checks.
+- Added unit coverage for player-to-castle mapping, crystal damage/friendly-fire rejection, mine capture/production, rebuild affordability, and session-to-match tiebreak synchronization. These tests are included in CI; the latest run must pass before treating the changes as validated.
