@@ -94,6 +94,9 @@
 
 - Additional Arabic HUD cleanup: attack cooldown is now formatted in seconds with the Arabic unit rather than exposing the English `ms` suffix. Commit: `8213f7d71d6ebe70301ca20be14aef4623d1f2bf`.
 
+
+- Added a return-to-home action to the authoritative match result panel, so players can leave the finished match and return to the main hub. Callback behavior is covered by a widget test. Commits: `188a5876b92b4dd6e3e01daed30d694ccaee3f3b`, `86eaf43435275361c6aefa6b8b737b62559c0297`, `8e966589680ab04e46e51b77ebb0ff4336a2bc7a`, `aae29afc04b073d2a81dd4cfd03a06b9558e8dba`, `8805c06f5f41c7c5eba453148eef272971dab291`.
+
 ## Remaining Phase 4 work
 
 1. Account/profile and cloud identity are Phase 5 work; the home navigation, read-only armory, and authoritative match-result panel are now present. Add any further post-match return/requeue flow only when the server protocol supports it.
