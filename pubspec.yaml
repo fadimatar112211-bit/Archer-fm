@@ -20,3 +20,9 @@ flutter:
   assets:
     - assets/heroes3d/
     - assets/audio/flame/
+    - assets/monsters/
+    - assets/monsters/bog-monster/
+    - assets/monsters/werewolf/
+    - assets/monsters/stone-golem/
+    - assets/monsters/blind-stalker/
+    - assets/monsters/legacy/

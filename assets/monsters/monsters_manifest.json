@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "monsters": [
+    {
+      "id": "bog-monster",
+      "role": "normal",
+      "glb": "bog-monster/bog-monster.glb",
+      "info": "bog-monster/monster.json"
+    },
+    {
+      "id": "werewolf",
+      "role": "fast",
+      "glb": "werewolf/werewolf.glb",
+      "info": "werewolf/monster.json"
+    },
+    {
+      "id": "stone-golem",
+      "role": "heavy_aoe",
+      "glb": "stone-golem/stone-golem.glb",
+      "info": "stone-golem/monster.json"
+    },
+    {
+      "id": "blind-stalker",
+      "role": "stealth",
+      "glb": "blind-stalker/blind-stalker.glb",
+      "info": "blind-stalker/monster.json"
+    }
+  ],
+  "coordinate_system": "glTF 2.0: +Y up, +Z forward, meters"
+}

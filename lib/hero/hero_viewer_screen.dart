@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 
 import 'hero_catalog.dart';
 import 'hero3d.dart';
+import '../monsters/monster_battle_screen.dart';
 
 /// Placeholder type kept for backward-compatible constructor signature.
 /// The old sprite system used it; Hero3D loads its own .bin assets.
@@ -237,6 +238,12 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
               'Archer FM · ${_hero.nameAr}',
               style: const TextStyle(color: Color(0xFFE4F2E7), fontSize: 16, fontWeight: FontWeight.w700),
             ),
+          ),
+          TextButton.icon(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MonsterBattleScreen())),
+            icon: const Icon(Icons.sports_kabaddi, size: 16),
+            label: const Text('المعركة', style: TextStyle(fontSize: 12)),
+            style: TextButton.styleFrom(foregroundColor: theme.accent),
           ),
           Text(
             _hero3d.isReady ? 'Hero3D جاهز' : 'جارٍ التحميل…',

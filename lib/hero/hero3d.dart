@@ -78,17 +78,19 @@ class Hero3D {
 
   Future<void> load([String folder = 'assets/heroes3d']) async {
     final data = await rootBundle.load('$folder/$id.bin');
-    final bytes = Uint8List.fromList(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+    final raw = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    final bytes = raw.offsetInBytes % 4 == 0 ? raw : Uint8List.fromList(raw);
     final buf = bytes.buffer;
-    final headLength = ByteData.view(buf).getUint32(0, Endian.little);
+    final base = bytes.offsetInBytes;
+    final headLength = ByteData.view(buf, base, bytes.lengthInBytes).getUint32(0, Endian.little);
     final head = jsonDecode(utf8.decode(bytes.sublist(4, 4 + headLength))) as Map<String, dynamic>;
     final n = head['n'] as int, t = head['t'] as int;
     _anims = head['clips'] as Map<String, dynamic>;
-    var at = 4 + headLength;
+    var at = (4 + headLength + 3) & ~3;
     int take(int size) {
       final start = at;
       at += (size + 3) & ~3;
-      return start;
+      return base + start;
     }
     _pos = buf.asFloat32List(take(n * 12), n * 3);
     _col = buf.asInt32List(take(n * 4), n);
