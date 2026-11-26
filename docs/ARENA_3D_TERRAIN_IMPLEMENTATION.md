@@ -6,7 +6,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 
 ## Implemented on the current feature branch
 
-- Added a continuous camera-culled triangulated ground mesh across the visible battlefield, with deterministic elevation variation and biome-specific surface palettes.
+- Connected the existing packaged `assets/maps/arena/height_map.csv` (96×96, authored elevations 0–1.5) to the live battlefield painter through an asynchronous asset load; the renderer now builds a continuous camera-culled triangular heightfield from that source, with shaded faces and contour highlights. No height-map data was regenerated.
 - Added shallow raised river-bank faces, shoreline stones and pale foam seams along the water channels to improve depth and scale.
 - Added a software-rendered, height-bearing triangular mesh pass for biome landforms. The mesh has concentric elevation rings, exposed cliff faces, per-face directional shading, and biome palettes for forest, desert, snow and volcanic regions.
 - Replaced flat circular tree canopies with layered faceted conifer crowns and a tapered trunk.
@@ -26,7 +26,7 @@ The battlefield used to draw its ground, trees and rocks as flat Canvas shapes w
 ## Still required before calling the map fully 3D
 
 This is an initial mesh-based terrain pass, not completion of the final map art. Remaining work includes:
-- Connect the packaged 96×96 height-map asset to the live match renderer (the asset loader currently parses it separately from the procedural match-world snapshot), with terrain chunking and correct depth ordering.
+- Improve terrain chunking and depth ordering where raised ground intersects bridges, castles and moving actors; the live painter now consumes the packaged 96×96 height map.
 - Move the terrain from this Canvas-based mesh/2.5D pass to a true GPU 3D scene with camera, depth buffer, perspective, materials and real mesh geometry; current renderer still paints projected triangles.
 - Replace remaining flat castle cores, towers and resource structures with full 3D meshes; wall, bridge and crystal elements only have partial extrusion so far.
 - Upgrade river rendering to a true 3D water surface with waterfalls/ripples, reflections and material response; the current banks are extruded but the water itself remains a projected painter surface.
