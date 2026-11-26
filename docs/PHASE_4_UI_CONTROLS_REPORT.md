@@ -313,3 +313,13 @@
 - Added widget coverage proving the preference changes, survives leaving/reopening the settings route, and updates the shared runtime preference.
 - Commits: `31b38df150c6e0677109a8cad49f5d1c0d1b1537` (shared feedback preference), `68ed67a35c844b94745cfa09645c58ecda1fb701` (settings integration), `103a782a2f6b61923524efed198717ab6e5a53a6` (gameplay feedback hooks), `1c0ea071f70eba86eba3348a54681f981b0bd94f` (cross-route preference test).
 - Fresh Flutter analysis, full tests and Android APK build are required for this batch. Haptic behavior still needs confirmation on a physical Android device.
+
+
+## Sixteenth implementation batch — configurable movement sensitivity
+
+- Added a session-scoped movement sensitivity preference with a bounded range of 50%–150% and a 100% default.
+- Added an Arabic settings slider showing the current percentage. The live match joystick consumes the shared value, so the setting changes actual movement input scaling rather than only changing a label.
+- Added a settings widget test for updating the shared value and a live-match integration assertion that the joystick receives the configured sensitivity.
+- Like haptics, this preference is session-scoped until Phase 5 provides durable player settings storage.
+- Commits: `7790b3d915189a756855337f4c60daec6570a0ce` (preference), `9a76345ff8c2d53c763df88b6f0efae2860fb776` (settings slider), `16b1603221eaa4888660efa5adf6c8ec844b5429` (live joystick wiring), `a1322abe219393ad54f1fb7a862126f265f58cfd` (settings test), `2bfe307182328885f628cca4df4a475f8facdf04` (live match test).
+- Fresh Flutter analysis, full tests and Android debug APK build remain required. The new UI has not yet been verified on a physical device.
