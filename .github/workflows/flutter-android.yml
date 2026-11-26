@@ -39,7 +39,7 @@ jobs:
           flutter-version: '3.47.8'
           cache: true
       - run: flutter create --platforms=android --project-name archer_fm --org com.archerfm --no-pub .
-      - name: Add Maven Central to Flutter's included Gradle build plugin repositories
+      - name: Ensure Flutter Gradle plugin repositories are configured
         shell: bash
         run: |
           FLUTTER_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
