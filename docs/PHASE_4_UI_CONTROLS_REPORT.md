@@ -323,3 +323,11 @@
 - Like haptics, this preference is session-scoped until Phase 5 provides durable player settings storage.
 - Commits: `7790b3d915189a756855337f4c60daec6570a0ce` (preference), `9a76345ff8c2d53c763df88b6f0efae2860fb776` (settings slider), `16b1603221eaa4888660efa5adf6c8ec844b5429` (live joystick wiring), `a1322abe219393ad54f1fb7a862126f265f58cfd` (settings test), `2bfe307182328885f628cca4df4a475f8facdf04` (live match test).
 - Fresh Flutter analysis, full tests and Android debug APK build remain required. The new UI has not yet been verified on a physical device.
+
+
+## Validation checkpoint after the sixteenth batch
+
+- Latest implementation/documentation commit: `b66458c8250b8a4ef3b8540beecbaf566204773b`.
+- The available Flutter Android run `45901549385` was triggered for the earlier pre-sensitivity checkpoint (`5f23f64...`), not this latest batch. At the last check, `flutter analyze --no-fatal-infos` had passed and `flutter test` was still running; APK build had not started. This is not a passing validation for the sensitivity changes.
+- The arena visual-capture run `45901549353` completed successfully, but it validates only the earlier arena capture test, not the latest settings/joystick changes.
+- A fresh full Flutter test run and Android APK build against the latest branch head are still required. Physical-device touch and haptics QA remains outstanding.
