@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../game/arena/arena_map_screen.dart';
+
 import 'hero_assets.dart';
 import 'hero_catalog.dart';
 import 'hero_manifest.dart';
@@ -291,6 +293,13 @@ class _HeroViewerScreenState extends State<HeroViewerScreen>
         foregroundColor: const Color(0xFFE4F2E7),
         title: Text('Archer FM · ${_hero.nameEn}'),
         actions: [
+          IconButton(
+            tooltip: 'عرض ساحة المعركة',
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ArenaMapScreen()),
+            ),
+          ),
           if (manifest != null)
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 16),
