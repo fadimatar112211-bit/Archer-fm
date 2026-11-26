@@ -339,3 +339,12 @@
 - Added unit tests proving movement sensitivity is clamped to the supported 50%–150% range and haptics can be disabled independently.
 - Commits: `823e6c80ce9ed4312b31776c21f1136b3a09c2ab` (joystick scaling test), `5f3a42299e5435ca3b6689703d1c6715cd6dd74f` (shared preference tests).
 - Validation for this batch still requires a fresh successful Flutter analysis, full test suite and Android debug APK build on the current branch head.
+
+
+## Eighteenth implementation batch — accessible movement controls
+
+- Extended the virtual joystick's Arabic accessibility semantics with explicit move-up, move-down, move-left, move-right and stop actions. Screen-reader or switch-access users can now issue movement commands without performing a drag gesture; the same movement callback and server command path are used.
+- Kept the existing touch joystick behavior, sensitivity scaling, retry-on-rejected-send behavior and zero-vector stop on release/disposal.
+- Added widget coverage that verifies all five directional/stop actions are exposed in the semantics tree.
+- Commits: implementation and regression test recorded in the Git history for this batch.
+- A fresh analyzer, full Flutter test run and Android build are required; this change is not considered verified until those checks finish. Physical-device assistive-technology review remains outstanding.
