@@ -278,7 +278,7 @@ void main() {
     );
     final players = [for (var i = 0; i < 4; i++) session.join()!];
     for (var i = 0; i < players.length; i++) {
-      final hero = archerFmHeroes[i];
+      final hero = archerFmHeroes.first;
       expect(session.handle(players[i], {
         'type': 'select',
         'heroId': hero.id.name,
