@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import '../heroes/hero_roster.dart';
+import '../world/arena_map.dart';
 import '../match/match_rules.dart';
+import 'match_world_authority.dart';
 import 'websocket_game_host.dart';
 
 /// Concrete four-player match session used by [WebSocketGameHost].
@@ -15,7 +17,9 @@ class AuthoritativeMatchSession implements GameServerSession {
     int durationMinutes = 30,
     Random? random,
     bool Function(String playerId, String weaponId)? canUseWeapon,
-  })  : duration = MatchDuration.fromMinutes(durationMinutes),
+    ArenaMap Function()? mapFactory,
+  })  : _mapFactory = mapFactory,
+        duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
         _canUseWeapon = canUseWeapon;
 
@@ -23,6 +27,7 @@ class AuthoritativeMatchSession implements GameServerSession {
     String roomCode,
     Map<String, dynamic> message, {
     bool Function(String playerId, String weaponId)? canUseWeapon,
+    ArenaMap Function()? mapFactory,
   }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
@@ -32,12 +37,16 @@ class AuthoritativeMatchSession implements GameServerSession {
       code: roomCode,
       durationMinutes: requestedDuration as int? ?? 30,
       canUseWeapon: canUseWeapon,
+      mapFactory: mapFactory,
     );
   }
 
   @override
   final String code;
   final MatchDuration duration;
+  final ArenaMap Function()? _mapFactory;
+  MatchWorldAuthority? world;
+  int _worldNowMs = 0;
   final Random _random;
   final bool Function(String playerId, String weaponId)? _canUseWeapon;
   final List<_MatchPlayer> _players = [];
@@ -126,6 +135,11 @@ class AuthoritativeMatchSession implements GameServerSession {
         if (_players.any((item) => item.heroId == null || item.weaponId == null)) {
           return 'all_players_must_select';
         }
+        world = MatchWorldAuthority(
+          map: _mapFactory?.call() ?? ArenaMap.generate(_random),
+          playerIds: [for (final item in _players) item.id],
+          random: _random,
+        );
         _rules = MatchRulesEngine(
           duration: duration,
           participants: [
@@ -164,10 +178,68 @@ class AuthoritativeMatchSession implements GameServerSession {
     return rules.setLivingCrystals(playerId, count);
   }
 
+  /// Server-authoritative movement through map collision and terrain rules.
+  Offset? movePlayer(String playerId, Offset desiredDelta, {double radius = 18}) {
+    final rules = _rules;
+    final matchWorld = world;
+    if (rules?.phase != MatchPhase.running || matchWorld == null) return null;
+    return matchWorld.movePlayer(playerId, desiredDelta, radius);
+  }
+
+  /// Connects authoritative crystal damage to the canonical match tiebreak data.
+  CrystalDamageResult damageCrystal({
+    required String attackerId,
+    required String crystalId,
+    required double amount,
+  }) {
+    final rules = _rules;
+    final matchWorld = world;
+    if (rules?.phase != MatchPhase.running || matchWorld == null) {
+      return const CrystalDamageResult.unknownCrystal();
+    }
+    final result = matchWorld.damageCrystal(
+      attackerId: attackerId,
+      crystalId: crystalId,
+      amount: amount,
+    );
+    if (result.accepted && result.ownerId != null && result.livingCrystals != null) {
+      rules!.setLivingCrystals(result.ownerId!, result.livingCrystals!);
+    }
+    return result;
+  }
+
+  CrystalRebuildResult rebuildCrystal({
+    required String ownerId,
+    required Offset position,
+  }) {
+    final rules = _rules;
+    final matchWorld = world;
+    if (rules?.phase != MatchPhase.running || matchWorld == null) {
+      return CrystalRebuildResult.blocked;
+    }
+    final result = matchWorld.rebuildCrystal(ownerId: ownerId, position: position);
+    if (result == CrystalRebuildResult.ok) {
+      rules!.setLivingCrystals(ownerId, matchWorld.livingCrystals(ownerId));
+    }
+    return result;
+  }
+
   @override
   void tick(Duration elapsed) {
     final rules = _rules;
-    if (rules?.phase == MatchPhase.running) rules!.advance(elapsed);
+    if (rules?.phase != MatchPhase.running) return;
+    rules!.advance(elapsed);
+    final matchWorld = world;
+    if (matchWorld != null && elapsed.inMilliseconds > 0) {
+      _worldNowMs += elapsed.inMilliseconds;
+      final result = matchWorld.tick(
+        deltaMs: elapsed.inMilliseconds,
+        nowMs: _worldNowMs,
+      );
+      for (final entry in result.livingCrystals.entries) {
+        rules.setLivingCrystals(entry.key, entry.value);
+      }
+    }
   }
 
   @override
@@ -203,6 +275,27 @@ class AuthoritativeMatchSession implements GameServerSession {
                 'livingCrystals': standing.livingCrystals,
                 'rank': standing.rank,
                 'hasForfeited': standing.hasForfeited,
+              },
+          ],
+        },
+      if (world case final matchWorld?)
+        'world': {
+          'resources': matchWorld.resources,
+          'livingCrystals': {
+            for (final id in _players) id.id: matchWorld.livingCrystals(id.id),
+          },
+          'playerPositions': {
+            for (final entry in matchWorld.playerPositions.entries)
+              entry.key: {'x': entry.value.dx, 'y': entry.value.dy},
+          },
+          'mines': [
+            for (final mine in matchWorld.mines.mines)
+              {
+                'ownerId': mine.ownerId,
+                'capturerId': mine.capturerId,
+                'captureFraction': mine.captureFraction,
+                'x': mine.position.dx,
+                'y': mine.position.dy,
               },
           ],
         },
