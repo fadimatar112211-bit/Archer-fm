@@ -186,7 +186,7 @@ void main() {
       expect(
         fakeClient.sent.any(
           (message) =>
-              message['type'] == 'attack' && message['targetId'] == 'p2',
+              message['type'] == 'attack' && message['targetId'] == 'hero_p2',
         ),
         isTrue,
       );
