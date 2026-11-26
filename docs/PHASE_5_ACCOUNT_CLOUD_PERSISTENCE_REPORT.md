@@ -120,7 +120,7 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 
 ### Validation
 - An initial Android validation run exposed two source errors (a malformed callback line and an interface capability cast); both were corrected.
-- The latest validation runs on the current branch are in progress. Record their final Match Rules, Monster Army and Android results here only after they complete. A previous run on an earlier SHA failed at analysis and did not build an APK.
+- The current source validation on commit `a58e9bcb3471bd90c90543c95e60ec7b7ca66e38` passed Match Rules analysis and all **303 Flutter tests** (run [45908292761](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908292761)). Android validation on the same commit also passed dependency setup, analysis and the full Flutter test step; the debug APK build was still running at the time of this update (run [45908292769](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908292769)). Earlier intermediate runs failed on issues that were fixed before this validated commit. Do not claim the Android artifact is ready until build and upload both complete.
 
 
 ## 7. Review and verification checkpoint — 2026-11-27
