@@ -16,7 +16,8 @@ import 'websocket_game_host.dart';
 /// Client commands may choose a valid hero/loadout, start a full lobby, or
 /// forfeit. Scores and crystal counts are updated only through trusted
 /// server-side methods called by the authoritative combat/castle systems.
-class AuthoritativeMatchSession implements GameServerSession {
+class AuthoritativeMatchSession
+    implements GameServerSession, PlayerScopedSnapshotSession {
   AuthoritativeMatchSession({
     required this.code,
     int durationMinutes = 30,
@@ -619,6 +620,59 @@ class AuthoritativeMatchSession implements GameServerSession {
             },
       ],
     };
+  }
+
+  /// Builds a recipient-specific state projection. Enemy units and
+  /// projectiles outside the existing map reveal radius are not sent over the
+  /// network, rather than merely hidden by the local renderer.
+  @override
+  Map<String, Object?> snapshotFor(GameServerPlayer player) {
+    final result = snapshot();
+    final worldData = result['world'];
+    final combatData = result['combat'];
+    if (worldData is! Map || combatData is! Map) return result;
+
+    final positions = worldData['playerPositions'];
+    final localPosition = positions is Map ? positions[player.id] : null;
+    final localX = localPosition is Map && localPosition['x'] is num
+        ? (localPosition['x'] as num).toDouble()
+        : null;
+    final localY = localPosition is Map && localPosition['y'] is num
+        ? (localPosition['y'] as num).toDouble()
+        : null;
+
+    bool visibleToPlayer(Object? raw) {
+      if (raw is! Map) return false;
+      if (raw['ownerId'] == player.id) return true;
+      final x = raw['x'];
+      final y = raw['y'];
+      if (localX == null || localY == null || x is! num || y is! num) {
+        return false;
+      }
+      final dx = x.toDouble() - localX;
+      final dy = y.toDouble() - localY;
+      return dx * dx + dy * dy <= enemyVisibleRadius * enemyVisibleRadius;
+    }
+
+    final scopedCombat = Map<String, Object?>.from(combatData);
+    final monsters = combatData['monsters'];
+    if (monsters is List) {
+      scopedCombat['monsters'] = monsters.where(visibleToPlayer).toList();
+    }
+    final dying = combatData['dyingMonsters'];
+    if (dying is List) {
+      // Dying entries have no position; expose only the recipient's own units.
+      scopedCombat['dyingMonsters'] = dying
+          .where((unit) => unit is Map && unit['ownerId'] == player.id)
+          .toList();
+    }
+    final projectiles = combatData['projectiles'];
+    if (projectiles is List) {
+      scopedCombat['projectiles'] =
+          projectiles.where(visibleToPlayer).toList();
+    }
+    result['combat'] = scopedCombat;
+    return result;
   }
 
   void _syncCrystalStandings() {
