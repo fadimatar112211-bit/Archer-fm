@@ -793,16 +793,31 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
             spacing: 6,
             children: [
               for (final type in MonsterType.values)
-                OutlinedButton(
-                  onPressed: canAct
-                      ? () => _sendPurchase(type)
-                      : null,
-                  child: Text(switch (type) {
+                Semantics(
+                  button: true,
+                  enabled: canAct,
+                  label: switch (type) {
                     MonsterType.runner => 'شراء عدّاء',
                     MonsterType.tank => 'شراء مدرّع',
                     MonsterType.stalker => 'شراء متسلّل',
                     MonsterType.ranged => 'شراء رامٍ',
-                  }),
+                  },
+                  hint: canAct
+                      ? 'يرسل طلب الشراء إلى الخادم؛ يُتحقق من الرصيد والسعة قبل الخصم'
+                      : 'الشراء متاح أثناء المباراة عند اتصالك وبقاء بطلك حياً',
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(88, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                    onPressed: canAct ? () => _sendPurchase(type) : null,
+                    child: Text(switch (type) {
+                      MonsterType.runner => 'شراء عدّاء',
+                      MonsterType.tank => 'شراء مدرّع',
+                      MonsterType.stalker => 'شراء متسلّل',
+                      MonsterType.ranged => 'شراء رامٍ',
+                    }),
+                  ),
                 ),
             ],
           ),
