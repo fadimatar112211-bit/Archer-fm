@@ -56,7 +56,7 @@ class MatchHeroState {
     required this.definition,
     required this.weaponId,
     required this.spawnPosition,
-    this.level = 1,
+    required int level,
     required int comboResetWindowMs,
   }) : combat = HeroCombatRuntime(
           hero: definition,
@@ -72,14 +72,14 @@ class MatchHeroState {
   final String playerId;
   final HeroCombatDefinition definition;
   final String weaponId;
-  final int level;
   final HeroCombatRuntime combat;
+  int get level => combat.level;
   late double health;
   Duration respawnRemaining = Duration.zero;
   Duration protectionRemaining = Duration.zero;
   final Offset spawnPosition;
 
-  double get maxHealth => definition.healthAt(level).toDouble();
+  double get maxHealth => definition.healthAt(combat.level).toDouble();
   bool get isAlive => health > 0;
   bool get isRespawning => !isAlive && respawnRemaining > Duration.zero;
   bool get isProtected => protectionRemaining > Duration.zero;
@@ -126,16 +126,21 @@ class MatchCombatAuthority {
     required Map<String, HeroCombatDefinition> heroes,
     required Map<String, String> weaponIds,
     required Map<String, InitialArmySelection> initialArmies,
+    required Map<String, int> heroLevels,
     required this.configuration,
     math.Random? random,
   }) {
     if (heroes.length != world.playerIds.length ||
         weaponIds.length != world.playerIds.length ||
         initialArmies.length != world.playerIds.length ||
+        heroLevels.length != world.playerIds.length ||
         world.playerIds.any((id) =>
             !heroes.containsKey(id) ||
             !weaponIds.containsKey(id) ||
-            !initialArmies.containsKey(id))) {
+            !initialArmies.containsKey(id) ||
+            !heroLevels.containsKey(id) ||
+            heroLevels[id]! < 1 ||
+            heroLevels[id]! > heroLevelCap)) {
       throw ArgumentError('Combat loadouts and initial armies must cover all four players.');
     }
 
@@ -160,6 +165,7 @@ class MatchCombatAuthority {
         definition: hero,
         weaponId: weaponId,
         spawnPosition: world.playerPositions[playerId]!,
+        level: heroLevels[playerId]!,
         comboResetWindowMs: configuration.comboResetWindowMs,
       );
       _heroes[playerId] = heroState;
