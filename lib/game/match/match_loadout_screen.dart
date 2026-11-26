@@ -7,6 +7,7 @@ import 'match_target_selector.dart';
 import '../../monsters/monster_models.dart';
 
 import '../controls/virtual_joystick.dart';
+import '../render3/arena_battlefield.dart';
 import '../heroes/hero_roster.dart';
 import '../network/game_client.dart';
 
@@ -543,6 +544,13 @@ class _MatchLoadoutScreenState extends State<MatchLoadoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_playerId != null) ...[
+            ArenaBattlefield(
+              snapshot: state,
+              localPlayerId: _playerId!,
+            ),
+            const SizedBox(height: 12),
+          ],
           Wrap(
             spacing: 14,
             runSpacing: 8,
