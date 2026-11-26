@@ -1,9 +1,12 @@
 # Archer FM — Project Status
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
-> Last updated: 2026-11-14
-> Project status: Hero asset audit and transfer in progress
+> Last updated: 2026-11-26
+> Project status: Match foundation implemented; Phase 1 repository audit and CI hardening in progress
+> Active work branch: `feature/match-rules-foundation` (PR #20, Draft, open)
 > Default branch: `main`
+>
+> **Current status note (2026-11-26):** The detailed historical sections below include snapshots from earlier dates and are not a live completion claim. For the current evidence-based audit and execution order, see `docs/PROJECT_AUDIT_AND_REMAINING_WORK.md` and `docs/PHASE_1_COMPLETION_REPORT.md`.
 
 ## 1. Project identity
 
