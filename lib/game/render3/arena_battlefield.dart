@@ -211,7 +211,7 @@ class _ArenaPainter extends CustomPainter {
       final radius = _number(obstacle['radius']);
       if (point == null || radius == null) continue;
       final p = project(point);
-      final r = math.max(4.0, (project(point + Offset(radius, 0)) - p).distance);
+      final r = math.max(4.0, (project(point + Offset(radius, 0)) - p).distance).toDouble();
       final tree = obstacle['kind'] == 'tree';
       canvas.drawCircle(p + const Offset(0, 3), r, Paint()..color = const Color(0x66000000));
       canvas.drawCircle(
