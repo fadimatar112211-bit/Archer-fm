@@ -191,7 +191,7 @@ class _ArenaPainter extends CustomPainter {
     );
     // Real elevated mesh facets are rendered before gameplay overlays so
     // rivers, bridges, castles and actors remain readable and authoritative.
-    _drawBaseTerrainMesh(canvas, world, worldSize, project);
+    _drawBaseTerrainMesh(canvas, world, worldSize, cameraOrigin, size, project);
     _drawTerrain3D(canvas, world, project);
     _drawBiomes(canvas, world, project);
     _drawTerrainTexture(canvas, world, cameraOrigin, project);
@@ -215,6 +215,8 @@ class _ArenaPainter extends CustomPainter {
     Canvas canvas,
     Map world,
     Size worldSize,
+    Offset cameraOrigin,
+    Size viewport,
     Offset Function(Offset) project,
   ) {
     const cell = 64.0;
@@ -245,19 +247,6 @@ class _ArenaPainter extends CustomPainter {
       return height.clamp(0.0, 20.0).toDouble();
     }
 
-    Color biomeColor(Offset center) {
-      for (final biome in biomes) {
-        final origin = _point(biome);
-        final radius = _number(biome['radius']);
-        if (origin == null || radius == null) continue;
-        if ((center - origin).distance <= radius) {
-          final kind = biome['kind']?.toString() ?? 'forest';
-          final palette = palettes[kind] ?? palettes['forest']!;
-          return palette[0];
-        }
-      }
-      return base;
-    }
 
     Path triangle(Offset a, Offset b, Offset d) => Path()
       ..moveTo(a.dx, a.dy)
@@ -269,8 +258,23 @@ class _ArenaPainter extends CustomPainter {
       return project(point) + Offset(0, -heightAt(point));
     }
 
-    for (var y = 0.0; y < worldSize.height; y += cell) {
-      for (var x = 0.0; x < worldSize.width; x += cell) {
+    const projectionYScale = 0.82;
+    final scale = math.min(
+      viewport.width / 960.0,
+      viewport.height / (540.0 * projectionYScale),
+    );
+    final visibleWidth = viewport.width / scale;
+    final visibleHeight = viewport.height / (scale * projectionYScale);
+    final firstX = math.max(0, (cameraOrigin.dx / cell).floor() - 1);
+    final firstY = math.max(0, (cameraOrigin.dy / cell).floor() - 1);
+    final lastX = math.min((worldSize.width / cell).ceil(),
+        ((cameraOrigin.dx + visibleWidth) / cell).ceil() + 1);
+    final lastY = math.min((worldSize.height / cell).ceil(),
+        ((cameraOrigin.dy + visibleHeight) / cell).ceil() + 1);
+    for (var row = firstY; row < lastY; row++) {
+      for (var column = firstX; column < lastX; column++) {
+        final x = column * cell;
+        final y = row * cell;
         final x1 = math.min(x + cell, worldSize.width);
         final y1 = math.min(y + cell, worldSize.height);
         final a = vertex(x, y);
