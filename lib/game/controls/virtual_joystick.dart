@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
 typedef JoystickMoveCallback = bool Function(Offset direction);
