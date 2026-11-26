@@ -325,7 +325,7 @@ class WebSocketGameHost {
               player = room.resume(token);
             } else if (room is AccountBoundGameServerSession &&
                 room.ownsResumeToken(token, accountId!)) {
-              player = room!.resume(token);
+              player = room.resume(token);
             }
           }
           break;
@@ -357,7 +357,7 @@ class WebSocketGameHost {
         'lastSeq': joinedPlayer.lastSequence,
       });
       final initialSnapshot = joinedRoom is PlayerScopedSnapshotSession
-          ? joinedRoom.snapshotFor(joinedPlayer)
+          ? (joinedRoom as PlayerScopedSnapshotSession).snapshotFor(joinedPlayer)
           : joinedRoom.snapshot();
       _send(socket, initialSnapshot);
     } catch (_) {
