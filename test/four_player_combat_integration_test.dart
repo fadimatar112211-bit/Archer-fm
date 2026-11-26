@@ -150,7 +150,7 @@ void main() {
       sockets.first.add(jsonEncode({
         'type': 'attack',
         'seq': 5,
-        'targetId': 'hero_p2',
+        'targetId': 'forged_target_id',
       }));
       expect((await ack)['error'], 'attack_rejected');
 
