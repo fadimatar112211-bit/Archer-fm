@@ -1,7 +1,7 @@
 import 'monster_models.dart';
 import 'monster_progression.dart';
 import 'monster_progress_store.dart';
-import '../network/supabase_rest_client.dart';
+import '../game/network/supabase_rest_client.dart';
 
 /// Cloud implementation of [MonsterProgressStore].
 ///
