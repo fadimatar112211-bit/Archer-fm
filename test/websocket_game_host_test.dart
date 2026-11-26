@@ -92,16 +92,57 @@ class _FakeScopedSession extends _FakeSession
       };
 }
 
+class _FakeAccountSession extends _FakeSession
+    implements AccountBoundGameServerSession, AccountProvisioningGameServerSession {
+  _FakeAccountSession(super.code);
+
+  final Map<String, String> _accounts = {};
+  bool provisioningComplete = false;
+  bool failProvisioning = false;
+
+  @override
+  GameServerPlayer? joinForAccount(String accountId) {
+    if (_accounts.containsValue(accountId)) return null;
+    final player = join();
+    if (player != null) _accounts[player.id] = accountId;
+    return player;
+  }
+
+  @override
+  bool ownsResumeToken(String resumeToken, String accountId) =>
+      _players.any((player) =>
+          player.resumeToken == resumeToken &&
+          _accounts[player.id] == accountId);
+
+  @override
+  Future<void> prepareAccount(GameServerPlayer player, String accountId) async {
+    if (_accounts[player.id] != accountId) {
+      throw StateError('account mismatch');
+    }
+    if (failProvisioning) throw StateError('cloud restore failed');
+    provisioningComplete = true;
+  }
+}
+
 class _FakeFactory {
   final Map<String, _FakeSession> sessions = {};
   bool scopedSnapshots = false;
+  bool accountBound = false;
+  bool failProvisioning = false;
 
   GameServerSession create(String code, Map<String, dynamic> message) =>
       sessions.putIfAbsent(
         code,
-        () => scopedSnapshots
-            ? _FakeScopedSession(code)
-            : _FakeSession(code),
+        () {
+          if (accountBound) {
+            final session = _FakeAccountSession(code)
+              ..failProvisioning = failProvisioning;
+            return session;
+          }
+          return scopedSnapshots
+              ? _FakeScopedSession(code)
+              : _FakeSession(code);
+        },
       );
 }
 
@@ -239,4 +280,59 @@ void main() {
     expect(response.statusCode, HttpStatus.badRequest);
     client.close(force: true);
   });
+
+  test('verified account is hydrated before the host sends welcome', () async {
+    factory.accountBound = true;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' ? 'verified-account' : null,
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final welcomeFuture = _nextType(messages, 'welcome');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    final welcome = await welcomeFuture;
+    expect(welcome['id'], 'p1');
+    expect(factory.sessions.values.single.provisioningComplete, isTrue);
+    await socket.close();
+  });
+
+  test('cloud restore failure rejects the handshake without welcome', () async {
+    factory
+      ..accountBound = true
+      ..failProvisioning = true;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async => 'verified-account',
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final errorFuture = _nextType(messages, 'error');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    final error = await errorFuture;
+    expect(error['reason'], 'account_restore_failed');
+    expect(
+      messages.where((message) => message['type'] == 'welcome').isEmpty,
+      isTrue,
+    );
+    await socket.close();
+  });
+
 }
