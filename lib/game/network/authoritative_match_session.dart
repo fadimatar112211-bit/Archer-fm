@@ -134,11 +134,12 @@ class AuthoritativeMatchSession
 
   @override
   bool ownsResumeToken(String resumeToken, String accountId) {
-    final player = _players.cast<_MatchPlayer?>().firstWhere(
-          (candidate) => candidate?.resumeToken == resumeToken,
-          orElse: () => null,
-        );
-    return player != null && player.accountId == accountId;
+    for (final player in _players) {
+      if (player.resumeToken == resumeToken) {
+        return player.accountId == accountId;
+      }
+    }
+    return false;
   }
 
   @override
