@@ -425,6 +425,63 @@ void main() {
   });
 
 
+  test('routes crystal rebuild requests through server-owned player identity and wallet', () {
+    final session = _combatReadySession();
+    final p1 = session.players.first;
+    final castle = session.world!.castles.castleOf('p1')!;
+    final crystal = castle.crystals.first;
+    expect(
+      session.damageCrystal(
+        attackerId: 'p2',
+        crystalId: crystal.id,
+        amount: crystal.maxHp + 1,
+      ).destroyedNow,
+      isTrue,
+    );
+
+    final cost = session.world!.castles.rebuildCost(castle);
+    Offset? validPosition;
+    for (var radius = 40.0; radius <= 280 && validPosition == null; radius += 20) {
+      for (var step = 0; step < 24; step++) {
+        final angle = step * 2 * pi / 24;
+        final candidate = castle.anchor +
+            Offset(cos(angle) * radius, sin(angle) * radius);
+        if (session.world!.castles.validateRebuild(
+              castle,
+              candidate,
+              resources: cost,
+            ) == CrystalRebuildResult.ok) {
+          validPosition = candidate;
+          break;
+        }
+      }
+    }
+    expect(validPosition, isNotNull);
+    session.world!.creditResources('p1', cost);
+
+    expect(session.handle(p1, {
+      'type': 'rebuild_crystal',
+      'ownerId': 'p2',
+      'x': validPosition!.dx,
+      'y': validPosition.dy,
+    }), isNull);
+    expect(session.world!.livingCrystals('p1'), 7);
+    expect(session.world!.livingCrystals('p2'), 7);
+    expect(session.world!.resources['p1'], 0);
+    expect(
+      (session.snapshot()['players'] as List)
+          .cast<Map>()
+          .firstWhere((player) => player['id'] == 'p1')['lastRebuild'],
+      isA<Map>(),
+    );
+
+    expect(session.handle(p1, {
+      'type': 'rebuild_crystal',
+      'x': double.nan,
+      'y': 0,
+    }), 'invalid_rebuild_position');
+  });
+
   test('requires a valid individual twenty-unit army before a configured match starts', () {
     final session = AuthoritativeMatchSession(
       code: 'army01',
