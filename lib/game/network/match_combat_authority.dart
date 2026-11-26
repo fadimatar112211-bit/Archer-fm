@@ -254,10 +254,15 @@ class MatchCombatAuthority {
       armies: armies,
       combatLoop: MonsterMatchCombatLoop(
         combat: const MonsterCombatController(),
-        resolver: const MonsterCombatResolver(),
+        resolver: MonsterCombatResolver(
+          onKill: (attackerOwnerId, targetKind) =>
+              _onKill?.call(attackerOwnerId, targetKind),
+        ),
         rangedHandler: const MonsterRangedAttackHandler(),
         projectiles: projectileManager,
         projectileSpeed: configuration.projectileSpeed,
+        onProjectileKill: (attackerOwnerId, targetKind) =>
+            _onKill?.call(attackerOwnerId, targetKind),
         projectileId: _projectileId,
         obstaclesFor: (_) => [
           for (final obstacle in world.map.obstacles)
