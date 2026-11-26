@@ -265,18 +265,18 @@ class _ArenaPainter extends CustomPainter {
     );
     final visibleWidth = viewport.width / scale;
     final visibleHeight = viewport.height / (scale * projectionYScale);
-    final firstX = math.max(0, (cameraOrigin.dx / cell).floor() - 1);
-    final firstY = math.max(0, (cameraOrigin.dy / cell).floor() - 1);
+    final firstX = math.max(0, (cameraOrigin.dx / cell).floor() - 1).toInt();
+    final firstY = math.max(0, (cameraOrigin.dy / cell).floor() - 1).toInt();
     final lastX = math.min((worldSize.width / cell).ceil(),
-        ((cameraOrigin.dx + visibleWidth) / cell).ceil() + 1);
+        ((cameraOrigin.dx + visibleWidth) / cell).ceil() + 1).toInt();
     final lastY = math.min((worldSize.height / cell).ceil(),
-        ((cameraOrigin.dy + visibleHeight) / cell).ceil() + 1);
+        ((cameraOrigin.dy + visibleHeight) / cell).ceil() + 1).toInt();
     for (var row = firstY; row < lastY; row++) {
       for (var column = firstX; column < lastX; column++) {
-        final x = column * cell;
-        final y = row * cell;
-        final x1 = math.min(x + cell, worldSize.width);
-        final y1 = math.min(y + cell, worldSize.height);
+        final x = (column * cell).toDouble();
+        final y = (row * cell).toDouble();
+        final x1 = math.min(x + cell, worldSize.width).toDouble();
+        final y1 = math.min(y + cell, worldSize.height).toDouble();
         final a = vertex(x, y);
         final b = vertex(x1, y);
         final d = vertex(x1, y1);
