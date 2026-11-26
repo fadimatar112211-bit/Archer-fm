@@ -8,6 +8,10 @@ import 'package:archer_fm/game/heroes/hero_roster.dart';
 Map<String, Object?> _validConfiguration() => {
   'projectileSpeed': 120,
   'weaponUpgradeDamagePerLevel': 0.04,
+  'monsterKillScore': 5,
+  'monsterKillResources': 3,
+  'heroKillScore': 15,
+  'heroKillResources': 10,
   'maxActiveProjectiles': 128,
   'maxUnitsPerArmy': 100,
   'worldUnitsPerSecond': 100,
@@ -40,6 +44,10 @@ void main() {
     expect(config.monsterCatalog.all, hasLength(4));
     expect(config.ultimateEnergyCosts, hasLength(16));
     expect(config.weaponUpgradeDamagePerLevel, 0.04);
+    expect(config.monsterKillScore, 5);
+    expect(config.monsterKillResources, 3);
+    expect(config.heroKillScore, 15);
+    expect(config.heroKillResources, 10);
     expect(config.maxHeroEnergy, 100);
     expect(config.energyRegenerationPerSecond, 8);
     expect(config.weaponUpgradeDamagePerLevel, 0.04);
