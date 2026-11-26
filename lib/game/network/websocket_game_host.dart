@@ -34,7 +34,7 @@ abstract interface class GameServerSession {
   Map<String, Object?> snapshot();
 }
 
-typedef GameServerSessionFactory = GameServerSession Function(String roomCode);
+typedef GameServerSessionFactory = GameServerSession Function(\n  String roomCode,\n  Map<String, dynamic> createMessage,\n);
 
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
 ///
@@ -253,7 +253,7 @@ class WebSocketGameHost {
           return;
         }
         final code = _newRoomCode();
-        room = sessionFactory(code);
+        room = sessionFactory(code, message);
         _rooms[code] = room;
         player = room.join();
         break;
