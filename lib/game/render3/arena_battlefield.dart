@@ -191,6 +191,7 @@ class _ArenaPainter extends CustomPainter {
     );
     // Real elevated mesh facets are rendered before gameplay overlays so
     // rivers, bridges, castles and actors remain readable and authoritative.
+    _drawBaseTerrainMesh(canvas, world, worldSize, project);
     _drawTerrain3D(canvas, world, project);
     _drawBiomes(canvas, world, project);
     _drawTerrainTexture(canvas, world, cameraOrigin, project);
@@ -205,6 +206,106 @@ class _ArenaPainter extends CustomPainter {
     canvas.restore();
   }
 
+
+
+  /// Continuous triangulated ground surface across the full procedural map.
+  /// The height function is deterministic and derived from world coordinates
+  /// plus the authored biome patches, so it never changes gameplay positions.
+  void _drawBaseTerrainMesh(
+    Canvas canvas,
+    Map world,
+    Size worldSize,
+    Offset Function(Offset) project,
+  ) {
+    const cell = 64.0;
+    const base = Color(0xFF426B43);
+    const light = Color(0xFF52794A);
+    const shade = Color(0xFF345B3C);
+    const palettes = <String, List<Color>>{
+      'forest': [Color(0xFF426B43), Color(0xFF52794A), Color(0xFF345B3C)],
+      'desert': [Color(0xFFB9955C), Color(0xFFD1B477), Color(0xFF8E7048)],
+      'snow': [Color(0xFFB8D0D7), Color(0xFFE1EDF0), Color(0xFF8EAAB4)],
+      'volcanic': [Color(0xFF69483E), Color(0xFF8B5B48), Color(0xFF493832)],
+    };
+    final biomes = _list(world['biomes']).map(_map).whereType<Map>().toList();
+    double heightAt(Offset point) {
+      var height = 3.0 +
+          math.sin(point.dx * 0.0061) * 3.0 +
+          math.cos(point.dy * 0.0073) * 2.6 +
+          math.sin((point.dx + point.dy) * 0.0037) * 2.0;
+      for (final biome in biomes) {
+        final center = _point(biome);
+        final radius = _number(biome['radius']);
+        if (center == null || radius == null || radius <= 0) continue;
+        final distance = (point - center).distance / radius;
+        if (distance >= 1) continue;
+        final ridge = math.cos(distance * math.pi * 0.5);
+        height += 8.0 * ridge * ridge;
+      }
+      return height.clamp(0.0, 20.0).toDouble();
+    }
+
+    Color biomeColor(Offset center) {
+      for (final biome in biomes) {
+        final origin = _point(biome);
+        final radius = _number(biome['radius']);
+        if (origin == null || radius == null) continue;
+        if ((center - origin).distance <= radius) {
+          final kind = biome['kind']?.toString() ?? 'forest';
+          final palette = palettes[kind] ?? palettes['forest']!;
+          return palette[0];
+        }
+      }
+      return base;
+    }
+
+    Path triangle(Offset a, Offset b, Offset d) => Path()
+      ..moveTo(a.dx, a.dy)
+      ..lineTo(b.dx, b.dy)
+      ..lineTo(d.dx, d.dy)
+      ..close();
+    Offset vertex(double x, double y) {
+      final point = Offset(x, y);
+      return project(point) + Offset(0, -heightAt(point));
+    }
+
+    for (var y = 0.0; y < worldSize.height; y += cell) {
+      for (var x = 0.0; x < worldSize.width; x += cell) {
+        final x1 = math.min(x + cell, worldSize.width);
+        final y1 = math.min(y + cell, worldSize.height);
+        final a = vertex(x, y);
+        final b = vertex(x1, y);
+        final d = vertex(x1, y1);
+        final e = vertex(x, y1);
+        final center = Offset((x + x1) * 0.5, (y + y1) * 0.5);
+        final palette = palettes.entries.firstWhere(
+          (entry) => entry.key == _biomeKindAt(center, biomes),
+          orElse: () => MapEntry('forest', [base, light, shade]),
+        ).value;
+        final slope = (heightAt(Offset(x1, y1)) - heightAt(Offset(x, y))) / cell;
+        final first = slope > 0.06 ? palette[2] : palette[0];
+        final second = slope < -0.06 ? palette[2] : palette[1];
+        canvas.drawPath(triangle(a, b, d), Paint()..color = first);
+        canvas.drawPath(triangle(a, d, e), Paint()..color = second);
+        canvas.drawPath(triangle(a, b, d), Paint()
+          ..color = const Color(0x12312A22)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.45);
+      }
+    }
+  }
+
+  String _biomeKindAt(Offset point, List<Map> biomes) {
+    for (final biome in biomes) {
+      final center = _point(biome);
+      final radius = _number(biome['radius']);
+      if (center != null && radius != null &&
+          (point - center).distance <= radius) {
+        return biome['kind']?.toString() ?? 'forest';
+      }
+    }
+    return 'forest';
+  }
 
   /// Software-rendered 3D terrain mesh. Each biome is built from lit triangular
   /// faces with explicit world height; it is not a flat tinted circle.
