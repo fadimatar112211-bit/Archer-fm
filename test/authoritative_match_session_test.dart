@@ -200,6 +200,58 @@ void main() {
     );
   });
 
+  test('loads trusted permanent hero levels and resets combo on damage interruption', () {
+    final session = AuthoritativeMatchSession(
+      code: 'levels1',
+      mapFactory: () => ArenaMap.generate(Random(765)),
+      combatConfiguration: _combatConfiguration(),
+      heroLevelForPlayer: (playerId, heroId) => switch (playerId) {
+        'p1' => 10,
+        'p2' => 20,
+        'p3' => 30,
+        _ => 1,
+      },
+    );
+    final players = [for (var i = 0; i < 4; i++) session.join()!];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      }), isNull);
+      expect(session.handle(players[i], {
+        'type': 'army_select',
+        'counts': {'runner': 20},
+      }), isNull);
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+
+    final p1 = session.combat!.heroes['p1']!;
+    final p2 = session.combat!.heroes['p2']!;
+    final p3 = session.combat!.heroes['p3']!;
+    expect(p1.level, 10);
+    expect(p1.maxHealth, 762);
+    expect(p2.level, 20);
+    expect(p3.level, 30);
+    expect(p1.combat.useUltimate(1).accepted, isTrue);
+    expect(p1.combat.useUltimate(2).accepted, isFalse);
+
+    final enemy = session.combat!.armies
+        .firstWhere((army) => army.ownerId == 'p2')
+        .units.first;
+    final p1Position = session.world!.playerPositions['p1']!;
+    enemy.positionX = p1Position.dx;
+    enemy.positionY = p1Position.dy;
+    expect(session.handle(players.first, {
+      'type': 'attack',
+      'targetId': enemy.id,
+    }), isNull);
+    expect(p1.combat.comboIndex, 1);
+    p1.applyDamage(1);
+    expect(p1.combat.comboIndex, 0);
+  });
+
   test('integrates 20-unit armies, monster damage, hero combo and Ultimate', () {
     final session = _combatReadySession();
     final authority = session.combat!;
