@@ -15,6 +15,7 @@ import '../../monsters/monster_projectile_manager.dart';
 import '../../monsters/monster_progression.dart';
 import '../../monsters/monster_ranged_attack_handler.dart';
 import 'match_world_authority.dart';
+import 'match_status_effects.dart';
 
 /// Approved balance/configuration supplied by the host, not invented here.
 /// Each player must provide their own pre-match selection of exactly 20 units.
@@ -269,6 +270,10 @@ class MatchCombatAuthority {
             _onKill?.call(attackerOwnerId, targetKind);
           }
         },
+        canActFor: (unit) =>
+            !(_statusEffects[unit.id]?.isActionDisabled ?? false),
+        movementSpeedMultiplierFor: (unit) =>
+            _statusEffects[unit.id]?.movementMultiplier ?? 1,
         projectileId: _projectileId,
         obstaclesFor: (_) => [
           for (final obstacle in world.map.obstacles)
@@ -288,6 +293,7 @@ class MatchCombatAuthority {
   final MatchWorldAuthority world;
   final MatchCombatConfiguration configuration;
   final Map<String, MatchHeroState> _heroes = {};
+  final Map<String, MatchStatusEffectRuntime> _statusEffects = {};
   late final MonsterMatchRuntime monsters;
   final math.Random _random;
   final void Function(String playerId, MonsterTargetKind targetKind)? _onKill;
@@ -305,6 +311,9 @@ class MatchCombatAuthority {
   Offset moveHero(String playerId, Offset direction, Duration elapsed) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) throw StateError('A defeated hero cannot move.');
+    if (hero.statusEffects.isActionDisabled) {
+      return world.playerPositions[playerId]!;
+    }
     if (elapsed.isNegative ||
         !direction.dx.isFinite ||
         !direction.dy.isFinite) {
@@ -322,7 +331,8 @@ class MatchCombatAuthority {
         configuration.worldUnitsPerSecond *
         seconds *
         (length < 1 ? length : 1.0) *
-        world.map.movementFactorAt(world.playerPositions[playerId]!);
+        world.map.movementFactorAt(world.playerPositions[playerId]!) *
+        hero.statusEffects.movementMultiplier;
     final delta = direction / length * distance;
     return world.movePlayer(playerId, delta, 18);
   }
@@ -332,6 +342,9 @@ class MatchCombatAuthority {
   CombatActionResult attack(String playerId, String targetId) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) return _rejected('البطل مهزوم');
+    if (hero.statusEffects.isActionDisabled) {
+      return _rejected('البطل متوقف بتأثير حالة');
+    }
     final target = _resolveTarget(targetId);
     if (target == null || !target.isAlive) {
       return _rejected('الهدف غير موجود');
@@ -347,6 +360,9 @@ class MatchCombatAuthority {
     final defeatedNow = target.applyDamage(result.damage.toDouble());
     if (defeatedNow && target.kind != MonsterTargetKind.crystal) {
       _onKill?.call(playerId, target.kind);
+    } else if (target.isAlive) {
+      final effect = _basicAttackEffect(hero.definition.id);
+      if (effect != null) _applyStatusEffect(target.id, playerId, effect);
     }
     return result;
   }
@@ -360,6 +376,9 @@ class MatchCombatAuthority {
   ) {
     final hero = _requireHero(playerId);
     if (!hero.isAlive) return _rejected('البطل مهزوم');
+    if (hero.statusEffects.isActionDisabled) {
+      return _rejected('البطل متوقف بتأثير حالة');
+    }
     final target = _resolveTarget(targetId);
     if (target == null || !target.isAlive) {
       return _rejected('الهدف غير موجود');
@@ -380,6 +399,11 @@ class MatchCombatAuthority {
         final defeatedNow = candidate.applyDamage(result.damage.toDouble());
         if (defeatedNow && candidate.kind != MonsterTargetKind.crystal) {
           _onKill?.call(playerId, candidate.kind);
+        } else if (candidate.isAlive) {
+          final effect = _ultimateEffect(hero.definition.id, ultimateIndex);
+          if (effect != null) {
+            _applyStatusEffect(candidate.id, playerId, effect);
+          }
         }
       }
     }
@@ -410,6 +434,7 @@ class MatchCombatAuthority {
         hero.respawn();
       }
     }
+    _advanceStatusEffects(elapsed);
     _now = _now.add(elapsed);
     final result = monsters.tick(
       now: _now,
@@ -419,7 +444,110 @@ class MatchCombatAuthority {
     return result;
   }
 
-  void clear() => monsters.combatLoop.clear();
+  void clear() {
+    monsters.combatLoop.clear();
+    _statusEffects.clear();
+  }
+
+  void _applyStatusEffect(
+    String targetId,
+    String sourcePlayerId,
+    MatchStatusEffectSpec spec,
+  ) {
+    if (targetId.isEmpty || sourcePlayerId.isEmpty) return;
+    _statusEffects.putIfAbsent(targetId, MatchStatusEffectRuntime.new).apply(
+      sourcePlayerId: sourcePlayerId,
+      spec: spec,
+    );
+  }
+
+  void _advanceStatusEffects(Duration elapsed) {
+    for (final entry in _statusEffects.entries.toList(growable: false)) {
+      final target = _resolveTarget(entry.key);
+      final runtime = entry.value;
+      if (target == null || !target.isAlive) {
+        _statusEffects.remove(entry.key);
+        continue;
+      }
+      for (final event in runtime.advance(elapsed)) {
+        if (!target.isAlive) break;
+        final defeatedNow = target.applyDamage(event.amount);
+        if (defeatedNow && target.kind != MonsterTargetKind.crystal) {
+          _onKill?.call(event.sourcePlayerId, target.kind);
+        }
+      }
+      if (runtime.isEmpty || !target.isAlive) {
+        _statusEffects.remove(entry.key);
+      }
+    }
+  }
+
+  MatchStatusEffectSpec? _basicAttackEffect(HeroId heroId) {
+    switch (heroId) {
+      case HeroId.ranger:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.slow,
+          duration: Duration(milliseconds: 1200),
+          movementMultiplier: 0.75,
+        );
+      case HeroId.flame:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.burn,
+          duration: Duration(milliseconds: 2500),
+          tickInterval: Duration(seconds: 1),
+          damagePerTick: 4,
+        );
+      case HeroId.shadow:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.poison,
+          duration: Duration(milliseconds: 3500),
+          tickInterval: Duration(seconds: 1),
+          damagePerTick: 3,
+        );
+      case HeroId.storm:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.stun,
+          duration: Duration(milliseconds: 300),
+        );
+    }
+  }
+
+  MatchStatusEffectSpec? _ultimateEffect(HeroId heroId, int index) {
+    if (heroId == HeroId.storm && index == 1) {
+      return const MatchStatusEffectSpec(
+        type: MatchStatusEffectType.stun,
+        duration: Duration(milliseconds: 800),
+      );
+    }
+    if (index != 2) return null;
+    switch (heroId) {
+      case HeroId.ranger:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.slow,
+          duration: Duration(seconds: 3),
+          movementMultiplier: 0.55,
+        );
+      case HeroId.flame:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.burn,
+          duration: Duration(seconds: 4),
+          tickInterval: Duration(seconds: 1),
+          damagePerTick: 10,
+        );
+      case HeroId.shadow:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.poison,
+          duration: Duration(seconds: 5),
+          tickInterval: Duration(seconds: 1),
+          damagePerTick: 8,
+        );
+      case HeroId.storm:
+        return const MatchStatusEffectSpec(
+          type: MatchStatusEffectType.freeze,
+          duration: Duration(milliseconds: 900),
+        );
+    }
+  }
 
   MatchHeroState _requireHero(String playerId) {
     final hero = _heroes[playerId];
