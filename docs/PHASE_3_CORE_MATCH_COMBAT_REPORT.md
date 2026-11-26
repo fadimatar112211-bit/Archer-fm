@@ -146,3 +146,14 @@ The visual code change is committed on `feature/match-rules-foundation`. CI must
 - Android validation [45860452966](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45860452966): analysis and full Flutter tests passed; debug APK build is still running, followed by emulator install/launch.
 - Latest arena visual changes include denser world-anchored ground details, layered water and ripples, timber bridge planks/rails, castle merlons, glowing crystals/mines and clearer chests/resource pickups.
 - The pull request remains Draft/open/unmerged. No merge was performed.
+
+
+## Visual QA and Android validation follow-up — 2026-11-26
+
+- Added `test/arena_battlefield_visual_capture_test.dart` and `.github/workflows/phase3-arena-visual-capture.yml`. The test captures the production `ArenaBattlefield` painter and 3D actor layer at 960×540 (16:9) using a representative four-player snapshot with four castles, 28 crystals, four monster roles, mines, river crossings, pickups and biome regions. The PNG is uploaded as the `phase3-arena-visual-capture` workflow artifact.
+- Visual capture run [45863744599](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45863744599) passed and produced the review image. The first review showed hard-edged biome discs and small actor silhouettes.
+- Follow-up renderer changes soften biome boundaries with radial falloff, add deterministic biome-specific ground details, and increase world-anchored terrain detail density in `lib/game/render3/arena_battlefield.dart`.
+- Increased hero and monster presentation scale and adjusted hero health-bar placement in `lib/game/render3/arena_3d_asset_layer.dart`; gameplay positions, hit logic and server authority are unchanged.
+- Android validation previously passed Flutter analyze, full Flutter tests and debug APK build, but the emulator runner on `ubuntu-latest` (Ubuntu 26.04) timed out because ADB never discovered `emulator-5554`. The Android workflow is now pinned to `ubuntu-24.04` and configured for pull-request validation. This is an environment correction; emulator install/launch has not yet been claimed as successful.
+- Latest code head: `acee10fb04aecc1c39e2b2cad12e83f4a0d57a28`. At the time of this update, Match Rules run [45864045471](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45864045471), Monster Army run [45864045734](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45864045734), visual capture run [45864045602](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45864045602), and Android validation run [45864045447](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45864045447) are running.
+- Phase 3 remains open until the latest capture and CI runs finish, the updated 16:9 image receives visual review, and Android emulator install/launch succeeds. The capture is a representative renderer test snapshot, not a claim of a completed physical-device gameplay test.
