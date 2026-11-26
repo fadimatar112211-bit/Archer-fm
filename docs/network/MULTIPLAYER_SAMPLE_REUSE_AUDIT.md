@@ -64,7 +64,7 @@ The source README explicitly marks the sample as unrun and untested. It also ide
 
 - `MatchWorldAuthority` wraps the existing `ArenaMap`, `CastleController`, and `MineController`; it does not introduce duplicate map, crystal, or mine rules.
 - The castle controller now accepts an optional ordered player-ID list while preserving the original offline/default ownership behavior.
-- A four-player session creates exactly four player-owned castles and seven crystals per castle, with player IDs matching the room's actual server IDs.
+- A four-player session creates exactly four player-owned castles and seven crystals per castle, with player IDs matching the room's actual server IDs. Network snapshots now include map dimensions, player positions, castle anchors/fallen state, all crystal IDs/positions/HP/exposure, mine ownership/capture progress, resource pickups and per-player wallets.
 - Server-side movement uses `ArenaMap.slideMove` for bounds/obstacle collision. The client transport still does not accept raw position writes.
 - Mine capture and production are advanced from the authoritative player-position map; only pickups touched by a player are added to that player's match wallet.
 - Crystal damage rejects friendly/unknown targets and updates the match's living-crystal tiebreak count. Rebuild attempts use the canonical territory, collision, seven-crystal cap and wallet checks.
