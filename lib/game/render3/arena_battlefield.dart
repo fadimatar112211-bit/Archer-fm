@@ -189,6 +189,9 @@ class _ArenaPainter extends CustomPainter {
           ],
         ).createShader(bounds),
     );
+    // Real elevated mesh facets are rendered before gameplay overlays so
+    // rivers, bridges, castles and actors remain readable and authoritative.
+    _drawTerrain3D(canvas, world, project);
     _drawBiomes(canvas, world, project);
     _drawTerrainTexture(canvas, world, cameraOrigin, project);
     _drawRivers(canvas, world, project);
@@ -200,6 +203,110 @@ class _ArenaPainter extends CustomPainter {
     _drawProjectiles(canvas, snapshot, project);
     _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
     canvas.restore();
+  }
+
+
+  /// Software-rendered 3D terrain mesh. Each biome is built from lit triangular
+  /// faces with explicit world height; it is not a flat tinted circle.
+  /// Simulation coordinates stay unchanged and all gameplay overlays are
+  /// painted afterwards using the same ground projection.
+  void _drawTerrain3D(
+    Canvas canvas,
+    Map world,
+    Offset Function(Offset) project,
+  ) {
+    const segmentCount = 28;
+    const palettes = <String, List<Color>>{
+      'forest': [Color(0xFF557C43), Color(0xFF315D3B), Color(0xFF24452F)],
+      'desert': [Color(0xFFD5B16C), Color(0xFFB8874D), Color(0xFF8B603D)],
+      'snow': [Color(0xFFDDEAF0), Color(0xFF9FBCC9), Color(0xFF718E9D)],
+      'volcanic': [Color(0xFF805044), Color(0xFF563A35), Color(0xFF342B2A)],
+    };
+    Offset elevated(Offset point, double height) =>
+        project(point) + Offset(0, -height);
+    Path triangle(Offset a, Offset b, Offset c) =>
+        Path()..moveTo(a.dx, a.dy)..lineTo(b.dx, b.dy)..lineTo(c.dx, c.dy)..close();
+
+    for (final raw in _list(world['biomes'])) {
+      final biome = _map(raw);
+      if (biome == null) continue;
+      final center = _point(biome);
+      final radius = _number(biome['radius']);
+      if (center == null || radius == null || radius < 48) continue;
+      final kind = biome['kind']?.toString() ?? 'forest';
+      final palette = palettes[kind] ?? palettes['forest']!;
+      final phase = (biome['seed'] is num ? (biome['seed'] as num).toDouble() : center.dx * 0.013 + center.dy * 0.017);
+      final heights = <double>[0, radius * 0.075, radius * 0.13, radius * 0.045];
+      final radii = <double>[0.0, 0.34, 0.72, 1.0];
+
+      // Exposed cliff wall: dark vertical side faces create real depth.
+      for (var i = 0; i < segmentCount; i++) {
+        final a0 = i * math.pi * 2 / segmentCount;
+        final a1 = (i + 1) * math.pi * 2 / segmentCount;
+        final wobble0 = 1 + 0.035 * math.sin(a0 * 5 + phase);
+        final wobble1 = 1 + 0.035 * math.sin(a1 * 5 + phase);
+        final p0 = center + Offset(math.cos(a0), math.sin(a0)) * radius * wobble0;
+        final p1 = center + Offset(math.cos(a1), math.sin(a1)) * radius * wobble1;
+        final top0 = elevated(p0, heights.last);
+        final top1 = elevated(p1, heights.last);
+        final foot0 = project(p0);
+        final foot1 = project(p1);
+        final side = triangle(foot0, foot1, top1);
+        side
+          ..lineTo(top0.dx, top0.dy)
+          ..close();
+        final shade = i % 3 == 0 ? palette[2] : palette[1];
+        canvas.drawPath(side, Paint()..color = shade);
+        canvas.drawLine(top0, top1, Paint()
+          ..color = palette[0].withAlpha(0xAA)
+          ..strokeWidth = 1.1);
+      }
+
+      // Concentric triangulated rings. Each vertex has a distinct elevation;
+      // directional face shading makes the mesh read as a sculpted landform.
+      for (var ring = 0; ring < radii.length - 1; ring++) {
+        for (var i = 0; i < segmentCount; i++) {
+          final a0 = i * math.pi * 2 / segmentCount;
+          final a1 = (i + 1) * math.pi * 2 / segmentCount;
+          Offset vertex(double angle, double radial, double baseHeight) {
+            final ridge = 1 + 0.035 * math.sin(angle * 5 + phase) +
+                0.018 * math.cos(angle * 9 - phase);
+            final point = center + Offset(math.cos(angle), math.sin(angle)) *
+                (radius * radial * ridge);
+            final local = (math.sin(angle * 3 + phase) + 1) * 0.5;
+            return elevated(point, baseHeight * (0.82 + local * 0.18));
+          }
+          final a = vertex(a0, radii[ring], heights[ring]);
+          final b = vertex(a1, radii[ring], heights[ring]);
+          final c0 = vertex(a0, radii[ring + 1], heights[ring + 1]);
+          final d = vertex(a1, radii[ring + 1], heights[ring + 1]);
+          final tint = (i + ring * 2) % 5;
+          final faceColor = tint == 0 ? palette[0] : tint == 1 ? palette[1] : palette[0].withBlue((palette[0].blue + 8).clamp(0,255));
+          canvas.drawPath(triangle(a, c0, d), Paint()..color = faceColor);
+          canvas.drawPath(triangle(a, d, b), Paint()..color = palette[1].withAlpha(0xD8));
+          canvas.drawPath(triangle(a, c0, d), Paint()
+            ..color = const Color(0x183D3025)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.65);
+        }
+      }
+
+      // Small raised stone outcrops sit on the landform as faceted mesh peaks.
+      for (var rock = 0; rock < 7; rock++) {
+        final angle = rock * 2.399963229728653 + phase;
+        final distance = radius * (0.25 + (rock % 3) * 0.19);
+        final point = center + Offset(math.cos(angle), math.sin(angle)) * distance;
+        final base = project(point);
+        final scale = math.max(2.5, radius * 0.035);
+        final peak = base + Offset(0, -scale * (1.7 + (rock % 3) * 0.35));
+        final left = base + Offset(-scale, -scale * 0.45);
+        final right = base + Offset(scale, -scale * 0.45);
+        final back = base + Offset(0, -scale * 0.9);
+        canvas.drawPath(triangle(left, back, peak), Paint()..color = palette[0]);
+        canvas.drawPath(triangle(back, right, peak), Paint()..color = palette[1]);
+        canvas.drawPath(triangle(left, right, base), Paint()..color = palette[2]);
+      }
+    }
   }
 
   void _drawBiomes(Canvas canvas, Map world, Offset Function(Offset) project) {
