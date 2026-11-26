@@ -348,3 +348,17 @@
 - Added widget coverage that verifies all five directional/stop actions are exposed in the semantics tree.
 - Commits: `a06ad14f42ba539a31ec4f38bb1c91659b111922` (semantic movement actions), `bd8bf61d9651126e9759bcd125cf04fefed7e638` (accessibility regression test), and `0f8546d24d067d4ef158a891fe9055f9b5e6efdf` (apply configured sensitivity to assistive movement).
 - A fresh analyzer, full Flutter test run and Android build are required; this change is not considered verified until those checks finish. Physical-device assistive-technology review remains outstanding.
+
+
+## Accessibility validation correction
+
+- The first CI analysis caught two issues in the accessible joystick batch: the Flutter semantics import was missing, and the test referenced a non-existent SemanticsData property. Both were corrected; the test now asserts the five custom semantics action IDs.
+- Commits: `c69e59776e9af02a41375e83d653fd3b1074a9d7` (semantics import), `3ebe07c50588de92d0e04004c68e8719db53d5bd` (valid semantics action assertion).
+- A fresh validation run was queued for the corrected branch head; it has not completed yet.
+
+## Nineteenth implementation batch — accessible match result region
+
+- Wrapped the authoritative end-of-match result panel in a named Arabic semantics region while preserving the individual winner, result reason, standings and return-home button as child semantics.
+- Added a widget test that enables the semantics tree and verifies the named result region is exposed.
+- Commits: `377a973d9f6db7455a8e88c7fd7213f4282d800b` (accessible result region), `22116ae80d2f0569e33243edf85d3769b8468490` (regression test).
+- Fresh analyzer, full Flutter tests, Android APK build and visual capture are required for the latest branch head. Physical screen-reader testing remains outstanding.
