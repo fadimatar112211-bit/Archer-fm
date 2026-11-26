@@ -85,6 +85,40 @@ void main() {
     }
   });
 
+  test('persistent service serializes and saves post-match hero XP awards', () async {
+    final directory = await Directory.systemTemp.createTemp('archer_hero_xp_');
+    try {
+      final persistent = PersistentHeroProgressionService(
+        store: FileHeroProgressStore(directory),
+        economy: const _TestEconomy(),
+      );
+      await persistent.store.save(
+        'verified-account-xp',
+        HeroProgress.fresh(),
+      );
+
+      final results = await Future.wait([
+        persistent.awardHeroExperience(
+          'verified-account-xp',
+          'ranger',
+          amount: 100,
+        ),
+        persistent.awardHeroExperience(
+          'verified-account-xp',
+          'ranger',
+          amount: 100,
+        ),
+      ]);
+      expect(results, [0, 1]);
+      final reloaded = await persistent.load('verified-account-xp');
+      expect(reloaded.heroLevel('ranger'), 2);
+      expect(reloaded.heroXp('ranger'), 50);
+      expect(reloaded.heroLevel('flame'), 1);
+    } finally {
+      await directory.delete(recursive: true);
+    }
+  });
+
   test('unknown items and insufficient funds do not mutate progress', () {
     final before = progress.permanentCurrency;
     final unknown = service.unlock(progress, 'not_a_weapon');
