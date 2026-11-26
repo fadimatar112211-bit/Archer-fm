@@ -10,6 +10,7 @@ import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_progression.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
+import 'package:archer_fm/game/world/castle_system.dart';
 import 'package:archer_fm/game/network/authoritative_match_session.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
