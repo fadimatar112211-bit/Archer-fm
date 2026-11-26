@@ -653,22 +653,6 @@ class _ArenaPainter extends CustomPainter {
     }
   }
 
-  void _drawText(Canvas canvas, String text, Offset center, double fontSize) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-          shadows: const [Shadow(color: Colors.black, blurRadius: 3)],
-        ),
-      ),
-      textDirection: TextDirection.rtl,
-    )..layout();
-    painter.paint(canvas, center - Offset(painter.width / 2, 0));
-  }
-
   void _drawCenteredLabel(Canvas canvas, Size size, String label) {
     final painter = TextPainter(
       text: TextSpan(
