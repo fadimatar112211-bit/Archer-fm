@@ -1,6 +1,10 @@
 {
   "projectileSpeed": 120,
   "weaponUpgradeDamagePerLevel": 0.04,
+  "monsterKillScore": 5,
+  "monsterKillResources": 3,
+  "heroKillScore": 15,
+  "heroKillResources": 10,
   "maxActiveProjectiles": 128,
   "maxUnitsPerArmy": 100,
   "worldUnitsPerSecond": 100,
