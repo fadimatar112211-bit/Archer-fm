@@ -25,12 +25,19 @@ enum MonsterDamageResult {
   invalidIntent,
 }
 
+typedef MonsterKillCallback = void Function(
+  String attackerOwnerId,
+  MonsterTargetKind targetKind,
+);
+
 /// Resolves an AI intent against a fresh authoritative target.
 ///
 /// This class deliberately does not look up entities or mutate match state
 /// itself. The caller owns lookup, network authority, and transaction ordering.
 class MonsterCombatResolver {
-  const MonsterCombatResolver();
+  const MonsterCombatResolver({this.onKill});
+
+  final MonsterKillCallback? onKill;
 
   MonsterDamageResult resolve({
     required MonsterCombatIntent intent,
@@ -58,7 +65,8 @@ class MonsterCombatResolver {
     }
     if (!target.isAlive) return MonsterDamageResult.deadTarget;
 
-    target.applyDamage(intent.damage);
+    final defeatedNow = target.applyDamage(intent.damage);
+    if (defeatedNow) onKill?.call(attackerOwnerId, target.kind);
     return MonsterDamageResult.applied;
   }
 }
