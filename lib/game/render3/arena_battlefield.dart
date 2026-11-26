@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../world/arena_map.dart' show enemyVisibleRadius;
+import 'arena_3d_asset_layer.dart';
 
 /// Snapshot-driven oblique arena projection.
 ///
@@ -37,9 +38,20 @@ class ArenaBattlefield extends StatelessWidget {
         child: DecoratedBox(
           decoration: const BoxDecoration(color: Color(0xFF17271F)),
           child: hasWorld
-              ? CustomPaint(
-                  painter: _ArenaPainter(snapshot, localPlayerId),
-                  child: const SizedBox.expand(),
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CustomPaint(
+                      painter: _ArenaPainter(snapshot, localPlayerId),
+                      child: const SizedBox.expand(),
+                    ),
+                    Positioned.fill(
+                      child: Arena3DAssetLayer(
+                        snapshot: snapshot,
+                        localPlayerId: localPlayerId,
+                      ),
+                    ),
+                  ],
                 )
               : Center(
                   child: Text(
@@ -172,10 +184,7 @@ class _ArenaPainter extends CustomPainter {
     _drawMines(canvas, world, project);
     _drawCastles(canvas, world, project);
     _drawFogOfWar(canvas, world, project, bounds);
-    _drawMonsters(canvas, snapshot, world, project);
-    _drawDyingMonsters(canvas, snapshot, world, project);
     _drawProjectiles(canvas, snapshot, project);
-    _drawHeroes(canvas, snapshot, world, project);
     _drawMinimap(canvas, snapshot, worldSize, cameraOrigin, size);
     canvas.restore();
   }
