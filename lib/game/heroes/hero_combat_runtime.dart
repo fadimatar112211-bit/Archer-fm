@@ -27,6 +27,7 @@ class HeroCombatRuntime {
     required this.hero,
     this.level = 1,
     this.targetMaxHealth = 100000,
+    required this.comboResetWindowMs,
   })  : targetHealth = targetMaxHealth,
         selectedWeaponIndex = 0 {
     if (level < 1 || level > heroLevelCap) {
@@ -35,10 +36,15 @@ class HeroCombatRuntime {
     if (targetMaxHealth <= 0) {
       throw RangeError.value(targetMaxHealth, 'targetMaxHealth');
     }
+    if (comboResetWindowMs <= 0) {
+      throw RangeError.value(comboResetWindowMs, 'comboResetWindowMs');
+    }
   }
 
   final HeroCombatDefinition hero;
   final int targetMaxHealth;
+  final int comboResetWindowMs;
+  int _comboResetRemainingMs = 0;
   int targetHealth;
   int level;
   int experience = 0;
@@ -67,6 +73,18 @@ class HeroCombatRuntime {
       _ultimateCooldowns[i] =
           (_ultimateCooldowns[i] - milliseconds).clamp(0, 1 << 30).toInt();
     }
+    if (_comboResetRemainingMs > 0) {
+      _comboResetRemainingMs =
+          (_comboResetRemainingMs - milliseconds).clamp(0, 1 << 30).toInt();
+      if (_comboResetRemainingMs == 0) comboIndex = 0;
+    }
+  }
+
+  /// Damage, crowd-control interruption or other server-confirmed interruption
+  /// can reset the combo without changing Ultimate cooldowns.
+  void resetCombo() {
+    comboIndex = 0;
+    _comboResetRemainingMs = 0;
   }
 
   CombatActionResult selectWeapon(int index) {
@@ -98,6 +116,7 @@ class HeroCombatRuntime {
     final damage = raw.round();
     targetHealth = (targetHealth - damage).clamp(0, targetMaxHealth).toInt();
     comboIndex = (comboIndex + 1) % comboHitCount;
+    _comboResetRemainingMs = comboResetWindowMs;
     attackCooldownRemainingMs = selectedWeapon.cooldownMs;
     return CombatActionResult(
       accepted: true,
@@ -161,6 +180,6 @@ class HeroCombatRuntime {
 
   void resetTarget() {
     targetHealth = targetMaxHealth;
-    comboIndex = 0;
+    resetCombo();
   }
 }
