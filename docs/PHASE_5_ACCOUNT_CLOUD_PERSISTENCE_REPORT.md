@@ -227,3 +227,16 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Earlier failed analysis runs [45911672283](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911672283) and [45911687948](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911687948) were caused by that missing import, not by test failures. Do not count them as passing.
 
 **Phase 5 remains IN PROGRESS.** This closes the previously identified process-restart gap for already-enqueued settlement records, but live Supabase acceptance, approved progression economy, full profile/upgrade API integration, cross-device E2E and production deployment remain open.
+
+## 16. Player account surface and history — 2026-11-27
+
+- Added `PlayerAccountDataService`, which derives the account UUID only from the active Supabase Auth session; callers cannot pass an arbitrary user ID.
+- The client can now read its own profile, wallet balance, immutable currency ledger and recent match results through the migration's authenticated-user RLS policies.
+- The only profile mutation exposed to the client is `display_name`; there are no client-side currency, reward, hero progression or monster progression write methods.
+- Added strict display-name validation (1–32 visible characters, rejecting control and bidirectional-override characters) and typed parsers for profile, ledger and match history rows.
+- Added an Arabic account screen reachable from the home screen when cloud accounts are configured. It shows the player's name/email, balance, recent currency transactions and matches, supports editing the display name, refresh and sign-out.
+- The game client now refreshes a Supabase access token when it is within 30 seconds of expiry before reconnect/handshake.
+- Added model/validation tests for Arabic display names, malformed profile/ledger rows and match result bounds.
+- CI run [45912118016](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912118016) was triggered while this UI work was being committed. Its status must be checked against the latest branch head before calling the new screen validated.
+
+**Remaining account work:** the screen currently reads account history and profile data, but hero/weapon and monster upgrade commands still need server-authoritative APIs and owner-approved economy costs. The screen also requires a live Supabase deployment to display provisioned data; no live staging verification has occurred.
