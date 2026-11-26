@@ -65,7 +65,13 @@ void main() {
     final p2 = standings.firstWhere((item) => (item as Map)['playerId'] == 'p2')
         as Map;
     expect(p2['livingCrystals'], 6);
-    expect((session.snapshot()['world'] as Map)['livingCrystals']['p2'], 6);
+    final worldSnapshot = session.snapshot()['world'] as Map;
+    expect(worldSnapshot['livingCrystals']['p2'], 6);
+    expect(worldSnapshot['castles'], hasLength(4));
+    final p2Castle = (worldSnapshot['castles'] as List)
+        .cast<Map>()
+        .firstWhere((castle) => castle['ownerId'] == 'p2');
+    expect(p2Castle['crystals'], hasLength(7));
   });
 
   test('rejects incomplete lobby, invalid loadout and client-side score spoofing', () {
