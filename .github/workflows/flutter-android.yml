@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          version: '3.47.8'
+          flutter-version: '3.47.8'
           cache: true
       - run: flutter create --platforms=android --project-name archer_fm --org com.archerfm --no-pub .
       - name: Add Maven Central to Flutter's included Gradle build plugin repositories
