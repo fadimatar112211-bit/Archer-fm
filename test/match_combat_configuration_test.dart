@@ -59,6 +59,20 @@ void main() {
     expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
   });
 
+  test('requires exact positive energy costs for all sixteen Ultimates', () {
+    final missing = _validConfiguration();
+    (missing['ultimateEnergyCosts'] as Map).remove('ranger_starfall');
+    expect(() => decodeMatchCombatConfiguration(missing), throwsArgumentError);
+
+    final extra = _validConfiguration();
+    (extra['ultimateEnergyCosts'] as Map)['unknown_ultimate'] = 10;
+    expect(() => decodeMatchCombatConfiguration(extra), throwsArgumentError);
+
+    final tooExpensive = _validConfiguration();
+    (tooExpensive['ultimateEnergyCosts'] as Map)['ranger_starfall'] = 101;
+    expect(() => decodeMatchCombatConfiguration(tooExpensive), throwsArgumentError);
+  });
+
   test('rejects invalid cooldowns, costs and runtime limits', () {
     final json = _validConfiguration();
     ((json['monsterCatalog'] as Map)['tank'] as Map)['attackCooldownMs'] = 0;
