@@ -88,3 +88,34 @@ jobs:
           end;
           $assert$;
           SQL
+      - name: Verify display-name constraints and updated timestamp trigger
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          update public.player_profiles
+          set display_name = 'Player One'
+          where user_id = '123e4567-e89b-42d3-a456-426614174000';
+          select pg_sleep(0.02);
+          update public.player_profiles
+          set display_name = 'Player Two'
+          where user_id = '123e4567-e89b-42d3-a456-426614174000';
+          do $assert$
+          declare
+            profile public.player_profiles%rowtype;
+          begin
+            select * into profile from public.player_profiles
+            where user_id = '123e4567-e89b-42d3-a456-426614174000';
+            if profile.display_name <> 'Player Two'
+               or profile.updated_at <= profile.created_at then
+              raise exception 'profile update timestamp trigger did not advance updated_at';
+            end if;
+            begin
+              update public.player_profiles
+              set display_name = '  padded  '
+              where user_id = profile.user_id;
+              raise exception 'whitespace-padded display name unexpectedly accepted';
+            exception when check_violation then
+              null;
+            end;
+          end;
+          $assert$;
+          SQL
