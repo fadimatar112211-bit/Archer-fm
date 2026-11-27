@@ -19,13 +19,14 @@ SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_ONLY_SERVICE_ROLE_SECRET
 ARCHER_FM_COMBAT_CONFIG=/etc/archer-fm/match-combat.json
-ARCHER_FM_MATCH_REWARDS_BY_RANK=[0,0,0,0]
+ARCHER_FM_PROGRESSION_ECONOMY_CONFIG=/etc/archer-fm/progression-economy.json
+ARCHER_FM_MATCH_REWARDS_CONFIG=/etc/archer-fm/match-rewards.json
 ARCHER_FM_BIND_ADDRESS=127.0.0.1
 ARCHER_FM_PORT=8080
 ARCHER_FM_SETTLEMENT_OUTBOX_PATH=/var/lib/archer-fm/pending-match-settlements.json
 ```
 
-The reward array above intentionally grants zero currency until the game owner approves and tests a rank reward schedule. Store the combat configuration outside the repository and review all gameplay/economy values before deployment.
+Install the three non-secret JSON templates from `config/` into `/etc/archer-fm/` using root ownership and group-readable mode 0640, with the service user in the `archerfm` group. The approved launch templates define weapon/monster prices and monster stat growth, plus permanent-currency rewards by final rank [140, 110, 85, 60]. See `docs/PROTECTED_SERVER_ECONOMY_CONFIGURATION.md` for exact values and installation commands. Keep the JSON files outside the repository and web root. The Supabase service-role secret remains only in the root-owned mode-0600 environment file.
 
 ## 3. systemd service template
 
@@ -114,7 +115,7 @@ Configure DNS, certificate renewal, HSTS after validating the HTTPS site, reques
 - [ ] Cross-account data isolation tested with two real test users.
 - [ ] Cross-device hero progression restore tested.
 - [ ] Match settlement and retry/idempotency tested against staging PostgreSQL.
-- [ ] Approved rank reward schedule configured and reconciled with the currency ledger.
+- [ ] Protected economy, combat-growth and rank-reward JSON files installed with restricted permissions and validated at gateway startup; reconcile rank rewards with the currency ledger.
 - [ ] Android release APK built, installed and smoke-tested on physical devices.
 - [ ] Monitoring, log retention, alerting, backup and restore drill completed.
 
