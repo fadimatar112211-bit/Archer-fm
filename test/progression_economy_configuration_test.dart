@@ -62,6 +62,38 @@ void main() {
     );
   });
 
+  test('rejects monster prices that differ from live combat progression costs', () {
+    final config = ProgressionEconomyConfiguration.fromJson(_validConfig());
+    final matching = {
+      for (final type in MonsterType.values)
+        type.name: {
+          for (var level = 2; level <= 40; level++) level: level * 20,
+        },
+    };
+    expect(() => config.validateMonsterUpgradeCosts(matching), returnsNormally);
+
+    final changedPrice = {
+      for (final type in MonsterType.values)
+        type.name: {
+          for (var level = 2; level <= 40; level++)
+            level: type == MonsterType.runner && level == 3
+                ? level * 20 + 1
+                : level * 20,
+        },
+    };
+    expect(
+      () => config.validateMonsterUpgradeCosts(changedPrice),
+      throwsFormatException,
+    );
+
+    final missingMonster = Map<String, Map<int, int>>.from(matching)
+      ..remove('ranged');
+    expect(
+      () => config.validateMonsterUpgradeCosts(missingMonster),
+      throwsFormatException,
+    );
+  });
+
   test('rejects unsupported IDs and schema versions', () {
     final unknown = _validConfig();
     (unknown['weapons'] as Map)['unknown_weapon'] = {
