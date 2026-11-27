@@ -86,8 +86,11 @@ begin
     from public.currency_transactions
     where user_id = p_user_id and idempotency_key = p_idempotency_key;
   if found then
-    if existing_transaction.amount <> -p_cost
-       or existing_transaction.reason <> p_purchase_type
+    -- The idempotency key is authoritative for retries. A retry may
+    -- observe a newer level-dependent catalog price after the first request
+    -- committed but its response was lost; never charge again or reject it
+    -- merely because the current quote has moved to the next level.
+    if existing_transaction.reason <> p_purchase_type
        or existing_transaction.reference_id <> p_target_id then
       raise exception 'progression_purchase_idempotency_conflict'
         using errcode = '23505';
