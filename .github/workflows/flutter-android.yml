@@ -78,13 +78,26 @@ jobs:
                   pos = prefix.index(marker) + len(marker)
                   prefix = prefix[:pos] + "\n        " + "\n        ".join(missing) + prefix[pos:]
                   content = prefix + ("dependencyResolutionManagement" + rest[0] if rest else "")
+          # Explicit Plugin Portal Maven endpoint as a fallback for hosted
+          # runners that fail the Gradle DSL shorthand repository lookup.
+          if "https://plugins.gradle.org/m2/" not in content:
+              marker = "repositories {"
+              pos = content.index(marker) + len(marker)
+              content = content[:pos] + '\n        maven { url = uri("https://plugins.gradle.org/m2/") }' + content[pos:]
           settings.write_text(content)
           PY
-          grep -A6 '^pluginManagement {' "$SETTINGS"
+          grep -A8 '^pluginManagement {' "$SETTINGS"
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-      - run: flutter build apk --debug
+      - name: Build Android APK (retry dependency refresh once)
+        shell: bash
+        run: |
+          flutter build apk --debug || (
+            echo "First Gradle resolution failed; retrying with refreshed dependencies."
+            cd android
+            ./gradlew --refresh-dependencies assembleDebug
+          )
       - name: Free runner disk space for the Android emulator
         run: |
           echo "Disk space before cleanup:"
