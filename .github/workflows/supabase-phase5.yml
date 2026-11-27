@@ -213,6 +213,102 @@ jobs:
           end;
           $settlement_test$;
           SQL
+      - name: Verify atomic weapon and monster purchases
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          do $purchase_test$
+          declare
+            v_user_id constant uuid := '123e4567-e89b-42d3-a456-426614174000';
+            receipt record;
+            retry_receipt record;
+            hero_doc jsonb;
+            monster_doc jsonb;
+            ledger_count integer;
+          begin
+            -- The match settlement step has already credited this account with 50.
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_unlock', 'ranger_test_bow', 10, 40,
+              1, 0, 'purchase:weapon-unlock:test-1'
+            );
+            if receipt.currency_balance <> 40
+               or receipt.hero_revision <> 2
+               or receipt.monster_revision <> 0
+               or receipt.resulting_level <> 0
+               or receipt.already_applied then
+              raise exception 'weapon unlock purchase returned invalid receipt';
+            end if;
+
+            select * into retry_receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_unlock', 'ranger_test_bow', 10, 40,
+              1, 0, 'purchase:weapon-unlock:test-1'
+            );
+            if not retry_receipt.already_applied
+               or retry_receipt.currency_balance <> 40
+               or retry_receipt.hero_revision <> 2 then
+              raise exception 'weapon unlock retry was not idempotent';
+            end if;
+
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_upgrade', 'ranger_test_bow', 5, 40,
+              2, 0, 'purchase:weapon-upgrade:test-1'
+            );
+            if receipt.currency_balance <> 35
+               or receipt.resulting_level <> 1
+               or receipt.hero_revision <> 3 then
+              raise exception 'weapon upgrade purchase returned invalid receipt';
+            end if;
+
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'monster_upgrade', 'runner', 7, 40,
+              3, 0, 'purchase:monster-upgrade:test-1'
+            );
+            if receipt.currency_balance <> 28
+               or receipt.resulting_level <> 2
+               or receipt.hero_revision <> 4
+               or receipt.monster_revision <> 1 then
+              raise exception 'monster upgrade purchase returned invalid receipt';
+            end if;
+
+            select data into hero_doc from public.hero_progress where user_id = v_user_id;
+            select data into monster_doc from public.monster_progress where user_id = v_user_id;
+            select count(*) into ledger_count
+              from public.currency_transactions
+              where user_id = v_user_id
+                and reason in ('weapon_unlock', 'weapon_upgrade', 'monster_upgrade');
+            if (hero_doc->>'permanentCurrency')::bigint <> 28
+               or not ((hero_doc->'unlockedWeaponIds') ? 'ranger_test_bow')
+               or (hero_doc->'weaponUpgradeLevels'->>'ranger_test_bow')::integer <> 1
+               or (monster_doc->'levels'->>'runner')::integer <> 2
+               or ledger_count <> 3 then
+              raise exception 'purchase mutations or immutable currency ledger are inconsistent';
+            end if;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'monster_upgrade', 'runner', 7, 40,
+                3, 0, 'purchase:stale-revision:test'
+              );
+              raise exception 'stale progression revision was unexpectedly accepted';
+            exception when serialization_failure then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'weapon_upgrade', 'ranger_test_bow', 999, 40,
+                4, 1, 'purchase:insufficient:test'
+              );
+              raise exception 'unaffordable progression purchase was unexpectedly accepted';
+            exception when numeric_value_out_of_range then
+              null;
+            end;
+          end;
+          $purchase_test$;
+          SQL
       - name: Verify authenticated row-level isolation
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
