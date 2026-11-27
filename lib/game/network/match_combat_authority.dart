@@ -10,6 +10,7 @@ import '../../monsters/monster_external_entity_adapter.dart';
 import '../../monsters/monster_formation_movement.dart';
 import '../../monsters/monster_match_combat_loop.dart';
 import '../../monsters/monster_match_runtime.dart';
+import '../../monsters/monster_navigation.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_projectile_manager.dart';
 import '../../monsters/monster_progression.dart';
@@ -290,6 +291,7 @@ class MatchCombatAuthority {
         rangedHandler: const MonsterRangedAttackHandler(),
         projectiles: projectileManager,
         projectileSpeed: configuration.projectileSpeed,
+        navigationGrid: _buildMonsterNavigationGrid(world.map),
         onProjectileKill: (attackerOwnerId, targetKind) {
           if (targetKind != MonsterTargetKind.crystal) {
             _onKill?.call(attackerOwnerId, targetKind);
@@ -706,4 +708,31 @@ class _MatchCombatTarget {
 
   bool get isAlive => alive();
   bool applyDamage(double amount) => damage(amount);
+}
+
+
+/// Builds the immutable A* walkability snapshot from the actual generated
+/// match map. Trees, rocks and the world boundary are blocked; shallow water
+/// remains traversable and is slowed by movementFactorAt in the same tick.
+MonsterNavigationGrid _buildMonsterNavigationGrid(ArenaMap map) {
+  const cellSize = 48.0;
+  const unitCollisionRadius = 18.0;
+  final columns = (map.size.width / cellSize).ceil();
+  final rows = (map.size.height / cellSize).ceil();
+  final blocked = <MonsterGridCell>{};
+  for (var y = 0; y < rows; y++) {
+    for (var x = 0; x < columns; x++) {
+      final center = Offset((x + 0.5) * cellSize, (y + 0.5) * cellSize);
+      if (map.isBlocked(center, unitCollisionRadius)) {
+        blocked.add(MonsterGridCell(x, y));
+      }
+    }
+  }
+  return MonsterNavigationGrid(
+    columns: columns,
+    rows: rows,
+    cellSize: cellSize,
+    blocked: blocked,
+    revision: 1,
+  );
 }
