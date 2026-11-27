@@ -269,6 +269,14 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                           ],
                         ),
                       ),
+                      if (_purchaseCatalog == null)
+                        const Card(
+                          child: ListTile(
+                            leading: Icon(Icons.info_outline),
+                            title: Text('خدمة الشراء غير متاحة حالياً'),
+                            subtitle: Text('يلزم ربط عنوان خادم اللعبة وإعداد أسعار التطوير المعتمدة.'),
+                          ),
+                        ),
                       const SizedBox(height: 18),
                       Text('الأسلحة وفتحها وتطويرها', style: Theme.of(context).textTheme.titleLarge),
                       for (final hero in archerFmHeroes)
@@ -412,16 +420,6 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
   Widget _heroLevelTile(String title, int? level) => ListTile(
         dense: true,
         leading: const Icon(Icons.shield_outlined),
-        title: Text(title),
-        trailing: Text(
-          level == null ? '—' : 'المستوى $level / 40',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      );
-
-  Widget _monsterLevelTile(String title, int? level) => ListTile(
-        dense: true,
-        leading: const Icon(Icons.pets_outlined),
         title: Text(title),
         trailing: Text(
           level == null ? '—' : 'المستوى $level / 40',
