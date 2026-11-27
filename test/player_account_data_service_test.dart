@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/auth/player_account_data_service.dart';
+import 'package:archer_fm/game/progression/hero_progress.dart';
 
 void main() {
   group('PlayerAccountDataService validation', () {
@@ -174,6 +175,41 @@ void main() {
             'ranged': 1,
           },
         }, 0),
+        throwsFormatException,
+      );
+    });
+  });
+
+
+  group('PlayerHeroProgress', () {
+    test('parses all hero levels and weapon ownership summary', () {
+      final data = HeroProgress.fresh().toJson();
+      data['heroLevels'] = {
+        'ranger': 2,
+        'flame': 3,
+        'shadow': 4,
+        'storm': 5,
+      };
+      data['weaponUpgradeLevels'] = {'ranger_greenbow': 2};
+      final progress = PlayerHeroProgress.fromSaveData(data, 7);
+      expect(progress.rangerLevel, 2);
+      expect(progress.flameLevel, 3);
+      expect(progress.shadowLevel, 4);
+      expect(progress.stormLevel, 5);
+      expect(progress.unlockedWeaponCount, 4);
+      expect(progress.weaponUpgradeCount, 1);
+      expect(progress.revision, 7);
+    });
+
+    test('rejects malformed or unknown hero progression', () {
+      final data = HeroProgress.fresh().toJson();
+      data['heroLevels'] = {'ranger': 41};
+      expect(
+        () => PlayerHeroProgress.fromSaveData(data, 0),
+        throwsFormatException,
+      );
+      expect(
+        () => PlayerHeroProgress.fromSaveData(HeroProgress.fresh().toJson(), -1),
         throwsFormatException,
       );
     });
