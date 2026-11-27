@@ -191,11 +191,20 @@ class SupabaseRestClient {
     final response = await request.close().timeout(timeout);
     final responseBody = await response.transform(utf8.decoder).join().timeout(timeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      // Keep credentials out of exception messages and logs.
-      throw HttpException(
-        'Supabase request failed with HTTP ${response.statusCode}.',
-        uri: uri,
-      );
+      // Preserve only a short machine-readable database error code. Never
+      // include response details, request bodies or credentials in logs.
+      String? errorCode;
+      try {
+        final decoded = jsonDecode(responseBody);
+        final message = decoded is Map ? decoded['message'] : null;
+        if (message is String &&
+            RegExp(r'^[a-z0-9_]{1,64}$').hasMatch(message)) {
+          errorCode = message;
+        }
+      } on FormatException {
+        // Non-JSON error bodies intentionally remain opaque.
+      }
+      throw SupabaseRestException(response.statusCode, errorCode, uri);
     }
     if (responseBody.isEmpty) return null;
     return jsonDecode(responseBody);
@@ -206,4 +215,17 @@ class SupabaseRestClient {
       ).hasMatch(value);
 
   void close() => _httpClient.close(force: true);
+}
+
+/// Safe PostgREST failure metadata for server-side error mapping.
+class SupabaseRestException extends HttpException {
+  SupabaseRestException(this.statusCode, this.code, Uri uri)
+      : super(
+          'Supabase request failed with HTTP $statusCode'
+          '${code == null ? '' : ' ($code)'}.',
+          uri: uri,
+        );
+
+  final int statusCode;
+  final String? code;
 }
