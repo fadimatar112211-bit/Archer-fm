@@ -11,9 +11,12 @@ import 'match_world_authority.dart';
 import 'match_combat_authority.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_army.dart';
+import '../../monsters/monster_progression.dart';
 import 'websocket_game_host.dart';
 
 typedef AccountHeroProgressLoader = Future<HeroProgress> Function(String accountId);
+typedef AccountMonsterProgressionLoader =
+    Future<MonsterProgression> Function(String accountId);
 
 typedef MatchSettlementHandler = Future<void> Function({
   required String matchId,
@@ -42,7 +45,9 @@ class AuthoritativeMatchSession
     MatchSettlementHandler? onMatchSettlement,
     void Function(Object error)? onMatchSettlementError,
     AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
   })  : _loadAccountHeroProgress = loadAccountHeroProgress,
+        _loadAccountMonsterProgression = loadAccountMonsterProgression,
         _onMatchSettlement = onMatchSettlement,
         _onMatchSettlementError = onMatchSettlementError,
         _mapFactory = mapFactory,
@@ -65,6 +70,7 @@ class AuthoritativeMatchSession
     MatchSettlementHandler? onMatchSettlement,
     void Function(Object error)? onMatchSettlementError,
     AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
   }) {
     return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
           roomCode,
@@ -77,6 +83,7 @@ class AuthoritativeMatchSession
           onMatchSettlement: onMatchSettlement,
           onMatchSettlementError: onMatchSettlementError,
           loadAccountHeroProgress: loadAccountHeroProgress,
+          loadAccountMonsterProgression: loadAccountMonsterProgression,
         );
   }
 
@@ -91,6 +98,7 @@ class AuthoritativeMatchSession
     MatchSettlementHandler? onMatchSettlement,
     void Function(Object error)? onMatchSettlementError,
     AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
   }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
@@ -107,6 +115,7 @@ class AuthoritativeMatchSession
       onMatchSettlement: onMatchSettlement,
       onMatchSettlementError: onMatchSettlementError,
       loadAccountHeroProgress: loadAccountHeroProgress,
+      loadAccountMonsterProgression: loadAccountMonsterProgression,
     );
   }
 
@@ -117,7 +126,9 @@ class AuthoritativeMatchSession
   final ArenaMap Function()? _mapFactory;
   final MatchCombatConfiguration? _combatConfiguration;
   final AccountHeroProgressLoader? _loadAccountHeroProgress;
+  final AccountMonsterProgressionLoader? _loadAccountMonsterProgression;
   final Map<String, HeroProgress> _accountHeroProgress = {};
+  final Map<String, MonsterProgression> _accountMonsterProgression = {};
   final MatchSettlementHandler? _onMatchSettlement;
   final void Function(Object error)? _onMatchSettlementError;
   final Map<String, _PendingMatchSettlement> _pendingSettlements = {};
@@ -184,11 +195,18 @@ class AuthoritativeMatchSession
     if (matchPlayer == null || matchPlayer.accountId != accountId) {
       throw StateError('Verified account does not own this match slot.');
     }
-    if (_accountHeroProgress.containsKey(player.id)) return;
-    final loader = _loadAccountHeroProgress;
-    if (loader == null) return;
-    final progress = await loader(accountId);
-    _accountHeroProgress[player.id] = progress;
+    if (!_accountHeroProgress.containsKey(player.id)) {
+      final heroLoader = _loadAccountHeroProgress;
+      if (heroLoader != null) {
+        _accountHeroProgress[player.id] = await heroLoader(accountId);
+      }
+    }
+    if (!_accountMonsterProgression.containsKey(player.id)) {
+      final monsterLoader = _loadAccountMonsterProgression;
+      if (monsterLoader != null) {
+        _accountMonsterProgression[player.id] = await monsterLoader(accountId);
+      }
+    }
   }
 
   @override
@@ -327,7 +345,13 @@ class AuthoritativeMatchSession
                 for (final item in _players)
                   item.id: item.initialArmySelection!,
               },
-              configuration: config,
+              configuration: _accountMonsterProgression.isEmpty
+                  ? config
+                  : config.withMonsterProgressionByPlayer({
+                      ...config.monsterProgressionByPlayer,
+                      for (final entry in _accountMonsterProgression.entries)
+                        entry.key: entry.value,
+                    }),
               weaponUpgradeLevels: {
                 for (final item in _players)
                   item.id: _accountHeroProgress[item.id]?.weaponLevel(item.weaponId!) ??
