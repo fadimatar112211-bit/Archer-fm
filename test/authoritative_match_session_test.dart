@@ -256,6 +256,13 @@ void main() {
       (session.snapshot()['combat'] as Map)['monsterProgression'],
       isA<Map>(),
     );
+    final p1Progression = (session.snapshotFor(players.first)['combat'] as Map)
+        ['monsterProgression'] as Map;
+    final p2Progression = (session.snapshotFor(players[1])['combat'] as Map)
+        ['monsterProgression'] as Map;
+    expect(p1Progression.keys, ['p1']);
+    expect(p2Progression.keys, ['p2']);
+    expect(p1Progression.containsKey('p2'), isFalse);
   });
 
   test('loaded permanent monster progression scales only its owner army', () {
