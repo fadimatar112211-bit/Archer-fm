@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/progression/progression_economy_configuration.dart';
+import 'package:archer_fm/game/network/match_combat_configuration.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 
 Map<String, dynamic> _validConfig() => {
@@ -26,6 +30,32 @@ Map<String, dynamic> _validConfig() => {
 };
 
 void main() {
+  test('checked-in launch templates contain the approved matching economy', () async {
+    final economyJson = jsonDecode(
+      await File('config/progression-economy.example.json').readAsString(),
+    ) as Map<String, dynamic>;
+    final combatJson = jsonDecode(
+      await File('config/match-combat.example.json').readAsString(),
+    ) as Map<String, dynamic>;
+    final economy = ProgressionEconomyConfiguration.fromJson(economyJson);
+    final combat = decodeMatchCombatConfiguration(combatJson);
+    final policy = combat.monsterProgressionPolicy!;
+
+    final combatCosts = {
+      for (final entry in policy.upgradeCosts.entries)
+        entry.key.name: entry.value,
+    };
+    economy.validateMonsterUpgradeCosts(combatCosts);
+
+    expect(economy.unlockCost('ranger_greenbow'), 0);
+    expect(economy.unlockCost('ranger_longbow'), 1200);
+    expect(economy.unlockCost('ranger_twinshot'), 2500);
+    expect(economy.weaponUpgradeCost('ranger_longbow', 40), 664);
+    expect(economy.monsterUpgradeCost('runner', 40), 447);
+    expect(policy.growth[MonsterType.runner]!.healthPerLevel, 0.015);
+    expect(policy.growth[MonsterType.tank]!.damagePerLevel, 0.01);
+  });
+
   test('loads all canonical weapon and monster prices without defaults', () {
     final config = ProgressionEconomyConfiguration.fromJson(_validConfig());
     expect(config.unlockCost('ranger_greenbow'), 0);
