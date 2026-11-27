@@ -109,7 +109,7 @@ Configure DNS, certificate renewal, HSTS after validating the HTTPS site, reques
 ## 6. Release acceptance checklist
 
 - [ ] Supabase staging migration applied and `supabase/validation/phase5_privileges.sql` passes.
-- [ ] Auth sign-up, sign-in, token refresh, expiry and revoked-token rejection tested.
+- [ ] Auth sign-up, sign-in, token refresh, expiry and active-WebSocket revalidation tested against a staging project; confirm the provider's exact revocation semantics.
 - [ ] WSS handshake, reconnect and account ownership tested through the real TLS proxy.
 - [ ] Cross-account data isolation tested with two real test users.
 - [ ] Cross-device hero progression restore tested.
