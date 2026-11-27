@@ -25,8 +25,8 @@ This document separates implemented source and repeatable local CI evidence from
 | Full Flutter tests | Same commit | 330 tests passed |
 | Match-rules tests | Run [45972701304](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45972701304) | Passed |
 | PostgreSQL 16 migration, grants/RLS, account backfill, settlement idempotency and two-account isolation | Run [45973257865](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45973257865) | Passed |
-| Android debug APK build | Run [45973257832](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45973257832) | Failed at Gradle plugin resolution (`org.gradle.kotlin.kotlin-dsl:6.4.2`); Flutter tests had passed. A second build attempt is being checked separately. |
-| Android emulator | Earlier run [45971636930](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45971636930) | Started on an earlier commit before active-session revalidation; it is not accepted as final Phase 5 emulator evidence. |
+| Android debug APK build | Run [45973249058](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45973249058) | Passed analysis, all 330 Flutter tests, and debug APK build. The parallel first build [45973257832](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45973257832) failed once during Gradle plugin resolution; the repeat succeeded. |
+| Android emulator | Run [45971636930](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45971636930), artifact [15185839796](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45971636930) | APK installed; process remained alive; `MainActivity` was resumed; two screenshots and before/after logcats were captured. Both app screenshots show a black content surface, so visual startup is **not accepted**. Run used earlier commit `9d9ed86`; no app fatal exception was found in the captured logcat, but Impeller EGL warnings and an emulator System UI ANR occurred. |
 
 The PostgreSQL job uses local PostgreSQL 16 and a minimal Supabase-compatible Auth schema. It is not a live Supabase staging test.
 
@@ -38,7 +38,7 @@ The PostgreSQL job uses local PostgreSQL 16 and a minimal Supabase-compatible Au
 4. **Monster match hydration:** cloud monster levels are stored and displayed, but production match loadouts still need the approved growth policy and trusted account loader wired into the authoritative match factory.
 5. **Production durability and operations:** the JSON outbox is single-instance only. Multi-replica service requires a shared database queue/lease; configure monitoring, alerting, protected storage, backups, and complete a restore drill.
 6. **TLS/WSS deployment:** deploy the gateway behind the real TLS proxy and verify public WSS create/join/resume/reconnect.
-7. **Final Android runtime:** after source/build work is frozen, run the emulator smoke test once against the final branch commit, then verify install, launch, resumed activity, screenshots, and logcat. Physical-device smoke test remains separate.
+7. **Android runtime visual failure:** investigate the black Flutter surface seen in run [45971636930](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45971636930). The install/process/activity checks passed, but screenshots were black. Once code is frozen and the rendering issue is addressed, run one final emulator smoke test against the final branch commit and verify a visibly rendered home screen as well as install, launch, resumed activity, screenshots, and logcat. Physical-device smoke test remains separate.
 
 ## Release decision
 
