@@ -306,6 +306,130 @@ void main() {
     await socket.close();
   });
 
+  test('authenticated purchase HTTP routes derive account identity from bearer token', () async {
+    factory.accountBound = true;
+    String? purchasedAccount;
+    var purchaseCalls = 0;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' ? 'verified-account' : null,
+      progressionCatalogHandler: ({required trustedAccountId}) async {
+        expect(trustedAccountId, 'verified-account');
+        return {
+          'weapons': [
+            {'id': 'ranger_longbow', 'cost': 120, 'available': true},
+          ],
+          'monsters': [
+            {'id': 'runner', 'cost': 60, 'available': true},
+          ],
+        };
+      },
+      progressionPurchaseHandler: ({
+        required trustedAccountId,
+        required purchaseType,
+        required targetId,
+        required idempotencyKey,
+      }) async {
+        purchaseCalls++;
+        purchasedAccount = trustedAccountId;
+        expect(purchaseType, 'weapon_unlock');
+        expect(targetId, 'ranger_longbow');
+        expect(idempotencyKey, 'retry-key-1');
+        return {
+          'currency_balance': 880,
+          'hero_revision': 2,
+          'monster_revision': 1,
+          'resulting_level': 0,
+          'already_applied': false,
+        };
+      },
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+    final client = HttpClient();
+
+    final catalogRequest = await client.getUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/catalog'),
+    );
+    catalogRequest.headers.set(HttpHeaders.authorizationHeader, 'Bearer valid-token');
+    final catalogResponse = await catalogRequest.close();
+    final catalog = jsonDecode(await catalogResponse.transform(utf8.decoder).join())
+        as Map<String, dynamic>;
+    expect(catalogResponse.statusCode, HttpStatus.ok);
+    expect(catalog['type'], 'progression_catalog');
+
+    final purchaseRequest = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    purchaseRequest.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer valid-token')
+      ..contentType = ContentType.json;
+    purchaseRequest.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key-1',
+    }));
+    final purchaseResponse = await purchaseRequest.close();
+    final receipt = jsonDecode(await purchaseResponse.transform(utf8.decoder).join())
+        as Map<String, dynamic>;
+    expect(purchaseResponse.statusCode, HttpStatus.ok);
+    expect(receipt['currency_balance'], 880);
+    expect(purchasedAccount, 'verified-account');
+    expect(purchaseCalls, 1);
+
+    final spoofRequest = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    spoofRequest.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer valid-token')
+      ..contentType = ContentType.json;
+    spoofRequest.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key-2',
+      'userId': 'attacker-account',
+      'cost': 1,
+      'expectedHeroRevision': 0,
+    }));
+    final spoofResponse = await spoofRequest.close();
+    expect(spoofResponse.statusCode, HttpStatus.badRequest);
+    expect(purchaseCalls, 1);
+    client.close(force: true);
+  });
+
+  test('purchase HTTP route rejects missing bearer authentication', () async {
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async => null,
+      progressionPurchaseHandler: ({
+        required trustedAccountId,
+        required purchaseType,
+        required targetId,
+        required idempotencyKey,
+      }) async => throw StateError('must not be called'),
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+    final client = HttpClient();
+    final request = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    request.headers.contentType = ContentType.json;
+    request.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key',
+    }));
+    final response = await request.close();
+    expect(response.statusCode, HttpStatus.unauthorized);
+    client.close(force: true);
+  });
+
   test('disconnects an authenticated socket when its token is revoked', () async {
     factory.accountBound = true;
     var tokenRevoked = false;
