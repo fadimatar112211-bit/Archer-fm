@@ -18,7 +18,7 @@ class PlayerProgressionPurchaseClient {
   final SupabaseAccountService accountService;
   final String _apiUrl;
   final HttpClient _httpClient;
-  final Map<String, String> _pendingIdempotencyKeys = {};
+  static final Map<String, String> _pendingIdempotencyKeys = {};
 
   Future<ProgressionPurchaseCatalog> loadCatalog() async {
     final token = await _accessToken();
@@ -55,7 +55,7 @@ class PlayerProgressionPurchaseClient {
     final uri = base.replace(
       path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
     );
-    final operationKey = targetId;
+    final operationKey = '${accountService.currentUser?.id ?? 'signed-out'}:$targetId';
     final idempotencyKey = _pendingIdempotencyKeys.putIfAbsent(
       operationKey,
       _newIdempotencyKey,
