@@ -146,11 +146,11 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       ),
     );
     if (confirmed == true && mounted) {
-      await _purchase(purchaseType, targetId);
+      await _purchase(purchaseType, targetId, cost);
     }
   }
 
-  Future<void> _purchase(String purchaseType, String targetId) async {
+  Future<void> _purchase(String purchaseType, String targetId, int quotedCost) async {
     final key = '$purchaseType:$targetId';
     if (_busyPurchases.contains(key)) return;
     setState(() => _busyPurchases.add(key));
@@ -158,6 +158,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       final receipt = await _purchaseClient.purchase(
         purchaseType: purchaseType,
         targetId: targetId,
+        quotedCost: quotedCost,
       );
       if (!mounted) return;
       await _load();
