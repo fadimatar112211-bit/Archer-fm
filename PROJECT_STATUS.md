@@ -458,3 +458,5 @@ Still to decide or test:
 
 - PostgreSQL migration, idempotent match settlement and two-account RLS isolation checks passed again on the expanded account-screen implementation: [workflow 45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438).
 - Account screen now includes hero levels and weapon ownership/upgrade summary in addition to monster levels, wallet, ledger and match history. Flutter validation for that expanded view is running in [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437).
+
+- Expanded account-screen Flutter workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) has now passed Flutter analysis and the complete test suite, including hero/weapon progression parsing and display. Android debug APK compilation is in progress; emulator execution remains a manual-dispatch-only QA step.
