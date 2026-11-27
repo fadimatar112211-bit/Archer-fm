@@ -183,7 +183,7 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - The room uses a per-session unique match identifier rather than the short join code, preventing collisions with historical match records.
 - Production gateway now constructs the server-only Supabase settlement adapter from `SUPABASE_SERVICE_ROLE_KEY` and invokes the atomic settlement RPC. The key is required at server startup and is never part of mobile configuration.
 - Failed settlement requests remain queued and are retried on subsequent server ticks. The room is not eligible for removal while durable settlements remain pending. Retries use the database idempotency key so a lost HTTP response does not double-award currency.
-- Added `ARCHER_FM_MATCH_REWARDS_BY_RANK` as an optional four-integer server configuration. It defaults to `[0,0,0,0]`; no currency values were invented without an approved economy schedule.
+- The initial optional `ARCHER_FM_MATCH_REWARDS_BY_RANK` setting has been superseded by a required protected `ARCHER_FM_MATCH_REWARDS_CONFIG` JSON file. The launch rank schedule is now stored in `config/match-rewards.example.json` and is loaded fail-closed by the production gateway.
 - Added a session-level test proving a finished account-bound match queues durable settlement for all four accounts. The new implementation still needs CI and a real Supabase staging test.
 - Cloud hero/monster progression hydration before match start is still not complete; the adapters and revision-checked save APIs exist, but all game profile/upgrade handlers are not yet connected.
 - Live Supabase migration deployment, cross-device restore and cross-account isolation E2E remain blocked until an owner-configured staging project and secrets are available.
@@ -356,3 +356,13 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Player-facing purchase commands remain intentionally unimplemented until the server-side catalog/economy configuration is approved. No weapon prices, monster upgrade prices, or monster growth values have been invented. Live Supabase staging, cross-device recovery, production WSS deployment and device runtime QA remain open.
 
 **Current acceptance status: IN PROGRESS — purchase SQL validation is green; player-facing purchase flow, live Supabase staging, cross-device recovery, production deployment and device QA remain open.**
+
+
+## Approved server economy configuration — 2026-11-27
+
+- The launch economy templates are now committed on this Phase 5 branch: `config/progression-economy.example.json`, `config/match-combat.example.json`, and `config/match-rewards.example.json`.
+- The strict progression decoder accepts zero unlock cost only for each hero's free starter weapon; all other weapon unlocks must have positive prices. All 12 weapon upgrade schedules and all four monster upgrade schedules are explicit.
+- Monster growth and upgrade costs are included in the combat template. Startup checks the monster upgrade cost maps match the purchase catalog exactly.
+- The production gateway now requires `ARCHER_FM_MATCH_REWARDS_CONFIG` and reads a versioned four-rank permanent-currency schedule. It no longer silently defaults missing rank rewards to zero.
+- Protected installation instructions and values: `docs/PROTECTED_SERVER_ECONOMY_CONFIGURATION.md`. Production deployment wiring: `docs/deployment/PRODUCTION_GATEWAY.md`.
+- CI must still pass on the latest head. The example JSON templates are not the same as installing the files on a live server; production file ownership, permissions, secrets, TLS and live Supabase configuration remain external deployment steps.
