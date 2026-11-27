@@ -306,6 +306,16 @@ jobs:
             exception when numeric_value_out_of_range then
               null;
             end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, null, 'runner', 1, 40,
+                4, 1, 'purchase:null-type:test'
+              );
+              raise exception 'null purchase type was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
           end;
           $purchase_test$;
           SQL
