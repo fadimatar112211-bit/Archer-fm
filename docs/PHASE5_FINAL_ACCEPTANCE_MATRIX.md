@@ -12,12 +12,15 @@ This document separates implemented source and repeatable local CI evidence from
 - Server-side access-token verification for WebSocket create/join/resume, account-bound room ownership, and resume-token rotation.
 - Active authenticated sockets revalidate the original bearer token every 60 seconds; rejected, identity-changed, or unverifiable sessions fail closed.
 - Hero and monster progression models, store abstractions, Supabase REST adapters, revision checks, and account-private snapshot projection.
+- New server-only atomic progression purchase RPC and gateway REST adapter: weapon unlock, weapon upgrade, and monster upgrade each debit the wallet, update progression, advance revisions, and append an immutable ledger transaction in one DB transaction. Retries are idempotent; stale revisions and insufficient balance are rejected. The RPC accepts price/target from trusted gateway code only; owner-approved balance config and live client command wiring remain outstanding.
 - Match result/reward settlement through a server-only RPC, idempotency checks, and a disk-backed retry outbox for one gateway instance.
 - Account screen reads profile, wallet, hero levels, weapon ownership/upgrade summary, monster levels, currency ledger, and match history; only display name is client-editable.
 - SQL migration provisions both existing and future Auth accounts, applies RLS and least-privilege grants, and limits mutation RPCs to `service_role`.
 - Deployment templates document loopback binding, TLS/WSS reverse proxy, secret handling, persistent outbox storage, backup and restore requirements.
 
 ## Verified automated checks
+
+The latest purchase-RPC migration and expanded SQL smoke checks are still running in CI; do not treat the new purchase path as verified until that run passes.
 
 | Check | Evidence | Result |
 |---|---|---|
@@ -34,7 +37,7 @@ The PostgreSQL job uses local PostgreSQL 16 and a minimal Supabase-compatible Au
 
 1. **Live Supabase staging:** owner must create/link the project, apply the migration, configure Auth email policy/redirects, and test two real accounts, token expiry/revocation, concurrent writes, and account isolation.
 2. **Progression economy approval:** weapon unlock/upgrade prices, weapon upgrade caps/scaling, monster upgrade prices, and per-level monster health/damage/speed growth must be approved. Existing service abstractions intentionally have no invented defaults.
-3. **Authoritative upgrade endpoints and UI:** persistent hero/monster progression services exist, but player-facing unlock/upgrade commands are not yet connected end-to-end to authenticated server requests and the wallet/ledger.
+3. **Authoritative upgrade endpoints and UI:** the atomic database purchase endpoint and server REST adapter now exist, with SQL CI coverage being added for unlock, upgrade, idempotent retry, stale revisions, insufficient balance and ledger writes. Remaining: connect authenticated player commands/UI to the trusted gateway purchase service and load owner-approved prices/max levels from protected server configuration.
 4. **Monster match hydration:** cloud monster levels are stored and displayed, but production match loadouts still need the approved growth policy and trusted account loader wired into the authoritative match factory.
 5. **Production durability and operations:** the JSON outbox is single-instance only. Multi-replica service requires a shared database queue/lease; configure monitoring, alerting, protected storage, backups, and complete a restore drill.
 6. **TLS/WSS deployment:** deploy the gateway behind the real TLS proxy and verify public WSS create/join/resume/reconnect.
