@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'shared_preferences_stub.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'supabase_account_service.dart';
 

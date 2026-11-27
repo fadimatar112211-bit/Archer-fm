@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../hero/hero3d.dart';
+import '../hero/hero_assets.dart';
+import '../hero/hero_catalog.dart';
 import '../hero/hero_viewer_screen.dart';
 import '../monsters/monster3d.dart';
 import '../monsters/monster_assets.dart';
@@ -375,7 +377,11 @@ class _ArenaScreenState extends State<ArenaScreen> with SingleTickerProviderStat
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const HeroViewerScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => HeroViewerScreen(
+                        loaderFactory: defaultHeroLoaderFactory,
+                      ),
+                    ),
                   );
                 },
                 child: const Text('الأبطال', style: TextStyle(color: Colors.white)),

@@ -1,4 +1,4 @@
-import 'supabase_stub.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../progression/hero_progress.dart';
 
@@ -120,8 +120,12 @@ class PlayerAccountDataService {
         .eq('user_id', _userId)
         .order('created_at', ascending: false)
         .limit(limit);
-    return rows
-        .map((row) => PlayerCurrencyTransaction.fromJson(row))
+    final list = (rows as List?) ?? const [];
+    return list
+        .whereType<Map>()
+        .map((row) => PlayerCurrencyTransaction.fromJson(
+              Map<String, dynamic>.from(row),
+            ))
         .toList(growable: false);
   }
 
@@ -137,7 +141,11 @@ class PlayerAccountDataService {
         .eq('user_id', _userId)
         .order('completed_at', ascending: false)
         .limit(limit);
-    return rows.map((row) => PlayerMatchResult.fromJson(row)).toList(growable: false);
+    final list = (rows as List?) ?? const [];
+    return list
+        .whereType<Map>()
+        .map((row) => PlayerMatchResult.fromJson(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
   }
 
   static void validateDisplayName(String value) {

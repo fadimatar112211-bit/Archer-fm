@@ -1,4 +1,4 @@
-import 'supabase_stub.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'player_account_data_service.dart';
 
