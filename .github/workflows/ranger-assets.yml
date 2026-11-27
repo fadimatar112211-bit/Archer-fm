@@ -3,6 +3,7 @@ name: Ranger Blender Asset Pipeline
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "tools/blender/**"
       - "tools/validate_hero_assets.py"

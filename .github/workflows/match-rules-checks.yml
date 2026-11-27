@@ -1,36 +1,37 @@
 name: Match rules checks
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
-    branches: [feature/match-rules-foundation]
+    branches: [feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
     paths:
-      - 'lib/game/match/**'
-      - 'lib/game/network/**'
-      - 'lib/game/controls/**'
-      - 'lib/game/progression/**'
-      - 'test/match_rules_test.dart'
-      - 'test/game_client_test.dart'
-      - 'test/hero_progress_test.dart'
-      - 'test/file_hero_progress_store_test.dart test/virtual_joystick_test.dart'
-      - 'test/virtual_joystick_test.dart'
-      - '.github/workflows/match-rules-checks.yml'
+      - 'lib/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'supabase/**'
+      - 'tool/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'analysis_options.yaml'
+      - '.github/workflows/**'
   pull_request:
     branches: [heroes-complete]
     paths:
-      - 'lib/game/match/**'
-      - 'lib/game/network/**'
-      - 'lib/game/controls/**'
-      - 'lib/game/progression/**'
-      - 'test/match_rules_test.dart'
-      - 'test/game_client_test.dart'
-      - 'test/hero_progress_test.dart'
-      - 'test/file_hero_progress_store_test.dart'
-      - 'test/virtual_joystick_test.dart'
-      - '.github/workflows/match-rules-checks.yml'
+      - 'lib/**'
+      - 'test/**'
+      - 'assets/**'
+      - 'tool/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/**'
 
 jobs:
   match-rules:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -38,6 +39,5 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: dart format lib/game/match lib/game/network lib/game/progression lib/game/controls test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test test/match_rules_test.dart test/game_client_test.dart test/hero_progress_test.dart test/file_hero_progress_store_test.dart
+      - run: flutter test

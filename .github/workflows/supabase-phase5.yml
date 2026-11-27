@@ -1,0 +1,413 @@
+name: Supabase Phase 5 migration smoke test
+
+on:
+  push:
+    branches: [feature/phase-5-account-cloud-persistence]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/validation/**'
+      - '.github/workflows/supabase-phase5.yml'
+  pull_request:
+    branches: [feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/validation/**'
+      - '.github/workflows/supabase-phase5.yml'
+  workflow_dispatch:
+
+jobs:
+  postgres-migration:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: archer_fm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d archer_fm_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: postgres
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/archer_fm_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create minimal Supabase auth roles and schema
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+          create role service_role nologin bypassrls;
+          create schema auth;
+          grant usage on schema auth to authenticated;
+          create table auth.users (
+            id uuid primary key,
+            email text unique
+          );
+          -- Simulate an account that existed before this migration was applied.
+          insert into auth.users(id, email)
+          values ('123e4567-e89b-42d3-a456-426614174001', 'existing@example.invalid');
+          create or replace function auth.uid()
+          returns uuid
+          language sql
+          stable
+          set search_path = ''
+          as $auth_uid$
+            select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+          $auth_uid$;
+          SQL
+      - name: Apply Phase 5 migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202611270001_phase5_player_persistence.sql
+      - name: Apply atomic progression purchase migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202611270002_atomic_progression_purchases.sql
+      - name: Assert RLS, client grants and server-only RPC privileges
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/validation/phase5_privileges.sql
+      - name: Verify new profile provisioning trigger
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users(id, email)
+          values
+            ('123e4567-e89b-42d3-a456-426614174000', 'smoke@example.invalid'),
+            ('123e4567-e89b-42d3-a456-426614174002', 'smoke2@example.invalid');
+          do $assert$
+          begin
+            if not exists (
+              select 1 from public.player_profiles
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'profile provisioning trigger failed';
+            end if;
+            if not exists (
+              select 1 from public.hero_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'hero progression provisioning trigger failed';
+            end if;
+            if not exists (
+              select 1 from public.monster_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'monster progression provisioning trigger failed';
+            end if;
+            if not exists (
+              select 1 from public.player_profiles
+              where user_id = '123e4567-e89b-42d3-a456-426614174001'
+            ) or not exists (
+              select 1 from public.hero_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174001'
+            ) or not exists (
+              select 1 from public.monster_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174001'
+            ) then
+              raise exception 'existing Auth account backfill failed';
+            end if;
+          end;
+          $assert$;
+          SQL
+      - name: Verify display-name constraints and updated timestamp trigger
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          update public.player_profiles
+          set display_name = 'Player One'
+          where user_id = '123e4567-e89b-42d3-a456-426614174000';
+          select pg_sleep(0.02);
+          update public.player_profiles
+          set display_name = 'Player Two'
+          where user_id = '123e4567-e89b-42d3-a456-426614174000';
+          do $assert$
+          declare
+            profile public.player_profiles%rowtype;
+          begin
+            select * into profile from public.player_profiles
+            where user_id = '123e4567-e89b-42d3-a456-426614174000';
+            if profile.display_name <> 'Player Two'
+               or profile.updated_at <= profile.created_at then
+              raise exception 'profile update timestamp trigger did not advance updated_at';
+            end if;
+            begin
+              update public.player_profiles
+              set display_name = '  padded  '
+              where user_id = profile.user_id;
+              raise exception 'whitespace-padded display name unexpectedly accepted';
+            exception when check_violation then
+              null;
+            end;
+          end;
+          $assert$;
+          SQL
+      - name: Verify atomic and idempotent match settlement
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          do $settlement_test$
+          declare
+            v_user_id constant uuid := '123e4567-e89b-42d3-a456-426614174000';
+            first_receipt record;
+            retry_receipt record;
+            stored_balance bigint;
+            ledger_rows integer;
+            stored_results integer;
+          begin
+            select * into first_receipt
+            from public.finalize_match_player_result(
+              'smoke-match-1',
+              v_user_id,
+              1::smallint,
+              900::bigint,
+              4::smallint,
+              'timeExpired',
+              50::bigint,
+              'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+            );
+            if first_receipt.result_id is null
+               or first_receipt.currency_balance <> 50
+               or first_receipt.reward_transaction_id is null then
+              raise exception 'first match settlement returned an invalid receipt';
+            end if;
+
+            select * into retry_receipt
+            from public.finalize_match_player_result(
+              'smoke-match-1',
+              v_user_id,
+              1::smallint,
+              900::bigint,
+              4::smallint,
+              'timeExpired',
+              50::bigint,
+              'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+            );
+            if retry_receipt.result_id <> first_receipt.result_id
+               or retry_receipt.reward_transaction_id <> first_receipt.reward_transaction_id then
+              raise exception 'idempotent retry returned a different settlement receipt';
+            end if;
+
+            select (data->>'permanentCurrency')::bigint into stored_balance
+            from public.hero_progress where user_id = v_user_id;
+            select count(*) into ledger_rows
+            from public.currency_transactions where user_id = v_user_id;
+            select count(*) into stored_results
+            from public.match_results
+            where user_id = v_user_id and match_id = 'smoke-match-1';
+            if stored_balance <> 50 or ledger_rows <> 1 or stored_results <> 1 then
+              raise exception 'idempotent settlement duplicated or lost the reward';
+            end if;
+
+            begin
+              perform public.finalize_match_player_result(
+                'smoke-match-1',
+                v_user_id,
+                1::smallint,
+                900::bigint,
+                4::smallint,
+                'timeExpired',
+                99::bigint,
+                'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+              );
+              raise exception 'conflicting match retry was unexpectedly accepted';
+            exception when unique_violation then
+              null;
+            end;
+          end;
+          $settlement_test$;
+          SQL
+      - name: Verify atomic weapon and monster purchases
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          do $purchase_test$
+          declare
+            v_user_id constant uuid := '123e4567-e89b-42d3-a456-426614174000';
+            receipt record;
+            retry_receipt record;
+            hero_doc jsonb;
+            monster_doc jsonb;
+            ledger_count integer;
+          begin
+            -- The match settlement step has already credited this account with 50.
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_unlock', 'ranger_longbow', 10, 40,
+              1, 0, 'purchase:weapon-unlock:test-1'
+            );
+            if receipt.currency_balance <> 40
+               or receipt.hero_revision <> 2
+               or receipt.monster_revision <> 0
+               or receipt.resulting_level <> 0
+               or receipt.already_applied then
+              raise exception 'weapon unlock purchase returned invalid receipt';
+            end if;
+
+            select * into retry_receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_unlock', 'ranger_longbow', 10, 40,
+              1, 0, 'purchase:weapon-unlock:test-1'
+            );
+            if not retry_receipt.already_applied
+               or retry_receipt.currency_balance <> 40
+               or retry_receipt.hero_revision <> 2 then
+              raise exception 'weapon unlock retry was not idempotent';
+            end if;
+
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_upgrade', 'ranger_longbow', 5, 40,
+              2, 0, 'purchase:weapon-upgrade:test-1'
+            );
+            if receipt.currency_balance <> 35
+               or receipt.resulting_level <> 1
+               or receipt.hero_revision <> 3 then
+              raise exception 'weapon upgrade purchase returned invalid receipt';
+            end if;
+
+            -- A lost-response retry may carry the old idempotency key but
+            -- observe a new level price. It must return the prior result and
+            -- never charge a second time.
+            select * into retry_receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_upgrade', 'ranger_longbow', 3, 40,
+              2, 0, 'purchase:weapon-upgrade:test-1'
+            );
+            if not retry_receipt.already_applied
+               or retry_receipt.currency_balance <> 35
+               or retry_receipt.hero_revision <> 3
+               or retry_receipt.resulting_level <> 1 then
+              raise exception 'weapon upgrade retry with changed quote was not idempotent';
+            end if;
+
+            select * into receipt
+            from public.purchase_player_progression(
+              v_user_id, 'monster_upgrade', 'runner', 7, 40,
+              3, 0, 'purchase:monster-upgrade:test-1'
+            );
+            if receipt.currency_balance <> 28
+               or receipt.resulting_level <> 2
+               or receipt.hero_revision <> 4
+               or receipt.monster_revision <> 1 then
+              raise exception 'monster upgrade purchase returned invalid receipt';
+            end if;
+
+            select data into hero_doc from public.hero_progress where user_id = v_user_id;
+            select data into monster_doc from public.monster_progress where user_id = v_user_id;
+            select count(*) into ledger_count
+              from public.currency_transactions
+              where user_id = v_user_id
+                and reason in ('weapon_unlock', 'weapon_upgrade', 'monster_upgrade');
+            if (hero_doc->>'permanentCurrency')::bigint <> 28
+               or not ((hero_doc->'unlockedWeaponIds') ? 'ranger_longbow')
+               or (hero_doc->'weaponUpgradeLevels'->>'ranger_longbow')::integer <> 1
+               or (monster_doc->'levels'->>'runner')::integer <> 2
+               or ledger_count <> 3 then
+              raise exception 'purchase mutations or immutable currency ledger are inconsistent';
+            end if;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'weapon_unlock', 'ranger_unknown_bow', 1, 40,
+                1, 0, 'purchase:unknown-weapon:test'
+              );
+              raise exception 'unknown weapon ID was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'monster_upgrade', 'dragon', 1, 40,
+                4, 1, 'purchase:unknown-monster:test'
+              );
+              raise exception 'unknown monster type was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'monster_upgrade', 'runner', 7, 40,
+                3, 0, 'purchase:stale-revision:test'
+              );
+              raise exception 'stale progression revision was unexpectedly accepted';
+            exception when serialization_failure then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'weapon_upgrade', 'ranger_longbow', 999, 40,
+                4, 1, 'purchase:insufficient:test'
+              );
+              raise exception 'unaffordable progression purchase was unexpectedly accepted';
+            exception when numeric_value_out_of_range then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, null, 'runner', 1, 40,
+                4, 1, 'purchase:null-type:test'
+              );
+              raise exception 'null purchase type was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
+          end;
+          $purchase_test$;
+          SQL
+      - name: Verify authenticated row-level isolation
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          begin;
+          set local role authenticated;
+          select set_config(
+            'request.jwt.claim.sub',
+            '123e4567-e89b-42d3-a456-426614174000',
+            true
+          );
+          do $rls_first$
+          declare
+            profile_rows integer;
+            hero_rows integer;
+            monster_rows integer;
+            ledger_rows integer;
+            match_rows integer;
+          begin
+            select count(*) into profile_rows from public.player_profiles;
+            select count(*) into hero_rows from public.hero_progress;
+            select count(*) into monster_rows from public.monster_progress;
+            select count(*) into ledger_rows from public.currency_transactions;
+            select count(*) into match_rows from public.match_results;
+            if profile_rows <> 1 or hero_rows <> 1 or monster_rows <> 1
+               or ledger_rows <> 4 or match_rows <> 1 then
+              raise exception 'first authenticated user can see unexpected rows: %, %, %, %, %',
+                profile_rows, hero_rows, monster_rows, ledger_rows, match_rows;
+            end if;
+          end;
+          $rls_first$;
+          select set_config(
+            'request.jwt.claim.sub',
+            '123e4567-e89b-42d3-a456-426614174002',
+            true
+          );
+          do $rls_second$
+          declare
+            profile_rows integer;
+            hero_rows integer;
+            monster_rows integer;
+            ledger_rows integer;
+            match_rows integer;
+          begin
+            select count(*) into profile_rows from public.player_profiles;
+            select count(*) into hero_rows from public.hero_progress;
+            select count(*) into monster_rows from public.monster_progress;
+            select count(*) into ledger_rows from public.currency_transactions;
+            select count(*) into match_rows from public.match_results;
+            if profile_rows <> 1 or hero_rows <> 1 or monster_rows <> 1
+               or ledger_rows <> 0 or match_rows <> 0 then
+              raise exception 'second authenticated user can see another account row: %, %, %, %, %',
+                profile_rows, hero_rows, monster_rows, ledger_rows, match_rows;
+            end if;
+          end;
+          $rls_second$;
+          rollback;
+          SQL

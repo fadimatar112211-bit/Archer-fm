@@ -1,4 +1,7 @@
+import 'dart:ui' show Offset;
+
 import 'package:archer_fm/game/render3/sprite_actor_clip_resolver.dart';
+import 'package:archer_fm/game/world/game_world.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -19,6 +22,10 @@ void main() {
       expect(
         SpriteActorClipResolver.clipName('walk', item.facing),
         'walk_${item.direction}',
+      );
+      expect(
+        SpriteActorClipResolver.directionFor(item.facing),
+        GameWorld.octantNames[GameWorld.octantIndexOf(item.facing)],
       );
     }
     expect(SpriteActorClipResolver.directionFor(Offset.zero), 's');

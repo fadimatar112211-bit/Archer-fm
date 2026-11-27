@@ -32,12 +32,14 @@ class MonsterProjectileManager {
   Map<String, MonsterProjectileResult> update({
     required Duration elapsed,
     required MonsterDamageTarget? Function(String targetId) resolveTarget,
+    MonsterKillCallback? onKill,
   }) {
     final results = <String, MonsterProjectileResult>{};
     for (final projectile in _active.values.toList(growable: false)) {
       results[projectile.id] = projectile.update(
         elapsed: elapsed,
         target: resolveTarget(projectile.targetId),
+        onKill: onKill,
       );
     }
     _active.removeWhere((_, projectile) => projectile.isResolved);

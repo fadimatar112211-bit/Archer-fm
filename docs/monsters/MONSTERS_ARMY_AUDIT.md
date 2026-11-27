@@ -308,3 +308,22 @@
 - The runtime exposes `buildBattleLayer()` so the actual match screen can render live units, dying units, projectiles, and successful attack events without manually wiring each list. The layer reports completed death animations back to the runtime.
 - Added integration tests for multi-army unit identity, target damage, defeated-unit removal, visual retention, attack-event handoff, and death cleanup.
 - `docs/monsters/MONSTER_RUNTIME_INTEGRATION.md` now documents the runtime as the single match-host entry point. Monster Army Checks run #205 passed all configured checks and 118 tests. Actual match-screen mounting, real hero/crystal adapters, map/camera data, final production art, profile persistence, and device performance remain host-owned gates.
+
+
+## 35. توصيل التقدم الدائم بجيش المباراة السلطوي — 2026-11-26
+
+- أصبح `MatchCombatConfiguration` يقبل سجلات `MonsterProgression` المحمّلة مسبقاً لكل لاعب عبر `monsterProgressionByPlayer`.
+- يتحقق المضيف من أن كل سجل يعود إلى لاعب مشارك وأنه يستخدم كتالوج الوحوش المعتمد نفسه؛ لا يمكن لملف تقدم غير موثوق تغيير إحصاءات الكتالوج.
+- يستخدم `MonsterArmy` إحصاءات المستوى الدائم عند إنشاء وحدات البداية وعند شراء وحدات جديدة. تبقى تكلفة الشراء من الكتالوج الأساسي ولا تتغير بسبب المستوى.
+- تتضمن لقطة المباراة غلاف الحفظ ذي الإصدار ومستويات الأنواع لكل لاعب حتى يتمكن العميل من عرض مستويات الوحوش.
+- أضيف اختبار تكامل يؤكد أن ترقية runner للاعب الأول لا تؤثر في جيش اللاعب الثاني.
+- هذا يربط بيانات التقدم المحمّلة بالمباراة، لكنه لا يدّعي وجود قاعدة بيانات أو خدمة حسابات إنتاجية: ما زال على المضيف الموثوق تحميل `toSaveData()` من ملف اللاعب وحفظه بعد عمليات الترقية الدائمة. لا توجد أسعار أو نسب ترقية إنتاجية مفترضة.
+
+
+## 36. حفظ مستويات الوحوش لكل حساب — 2026-11-26
+
+- أضيف `FileMonsterProgressStore` لحفظ واستعادة غلاف مستويات الوحوش ذي الإصدار لكل حساب موثوق، مع فصل ملفات الحسابات وترميز آمن لمعرّف الحساب ضمن اسم الملف.
+- الحفظ ذري عبر ملف مؤقت ثم rename، والكتابات للحساب الواحد تُسلسل لتجنب تداخل عمليتين على الملف نفسه.
+- الحساب الجديد يحصل على الأنواع الأربعة بالمستوى 1. تُرفض الملفات التالفة أو الإصدارات غير المدعومة أو المستويات خارج 1–40 والأنواع/الحقول غير المعروفة.
+- أضيفت اختبارات للحساب الجديد، والاستعادة، وعزل الحسابات، والبيانات التالفة، ومعرّفات الحساب غير الصالحة.
+- هذا مخزن تطوير لعقدة واحدة فقط؛ يجب أن يأتي معرّف الحساب من جلسة مصادقة موثوقة. الإنتاج يحتاج تنفيذ الواجهة نفسها فوق قاعدة بيانات/خدمة حسابات سحابية مع معاملات ونسخ احتياطي، وليس تعريض ملفات الخادم للعميل.
