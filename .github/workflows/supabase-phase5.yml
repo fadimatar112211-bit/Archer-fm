@@ -43,6 +43,7 @@ jobs:
           create role authenticated nologin;
           create role service_role nologin bypassrls;
           create schema auth;
+          grant usage on schema auth to authenticated;
           create table auth.users (
             id uuid primary key,
             email text unique
@@ -64,7 +65,9 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
           insert into auth.users(id, email)
-          values ('123e4567-e89b-42d3-a456-426614174000', 'smoke@example.invalid');
+          values
+            ('123e4567-e89b-42d3-a456-426614174000', 'smoke@example.invalid'),
+            ('123e4567-e89b-42d3-a456-426614174001', 'smoke2@example.invalid');
           do $assert$
           begin
             if not exists (
@@ -192,4 +195,61 @@ jobs:
             end;
           end;
           $settlement_test$;
+          SQL
+      - name: Verify authenticated row-level isolation
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          begin;
+          set local role authenticated;
+          select set_config(
+            'request.jwt.claim.sub',
+            '123e4567-e89b-42d3-a456-426614174000',
+            true
+          );
+          do $rls_first$
+          declare
+            profile_rows integer;
+            hero_rows integer;
+            monster_rows integer;
+            ledger_rows integer;
+            match_rows integer;
+          begin
+            select count(*) into profile_rows from public.player_profiles;
+            select count(*) into hero_rows from public.hero_progress;
+            select count(*) into monster_rows from public.monster_progress;
+            select count(*) into ledger_rows from public.currency_transactions;
+            select count(*) into match_rows from public.match_results;
+            if profile_rows <> 1 or hero_rows <> 1 or monster_rows <> 1
+               or ledger_rows <> 1 or match_rows <> 1 then
+              raise exception 'first authenticated user can see unexpected rows: %, %, %, %, %',
+                profile_rows, hero_rows, monster_rows, ledger_rows, match_rows;
+            end if;
+          end;
+          $rls_first$;
+          select set_config(
+            'request.jwt.claim.sub',
+            '123e4567-e89b-42d3-a456-426614174001',
+            true
+          );
+          do $rls_second$
+          declare
+            profile_rows integer;
+            hero_rows integer;
+            monster_rows integer;
+            ledger_rows integer;
+            match_rows integer;
+          begin
+            select count(*) into profile_rows from public.player_profiles;
+            select count(*) into hero_rows from public.hero_progress;
+            select count(*) into monster_rows from public.monster_progress;
+            select count(*) into ledger_rows from public.currency_transactions;
+            select count(*) into match_rows from public.match_results;
+            if profile_rows <> 1 or hero_rows <> 1 or monster_rows <> 1
+               or ledger_rows <> 0 or match_rows <> 0 then
+              raise exception 'second authenticated user can see another account row: %, %, %, %, %',
+                profile_rows, hero_rows, monster_rows, ledger_rows, match_rows;
+            end if;
+          end;
+          $rls_second$;
+          rollback;
           SQL
