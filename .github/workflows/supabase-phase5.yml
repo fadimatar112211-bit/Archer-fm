@@ -228,7 +228,7 @@ jobs:
             -- The match settlement step has already credited this account with 50.
             select * into receipt
             from public.purchase_player_progression(
-              v_user_id, 'weapon_unlock', 'ranger_test_bow', 10, 40,
+              v_user_id, 'weapon_unlock', 'ranger_longbow', 10, 40,
               1, 0, 'purchase:weapon-unlock:test-1'
             );
             if receipt.currency_balance <> 40
@@ -241,7 +241,7 @@ jobs:
 
             select * into retry_receipt
             from public.purchase_player_progression(
-              v_user_id, 'weapon_unlock', 'ranger_test_bow', 10, 40,
+              v_user_id, 'weapon_unlock', 'ranger_longbow', 10, 40,
               1, 0, 'purchase:weapon-unlock:test-1'
             );
             if not retry_receipt.already_applied
@@ -252,7 +252,7 @@ jobs:
 
             select * into receipt
             from public.purchase_player_progression(
-              v_user_id, 'weapon_upgrade', 'ranger_test_bow', 5, 40,
+              v_user_id, 'weapon_upgrade', 'ranger_longbow', 5, 40,
               2, 0, 'purchase:weapon-upgrade:test-1'
             );
             if receipt.currency_balance <> 35
@@ -280,12 +280,32 @@ jobs:
               where user_id = v_user_id
                 and reason in ('weapon_unlock', 'weapon_upgrade', 'monster_upgrade');
             if (hero_doc->>'permanentCurrency')::bigint <> 28
-               or not ((hero_doc->'unlockedWeaponIds') ? 'ranger_test_bow')
-               or (hero_doc->'weaponUpgradeLevels'->>'ranger_test_bow')::integer <> 1
+               or not ((hero_doc->'unlockedWeaponIds') ? 'ranger_longbow')
+               or (hero_doc->'weaponUpgradeLevels'->>'ranger_longbow')::integer <> 1
                or (monster_doc->'levels'->>'runner')::integer <> 2
                or ledger_count <> 3 then
               raise exception 'purchase mutations or immutable currency ledger are inconsistent';
             end if;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'weapon_unlock', 'ranger_unknown_bow', 1, 40,
+                1, 0, 'purchase:unknown-weapon:test'
+              );
+              raise exception 'unknown weapon ID was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
+
+            begin
+              perform public.purchase_player_progression(
+                v_user_id, 'monster_upgrade', 'dragon', 1, 40,
+                4, 1, 'purchase:unknown-monster:test'
+              );
+              raise exception 'unknown monster type was unexpectedly accepted';
+            exception when invalid_parameter_value then
+              null;
+            end;
 
             begin
               perform public.purchase_player_progression(
@@ -299,7 +319,7 @@ jobs:
 
             begin
               perform public.purchase_player_progression(
-                v_user_id, 'weapon_upgrade', 'ranger_test_bow', 999, 40,
+                v_user_id, 'weapon_upgrade', 'ranger_longbow', 999, 40,
                 4, 1, 'purchase:insufficient:test'
               );
               raise exception 'unaffordable progression purchase was unexpectedly accepted';
