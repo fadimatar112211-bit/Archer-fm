@@ -866,6 +866,15 @@ class AuthoritativeMatchSession
     result['world'] = worldCopy;
 
     final scopedCombat = Map<String, Object?>.from(combatData);
+    final monsterProgression = combatData['monsterProgression'];
+    if (monsterProgression is Map) {
+      // Permanent monster levels are account data. Keep only the recipient's
+      // own entry; enemy unit stats are already represented by visible units.
+      scopedCombat['monsterProgression'] = {
+        if (monsterProgression.containsKey(player.id))
+          player.id: monsterProgression[player.id],
+      };
+    }
     final heroes = combatData['heroes'];
     if (heroes is Map) {
       final scopedHeroes = Map<String, Object?>.from(heroes);
