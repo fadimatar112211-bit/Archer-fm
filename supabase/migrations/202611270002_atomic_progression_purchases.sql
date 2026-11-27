@@ -96,6 +96,23 @@ begin
     raise exception 'insufficient_currency' using errcode = '22003';
   end if;
 
+  -- Defense in depth: even trusted gateway mistakes cannot create ownership
+  -- records for weapon IDs that do not exist in the shipped four-hero roster.
+  if p_purchase_type in ('weapon_unlock', 'weapon_upgrade')
+     and p_target_id not in (
+       'ranger_greenbow', 'ranger_longbow', 'ranger_twinshot',
+       'flame_greatsword', 'flame_cleaver', 'flame_dualblades',
+       'shadow_twinfangs', 'shadow_nightfang', 'shadow_soulblades',
+       'storm_spear', 'storm_halberd', 'storm_lance'
+     ) then
+    raise exception 'unknown_weapon_id' using errcode = '22023';
+  end if;
+
+  if p_purchase_type = 'monster_upgrade'
+     and p_target_id not in ('runner', 'tank', 'stalker', 'ranged') then
+    raise exception 'unknown_monster_type' using errcode = '22023';
+  end if;
+
   if p_purchase_type = 'weapon_unlock' then
     if jsonb_typeof(hero_data->'unlockedWeaponIds') <> 'array'
        or (hero_data->'unlockedWeaponIds') ? p_target_id then
