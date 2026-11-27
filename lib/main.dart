@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'arena/arena_screen.dart';
 import 'game/auth/account_gate.dart';
 import 'game/auth/supabase_account_service.dart';
 import 'hero/hero_assets.dart';
