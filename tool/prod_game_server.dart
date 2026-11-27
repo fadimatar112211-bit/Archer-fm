@@ -10,6 +10,7 @@ import 'package:archer_fm/game/network/supabase_rest_client.dart';
 import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
 import 'package:archer_fm/game/network/file_match_settlement_outbox.dart';
 import 'package:archer_fm/game/progression/supabase_hero_progress_store.dart';
+import 'package:archer_fm/monsters/supabase_monster_progress_store.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 /// Production-oriented gateway entry point.
@@ -88,6 +89,14 @@ Future<void> main() async {
   );
   final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
   final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
+  final monsterProgressStore = SupabaseMonsterProgressStore(persistenceClient);
+  final monsterProgressionPolicy = combatConfiguration.monsterProgressionPolicy;
+  final loadAccountMonsterProgression = monsterProgressionPolicy == null
+      ? null
+      : (String accountId) async => monsterProgressionPolicy.restore(
+            catalog: combatConfiguration.monsterCatalog,
+            saveData: await monsterProgressStore.loadData(accountId),
+          );
   final settlementOutbox = FileMatchSettlementOutbox(
     file: File(
       Platform.environment['ARCHER_FM_SETTLEMENT_OUTBOX_PATH'] ??
@@ -133,6 +142,7 @@ Future<void> main() async {
     sessionFactory: AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: combatConfiguration,
       loadAccountHeroProgress: heroProgressStore.load,
+      loadAccountMonsterProgression: loadAccountMonsterProgression,
       onMatchSettlement: ({
         required matchId,
         required accountId,
