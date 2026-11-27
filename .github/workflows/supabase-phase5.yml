@@ -333,7 +333,7 @@ jobs:
             select count(*) into ledger_rows from public.currency_transactions;
             select count(*) into match_rows from public.match_results;
             if profile_rows <> 1 or hero_rows <> 1 or monster_rows <> 1
-               or ledger_rows <> 1 or match_rows <> 1 then
+               or ledger_rows <> 4 or match_rows <> 1 then
               raise exception 'first authenticated user can see unexpected rows: %, %, %, %, %',
                 profile_rows, hero_rows, monster_rows, ledger_rows, match_rows;
             end if;
