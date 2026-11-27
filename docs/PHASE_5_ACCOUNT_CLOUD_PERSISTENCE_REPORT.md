@@ -319,3 +319,11 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - The check uses Supabase Auth's user endpoint. It does not replace short access-token lifetimes, refresh-token rotation, or staging tests; operators must configure and verify those Auth policies.
 
 **Acceptance remains IN PROGRESS.** Live Supabase configuration and test users, approved progression economy/growth values, production WSS deployment, cross-device recovery, and a final Android emulator run are still outstanding.
+## 21. Existing-account migration backfill — 2026-11-27
+
+- The Phase 5 migration now provisions `player_profiles`, `hero_progress` and `monster_progress` for Auth users that already existed before the migration, in addition to the existing post-migration sign-up trigger.
+- The PostgreSQL smoke workflow now creates a pre-existing Auth user before applying the migration, verifies that all three account rows are backfilled, and separately verifies that later sign-ups still receive all three rows from the trigger.
+- Migration smoke run [45973132752](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45973132752) passed on commit `e0145bff0e1fe51f07620b9d7c5f27e0bf0bbfdd`, including migration application, RLS/grants, existing-account backfill, new-account provisioning, profile constraints/timestamp trigger, atomic/idempotent settlement and two-account isolation.
+- This is a PostgreSQL 16 compatibility smoke test using a minimal Supabase Auth schema. It does not replace applying the migration to the owner's live Supabase staging project.
+
+**Acceptance remains IN PROGRESS.** Live Supabase staging, approved weapon/monster economy and growth configuration, monster progression match hydration, live multi-device/reconnect testing, production WSS deployment, and final Android runtime acceptance remain open.
