@@ -180,7 +180,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
         'insufficient_currency' => 'رصيدك من العملات غير كافٍ',
         'weapon_locked' => 'افتح السلاح أولاً',
         'weapon_already_unlocked_or_invalid_save' => 'السلاح مفتوح مسبقاً',
-        'weapon_max_level' || 'monster_max_level' => 'وصلت إلى المستوى الأقصى',
+        'weapon_max_level' || 'monster_max_level' || 'weapon_max_level_or_unknown' || 'monster_max_level_or_invalid' => 'وصلت إلى المستوى الأقصى',
         'progression_purchase_revision_conflict' => 'تغيّرت بياناتك؛ حدّث الحساب وحاول مجدداً',
         'purchase_service_not_configured' || 'purchase_service_unavailable' => 'خدمة الشراء غير مهيأة حالياً',
         'unauthorized' => 'انتهت جلسة الحساب؛ سجّل الدخول مجدداً',
