@@ -66,6 +66,35 @@ class ProgressionEconomyConfiguration {
   int? monsterUpgradeCost(String monsterId, int nextLevel) =>
       monsterUpgradeCosts[monsterId]?[nextLevel];
 
+  /// Prevents the purchase catalog from charging for a progression level
+  /// whose stat growth is absent or priced differently in match combat.
+  void validateMonsterUpgradeCosts(
+    Map<String, Map<int, int>> combatUpgradeCosts,
+  ) {
+    if (combatUpgradeCosts.length != monsterUpgradeCosts.length ||
+        combatUpgradeCosts.keys.toSet().difference(monsterUpgradeCosts.keys.toSet()).isNotEmpty ||
+        monsterUpgradeCosts.keys.toSet().difference(combatUpgradeCosts.keys.toSet()).isNotEmpty) {
+      throw const FormatException(
+        'Combat and purchase catalogs must define the same four monster types.',
+      );
+    }
+    for (final entry in monsterUpgradeCosts.entries) {
+      final combatCosts = combatUpgradeCosts[entry.key];
+      if (combatCosts == null || combatCosts.length != entry.value.length) {
+        throw FormatException(
+          'Combat and purchase costs differ for monster ${entry.key}.',
+        );
+      }
+      for (final levelEntry in entry.value.entries) {
+        if (combatCosts[levelEntry.key] != levelEntry.value) {
+          throw FormatException(
+            'Combat and purchase costs differ for ${entry.key} level ${levelEntry.key}.',
+          );
+        }
+      }
+    }
+  }
+
   static Map<int, int> _levelCosts(Object? raw, String label, int firstLevel) {
     if (raw is! Map || raw.length != 40 - firstLevel + 1) {
       throw FormatException('$label must define every target level from $firstLevel through 40.');
