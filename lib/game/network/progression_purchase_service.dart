@@ -143,7 +143,22 @@ class ProgressionPurchaseService {
           (throw const FormatException('monster_upgrade_not_configured'));
     }
 
-    if (cost != quotedCost) {
+    final existingPurchase = await client.loadProgressionPurchaseByIdempotencyKey(
+      trustedAccountId: trustedAccountId,
+      idempotencyKey: idempotencyKey,
+    );
+    var rpcCost = cost;
+    if (existingPurchase != null) {
+      final amount = existingPurchase['amount'];
+      if (existingPurchase['reason'] != purchaseType ||
+          existingPurchase['reference_id'] != targetId ||
+          amount is! num || amount >= 0 || amount != amount.toInt()) {
+        throw const FormatException('idempotency_conflict');
+      }
+      // The first request committed before its response was lost. Replay the
+      // original ledger amount so SQL returns the prior receipt without debit.
+      rpcCost = -amount.toInt();
+    } else if (cost != quotedCost) {
       throw const FormatException('quote_changed');
     }
     try {
@@ -151,7 +166,7 @@ class ProgressionPurchaseService {
         trustedAccountId: trustedAccountId,
         purchaseType: purchaseType,
         targetId: targetId,
-        cost: cost,
+        cost: rpcCost,
         maxLevel: 40,
         expectedHeroRevision: heroRevision,
         expectedMonsterRevision: monsterRevision,
