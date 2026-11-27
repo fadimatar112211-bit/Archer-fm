@@ -122,6 +122,34 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
     }
   }
 
+  Future<void> _confirmPurchase({
+    required String purchaseType,
+    required String targetId,
+    required String title,
+    required int cost,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تأكيد العملية'),
+        content: Text('سيتم خصم $cost عملة لشراء أو تطوير $title. هل تريد المتابعة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تأكيد'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await _purchase(purchaseType, targetId);
+    }
+  }
+
   Future<void> _purchase(String purchaseType, String targetId) async {
     final key = '$purchaseType:$targetId';
     if (_busyPurchases.contains(key)) return;
@@ -370,7 +398,12 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
         width: 128,
         child: FilledButton.tonal(
           onPressed: available && !_busyPurchases.contains(busyKey)
-              ? () => _purchase(purchaseType, weapon.id)
+              ? () => _confirmPurchase(
+                    purchaseType: purchaseType,
+                    targetId: weapon.id,
+                    title: weapon.nameAr,
+                    cost: cost as int,
+                  )
               : null,
           child: Text(
             quote == null
@@ -402,7 +435,12 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
         width: 128,
         child: FilledButton.tonal(
           onPressed: available && !_busyPurchases.contains(busyKey)
-              ? () => _purchase(purchaseType, id)
+              ? () => _confirmPurchase(
+                    purchaseType: purchaseType,
+                    targetId: id,
+                    title: title,
+                    cost: cost as int,
+                  )
               : null,
           child: Text(
             quote == null
