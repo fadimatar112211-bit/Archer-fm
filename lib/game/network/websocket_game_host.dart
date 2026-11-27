@@ -76,18 +76,23 @@ class WebSocketGameHost {
     this.tickInterval = const Duration(milliseconds: 50),
     this.broadcastInterval = const Duration(milliseconds: 100),
     this.accessTokenVerifier,
+    this.authenticationRecheckInterval = const Duration(minutes: 1),
   })  : assert(port >= 0 && port <= 65535),
         assert(maxRooms > 0),
         assert(maxMessageCharacters > 0),
         assert(rateLimitBurst > 0),
         assert(rateLimitRefillPerSecond > 0),
         assert(tickInterval > Duration.zero),
-        assert(broadcastInterval > Duration.zero);
+        assert(broadcastInterval > Duration.zero),
+        assert(authenticationRecheckInterval > Duration.zero);
 
   final GameServerSessionFactory sessionFactory;
   /// When set, all handshakes require a verified token and account-bound room.
   /// Keep null only for isolated local development and tests.
   final GameAccessTokenVerifier? accessTokenVerifier;
+  /// Revalidates active bearer sessions so expired/revoked tokens cannot keep
+  /// issuing commands indefinitely after a successful WebSocket handshake.
+  final Duration authenticationRecheckInterval;
   final InternetAddress? address;
   final int port;
   final int maxRooms;
@@ -188,8 +193,12 @@ class WebSocketGameHost {
     GameServerSession? room;
     GameServerPlayer? player;
     var handshakePending = false;
+    Timer? authenticationTimer;
+    var authenticationCheckInFlight = false;
 
     void detach() {
+      authenticationTimer?.cancel();
+      authenticationTimer = null;
       final currentPlayer = player;
       if (currentPlayer == null ||
           !identical(_sockets[currentPlayer.id], socket)) {
@@ -231,6 +240,45 @@ class WebSocketGameHost {
             unawaited(_handshake(socket, message, (session, joined) {
               room = session;
               player = joined;
+              final verifier = accessTokenVerifier;
+              final token = message['accessToken'];
+              if (verifier != null && token is String) {
+                authenticationTimer?.cancel();
+                authenticationTimer = Timer.periodic(
+                  authenticationRecheckInterval,
+                  (timer) async {
+                    if (authenticationCheckInFlight ||
+                        !identical(_sockets[joined.id], socket)) {
+                      return;
+                    }
+                    authenticationCheckInFlight = true;
+                    try {
+                      final verifiedAccount = await verifier(token);
+                      if (verifiedAccount == null) {
+                        timer.cancel();
+                        if (identical(_sockets[joined.id], socket)) {
+                          socket.close(
+                            WebSocketStatus.policyViolation,
+                            'session_expired_or_revoked',
+                          );
+                        }
+                      }
+                    } on Object {
+                      // Fail closed: an unverifiable session must not retain
+                      // authority when the identity provider cannot be reached.
+                      timer.cancel();
+                      if (identical(_sockets[joined.id], socket)) {
+                        socket.close(
+                          WebSocketStatus.policyViolation,
+                          'session_revalidation_failed',
+                        );
+                      }
+                    } finally {
+                      authenticationCheckInFlight = false;
+                    }
+                  },
+                );
+              }
             }).whenComplete(() => handshakePending = false));
             return;
           }
