@@ -285,3 +285,15 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Added parser tests for all four levels, unsupported schema versions, missing monster types and the level 1–40 bounds.
 - This is read-only visibility. It does not invent upgrade prices or stat growth, and it does not yet apply cloud monster levels to match combat; that requires approved monster growth tuning and server-authoritative upgrade rules.
 - Fresh Flutter and PostgreSQL workflows for this addition are [45969015691](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015691) and [45969015750](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015750); both were running at the latest poll.
+
+## 23. Stronger database acceptance tests and full progression view — 2026-11-27
+
+- Extended the PostgreSQL smoke workflow to create two test accounts and execute the settlement RPC against the first account.
+- Verified the first settlement creates exactly one match result, one currency ledger entry and a balance increment; replaying the identical request returns the same result/transaction IDs without paying twice.
+- Verified a conflicting reward payload for the same match/account is rejected.
+- Switched to the authenticated role with each user's JWT subject and verified RLS returns only that account's profile, hero progression, monster progression, ledger and match rows.
+- PostgreSQL workflow [45969369330](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969369330) completed successfully, including all settlement and two-account isolation checks.
+- Expanded the Arabic account screen to show all four hero levels, unlocked-weapon count and number of upgraded weapons, in addition to the four monster levels, wallet, ledger and recent match history.
+- Added strict typed parsing through the existing `HeroProgress` model and tests for hero levels, weapon summary, malformed progression and fractional numeric fields in currency/match history.
+- Flutter run [45969181015](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969181015) passed analysis and all tests; Android debug APK compilation was still in progress at the latest poll. A fresh run including the expanded hero/weapon view is [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437).
+- The PostgreSQL smoke workflow uses a local PostgreSQL 16 instance with a minimal Supabase-compatible Auth schema. It is not a substitute for testing the real Supabase staging project.
