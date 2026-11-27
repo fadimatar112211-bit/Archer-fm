@@ -16,7 +16,9 @@ import 'arena_map.dart';
 import 'arena_match.dart';
 
 class ArenaScreen extends StatefulWidget {
-  const ArenaScreen({super.key});
+  const ArenaScreen({super.key, this.loaderFactory});
+
+  final HeroLoaderFactory? loaderFactory;
 
   @override
   State<ArenaScreen> createState() => _ArenaScreenState();
@@ -379,7 +381,7 @@ class _ArenaScreenState extends State<ArenaScreen> with SingleTickerProviderStat
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => HeroViewerScreen(
-                        loaderFactory: defaultHeroLoaderFactory,
+                        loaderFactory: widget.loaderFactory ?? defaultHeroLoaderFactory,
                       ),
                     ),
                   );

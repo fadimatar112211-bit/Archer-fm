@@ -112,13 +112,13 @@ void main() {
 
   test('rejects incomplete monster growth and upgrade cost policies', () {
     final missingCost = _monsterProgressionPolicy();
-    ((missingCost['upgradeCosts'] as Map)['runner'] as Map).remove('40');
+    ((missingCost['upgradeCosts'] as Map)['werewolf'] as Map).remove('40');
     final json = _validConfiguration()
       ..['monsterProgressionPolicy'] = missingCost;
     expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
 
     final missingGrowth = _monsterProgressionPolicy();
-    ((missingGrowth['growth'] as Map)['tank'] as Map).remove('damagePerLevel');
+    ((missingGrowth['growth'] as Map)['stoneGolem'] as Map).remove('damagePerLevel');
     final invalid = _validConfiguration()
       ..['monsterProgressionPolicy'] = missingGrowth;
     expect(() => decodeMatchCombatConfiguration(invalid), throwsFormatException);
@@ -126,14 +126,14 @@ void main() {
 
   test('rejects a missing monster type instead of silently using defaults', () {
     final json = _validConfiguration();
-    (json['monsterCatalog'] as Map).remove('ranged');
+    (json['monsterCatalog'] as Map).remove('bogMonster');
     expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
   });
 
   test('rejects unknown monster types and unknown runtime fields', () {
     final json = _validConfiguration();
     (json['monsterCatalog'] as Map)['dragon'] =
-        (json['monsterCatalog'] as Map)['runner'];
+        (json['monsterCatalog'] as Map)['werewolf'];
     expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
   });
 
@@ -153,7 +153,7 @@ void main() {
 
   test('rejects invalid cooldowns, costs and runtime limits', () {
     final json = _validConfiguration();
-    ((json['monsterCatalog'] as Map)['tank'] as Map)['attackCooldownMs'] = 0;
+    ((json['monsterCatalog'] as Map)['stoneGolem'] as Map)['attackCooldownMs'] = 0;
     expect(() => decodeMatchCombatConfiguration(json), throwsArgumentError);
 
     final invalidLimit = _validConfiguration();

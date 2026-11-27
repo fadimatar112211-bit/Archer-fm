@@ -107,7 +107,7 @@ void main() {
                     {
                       'id': 'm1',
                       'ownerId': 'p2',
-                      'type': 'tank',
+                      'type': 'stoneGolem',
                       'x': 900,
                       'y': 650,
                       'health': 80,
@@ -155,7 +155,7 @@ void main() {
                         {
                           'id': 'enemy-hidden-without-local-position',
                           'ownerId': 'p2',
-                          'type': 'tank',
+                          'type': 'stoneGolem',
                           'x': 1000,
                           'y': 600,
                           'health': 100,
@@ -260,7 +260,7 @@ void main() {
           {
             'id': 'enemy-monster',
             'ownerId': 'p2',
-            'type': 'runner',
+            'type': 'werewolf',
             'x': 1120,
             'y': 520,
             'health': 80,

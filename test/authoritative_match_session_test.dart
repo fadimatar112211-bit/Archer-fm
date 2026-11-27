@@ -95,7 +95,7 @@ AuthoritativeMatchSession _combatReadySession({
     expect(
       session.handle(players[i], {
         'type': 'army_select',
-        'counts': {'runner': 20},
+        'counts': {'werewolf': 20},
       }),
       isNull,
     );
@@ -211,7 +211,7 @@ void main() {
       expect(
         session.handle(players[i], {
           'type': 'army_select',
-          'counts': {'runner': 20},
+          'counts': {'werewolf': 20},
         }),
         isNull,
       );
@@ -257,7 +257,7 @@ void main() {
       }), isNull);
       expect(session.handle(players[i], {
         'type': 'army_select',
-        'counts': {'runner': 20},
+        'counts': {'werewolf': 20},
       }), isNull);
     }
 
@@ -322,7 +322,7 @@ void main() {
       }), isNull);
       expect(session.handle(players[i], {
         'type': 'army_select',
-        'counts': {'runner': 20},
+        'counts': {'werewolf': 20},
       }), isNull);
     }
     expect(session.handle(players.first, {'type': 'start'}), isNull);
@@ -377,7 +377,7 @@ void main() {
       }), isNull);
       expect(session.handle(players[i], {
         'type': 'army_select',
-        'counts': {'runner': 20},
+        'counts': {'werewolf': 20},
       }), isNull);
     }
     expect(session.handle(players.first, {'type': 'start'}), isNull);
@@ -756,7 +756,7 @@ void main() {
     expect(
       session.handle(
         session.players.first,
-        {'type': 'purchase', 'monsterType': 'runner'},
+        {'type': 'purchase', 'monsterType': 'werewolf'},
       ),
       isNull,
     );
@@ -841,7 +841,7 @@ void main() {
       });
     }
     expect(
-      session.handle(players.first, {'type': 'army_select', 'counts': {'runner': 19}}),
+      session.handle(players.first, {'type': 'army_select', 'counts': {'werewolf': 19}}),
       'invalid_army_selection',
     );
     expect(
@@ -849,7 +849,7 @@ void main() {
       'invalid_army_selection',
     );
     expect(
-      session.handle(players.first, {'type': 'army_select', 'counts': {'runner': 20}}),
+      session.handle(players.first, {'type': 'army_select', 'counts': {'werewolf': 20}}),
       isNull,
     );
     expect(session.handle(players.first, {'type': 'start'}), 'all_players_must_select_army');
@@ -1236,7 +1236,7 @@ void main() {
       expect(
         session.handle(players[i], {
           'type': 'army_select',
-          'counts': {'runner': 20},
+          'counts': {'werewolf': 20},
         }),
         isNull,
       );

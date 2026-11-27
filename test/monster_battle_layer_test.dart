@@ -53,9 +53,9 @@ void main() {
   group('Monster battle layer', () {
     testWidgets('renders live monsters and active projectile positions',
         (tester) async {
-      final runner = _unit(idPrefix: 'runner', type: MonsterType.werewolf);
+      final runner = _unit(idPrefix: 'werewolf', type: MonsterType.werewolf);
       final ranged = _unit(
-        idPrefix: 'ranged',
+        idPrefix: 'bogMonster',
         type: MonsterType.bogMonster,
         x: 40,
         y: 30,

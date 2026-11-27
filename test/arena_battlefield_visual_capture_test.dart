@@ -125,7 +125,7 @@ void main() {
           {
             'id': 'm-runner',
             'ownerId': 'p2',
-            'type': 'runner',
+            'type': 'werewolf',
             'x': 1040,
             'y': 490,
             'health': 100,
@@ -134,7 +134,7 @@ void main() {
           {
             'id': 'm-tank',
             'ownerId': 'p3',
-            'type': 'tank',
+            'type': 'stoneGolem',
             'x': 1080,
             'y': 610,
             'health': 160,
@@ -143,7 +143,7 @@ void main() {
           {
             'id': 'm-stalker',
             'ownerId': 'p4',
-            'type': 'stalker',
+            'type': 'blindStalker',
             'x': 1220,
             'y': 500,
             'health': 90,
@@ -152,7 +152,7 @@ void main() {
           {
             'id': 'm-ranged',
             'ownerId': 'p2',
-            'type': 'ranged',
+            'type': 'bogMonster',
             'x': 1190,
             'y': 650,
             'health': 110,

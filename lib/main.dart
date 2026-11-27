@@ -42,7 +42,9 @@ class ArcherFmApp extends StatelessWidget {
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: accountService == null
-            ? const ArenaScreen()
+            ? ArcherFmHomeScreen(
+                loaderFactory: loaderFactory ?? defaultHeroLoaderFactory,
+              )
             : AccountGate(
                 accountService: accountService!,
                 child: ArcherFmHomeScreen(

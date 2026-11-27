@@ -104,8 +104,8 @@ void main() {
     final one = await store.loadData('account-one');
     final two = await store.loadData('account-two');
 
-    expect((one['levels'] as Map)['runner'], 9);
-    expect((two['levels'] as Map)['runner'], 2);
+    expect((one['levels'] as Map)['werewolf'], 9);
+    expect((two['levels'] as Map)['werewolf'], 2);
   });
 
   test('rejects malformed persisted progression data', () async {
@@ -113,7 +113,7 @@ void main() {
     final file = File('${directory.path}${Platform.pathSeparator}$key.monsters.json');
     await file.writeAsString(jsonEncode({
       'version': MonsterProgression.saveSchemaVersion,
-      'levels': {'runner': 41, 'tank': 1, 'stalker': 1, 'ranged': 1},
+      'levels': {'werewolf': 41, 'stoneGolem': 1, 'blindStalker': 1, 'bogMonster': 1},
     }));
 
     await expectLater(store.loadData('broken-account'), throwsFormatException);

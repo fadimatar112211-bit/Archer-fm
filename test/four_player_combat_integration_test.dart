@@ -99,7 +99,7 @@ void main() {
         sockets[i].add(jsonEncode({
           'type': 'army_select',
           'seq': 2,
-          'counts': {'runner': 20},
+          'counts': {'werewolf': 20},
         }));
         expect((await ack)['error'], isNull);
       }
@@ -158,7 +158,7 @@ void main() {
       sockets.first.add(jsonEncode({
         'type': 'purchase',
         'seq': 6,
-        'monsterType': 'runner',
+        'monsterType': 'werewolf',
       }));
       expect((await ack)['error'], 'purchase_rejected');
 
@@ -166,7 +166,7 @@ void main() {
       sockets.first.add(jsonEncode({
         'type': 'purchase',
         'seq': 6,
-        'monsterType': 'runner',
+        'monsterType': 'werewolf',
       }));
       expect((await ack)['error'], 'duplicate');
 

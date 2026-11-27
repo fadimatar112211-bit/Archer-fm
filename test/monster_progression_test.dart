@@ -174,7 +174,7 @@ void main() {
           catalog: _catalog(),
           growth: _growth(),
           costForLevel: (_, __) => 1,
-          json: const {'runner': 0, 'tank': 1, 'stalker': 1, 'ranged': 1},
+          json: const {'werewolf': 0, 'stoneGolem': 1, 'blindStalker': 1, 'bogMonster': 1},
         ),
         throwsFormatException,
       );
