@@ -105,19 +105,23 @@ AuthoritativeMatchSession _combatReadySession({
 }
 
 void main() {
-  test('authoritative monster AI receives navigation built from match obstacles', () {
-    final session = _combatReadySession();
-    final grid = session.combat!.monsters.combatLoop.navigationGrid;
+  test(
+    'authoritative monster AI receives navigation built from match obstacles',
+    () {
+      final session = _combatReadySession();
+      final grid = session.combat!.monsters.combatLoop.navigationGrid;
 
-    expect(grid, isA<MonsterNavigationGrid>());
-    expect(grid!.columns, greaterThan(0));
-    expect(grid.rows, greaterThan(0));
-    expect(grid.cellSize, 48);
+      expect(grid, isA<MonsterNavigationGrid>());
+      final navigationGrid = grid!;
+      expect(navigationGrid.columns, greaterThan(0));
+      expect(navigationGrid.rows, greaterThan(0));
+      expect(navigationGrid.cellSize, 48);
     // The generated arena contains trees and rocks; the runtime grid must
     // include their collision footprints instead of relying on steering alone.
-    expect(grid.blockedCells, isNotEmpty);
-    expect(grid.revision, 1);
-  });
+      expect(navigationGrid.blockedCells, isNotEmpty);
+      expect(navigationGrid.revision, 1);
+    },
+  );
 
   test('snapshot publishes deterministic static arena geometry for clients', () {
     final session = _combatReadySession();
