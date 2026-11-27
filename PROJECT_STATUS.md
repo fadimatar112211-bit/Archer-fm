@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-27
-> Project status: Phase 5 in progress — Supabase email account gate, server token verification, account-bound match reconnect, RLS schema and revision-checked progression adapters implemented in source; draft PR #21 opened. Cloud deployment, progression/reward runtime wiring, verified CI, and staging/device acceptance remain open. Earlier phases retain their own acceptance gates.
+> Project status: Phase 5 in progress — authenticated accounts, cloud progression adapters, atomic match settlement and server-only purchase RPC are present. Purchase catalog validation order has been hardened after a failing SQL smoke test; the corrected PostgreSQL, Android and Match Rules workflows are awaiting completion. Player-facing purchase commands, live Supabase deployment, cross-device acceptance and device QA remain open. Earlier phases retain their own acceptance gates.
 > Active work branch: `feature/phase-5-account-cloud-persistence` (new isolated Phase 5 branch)
 > Previous integration branch: `feature/match-rules-foundation` (PR #20 remains Draft/open/unmerged)
 > Default branch: `main`
