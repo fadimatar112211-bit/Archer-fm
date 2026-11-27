@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'supabase_account_service.dart';
 
 /// Mobile client for the authenticated game-server purchase route.
@@ -19,6 +21,8 @@ class PlayerProgressionPurchaseClient {
   final String _apiUrl;
   final HttpClient _httpClient;
   static final Map<String, String> _pendingIdempotencyKeys = {};
+  static final Map<String, Future<String>> _pendingKeyLoads = {};
+  static final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
 
   Future<ProgressionPurchaseCatalog> loadCatalog() async {
     final token = await _accessToken();
@@ -56,10 +60,7 @@ class PlayerProgressionPurchaseClient {
       path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
     );
     final operationKey = '${accountService.currentUser?.id ?? 'signed-out'}:$purchaseType:$targetId';
-    final idempotencyKey = _pendingIdempotencyKeys.putIfAbsent(
-      operationKey,
-      _newIdempotencyKey,
-    );
+    final idempotencyKey = await _idempotencyKeyFor(operationKey);
     final request = await _httpClient.postUrl(uri);
     request.headers
       ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
@@ -78,13 +79,40 @@ class PlayerProgressionPurchaseClient {
     if (response.statusCode != HttpStatus.ok) {
       final code = _errorCode(decoded, 'purchase_failed');
       if (code == 'idempotency_conflict') {
-        _pendingIdempotencyKeys.remove(operationKey);
+        await _clearIdempotencyKey(operationKey);
       }
       throw ProgressionPurchaseException(code);
     }
     final receipt = ProgressionPurchaseReceipt.fromJson(decoded);
-    _pendingIdempotencyKeys.remove(operationKey);
+    await _clearIdempotencyKey(operationKey);
     return receipt;
+  }
+
+  Future<String> _idempotencyKeyFor(String operationKey) async {
+    final cached = _pendingIdempotencyKeys[operationKey];
+    if (cached != null) return cached;
+    final pending = _pendingKeyLoads.putIfAbsent(operationKey, () async {
+      final storageKey = 'archer_fm.pending_purchase.$operationKey';
+      final stored = await _preferences.getString(storageKey);
+      if (stored != null && stored.length == 64) {
+        _pendingIdempotencyKeys[operationKey] = stored;
+        return stored;
+      }
+      final created = _newIdempotencyKey();
+      await _preferences.setString(storageKey, created);
+      _pendingIdempotencyKeys[operationKey] = created;
+      return created;
+    });
+    try {
+      return await pending;
+    } finally {
+      _pendingKeyLoads.remove(operationKey);
+    }
+  }
+
+  Future<void> _clearIdempotencyKey(String operationKey) async {
+    _pendingIdempotencyKeys.remove(operationKey);
+    await _preferences.remove('archer_fm.pending_purchase.$operationKey');
   }
 
   Future<String> _accessToken() async {
