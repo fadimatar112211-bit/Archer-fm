@@ -440,3 +440,11 @@ Still to decide or test:
 - Player profile names now have database-side checks against whitespace padding, control characters and Unicode bidi overrides. A trigger maintains updated_at while keeping timestamp columns unwritable by the client; staging assertions check the trigger.
 
 - Corrected account-data query code has passed `flutter analyze --no-fatal-infos` in workflow 45912332059. The full Flutter test suite was still running at the latest poll; APK build remains pending.
+
+## Phase 5 SQL verification — 2026-11-27
+
+- Fixed an invalid dollar-quote delimiter in the player-profile timestamp trigger function before any live deployment.
+- Added a dedicated PostgreSQL 16 migration smoke-test workflow. It creates minimal Supabase Auth roles/schema, applies the migration, runs the RLS/privilege assertions, verifies Auth-user provisioning of profile/hero/monster rows, checks the updated_at trigger and rejects whitespace-padded display names.
+- PostgreSQL smoke test [45968811877](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811877) passed all steps.
+- Flutter/Android validation for the same implementation head [45968811852](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811852) was still running at the latest poll.
+- This is local PostgreSQL 16 compatibility validation, not a live Supabase staging deployment. Phase 5 remains in progress.
