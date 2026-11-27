@@ -115,18 +115,31 @@ class ProgressionPurchaseService {
       throw const FormatException('invalid_account_progress');
     }
 
+    // Resolve an existing ledger entry before calculating the next-level
+    // quote. This also permits a lost-response retry after the final level 40
+    // upgrade, where no further level price exists.
+    final existingPurchase = await client.loadProgressionPurchaseByIdempotencyKey(
+      trustedAccountId: trustedAccountId,
+      idempotencyKey: idempotencyKey,
+    );
+
     late final int cost;
     if (purchaseType == 'weapon_unlock') {
       cost = economy.unlockCost(targetId) ??
           (throw const FormatException('unknown_weapon'));
     } else if (purchaseType == 'weapon_upgrade') {
       final progress = HeroProgress.fromJson(heroData);
-      if (!progress.ownsWeapon(targetId)) {
+      if (!progress.ownsWeapon(targetId) && existingPurchase == null) {
         throw const FormatException('weapon_locked');
       }
-      final nextLevel = progress.weaponLevel(targetId) + 1;
-      cost = economy.weaponUpgradeCost(targetId, nextLevel) ??
-          (throw const FormatException('weapon_max_level_or_unknown'));
+      final currentLevel = progress.weaponLevel(targetId);
+      if (currentLevel >= 40 && existingPurchase == null) {
+        throw const FormatException('weapon_max_level_or_unknown');
+      }
+      cost = existingPurchase != null
+          ? 1
+          : economy.weaponUpgradeCost(targetId, currentLevel + 1) ??
+              (throw const FormatException('weapon_max_level_or_unknown'));
     } else {
       if (!const {'runner', 'tank', 'stalker', 'ranged'}.contains(targetId)) {
         throw const FormatException('unknown_monster');
@@ -136,17 +149,15 @@ class ProgressionPurchaseService {
         throw const FormatException('invalid_monster_progress');
       }
       final current = rawLevels[targetId];
-      if (current is! int || current < 1 || current >= 40) {
+      if (current is! int || current < 1 || current > 40 ||
+          (current >= 40 && existingPurchase == null)) {
         throw const FormatException('monster_max_level_or_invalid');
       }
-      cost = economy.monsterUpgradeCost(targetId, current + 1) ??
-          (throw const FormatException('monster_upgrade_not_configured'));
+      cost = existingPurchase != null
+          ? 1
+          : economy.monsterUpgradeCost(targetId, current + 1) ??
+              (throw const FormatException('monster_upgrade_not_configured'));
     }
-
-    final existingPurchase = await client.loadProgressionPurchaseByIdempotencyKey(
-      trustedAccountId: trustedAccountId,
-      idempotencyKey: idempotencyKey,
-    );
     var rpcCost = cost;
     if (existingPurchase != null) {
       final amount = existingPurchase['amount'];
