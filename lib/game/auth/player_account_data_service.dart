@@ -193,6 +193,8 @@ class PlayerHeroProgress {
     required this.unlockedWeaponCount,
     required this.weaponUpgradeCount,
     required this.revision,
+    required this.unlockedWeaponIds,
+    required this.weaponUpgradeLevels,
   });
 
   final int rangerLevel;
