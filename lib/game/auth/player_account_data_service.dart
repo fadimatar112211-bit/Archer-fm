@@ -66,6 +66,22 @@ class PlayerAccountDataService {
     );
   }
 
+
+  Future<PlayerMonsterProgress> loadMonsterProgress() async {
+    final row = await _client
+        .from('monster_progress')
+        .select('data, revision')
+        .eq('user_id', _userId)
+        .maybeSingle();
+    if (row == null || row['data'] is! Map || row['revision'] is! num) {
+      throw const FormatException('Invalid player monster progression record.');
+    }
+    return PlayerMonsterProgress.fromSaveData(
+      Map<String, dynamic>.from(row['data'] as Map),
+      (row['revision'] as num).toInt(),
+    );
+  }
+
   Future<List<PlayerCurrencyTransaction>> loadCurrencyHistory({
     int limit = 30,
   }) async {
@@ -137,6 +153,58 @@ class PlayerProfile {
       displayName: name as String?,
       createdAt: _dateOrNull(json['created_at']),
       updatedAt: _dateOrNull(json['updated_at']),
+    );
+  }
+}
+
+
+class PlayerMonsterProgress {
+  const PlayerMonsterProgress({
+    required this.runner,
+    required this.tank,
+    required this.stalker,
+    required this.ranged,
+    required this.revision,
+  });
+
+  final int runner;
+  final int tank;
+  final int stalker;
+  final int ranged;
+  final int revision;
+
+  factory PlayerMonsterProgress.fromSaveData(
+    Map<String, dynamic> data,
+    int revision,
+  ) {
+    final rawLevels = data['levels'];
+    if (data['version'] != 1 ||
+        revision < 0 ||
+        rawLevels is! Map ||
+        rawLevels.length != 4) {
+      throw const FormatException('Invalid player monster progression.');
+    }
+    int level(String key) {
+      final value = rawLevels[key];
+      if (value is! num ||
+          value != value.toInt() ||
+          value < 1 ||
+          value > 40) {
+        throw FormatException('Invalid saved monster level: $key.');
+      }
+      return value.toInt();
+    }
+    if (rawLevels.keys.any((key) =>
+        key is! String ||
+        !const {'runner', 'tank', 'stalker', 'ranged'}.contains(key))) {
+      throw const FormatException('Unknown monster progression type.');
+    }
+    return PlayerMonsterProgress(
+      runner: level('runner'),
+      tank: level('tank'),
+      stalker: level('stalker'),
+      ranged: level('ranged'),
+      revision: revision,
     );
   }
 }
