@@ -55,7 +55,7 @@ class PlayerProgressionPurchaseClient {
     final uri = base.replace(
       path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
     );
-    final operationKey = '${accountService.currentUser?.id ?? 'signed-out'}:$targetId';
+    final operationKey = '${accountService.currentUser?.id ?? 'signed-out'}:$purchaseType:$targetId';
     final idempotencyKey = _pendingIdempotencyKeys.putIfAbsent(
       operationKey,
       _newIdempotencyKey,
