@@ -7,6 +7,8 @@ import 'package:archer_fm/game/network/match_combat_configuration.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/network/supabase_access_token_verifier.dart';
 import 'package:archer_fm/game/network/supabase_rest_client.dart';
+import 'package:archer_fm/game/network/progression_purchase_service.dart';
+import 'package:archer_fm/game/progression/progression_economy_configuration.dart';
 import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
 import 'package:archer_fm/game/network/file_match_settlement_outbox.dart';
 import 'package:archer_fm/game/progression/supabase_hero_progress_store.dart';
@@ -25,6 +27,7 @@ Future<void> main() async {
   final serviceRoleKey = Platform.environment['SUPABASE_SERVICE_ROLE_KEY'];
   final rawRewardSchedule = Platform.environment['ARCHER_FM_MATCH_REWARDS_BY_RANK'];
   final configPath = Platform.environment['ARCHER_FM_COMBAT_CONFIG'];
+  final economyConfigPath = Platform.environment['ARCHER_FM_PROGRESSION_ECONOMY_CONFIG'];
   if (supabaseUrl == null ||
       supabaseUrl.trim().isEmpty ||
       supabaseAnonKey == null ||
@@ -32,9 +35,11 @@ Future<void> main() async {
       serviceRoleKey == null ||
       serviceRoleKey.trim().isEmpty ||
       configPath == null ||
-      configPath.trim().isEmpty) {
+      configPath.trim().isEmpty ||
+      economyConfigPath == null ||
+      economyConfigPath.trim().isEmpty) {
     stderr.writeln(
-      'SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY and ARCHER_FM_COMBAT_CONFIG are required.',
+      'SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, ARCHER_FM_COMBAT_CONFIG and ARCHER_FM_PROGRESSION_ECONOMY_CONFIG are required.',
     );
     exitCode = 64;
     return;
@@ -44,6 +49,25 @@ Future<void> main() async {
   if (!await configFile.exists()) {
     stderr.writeln('Combat configuration file not found.');
     exitCode = 66;
+    return;
+  }
+  final economyConfigFile = File(economyConfigPath);
+  if (!await economyConfigFile.exists()) {
+    stderr.writeln('Progression economy configuration file not found.');
+    exitCode = 66;
+    return;
+  }
+
+  late final ProgressionEconomyConfiguration progressionEconomy;
+  try {
+    final decoded = jsonDecode(await economyConfigFile.readAsString());
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Root JSON value must be an object.');
+    }
+    progressionEconomy = ProgressionEconomyConfiguration.fromJson(decoded);
+  } on FormatException catch (error) {
+    stderr.writeln('Invalid progression economy configuration: $error');
+    exitCode = 65;
     return;
   }
 
@@ -88,6 +112,10 @@ Future<void> main() async {
     serviceRoleKey: serviceRoleKey,
   );
   final settlementStore = SupabaseMatchSettlementStore(persistenceClient);
+  final progressionPurchaseService = ProgressionPurchaseService(
+    client: persistenceClient,
+    economy: progressionEconomy,
+  );
   final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
   final monsterProgressStore = SupabaseMonsterProgressStore(persistenceClient);
   final monsterProgressionPolicy = combatConfiguration.monsterProgressionPolicy;
@@ -139,6 +167,17 @@ Future<void> main() async {
     address: bindAddress,
     port: port,
     accessTokenVerifier: verifier.verify,
+    progressionPurchaseHandler: ({
+      required trustedAccountId,
+      required purchaseType,
+      required targetId,
+      required idempotencyKey,
+    }) => progressionPurchaseService.purchase(
+      trustedAccountId: trustedAccountId,
+      purchaseType: purchaseType,
+      targetId: targetId,
+      idempotencyKey: idempotencyKey,
+    ),
     sessionFactory: AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: combatConfiguration,
       loadAccountHeroProgress: heroProgressStore.load,
