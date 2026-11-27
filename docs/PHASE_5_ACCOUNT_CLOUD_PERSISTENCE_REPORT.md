@@ -297,3 +297,14 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Added strict typed parsing through the existing `HeroProgress` model and tests for hero levels, weapon summary, malformed progression and fractional numeric fields in currency/match history.
 - Flutter run [45969181015](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969181015) passed analysis and all tests; Android debug APK compilation was still in progress at the latest poll. A fresh run including the expanded hero/weapon view is [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437).
 - The PostgreSQL smoke workflow uses a local PostgreSQL 16 instance with a minimal Supabase-compatible Auth schema. It is not a substitute for testing the real Supabase staging project.
+
+
+## 24. Expanded account screen Android build verification — 2026-11-27
+
+- Flutter/Android workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) completed successfully.
+- Confirmed successful steps: dependency setup, `flutter analyze --no-fatal-infos`, the complete `flutter test` suite, and `flutter build apk --debug`.
+- The workflow uploaded artifact `archer-fm-android-validation` (artifact ID `15184891380`, approximately 141 MB; GitHub expiry shown as 2026-12-11).
+- Emulator execution was skipped by design because the workflow only runs the emulator step on manual `workflow_dispatch`. This is a successful compile/package check, not an emulator or physical-device runtime test.
+- PostgreSQL 16 migration/privilege/settlement/idempotency/conflicting-retry/two-user RLS validation passed in [45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438). This remains a local PostgreSQL compatibility test, not a live Supabase staging deployment.
+- Phase 5 remains **IN PROGRESS**. Live Supabase migration and auth/session tests, cross-device restore/reconnect, approved hero/weapon/monster economy rules and authoritative upgrade handlers, production TLS/WSS deployment, persistent-storage/backup validation, and device runtime QA remain open.
+- PR #21 remains draft/open/unmerged. PR #20 and `main` remain untouched.
