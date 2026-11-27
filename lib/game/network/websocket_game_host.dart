@@ -233,6 +233,16 @@ class WebSocketGameHost {
       return;
     }
     try {
+      if (request.headers.contentType?.mimeType != 'application/json') {
+        await _writeJson(request.response, HttpStatus.unsupportedMediaType,
+            {'error': 'application_json_required'});
+        return;
+      }
+      if (request.contentLength > 4096) {
+        await _writeJson(request.response, HttpStatus.requestEntityTooLarge,
+            {'error': 'request_too_large'});
+        return;
+      }
       final raw = await utf8.decoder.bind(request).join();
       if (raw.length > 4096) {
         await _writeJson(request.response, HttpStatus.requestEntityTooLarge,
