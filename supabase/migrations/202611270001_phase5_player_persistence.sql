@@ -25,12 +25,12 @@ create or replace function public.set_player_profile_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $profile_updated_at$
 begin
   new.updated_at = now();
   return new;
 end;
-$;
+$profile_updated_at$;
 
 drop trigger if exists player_profiles_set_updated_at on public.player_profiles;
 create trigger player_profiles_set_updated_at
