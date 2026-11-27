@@ -178,6 +178,9 @@ Future<void> main() async {
       targetId: targetId,
       idempotencyKey: idempotencyKey,
     ),
+    progressionCatalogHandler: ({
+      required trustedAccountId,
+    }) => progressionPurchaseService.catalog(trustedAccountId),
     sessionFactory: AuthoritativeMatchSession.configuredFactory(
       combatConfiguration: combatConfiguration,
       loadAccountHeroProgress: heroProgressStore.load,
