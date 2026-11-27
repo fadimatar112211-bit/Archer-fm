@@ -13,6 +13,7 @@ import '../../monsters/monster_match_runtime.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_projectile_manager.dart';
 import '../../monsters/monster_progression.dart';
+import 'monster_progression_policy.dart';
 import '../../monsters/monster_ranged_attack_handler.dart';
 import 'match_world_authority.dart';
 import 'match_status_effects.dart';
@@ -36,6 +37,7 @@ class MatchCombatConfiguration {
     this.heroKillScore = 0,
     this.heroKillResources = 0,
     Map<String, MonsterProgression> monsterProgressionByPlayer = const {},
+    this.monsterProgressionPolicy,
   })  : monsterProgressionByPlayer =
            Map.unmodifiable(monsterProgressionByPlayer),
         ultimateEnergyCosts = Map.unmodifiable(ultimateEnergyCosts) {
@@ -87,6 +89,29 @@ class MatchCombatConfiguration {
   /// Trusted, already-loaded permanent monster progression for each account.
   /// The host remains responsible for loading and saving each profile.
   final Map<String, MonsterProgression> monsterProgressionByPlayer;
+  final MonsterProgressionPolicy? monsterProgressionPolicy;
+
+  MatchCombatConfiguration withMonsterProgressionByPlayer(
+    Map<String, MonsterProgression> values,
+  ) =>
+      MatchCombatConfiguration(
+        monsterCatalog: monsterCatalog,
+        projectileSpeed: projectileSpeed,
+        maxActiveProjectiles: maxActiveProjectiles,
+        maxUnitsPerArmy: maxUnitsPerArmy,
+        worldUnitsPerSecond: worldUnitsPerSecond,
+        comboResetWindowMs: comboResetWindowMs,
+        maxHeroEnergy: maxHeroEnergy,
+        energyRegenerationPerSecond: energyRegenerationPerSecond,
+        ultimateEnergyCosts: ultimateEnergyCosts,
+        weaponUpgradeDamagePerLevel: weaponUpgradeDamagePerLevel,
+        monsterKillScore: monsterKillScore,
+        monsterKillResources: monsterKillResources,
+        heroKillScore: heroKillScore,
+        heroKillResources: heroKillResources,
+        monsterProgressionByPlayer: values,
+        monsterProgressionPolicy: monsterProgressionPolicy,
+      );
 }
 
 class MatchHeroState {
