@@ -55,7 +55,7 @@ class PlayerProgressionPurchaseClient {
     final uri = base.replace(
       path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
     );
-    final operationKey = '$purchaseType:$targetId';
+    final operationKey = targetId;
     final idempotencyKey = _pendingIdempotencyKeys.putIfAbsent(
       operationKey,
       _newIdempotencyKey,
@@ -76,7 +76,11 @@ class PlayerProgressionPurchaseClient {
         .timeout(const Duration(seconds: 12));
     final decoded = _decodeResponse(body);
     if (response.statusCode != HttpStatus.ok) {
-      throw ProgressionPurchaseException(_errorCode(decoded, 'purchase_failed'));
+      final code = _errorCode(decoded, 'purchase_failed');
+      if (code == 'idempotency_conflict') {
+        _pendingIdempotencyKeys.remove(operationKey);
+      }
+      throw ProgressionPurchaseException(code);
     }
     final receipt = ProgressionPurchaseReceipt.fromJson(decoded);
     _pendingIdempotencyKeys.remove(operationKey);
