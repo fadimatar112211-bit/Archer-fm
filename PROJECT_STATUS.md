@@ -448,3 +448,6 @@ Still to decide or test:
 - PostgreSQL smoke test [45968811877](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811877) passed all steps.
 - Flutter/Android validation for the same implementation head [45968811852](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811852) was still running at the latest poll.
 - This is local PostgreSQL 16 compatibility validation, not a live Supabase staging deployment. Phase 5 remains in progress.
+
+- Player account view now also reads and displays the authenticated player's four saved monster levels through own-row RLS. Added parsing tests for the versioned monster progression record and its level bounds. This is read-only visibility; applying levels to combat and upgrades still requires approved monster growth/cost rules.
+- Fresh Flutter and PostgreSQL validation workflows for this addition are running: [45969015691](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015691) and [45969015750](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015750).
