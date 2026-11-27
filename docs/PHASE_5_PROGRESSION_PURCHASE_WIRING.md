@@ -8,7 +8,7 @@
 - The server reads both progression rows, derives their current revisions and calculates the price from a protected operator-supplied economy file. The client never supplies or controls price, account identity, or revisions.
 - The existing service-role-only `purchase_player_progression` RPC performs the debit, progression update and ledger insert atomically. The service-role key remains exclusively in the server process.
 - The Arabic player account screen displays all 12 canonical weapons and four monster types, their current ownership/level, and the server-quoted next cost. It requires confirmation before spending, refreshes account/wallet/history after a successful purchase, and maps common rejection codes to Arabic feedback.
-- The mobile client reuses the same idempotency key for retries of an uncertain operation while the account screen remains alive; keys are scoped by account, purchase type and target. The SQL RPC also treats the key as authoritative when a retry sees a newer level-dependent quote, so a lost response cannot cause a second debit.
+- The mobile client stores pending idempotency keys in device preferences so retries retain the same key across screen changes and app restarts; keys are scoped by account, purchase type and target and cleared only after a confirmed receipt or explicit idempotency conflict. The SQL RPC also treats the key as authoritative when a retry sees a newer level-dependent quote, so a lost response cannot cause a second debit.
 
 ## Required deployment configuration — intentionally no invented economy
 
@@ -29,6 +29,12 @@ Canonical weapon IDs:
 - Storm: `storm_spear`, `storm_halberd`, `storm_lance`
 
 The decoder fails closed if any item/level is missing, unknown, zero, negative, or malformed. No economy values were selected in this implementation. The game operator must approve and populate the actual prices before the gateway can start.
+
+## Monster upgrades must affect live combat
+
+The production combat config must include a complete `monsterProgressionPolicy` with owner-approved `healthPerLevel`, `damagePerLevel`, and `speedPerLevel` for all four monster types, plus target-level costs from 2–40. The server refuses to start if this policy is missing or if its monster upgrade prices differ from the purchase economy file. This prevents purchases from changing account levels without changing actual in-match monster stats.
+
+The purchase economy file and combat config are separate protected operator files, but their monster upgrade prices must match exactly.
 
 The Flutter build must receive the public HTTPS gateway origin (no path/query) using:
 
