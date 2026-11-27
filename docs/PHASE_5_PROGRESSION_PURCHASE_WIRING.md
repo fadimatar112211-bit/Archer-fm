@@ -4,11 +4,11 @@
 
 - The production gateway exposes authenticated `GET /v1/account/progression/catalog` and `POST /v1/account/progression/purchase`.
 - Both routes require a Supabase access token in `Authorization: Bearer ...`; the gateway derives the account UUID from the verified token subject.
-- The mobile request accepts only `purchaseType`, `targetId`, and `idempotencyKey`. It rejects extra fields such as account IDs, prices, max levels, and row revisions.
+- The mobile request accepts `purchaseType`, `targetId`, `idempotencyKey`, and the displayed `quotedCost`. The quote is only a stale-price check: the server independently recalculates the current cost from its protected catalog and rejects a changed quote. It rejects extra fields such as account IDs, authoritative prices, max levels, and row revisions.
 - The server reads both progression rows, derives their current revisions and calculates the price from a protected operator-supplied economy file. The client never supplies or controls price, account identity, or revisions.
 - The existing service-role-only `purchase_player_progression` RPC performs the debit, progression update and ledger insert atomically. The service-role key remains exclusively in the server process.
 - The Arabic player account screen displays all 12 canonical weapons and four monster types, their current ownership/level, and the server-quoted next cost. It requires confirmation before spending, refreshes account/wallet/history after a successful purchase, and maps common rejection codes to Arabic feedback.
-- The mobile client reuses the same idempotency key for retries of an uncertain operation while the account screen remains alive. The SQL RPC also treats the key as authoritative when a retry sees a newer level-dependent quote, so a lost response cannot cause a second debit.
+- The mobile client reuses the same idempotency key for retries of an uncertain operation while the account screen remains alive; keys are scoped by account, purchase type and target. The SQL RPC also treats the key as authoritative when a retry sees a newer level-dependent quote, so a lost response cannot cause a second debit.
 
 ## Required deployment configuration — intentionally no invented economy
 
