@@ -70,6 +70,7 @@ jobs:
           else:
               prefix, *rest = content.split("dependencyResolutionManagement", 1)
               required = ["google()", "mavenCentral()", "gradlePluginPortal()"]
+          mirror = 'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
               missing = [repo for repo in required if repo not in prefix]
               if missing:
                   marker = "repositories {"
@@ -84,6 +85,13 @@ jobs:
               marker = "repositories {"
               pos = content.index(marker) + len(marker)
               content = content[:pos] + '\n        maven { url = uri("https://plugins.gradle.org/m2/") }' + content[pos:]
+          # Maven Central can temporarily rate-limit hosted runners (HTTP 429).
+          # Put Google's read-only Maven Central mirror first for Flutter's included
+          # Gradle build as well as plugin marker/dependency resolution.
+          if mirror not in content:
+              marker = "repositories {"
+              pos = content.index(marker) + len(marker)
+              content = content[:pos] + "\n        " + mirror + content[pos:]
           settings.write_text(content)
           PY
           grep -A8 '^pluginManagement {' "$SETTINGS"
@@ -93,11 +101,19 @@ jobs:
       - name: Build Android APK (retry dependency refresh once)
         shell: bash
         run: |
-          flutter build apk --debug || (
-            echo "First Gradle resolution failed; retrying with refreshed dependencies."
-            cd android
-            ./gradlew --refresh-dependencies assembleDebug
-          )
+          for attempt in 1 2 3; do
+            if flutter build apk --debug; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Gradle dependency resolution failed (attempt $attempt); refreshing and retrying after a short backoff."
+              sleep 20
+              (cd android && ./gradlew --refresh-dependencies assembleDebug) && exit 0
+              sleep 20
+            fi
+          done
+          echo "Android APK build failed after three attempts."
+          exit 1
       - name: Free runner disk space for the Android emulator
         run: |
           echo "Disk space before cleanup:"
