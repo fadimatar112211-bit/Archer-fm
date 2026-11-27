@@ -308,3 +308,14 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - PostgreSQL 16 migration/privilege/settlement/idempotency/conflicting-retry/two-user RLS validation passed in [45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438). This remains a local PostgreSQL compatibility test, not a live Supabase staging deployment.
 - Phase 5 remains **IN PROGRESS**. Live Supabase migration and auth/session tests, cross-device restore/reconnect, approved hero/weapon/monster economy rules and authoritative upgrade handlers, production TLS/WSS deployment, persistent-storage/backup validation, and device runtime QA remain open.
 - PR #21 remains draft/open/unmerged. PR #20 and `main` remain untouched.
+
+## 20. Active WebSocket session revalidation — 2026-11-27
+
+- Authenticated WebSocket connections now revalidate the original Supabase bearer token every 60 seconds by default, rather than checking identity only once at the initial create/join/resume handshake.
+- If the verifier rejects the token, or cannot establish validity because the Auth endpoint is unavailable, the gateway closes that socket with a policy-violation status. This is deliberately fail-closed so a connection cannot continue issuing commands indefinitely after its credentials stop validating.
+- The timer is cancelled when the socket detaches and does not run for the unauthenticated development gateway.
+- Added a host test that revokes a fake token after a successful handshake and asserts that the authenticated socket is disconnected.
+- This change is committed on the Phase 5 branch; CI for the new commit is pending. The test proves gateway behavior when the verifier rejects a token; live Supabase expiry/revocation semantics still require staging validation.
+- The check uses Supabase Auth's user endpoint. It does not replace short access-token lifetimes, refresh-token rotation, or staging tests; operators must configure and verify those Auth policies.
+
+**Acceptance remains IN PROGRESS.** Live Supabase configuration and test users, approved progression economy/growth values, production WSS deployment, cross-device recovery, and a final Android emulator run are still outstanding.
