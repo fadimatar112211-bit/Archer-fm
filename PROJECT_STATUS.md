@@ -2,7 +2,7 @@
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
 > Last updated: 2026-11-27
-> Project status: Phase 5 in progress — authenticated accounts, cloud progression adapters, atomic match settlement and server-only purchase RPC are present. PostgreSQL migration/purchase/idempotency/RLS smoke tests now pass on the corrected purchase-validation code. Player-facing purchase commands, approved economy configuration, live Supabase deployment, cross-device acceptance, production WSS and device QA remain open; Android validation for the latest head is still pending. Earlier phases retain their own acceptance gates.
+> Project status: Phase 5 in progress — authenticated account persistence, atomic settlement, server-only purchase RPC, authenticated purchase/catalog HTTP routes, server-quoted prices, idempotent purchase retry handling, and Arabic account UI for all 12 weapons/four monster types are implemented on the phase-5 branch. PostgreSQL purchase/idempotency/RLS smoke tests pass. Flutter analyze/tests/build are running for the latest code. Actual approved economy prices/config, live Supabase deployment, HTTPS gateway build define, cross-device acceptance, production WSS and device QA remain open. Earlier phases retain their own acceptance gates.
 > Active work branch: `feature/phase-5-account-cloud-persistence` (new isolated Phase 5 branch)
 > Previous integration branch: `feature/match-rules-foundation` (PR #20 remains Draft/open/unmerged)
 > Default branch: `main`
