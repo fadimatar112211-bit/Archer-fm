@@ -35,6 +35,7 @@ declare
   transaction_reason text;
 begin
   if p_user_id is null
+     or p_purchase_type is null
      or p_purchase_type not in ('weapon_unlock', 'weapon_upgrade', 'monster_upgrade')
      or p_target_id is null or char_length(p_target_id) not between 1 and 96
      or p_cost is null or p_cost <= 0
