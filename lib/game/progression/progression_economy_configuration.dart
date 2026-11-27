@@ -27,14 +27,23 @@ class ProgressionEconomyConfiguration {
         rawWeapons.length != weaponIds.length || rawMonsters.length != monsterIds.length) {
       throw const FormatException('Progression economy must define exactly the 12 launch weapons and four monsters.');
     }
+    final starterWeaponIds = {
+      for (final hero in archerFmHeroes) hero.weapons.first.id,
+    };
     final unlockCosts = <String, int>{};
     final weaponCosts = <String, Map<int, int>>{};
     for (final id in weaponIds) {
       final raw = rawWeapons[id];
-      if (raw is! Map || raw['unlockCost'] is! int || (raw['unlockCost'] as int) <= 0) {
-        throw FormatException('Missing positive weapons.$id.unlockCost.');
+      final unlockCost = raw is Map ? raw['unlockCost'] : null;
+      if (unlockCost is! int ||
+          unlockCost < 0 ||
+          (starterWeaponIds.contains(id) && unlockCost != 0) ||
+          (!starterWeaponIds.contains(id) && unlockCost <= 0)) {
+        throw FormatException(
+          'weapons.$id.unlockCost must be zero only for the four free starter weapons and positive for other weapons.',
+        );
       }
-      unlockCosts[id] = raw['unlockCost'] as int;
+      unlockCosts[id] = unlockCost;
       weaponCosts[id] = _levelCosts(raw['upgradeCosts'], '$id upgradeCosts', 1);
     }
     final monsterCosts = <String, Map<int, int>>{};
