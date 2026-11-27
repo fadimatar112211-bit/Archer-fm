@@ -43,10 +43,11 @@ class PlayerProgressionPurchaseClient {
   Future<ProgressionPurchaseReceipt> purchase({
     required String purchaseType,
     required String targetId,
+    required int quotedCost,
   }) async {
     if (!const {'weapon_unlock', 'weapon_upgrade', 'monster_upgrade'}
         .contains(purchaseType) ||
-        targetId.isEmpty || targetId.length > 96) {
+        targetId.isEmpty || targetId.length > 96 || quotedCost <= 0) {
       throw ArgumentError('Invalid progression purchase.');
     }
     final token = await _accessToken();
@@ -68,6 +69,7 @@ class PlayerProgressionPurchaseClient {
       'purchaseType': purchaseType,
       'targetId': targetId,
       'idempotencyKey': idempotencyKey,
+      'quotedCost': quotedCost,
     }));
     final response = await request.close().timeout(const Duration(seconds: 12));
     final body = await response.transform(utf8.decoder).join()
