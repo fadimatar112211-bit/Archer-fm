@@ -181,6 +181,20 @@ create trigger on_auth_user_created_archer_fm
 revoke all on function public.handle_new_archer_fm_user()
   from public, anon, authenticated;
 
+-- Existing Auth users must receive the same initial account rows as users
+-- created after this migration. The trigger above covers future sign-ups.
+insert into public.player_profiles(user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.hero_progress(user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.monster_progress(user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
 
 -- Optimistic revision checks prevent two game-server instances from silently
 -- overwriting each other's progression updates. These RPCs are backend-only.
