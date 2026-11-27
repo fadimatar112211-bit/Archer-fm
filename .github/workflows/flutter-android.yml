@@ -3,7 +3,8 @@ name: Flutter Android validation
 # Keep only the newest validation per event type and branch. In particular,
 # superseded PR runs must not continue an obsolete emulator boot.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  # Push and PR events for the same branch share one expensive Android build.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 on:
