@@ -26,7 +26,7 @@ Future<void> main() async {
   final supabaseUrl = Platform.environment['SUPABASE_URL'];
   final supabaseAnonKey = Platform.environment['SUPABASE_ANON_KEY'];
   final serviceRoleKey = Platform.environment['SUPABASE_SERVICE_ROLE_KEY'];
-  final rawRewardSchedule = Platform.environment['ARCHER_FM_MATCH_REWARDS_BY_RANK'];
+  final rewardConfigPath = Platform.environment['ARCHER_FM_MATCH_REWARDS_CONFIG'];
   final configPath = Platform.environment['ARCHER_FM_COMBAT_CONFIG'];
   final economyConfigPath = Platform.environment['ARCHER_FM_PROGRESSION_ECONOMY_CONFIG'];
   if (supabaseUrl == null ||
@@ -38,9 +38,11 @@ Future<void> main() async {
       configPath == null ||
       configPath.trim().isEmpty ||
       economyConfigPath == null ||
-      economyConfigPath.trim().isEmpty) {
+      economyConfigPath.trim().isEmpty ||
+      rewardConfigPath == null ||
+      rewardConfigPath.trim().isEmpty) {
     stderr.writeln(
-      'SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, ARCHER_FM_COMBAT_CONFIG and ARCHER_FM_PROGRESSION_ECONOMY_CONFIG are required.',
+      'SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, ARCHER_FM_COMBAT_CONFIG, ARCHER_FM_PROGRESSION_ECONOMY_CONFIG and ARCHER_FM_MATCH_REWARDS_CONFIG are required.',
     );
     exitCode = 64;
     return;
@@ -55,6 +57,12 @@ Future<void> main() async {
   final economyConfigFile = File(economyConfigPath);
   if (!await economyConfigFile.exists()) {
     stderr.writeln('Progression economy configuration file not found.');
+    exitCode = 66;
+    return;
+  }
+  final rewardConfigFile = File(rewardConfigPath);
+  if (!await rewardConfigFile.exists()) {
+    stderr.writeln('Match reward configuration file not found.');
     exitCode = 66;
     return;
   }
@@ -121,7 +129,11 @@ Future<void> main() async {
   final port = int.tryParse(Platform.environment['ARCHER_FM_PORT'] ?? '') ?? 8080;
   late final List<int> rewardSchedule;
   try {
-    rewardSchedule = _decodeRewardSchedule(rawRewardSchedule);
+    final decoded = jsonDecode(await rewardConfigFile.readAsString());
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Root JSON value must be an object.');
+    }
+    rewardSchedule = _decodeRewardSchedule(decoded);
   } on FormatException catch (error) {
     stderr.writeln('Invalid match reward configuration: $error');
     exitCode = 65;
@@ -249,14 +261,15 @@ Future<void> main() async {
   }
 }
 
-List<int> _decodeRewardSchedule(String? raw) {
-  if (raw == null || raw.trim().isEmpty) return List<int>.filled(4, 0);
-  final decoded = jsonDecode(raw);
-  if (decoded is! List ||
+List<int> _decodeRewardSchedule(Map<String, dynamic> json) {
+  final decoded = json['permanentCurrencyByRank'];
+  if (json['version'] != 1 ||
+      decoded is! List ||
       decoded.length != 4 ||
-      decoded.any((value) => value is! int || value < 0)) {
+      decoded.any((value) => value is! int || value < 0) ||
+      json.keys.toSet().difference({'version', 'permanentCurrencyByRank'}).isNotEmpty) {
     throw const FormatException(
-      'ARCHER_FM_MATCH_REWARDS_BY_RANK must be a JSON array of four non-negative integers.',
+      'Match rewards config must contain version 1 and exactly four non-negative permanentCurrencyByRank values.',
     );
   }
   return decoded.cast<int>();
