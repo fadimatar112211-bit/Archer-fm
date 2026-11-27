@@ -59,6 +59,13 @@ abstract interface class AccountProvisioningGameServerSession {
 
 typedef GameAccessTokenVerifier = Future<String?> Function(String accessToken);
 
+typedef AccountProgressionPurchaseHandler = Future<Map<String, dynamic>> Function({
+  required String trustedAccountId,
+  required String purchaseType,
+  required String targetId,
+  required String idempotencyKey,
+});
+
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
 ///
 /// It handles room codes, four-player transport sessions, reconnect tokens,
@@ -76,6 +83,7 @@ class WebSocketGameHost {
     this.tickInterval = const Duration(milliseconds: 50),
     this.broadcastInterval = const Duration(milliseconds: 100),
     this.accessTokenVerifier,
+    this.progressionPurchaseHandler,
     this.authenticationRecheckInterval = const Duration(minutes: 1),
   })  : assert(port >= 0 && port <= 65535),
         assert(maxRooms > 0),
@@ -90,6 +98,9 @@ class WebSocketGameHost {
   /// When set, all handshakes require a verified token and account-bound room.
   /// Keep null only for isolated local development and tests.
   final GameAccessTokenVerifier? accessTokenVerifier;
+  /// Invoked only after the HTTP bearer token has been verified. The callback
+  /// receives no client-supplied account ID, price, level cap or row revision.
+  final AccountProgressionPurchaseHandler? progressionPurchaseHandler;
   /// Revalidates active bearer sessions so expired/revoked tokens cannot keep
   /// issuing commands indefinitely after a successful WebSocket handshake.
   final Duration authenticationRecheckInterval;
@@ -138,6 +149,10 @@ class WebSocketGameHost {
   }
 
   void _acceptRequest(HttpRequest request) {
+    if (request.uri.path == '/v1/account/progression/purchase') {
+      unawaited(_handleProgressionPurchaseRequest(request));
+      return;
+    }
     if (!WebSocketTransformer.isUpgradeRequest(request)) {
       request.response.statusCode = HttpStatus.badRequest;
       unawaited(request.response.close());
@@ -146,6 +161,89 @@ class WebSocketGameHost {
     WebSocketTransformer.upgrade(request).then(_serve).catchError((Object error) {
       stderr.writeln('WebSocket upgrade failed: $error');
     });
+  }
+
+  Future<void> _handleProgressionPurchaseRequest(HttpRequest request) async {
+    final handler = progressionPurchaseHandler;
+    final verifier = accessTokenVerifier;
+    if (request.method != 'POST') {
+      await _writeJson(request.response, HttpStatus.methodNotAllowed,
+          {'error': 'method_not_allowed'});
+      return;
+    }
+    if (handler == null || verifier == null) {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_service_unavailable'});
+      return;
+    }
+    final authorization = request.headers.value(HttpHeaders.authorizationHeader);
+    if (authorization == null || !authorization.startsWith('Bearer ')) {
+      await _writeJson(request.response, HttpStatus.unauthorized,
+          {'error': 'unauthorized'});
+      return;
+    }
+    try {
+      final raw = await utf8.decoder.bind(request).join();
+      if (raw.length > 4096) {
+        await _writeJson(request.response, HttpStatus.requestEntityTooLarge,
+            {'error': 'request_too_large'});
+        return;
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic> ||
+          decoded.keys.toSet().difference(
+            {'purchaseType', 'targetId', 'idempotencyKey'},
+          ).isNotEmpty ||
+          decoded['purchaseType'] is! String ||
+          decoded['targetId'] is! String ||
+          decoded['idempotencyKey'] is! String) {
+        await _writeJson(request.response, HttpStatus.badRequest,
+            {'error': 'invalid_purchase_request'});
+        return;
+      }
+      final accountId = await verifier(authorization.substring(7));
+      if (accountId == null || accountId.isEmpty) {
+        await _writeJson(request.response, HttpStatus.unauthorized,
+            {'error': 'unauthorized'});
+        return;
+      }
+      final result = await handler(
+        trustedAccountId: accountId,
+        purchaseType: decoded['purchaseType'] as String,
+        targetId: decoded['targetId'] as String,
+        idempotencyKey: decoded['idempotencyKey'] as String,
+      );
+      await _writeJson(request.response, HttpStatus.ok, {
+        'type': 'purchase_result',
+        'currency_balance': result['currency_balance'],
+        'hero_revision': result['hero_revision'],
+        'monster_revision': result['monster_revision'],
+        'resulting_level': result['resulting_level'],
+        'already_applied': result['already_applied'],
+      });
+    } on FormatException catch (error) {
+      final code = error.message.toString();
+      await _writeJson(request.response, HttpStatus.conflict,
+          {'error': code.length <= 64 ? code : 'purchase_rejected'});
+    } on HttpException {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_backend_unavailable'});
+    } on Object {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_temporarily_unavailable'});
+    }
+  }
+
+  Future<void> _writeJson(
+    HttpResponse response,
+    int status,
+    Map<String, Object?> body,
+  ) async {
+    response.statusCode = status;
+    response.headers.contentType = ContentType.json;
+    response.headers.set(HttpHeaders.cacheControlHeader, 'no-store');
+    response.write(jsonEncode(body));
+    await response.close();
   }
 
   void _tick() {
