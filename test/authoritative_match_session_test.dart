@@ -8,6 +8,7 @@ import 'package:archer_fm/game/network/match_combat_authority.dart';
 import 'package:archer_fm/game/progression/hero_progress.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_progression.dart';
+import 'package:archer_fm/monsters/monster_navigation.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/castle_system.dart';
@@ -104,6 +105,20 @@ AuthoritativeMatchSession _combatReadySession({
 }
 
 void main() {
+  test('authoritative monster AI receives navigation built from match obstacles', () {
+    final session = _combatReadySession();
+    final grid = session.combat!.monsters.combatLoop.navigationGrid;
+
+    expect(grid, isA<MonsterNavigationGrid>());
+    expect(grid!.columns, greaterThan(0));
+    expect(grid.rows, greaterThan(0));
+    expect(grid.cellSize, 48);
+    // The generated arena contains trees and rocks; the runtime grid must
+    // include their collision footprints instead of relying on steering alone.
+    expect(grid.blockedCells, isNotEmpty);
+    expect(grid.revision, 1);
+  });
+
   test('snapshot publishes deterministic static arena geometry for clients', () {
     final session = _combatReadySession();
     final world = session.snapshot()['world'] as Map;
