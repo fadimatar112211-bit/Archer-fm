@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../progression/hero_progress.dart';
+
 /// A read/update-only client surface for the authenticated player's account.
 /// It deliberately exposes no client-side currency or progression mutation.
 class PlayerAccountDataService {
@@ -67,6 +69,25 @@ class PlayerAccountDataService {
     );
   }
 
+
+  Future<PlayerHeroProgress> loadHeroProgress() async {
+    final row = await _client
+        .from('hero_progress')
+        .select('data, revision')
+        .eq('user_id', _userId)
+        .maybeSingle();
+    if (row == null ||
+        row['data'] is! Map ||
+        row['revision'] is! num ||
+        (row['revision'] as num) < 0 ||
+        (row['revision'] as num) != (row['revision'] as num).toInt()) {
+      throw const FormatException('Invalid player hero progression record.');
+    }
+    return PlayerHeroProgress.fromSaveData(
+      Map<String, dynamic>.from(row['data'] as Map),
+      (row['revision'] as num).toInt(),
+    );
+  }
 
   Future<PlayerMonsterProgress> loadMonsterProgress() async {
     final row = await _client
@@ -162,6 +183,47 @@ class PlayerProfile {
   }
 }
 
+
+class PlayerHeroProgress {
+  const PlayerHeroProgress({
+    required this.rangerLevel,
+    required this.flameLevel,
+    required this.shadowLevel,
+    required this.stormLevel,
+    required this.unlockedWeaponCount,
+    required this.weaponUpgradeCount,
+    required this.revision,
+  });
+
+  final int rangerLevel;
+  final int flameLevel;
+  final int shadowLevel;
+  final int stormLevel;
+  final int unlockedWeaponCount;
+  final int weaponUpgradeCount;
+  final int revision;
+
+  factory PlayerHeroProgress.fromSaveData(
+    Map<String, dynamic> data,
+    int revision,
+  ) {
+    if (revision < 0) {
+      throw const FormatException('Invalid player hero progression revision.');
+    }
+    final progress = HeroProgress.fromJson(data);
+    return PlayerHeroProgress(
+      rangerLevel: progress.heroLevel('ranger'),
+      flameLevel: progress.heroLevel('flame'),
+      shadowLevel: progress.heroLevel('shadow'),
+      stormLevel: progress.heroLevel('storm'),
+      unlockedWeaponCount: progress.unlockedWeaponIds.length,
+      weaponUpgradeCount: progress.weaponUpgradeLevels.values
+          .where((level) => level > 0)
+          .length,
+      revision: revision,
+    );
+  }
+}
 
 class PlayerMonsterProgress {
   const PlayerMonsterProgress({
