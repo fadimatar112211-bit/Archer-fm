@@ -451,3 +451,7 @@ Still to decide or test:
 
 - Player account view now also reads and displays the authenticated player's four saved monster levels through own-row RLS. Added parsing tests for the versioned monster progression record and its level bounds. This is read-only visibility; applying levels to combat and upgrades still requires approved monster growth/cost rules.
 - Fresh Flutter and PostgreSQL validation workflows for this addition are running: [45969015691](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015691) and [45969015750](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015750).
+
+- Expanded PostgreSQL 16 smoke tests now exercise the atomic match settlement RPC, verify idempotent replay does not double-award currency, reject conflicting retries, and switch between two authenticated JWT subjects to verify RLS isolates profile/progression/ledger/match rows. Run [45969369330](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969369330) passed all steps.
+- Player account screen now displays the four hero levels, unlocked weapon count, upgraded weapon count and all four monster levels, in addition to wallet, currency ledger and recent match history. The UI remains read-only for progression/economy.
+- Latest expanded account-screen Flutter validation is [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437), queued at the latest check.
