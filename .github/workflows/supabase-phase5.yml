@@ -290,7 +290,7 @@ jobs:
             begin
               perform public.purchase_player_progression(
                 v_user_id, 'weapon_unlock', 'ranger_unknown_bow', 1, 40,
-                4, 1, 'purchase:unknown-weapon:test'
+                1, 0, 'purchase:unknown-weapon:test'
               );
               raise exception 'unknown weapon ID was unexpectedly accepted';
             exception when invalid_parameter_value then
