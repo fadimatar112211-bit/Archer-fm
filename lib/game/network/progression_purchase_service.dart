@@ -142,16 +142,23 @@ class ProgressionPurchaseService {
           (throw const FormatException('monster_upgrade_not_configured'));
     }
 
-    return client.purchaseProgression(
-      trustedAccountId: trustedAccountId,
-      purchaseType: purchaseType,
-      targetId: targetId,
-      cost: cost,
-      maxLevel: 40,
-      expectedHeroRevision: heroRevision,
-      expectedMonsterRevision: monsterRevision,
-      idempotencyKey: idempotencyKey,
-    );
+    try {
+      return await client.purchaseProgression(
+        trustedAccountId: trustedAccountId,
+        purchaseType: purchaseType,
+        targetId: targetId,
+        cost: cost,
+        maxLevel: 40,
+        expectedHeroRevision: heroRevision,
+        expectedMonsterRevision: monsterRevision,
+        idempotencyKey: idempotencyKey,
+      );
+    } on SupabaseRestException catch (error) {
+      if (error.statusCode >= 400 && error.statusCode < 500) {
+        throw FormatException(error.code ?? 'purchase_rejected');
+      }
+      rethrow;
+    }
   }
 
   int _revision(Map<String, dynamic> row, String label) {
