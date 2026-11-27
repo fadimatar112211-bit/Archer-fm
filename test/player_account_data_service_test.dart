@@ -100,4 +100,58 @@ void main() {
       );
     });
   });
+
+  group('PlayerMonsterProgress', () {
+    test('parses all four persisted monster levels', () {
+      final progress = PlayerMonsterProgress.fromSaveData({
+        'version': 1,
+        'levels': {
+          'runner': 4,
+          'tank': 8,
+          'stalker': 2,
+          'ranged': 6,
+        },
+      }, 9);
+      expect(progress.runner, 4);
+      expect(progress.tank, 8);
+      expect(progress.stalker, 2);
+      expect(progress.ranged, 6);
+      expect(progress.revision, 9);
+    });
+
+    test('rejects unsupported schema, missing types and out-of-range levels', () {
+      expect(
+        () => PlayerMonsterProgress.fromSaveData({
+          'version': 2,
+          'levels': {
+            'runner': 1,
+            'tank': 1,
+            'stalker': 1,
+            'ranged': 1,
+          },
+        }, 0),
+        throwsFormatException,
+      );
+      expect(
+        () => PlayerMonsterProgress.fromSaveData({
+          'version': 1,
+          'levels': {'runner': 1},
+        }, 0),
+        throwsFormatException,
+      );
+      expect(
+        () => PlayerMonsterProgress.fromSaveData({
+          'version': 1,
+          'levels': {
+            'runner': 41,
+            'tank': 1,
+            'stalker': 1,
+            'ranged': 1,
+          },
+        }, 0),
+        throwsFormatException,
+      );
+    });
+  });
+
 }
