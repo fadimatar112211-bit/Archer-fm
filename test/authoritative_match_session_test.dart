@@ -203,6 +203,61 @@ void main() {
     expect(session.rules!.duration.minutes, 10);
   });
 
+  test('cloud monster progression is hydrated before match combat starts', () async {
+    final config = _combatConfiguration();
+    final session = AuthoritativeMatchSession(
+      code: 'cloud-monsters',
+      mapFactory: () => ArenaMap.generate(Random(909)),
+      combatConfiguration: config,
+      loadAccountMonsterProgression: (accountId) async => MonsterProgression(
+        catalog: config.monsterCatalog,
+        growth: {
+          for (final type in MonsterType.values)
+            type: const MonsterUpgradeGrowth(
+              healthPerLevel: 0.1,
+              damagePerLevel: 0.05,
+              speedPerLevel: 0.02,
+            ),
+        },
+        costForLevel: (_, level) => level * 10,
+        levels: {
+          MonsterType.runner: accountId == 'account-1' ? 3 : 1,
+        },
+      ),
+    );
+    final players = [
+      for (var i = 0; i < 4; i++) session.joinForAccount('account-${i + 1}')!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      await session.prepareAccount(players[i], 'account-${i + 1}');
+      final hero = archerFmHeroes[i];
+      expect(session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      }), isNull);
+      expect(session.handle(players[i], {
+        'type': 'army_select',
+        'counts': {'runner': 20},
+      }), isNull);
+    }
+
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    final p1Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p1');
+    final p2Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p2');
+    expect(p1Army.units.first.stats.maxHealth, 1200);
+    expect(p2Army.units.first.stats.maxHealth, 1000);
+    expect(
+      session.combat!.configuration.monsterProgressionByPlayer['p1']!
+          .levelOf(MonsterType.runner),
+      3,
+    );
+    expect(
+      (session.snapshot()['combat'] as Map)['monsterProgression'],
+      isA<Map>(),
+    );
+  });
+
   test('loaded permanent monster progression scales only its owner army', () {
     final session = _combatReadySession(p1RunnerLevel: 3);
     final p1Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p1');
