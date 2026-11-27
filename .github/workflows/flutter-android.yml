@@ -106,10 +106,10 @@ jobs:
           docker system prune --all --force || true
           echo "Disk space after cleanup:"
           df -h /
-      # Keep emulator execution deferred until the Phase 5 source/test work is
-      # complete; run the final device smoke test once via workflow_dispatch.
+      # Run the final device smoke test on Phase 5 branch pushes and on-demand.
+      # Other branches keep emulator execution opt-in to avoid duplicate long TCG boots.
       - uses: reactivecircus/android-emulator-runner@v2
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name == 'feature/phase-5-account-cloud-persistence')
         # GitHub-hosted Linux runners do not expose KVM to this job. The
         # emulator exits immediately with "-accel off" unless TCG is explicitly
         # opted into; keep the longer boot window for software CPU emulation.
