@@ -19,6 +19,177 @@ class PlayerProgressionPurchaseClient {
   final String _apiUrl;
   final HttpClient _httpClient;
 
+  Future<ProgressionPurchaseCatalog> loadCatalog() async {
+    final token = await accountService.accessToken();
+    if (token == null || token.isEmpty) {
+      throw const ProgressionPurchaseException('unauthorized');
+    }
+    final base = _baseUri();
+    final uri = base.replace(
+      path: '${base.path.replaceFirst(RegExp(r'/+
+    required String purchaseType,
+    required String targetId,
+  }) async {
+    if (!const {'weapon_unlock', 'weapon_upgrade', 'monster_upgrade'}
+        .contains(purchaseType) ||
+        targetId.isEmpty || targetId.length > 96) {
+      throw ArgumentError('Invalid progression purchase.');
+    }
+    final token = await accountService.accessToken();
+    if (token == null || token.isEmpty) {
+      throw const ProgressionPurchaseException('unauthorized');
+    }
+    final base = _baseUri();
+    final uri = base.replace(
+      path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
+    );
+    final idempotencyKey = _newIdempotencyKey();
+    final request = await _httpClient.postUrl(uri);
+    request.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
+      ..set(HttpHeaders.acceptHeader, 'application/json')
+      ..contentType = ContentType.json;
+    request.write(jsonEncode({
+      'purchaseType': purchaseType,
+      'targetId': targetId,
+      'idempotencyKey': idempotencyKey,
+    }));
+    final response = await request.close().timeout(const Duration(seconds: 12));
+    final body = await response.transform(utf8.decoder).join()
+        .timeout(const Duration(seconds: 12));
+    Map<String, dynamic> decoded;
+    try {
+      final value = jsonDecode(body);
+      if (value is! Map<String, dynamic>) throw const FormatException();
+      decoded = value;
+    } on FormatException {
+      throw const ProgressionPurchaseException('invalid_server_response');
+    }
+    if (response.statusCode != HttpStatus.ok) {
+      final error = decoded['error'];
+      throw ProgressionPurchaseException(
+        error is String && error.length <= 64 ? error : 'purchase_failed',
+      );
+    }
+    return ProgressionPurchaseReceipt.fromJson(decoded);
+  }
+
+  Uri _baseUri() {
+    final base = Uri.tryParse(_apiUrl);
+    if (base == null || base.scheme != 'https' || base.host.isEmpty ||
+        base.userInfo.isNotEmpty || base.hasQuery || base.hasFragment) {
+      throw const ProgressionPurchaseException('purchase_service_not_configured');
+    }
+    return base;
+  }
+
+  Map<String, dynamic> _decodeResponse(String body) {
+    try {
+      final value = jsonDecode(body);
+      if (value is Map<String, dynamic>) return value;
+    } on FormatException {
+      // Converted below to a stable client-facing error code.
+    }
+    throw const ProgressionPurchaseException('invalid_server_response');
+  }
+
+  String _newIdempotencyKey() {
+    final random = Random.secure();
+    return List<int>.generate(32, (_) => random.nextInt(16))
+        .map((value) => value.toRadixString(16)).join();
+  }
+
+  void close() => _httpClient.close(force: true);
+}
+
+class ProgressionPurchaseReceipt {
+  const ProgressionPurchaseReceipt({
+    required this.currencyBalance,
+    required this.heroRevision,
+    required this.monsterRevision,
+    required this.resultingLevel,
+    required this.alreadyApplied,
+  });
+
+  final int currencyBalance;
+  final int heroRevision;
+  final int monsterRevision;
+  final int resultingLevel;
+  final bool alreadyApplied;
+
+  factory ProgressionPurchaseReceipt.fromJson(Map<String, dynamic> json) {
+    int integer(String key) {
+      final value = json[key];
+      if (value is! num || value != value.toInt() || value < 0) {
+        throw FormatException('Invalid purchase result field: $key.');
+      }
+      return value.toInt();
+    }
+    final alreadyApplied = json['already_applied'];
+    if (json['type'] != 'purchase_result' || alreadyApplied is! bool) {
+      throw const FormatException('Invalid progression purchase receipt.');
+    }
+    return ProgressionPurchaseReceipt(
+      currencyBalance: integer('currency_balance'),
+      heroRevision: integer('hero_revision'),
+      monsterRevision: integer('monster_revision'),
+      resultingLevel: integer('resulting_level'),
+      alreadyApplied: alreadyApplied,
+    );
+  }
+}
+
+class ProgressionPurchaseCatalog {
+  const ProgressionPurchaseCatalog({
+    required this.weapons,
+    required this.monsters,
+  });
+
+  final List<Map<String, dynamic>> weapons;
+  final List<Map<String, dynamic>> monsters;
+
+  factory ProgressionPurchaseCatalog.fromJson(Map<String, dynamic> json) {
+    if (json['type'] != 'progression_catalog' ||
+        json['weapons'] is! List || json['monsters'] is! List) {
+      throw const FormatException('Invalid progression catalog.');
+    }
+    List<Map<String, dynamic>> rows(Object? value) =>
+        (value as List).map((item) {
+          if (item is! Map) throw const FormatException('Invalid catalog item.');
+          return Map<String, dynamic>.from(item);
+        }).toList(growable: false);
+    return ProgressionPurchaseCatalog(
+      weapons: rows(json['weapons']),
+      monsters: rows(json['monsters']),
+    );
+  }
+}
+
+class ProgressionPurchaseException implements Exception {
+  const ProgressionPurchaseException(this.code);
+  final String code;
+  @override
+  String toString() => code;
+}
+), '')}/v1/account/progression/catalog',
+    );
+    final request = await _httpClient.getUrl(uri);
+    request.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
+      ..set(HttpHeaders.acceptHeader, 'application/json');
+    final response = await request.close().timeout(const Duration(seconds: 12));
+    final body = await response.transform(utf8.decoder).join()
+        .timeout(const Duration(seconds: 12));
+    final decoded = _decodeResponse(body);
+    if (response.statusCode != HttpStatus.ok) {
+      final error = decoded['error'];
+      throw ProgressionPurchaseException(
+        error is String && error.length <= 64 ? error : 'catalog_failed',
+      );
+    }
+    return ProgressionPurchaseCatalog.fromJson(decoded);
+  }
+
   Future<ProgressionPurchaseReceipt> purchase({
     required String purchaseType,
     required String targetId,
