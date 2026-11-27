@@ -90,7 +90,7 @@ jobs:
       # Emulator execution is an explicit release/QA action only. Phase work and
       # routine CI must not boot an Android emulator unless manually dispatched.
       - uses: reactivecircus/android-emulator-runner@v2
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.number == 21)
         # GitHub-hosted Linux runners do not expose KVM to this job. The
         # emulator exits immediately with "-accel off" unless TCG is explicitly
         # opted into; keep the longer boot window for software CPU emulation.
