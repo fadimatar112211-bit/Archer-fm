@@ -8,7 +8,7 @@ on:
       - 'supabase/validation/**'
       - '.github/workflows/supabase-phase5.yml'
   pull_request:
-    branches: [feature/phase-5-account-cloud-persistence]
+    branches: [feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
     paths:
       - 'supabase/migrations/**'
       - 'supabase/validation/**'
