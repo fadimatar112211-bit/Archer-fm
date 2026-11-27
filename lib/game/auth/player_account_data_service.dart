@@ -57,7 +57,8 @@ class PlayerAccountDataService {
         rawBalance < 0 ||
         rawBalance != rawBalance.toInt() ||
         revision is! num ||
-        revision < 0) {
+        revision < 0 ||
+        revision != revision.toInt()) {
       throw const FormatException('Invalid player wallet values.');
     }
     return PlayerWallet(
@@ -73,7 +74,11 @@ class PlayerAccountDataService {
         .select('data, revision')
         .eq('user_id', _userId)
         .maybeSingle();
-    if (row == null || row['data'] is! Map || row['revision'] is! num) {
+    if (row == null ||
+        row['data'] is! Map ||
+        row['revision'] is! num ||
+        (row['revision'] as num) < 0 ||
+        (row['revision'] as num) != (row['revision'] as num).toInt()) {
       throw const FormatException('Invalid player monster progression record.');
     }
     return PlayerMonsterProgress.fromSaveData(
@@ -240,7 +245,9 @@ class PlayerCurrencyTransaction {
     final reason = json['reason'];
     final reference = json['reference_id'];
     if (id is! num ||
+        id != id.toInt() ||
         amount is! num ||
+        amount != amount.toInt() ||
         reason is! String ||
         (reference != null && reference is! String)) {
       throw const FormatException('Invalid currency transaction.');
@@ -284,9 +291,16 @@ class PlayerMatchResult {
     if (id is! String ||
         matchId is! String ||
         placement is! num ||
+        placement != placement.toInt() ||
         score is! num ||
+        score != score.toInt() ||
         crystals is! num ||
+        crystals != crystals.toInt() ||
         reason is! String ||
+        reason.isEmpty ||
+        reason.length > 48 ||
+        id.isEmpty ||
+        matchId.isEmpty ||
         placement.toInt() < 1 ||
         placement.toInt() > 4 ||
         score < 0 ||
