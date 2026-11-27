@@ -4,16 +4,16 @@ These files are **templates only**. Copy them to a server-only directory; never 
 
 ## Files and runtime wiring
 
-- `config/progression-economy.example.json` → `/etc/archer-fm/progression-economy.json`
-- `config/match-combat.example.json` → `/etc/archer-fm/match-combat.json`
-- `config/match-rewards.example.json` → `/etc/archer-fm/match-rewards.json`
+- `config/progression-economy.example.json` → `/etc/archerfm/progression-economy.json`
+- `config/match-combat.example.json` → `/etc/archerfm/match-combat.json`
+- `config/match-rewards.example.json` → `/etc/archerfm/match-rewards.json`
 
 Set these environment variables for the production gateway:
 
 ```sh
-ARCHER_FM_PROGRESSION_ECONOMY_CONFIG=/etc/archer-fm/progression-economy.json
-ARCHER_FM_COMBAT_CONFIG=/etc/archer-fm/match-combat.json
-ARCHER_FM_MATCH_REWARDS_CONFIG=/etc/archer-fm/match-rewards.json
+ARCHER_FM_PROGRESSION_ECONOMY_CONFIG=/etc/archerfm/progression-economy.json
+ARCHER_FM_COMBAT_CONFIG=/etc/archerfm/match-combat.json
+ARCHER_FM_MATCH_REWARDS_CONFIG=/etc/archerfm/match-rewards.json
 ```
 
 The gateway now fails closed if any of the three paths is missing, unreadable, or invalid. It validates the monster purchase costs against the combat progression costs before opening the listener. Match reward values are read only by the server and applied by the existing idempotent match-settlement path.
@@ -23,13 +23,13 @@ The gateway now fails closed if any of the three paths is missing, unreadable, o
 Run on the server as an administrator, then replace the example values only through an approved deployment change:
 
 ```sh
-sudo install -d -o root -g archer-fm -m 0750 /etc/archer-fm
-sudo install -o root -g archer-fm -m 0640 config/progression-economy.example.json /etc/archer-fm/progression-economy.json
-sudo install -o root -g archer-fm -m 0640 config/match-combat.example.json /etc/archer-fm/match-combat.json
-sudo install -o root -g archer-fm -m 0640 config/match-rewards.example.json /etc/archer-fm/match-rewards.json
+sudo install -d -o root -g archerfm -m 0750 /etc/archerfm
+sudo install -o root -g archerfm -m 0640 config/progression-economy.example.json /etc/archerfm/progression-economy.json
+sudo install -o root -g archerfm -m 0640 config/match-combat.example.json /etc/archerfm/match-combat.json
+sudo install -o root -g archerfm -m 0640 config/match-rewards.example.json /etc/archerfm/match-rewards.json
 ```
 
-The service account must be a member of the `archer-fm` group. Do not make these files world-readable. Keep the directory outside the repository, Flutter assets, Docker public volume mounts, and web document roots. Back up the files securely and review changes before restart.
+The service account must be a member of the `archerfm` group. Do not make these files world-readable. Keep the directory outside the repository, Flutter assets, Docker public volume mounts, and web document roots. Back up the files securely and review changes before restart.
 
 Supabase credentials remain separate environment secrets (for example in a root-owned systemd EnvironmentFile with mode 0600). Never place service-role keys in any JSON configuration or commit them to Git.
 
