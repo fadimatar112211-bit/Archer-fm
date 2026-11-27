@@ -267,3 +267,13 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - A fresh workflow for the whitespace-validation fix is running as [45912518505](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912518505).
 - A second workflow for the latest documentation/branch head is [45912528555](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45912528555).
 - At the latest poll, the first run had reached Flutter analysis and the second was still setting up Flutter. Neither had yet reported a final result.
+
+## 21. PostgreSQL migration smoke test — 2026-11-27
+
+- Fixed the profile timestamp trigger function's dollar-quoted PL/pgSQL body. The migration previously contained an invalid delimiter; this was found during a direct source review before a live Supabase rollout.
+- Added `.github/workflows/supabase-phase5.yml`, which starts PostgreSQL 16, creates a minimal Supabase Auth-compatible schema/roles, applies the Phase 5 migration, and runs the RLS/privilege assertion script.
+- The workflow also inserts a new Auth user and verifies that profile, hero-progress and monster-progress rows are provisioned by the Auth trigger.
+- It updates the profile twice and verifies `updated_at` advances, then verifies the database rejects whitespace-padded display names.
+- PostgreSQL migration smoke test [45968811877](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811877) completed successfully. Migration apply, all privilege assertions, Auth provisioning and profile constraint/timestamp checks passed.
+- This validates the SQL against PostgreSQL 16 with a minimal Supabase-compatible Auth schema. It is not a substitute for applying the migration to the actual Supabase staging project and testing its real Auth/RLS configuration.
+- Flutter/Android validation for the same branch head is running as [45968811852](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811852); it had not completed at the time of this report update.
