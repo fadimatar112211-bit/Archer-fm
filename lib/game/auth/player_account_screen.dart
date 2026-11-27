@@ -16,6 +16,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
   late final PlayerAccountDataService _data;
   PlayerProfile? _profile;
   PlayerWallet? _wallet;
+  PlayerHeroProgress? _heroProgress;
   PlayerMonsterProgress? _monsterProgress;
   List<PlayerCurrencyTransaction> _transactions = const [];
   List<PlayerMatchResult> _matches = const [];
@@ -38,6 +39,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       final values = await Future.wait<Object>([
         _data.loadProfile(),
         _data.loadWallet(),
+        _data.loadHeroProgress(),
         _data.loadMonsterProgress(),
         _data.loadCurrencyHistory(limit: 12),
         _data.loadRecentMatches(limit: 12),
@@ -46,9 +48,10 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       setState(() {
         _profile = values[0] as PlayerProfile;
         _wallet = values[1] as PlayerWallet;
-        _monsterProgress = values[2] as PlayerMonsterProgress;
-        _transactions = values[3] as List<PlayerCurrencyTransaction>;
-        _matches = values[4] as List<PlayerMatchResult>;
+        _heroProgress = values[2] as PlayerHeroProgress;
+        _monsterProgress = values[3] as PlayerMonsterProgress;
+        _transactions = values[4] as List<PlayerCurrencyTransaction>;
+        _matches = values[5] as List<PlayerMatchResult>;
         _loading = false;
       });
     } catch (_) {
@@ -167,6 +170,29 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+                      Text('مستويات الأبطال', style: Theme.of(context).textTheme.titleLarge),
+                      Card(
+                        child: Column(
+                          children: [
+                            _heroLevelTile('رينجر', _heroProgress?.rangerLevel),
+                            _heroLevelTile('فليم', _heroProgress?.flameLevel),
+                            _heroLevelTile('شادو', _heroProgress?.shadowLevel),
+                            _heroLevelTile('ستورم', _heroProgress?.stormLevel),
+                            const Divider(height: 1),
+                            ListTile(
+                              dense: true,
+                              title: const Text('الأسلحة المفتوحة'),
+                              trailing: Text('${_heroProgress?.unlockedWeaponCount ?? 0}'),
+                            ),
+                            ListTile(
+                              dense: true,
+                              title: const Text('الأسلحة المطوّرة'),
+                              trailing: Text('${_heroProgress?.weaponUpgradeCount ?? 0}'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
                       Text('مستويات الوحوش', style: Theme.of(context).textTheme.titleLarge),
                       Card(
                         child: Column(
@@ -223,6 +249,16 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                 ),
     );
   }
+
+  Widget _heroLevelTile(String title, int? level) => ListTile(
+        dense: true,
+        leading: const Icon(Icons.shield_outlined),
+        title: Text(title),
+        trailing: Text(
+          level == null ? '—' : 'المستوى $level / 40',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
 
   Widget _monsterLevelTile(String title, int? level) => ListTile(
         dense: true,
