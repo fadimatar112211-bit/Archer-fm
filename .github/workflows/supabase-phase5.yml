@@ -119,3 +119,77 @@ jobs:
           end;
           $assert$;
           SQL
+      - name: Verify atomic and idempotent match settlement
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          do $settlement_test$
+          declare
+            user_id constant uuid := '123e4567-e89b-42d3-a456-426614174000';
+            first_receipt record;
+            retry_receipt record;
+            stored_balance bigint;
+            ledger_rows integer;
+            stored_results integer;
+          begin
+            select * into first_receipt
+            from public.finalize_match_player_result(
+              'smoke-match-1',
+              user_id,
+              1::smallint,
+              900::bigint,
+              4::smallint,
+              'timeExpired',
+              50::bigint,
+              'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+            );
+            if first_receipt.result_id is null
+               or first_receipt.currency_balance <> 50
+               or first_receipt.reward_transaction_id is null then
+              raise exception 'first match settlement returned an invalid receipt';
+            end if;
+
+            select * into retry_receipt
+            from public.finalize_match_player_result(
+              'smoke-match-1',
+              user_id,
+              1::smallint,
+              900::bigint,
+              4::smallint,
+              'timeExpired',
+              50::bigint,
+              'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+            );
+            if retry_receipt.result_id <> first_receipt.result_id
+               or retry_receipt.reward_transaction_id <> first_receipt.reward_transaction_id then
+              raise exception 'idempotent retry returned a different settlement receipt';
+            end if;
+
+            select (data->>'permanentCurrency')::bigint into stored_balance
+            from public.hero_progress where user_id = settlement_test.user_id;
+            select count(*) into ledger_rows
+            from public.currency_transactions where user_id = settlement_test.user_id;
+            select count(*) into stored_results
+            from public.match_results
+            where user_id = settlement_test.user_id and match_id = 'smoke-match-1';
+            if stored_balance <> 50 or ledger_rows <> 1 or stored_results <> 1 then
+              raise exception 'idempotent settlement duplicated or lost the reward';
+            end if;
+
+            begin
+              perform public.finalize_match_player_result(
+                'smoke-match-1',
+                user_id,
+                1::smallint,
+                900::bigint,
+                4::smallint,
+                'timeExpired',
+                99::bigint,
+                'smoke-match-1:user:123e4567-e89b-42d3-a456-426614174000:reward:v1'
+              );
+              raise exception 'conflicting match retry was unexpectedly accepted';
+            exception when unique_violation then
+              null;
+            end;
+          end;
+          $settlement_test$;
+          SQL
