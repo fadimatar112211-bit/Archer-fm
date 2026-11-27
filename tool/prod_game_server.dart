@@ -13,6 +13,7 @@ import 'package:archer_fm/game/network/supabase_match_settlement_store.dart';
 import 'package:archer_fm/game/network/file_match_settlement_outbox.dart';
 import 'package:archer_fm/game/progression/supabase_hero_progress_store.dart';
 import 'package:archer_fm/monsters/supabase_monster_progress_store.dart';
+import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/game/network/websocket_game_host.dart';
 
 /// Production-oriented gateway entry point.
@@ -88,6 +89,25 @@ Future<void> main() async {
     return;
   }
 
+  final monsterProgressionPolicy = combatConfiguration.monsterProgressionPolicy;
+  if (monsterProgressionPolicy == null) {
+    stderr.writeln(
+      'Production combat configuration must include approved monsterProgressionPolicy growth and costs; cloud upgrades must affect live monster stats.',
+    );
+    exitCode = 65;
+    return;
+  }
+  try {
+    progressionEconomy.validateMonsterUpgradeCosts({
+      for (final type in MonsterType.values)
+        type.name: monsterProgressionPolicy.upgradeCosts[type]!,
+    });
+  } on FormatException catch (error) {
+    stderr.writeln('Monster purchase/combat progression mismatch: $error');
+    exitCode = 65;
+    return;
+  }
+
   final bindAddress = InternetAddress.tryParse(
         Platform.environment['ARCHER_FM_BIND_ADDRESS'] ?? '127.0.0.1',
       ) ??
@@ -118,10 +138,7 @@ Future<void> main() async {
   );
   final heroProgressStore = SupabaseHeroProgressStore(persistenceClient);
   final monsterProgressStore = SupabaseMonsterProgressStore(persistenceClient);
-  final monsterProgressionPolicy = combatConfiguration.monsterProgressionPolicy;
-  final loadAccountMonsterProgression = monsterProgressionPolicy == null
-      ? null
-      : (String accountId) async => monsterProgressionPolicy.restore(
+  final loadAccountMonsterProgression = (String accountId) async => monsterProgressionPolicy.restore(
             catalog: combatConfiguration.monsterCatalog,
             saveData: await monsterProgressStore.loadData(accountId),
           );
