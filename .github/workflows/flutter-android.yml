@@ -61,40 +61,35 @@ jobs:
               content = """pluginManagement {
                   repositories {
                       google()
+                      maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }
                       mavenCentral()
                       gradlePluginPortal()
                   }
               }
 
           """ + content
-          else:
-              prefix, *rest = content.split("dependencyResolutionManagement", 1)
-              required = ["google()", "mavenCentral()", "gradlePluginPortal()"]
-          mirror = 'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
-              missing = [repo for repo in required if repo not in prefix]
-              if missing:
-                  marker = "repositories {"
-                  if marker not in prefix:
-                      raise SystemExit("Flutter Gradle pluginManagement has no repositories block")
-                  pos = prefix.index(marker) + len(marker)
-                  prefix = prefix[:pos] + "\n        " + "\n        ".join(missing) + prefix[pos:]
-                  content = prefix + ("dependencyResolutionManagement" + rest[0] if rest else "")
-          # Explicit Plugin Portal Maven endpoint as a fallback for hosted
-          # runners that fail the Gradle DSL shorthand repository lookup.
-          if "https://plugins.gradle.org/m2/" not in content:
-              marker = "repositories {"
-              pos = content.index(marker) + len(marker)
-              content = content[:pos] + '\n        maven { url = uri("https://plugins.gradle.org/m2/") }' + content[pos:]
-          # Maven Central can temporarily rate-limit hosted runners (HTTP 429).
-          # Put Google's read-only Maven Central mirror first for Flutter's included
-          # Gradle build as well as plugin marker/dependency resolution.
-          if mirror not in content:
-              marker = "repositories {"
-              pos = content.index(marker) + len(marker)
-              content = content[:pos] + "\n        " + mirror + content[pos:]
+
+          prefix, separator, suffix = content.partition("dependencyResolutionManagement")
+          if not separator:
+              prefix, suffix = content, ""
+          marker = "repositories {"
+          if marker not in prefix:
+              raise SystemExit("Flutter Gradle pluginManagement has no repositories block")
+          pos = prefix.index(marker) + len(marker)
+          required = [
+              'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }',
+              "google()",
+              "mavenCentral()",
+              "gradlePluginPortal()",
+              'maven { url = uri("https://plugins.gradle.org/m2/") }',
+          ]
+          missing = [repo for repo in required if repo not in prefix]
+          if missing:
+              prefix = prefix[:pos] + "\n        " + "\n        ".join(missing) + prefix[pos:]
+          content = prefix + (separator + suffix if separator else "")
           settings.write_text(content)
           PY
-          grep -A8 '^pluginManagement {' "$SETTINGS"
+          grep -A10 '^pluginManagement {' "$SETTINGS"
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
