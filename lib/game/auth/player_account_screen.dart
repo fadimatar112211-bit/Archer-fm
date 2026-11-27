@@ -183,6 +183,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
         'weapon_already_unlocked_or_invalid_save' => 'السلاح مفتوح مسبقاً',
         'weapon_max_level' || 'monster_max_level' || 'weapon_max_level_or_unknown' || 'monster_max_level_or_invalid' => 'وصلت إلى المستوى الأقصى',
         'progression_purchase_revision_conflict' => 'تغيّرت بياناتك؛ حدّث الحساب وحاول مجدداً',
+        'quote_changed' => 'تغيّر السعر قبل التأكيد؛ راجع السعر الجديد وحاول مجدداً',
         'purchase_service_not_configured' || 'purchase_service_unavailable' => 'خدمة الشراء غير مهيأة حالياً',
         'unauthorized' => 'انتهت جلسة الحساب؛ سجّل الدخول مجدداً',
         _ => 'تعذرت العملية. تحقق من الاتصال وحاول مجدداً.',
