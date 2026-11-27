@@ -112,7 +112,25 @@ class SupabaseRestClient {
     final decoded = await _request(
       'POST',
       baseUri.replace(
-        path: '${baseUri.path.replaceFirst(RegExp(r'/+
+        path: '${baseUri.path.replaceFirst(RegExp(r'/+$'), '')}/rest/v1/rpc/purchase_player_progression',
+      ),
+      body: {
+        'p_user_id': trustedAccountId.toLowerCase(),
+        'p_purchase_type': purchaseType,
+        'p_target_id': targetId,
+        'p_cost': cost,
+        'p_max_level': maxLevel,
+        'p_expected_hero_revision': expectedHeroRevision,
+        'p_expected_monster_revision': expectedMonsterRevision,
+        'p_idempotency_key': idempotencyKey,
+      },
+    );
+    if (decoded is List && decoded.length == 1 && decoded.single is Map) {
+      return Map<String, dynamic>.from(decoded.single as Map);
+    }
+    throw const FormatException('Supabase did not return one progression purchase.');
+  }
+
   /// The account UUID must come from the verified access-token subject.
   Future<Map<String, dynamic>> finalizeMatchPlayerResult({
     required String matchId,
