@@ -85,6 +85,12 @@ begin
      )
      or has_function_privilege(
        'authenticated', 'public.finalize_match_player_result(text,uuid,smallint,bigint,smallint,text,bigint,text)', 'EXECUTE'
+     )
+     or has_function_privilege(
+       'anon', 'public.purchase_player_progression(uuid,text,text,bigint,integer,bigint,bigint,text)', 'EXECUTE'
+     )
+     or has_function_privilege(
+       'authenticated', 'public.purchase_player_progression(uuid,text,text,bigint,integer,bigint,bigint,text)', 'EXECUTE'
      ) then
     raise exception 'A client role can execute a server-only persistence RPC';
   end if;
@@ -97,6 +103,9 @@ begin
      )
      or not has_function_privilege(
        'service_role', 'public.finalize_match_player_result(text,uuid,smallint,bigint,smallint,text,bigint,text)', 'EXECUTE'
+     )
+     or not has_function_privilege(
+       'service_role', 'public.purchase_player_progression(uuid,text,text,bigint,integer,bigint,bigint,text)', 'EXECUTE'
      ) then
     raise exception 'service_role is missing a required persistence RPC grant';
   end if;
