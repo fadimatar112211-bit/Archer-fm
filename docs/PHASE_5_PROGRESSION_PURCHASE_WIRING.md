@@ -12,9 +12,13 @@
 
 ## Required deployment configuration — intentionally no invented economy
 
-The gateway now requires:
+The gateway requires all three protected configuration paths:
 
-`ARCHER_FM_PROGRESSION_ECONOMY_CONFIG=/secure/path/progression-economy.json`
+`ARCHER_FM_PROGRESSION_ECONOMY_CONFIG=/etc/archer-fm/progression-economy.json`
+
+`ARCHER_FM_COMBAT_CONFIG=/etc/archer-fm/match-combat.json`
+
+`ARCHER_FM_MATCH_REWARDS_CONFIG=/etc/archer-fm/match-rewards.json`
 
 The file must be mounted/readable by the server process and must not be packaged in the mobile app or committed with secret deployment data. Its JSON schema is:
 
@@ -28,13 +32,21 @@ Canonical weapon IDs:
 - Shadow: `shadow_twinfangs`, `shadow_nightfang`, `shadow_soulblades`
 - Storm: `storm_spear`, `storm_halberd`, `storm_lance`
 
-The decoder fails closed if any item/level is missing, unknown, zero, negative, or malformed. No economy values were selected in this implementation. The game operator must approve and populate the actual prices before the gateway can start.
+The decoder fails closed if any item/level is missing, unknown, negative, or malformed. The four starter weapons must have unlockCost 0; the other eight unlockable weapons must have a positive cost. The approved launch catalog is now stored as a template in `config/progression-economy.example.json`. Copy it to the protected server path; do not package it in the app.
+
+Approved weapon unlock prices: each hero's first weapon is free and already owned; second weapon 1,200 gold; third weapon 2,500 gold. Weapon upgrade target levels 1–40 use round(15 + 3 × (level - 1) + 0.35 × (level - 1)^2).
+
+Approved monster upgrade target levels 2–40 use round(10 + 2 × (level - 2) + 0.25 × (level - 2)^2). The same prices are duplicated in `config/match-combat.example.json` under `monsterProgressionPolicy`; startup verifies exact equality.
+
+Monster stat growth is now set in the combat template: Runner +1.5% health/+1.2% damage/+6% max speed by level 40; Tank +3% health/+1% damage; Stalker +1.8% health/+1.8% damage/+4% max speed; Ranged +1.5% health/+1.7% damage. Speed growth is distributed linearly over levels 2–40.
+
+Placement rewards are now loaded from the protected `ARCHER_FM_MATCH_REWARDS_CONFIG` file: 1st 140, 2nd 110, 3rd 85, 4th 60 permanent gold. This is the rank reward supported by the current settlement interface; participation/objective/kill/damage bonuses are not yet wired and must not be claimed as implemented.
 
 ## Monster upgrades must affect live combat
 
 The production combat config must include a complete `monsterProgressionPolicy` with owner-approved `healthPerLevel`, `damagePerLevel`, and `speedPerLevel` for all four monster types, plus target-level costs from 2–40. The server refuses to start if this policy is missing or if its monster upgrade prices differ from the purchase economy file. This prevents purchases from changing account levels without changing actual in-match monster stats.
 
-The purchase economy file and combat config are separate protected operator files, but their monster upgrade prices must match exactly.
+The purchase economy file and combat config are separate protected operator files, but their monster upgrade prices must match exactly. Example templates and installation instructions are in `docs/PROTECTED_SERVER_ECONOMY_CONFIGURATION.md`. The reward schedule is a third protected file.
 
 The Flutter build must receive the public HTTPS gateway origin (no path/query) using:
 
