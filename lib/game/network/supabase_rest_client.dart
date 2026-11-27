@@ -59,6 +59,34 @@ class SupabaseRestClient {
     return row;
   }
 
+  /// Looks up an existing server-side purchase idempotency record before
+  /// checking a newly quoted level-dependent price. Used only by trusted code.
+  Future<Map<String, dynamic>?> loadProgressionPurchaseByIdempotencyKey({
+    required String trustedAccountId,
+    required String idempotencyKey,
+  }) async {
+    if (!_isUuid(trustedAccountId) ||
+        idempotencyKey.isEmpty || idempotencyKey.length > 128) {
+      throw ArgumentError('Invalid purchase idempotency lookup.');
+    }
+    final uri = baseUri.replace(
+      path: '${baseUri.path.replaceFirst(RegExp(r'/+$'), '')}/rest/v1/currency_transactions',
+      queryParameters: {
+        'user_id': 'eq.${trustedAccountId.toLowerCase()}',
+        'idempotency_key': 'eq.$idempotencyKey',
+        'select': 'amount,reason,reference_id',
+        'limit': '1',
+      },
+    );
+    final decoded = await _request('GET', uri);
+    if (decoded is! List || decoded.isEmpty) return null;
+    final row = decoded.first;
+    if (row is! Map<String, dynamic>) {
+      throw const FormatException('Invalid purchase idempotency record.');
+    }
+    return row;
+  }
+
   Future<int> saveProgression({
     required String rpc,
     required String trustedAccountId,
