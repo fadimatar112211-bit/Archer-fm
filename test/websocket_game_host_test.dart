@@ -306,6 +306,39 @@ void main() {
     await socket.close();
   });
 
+  test('disconnects an authenticated socket when its token is revoked', () async {
+    factory.accountBound = true;
+    var tokenRevoked = false;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      authenticationRecheckInterval: const Duration(milliseconds: 20),
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' && !tokenRevoked
+              ? 'verified-account'
+              : null,
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final welcomeFuture = _nextType(messages, 'welcome');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    await welcomeFuture;
+    expect(accountHost.connectedPlayerCount, 1);
+
+    tokenRevoked = true;
+    await socket.done.timeout(const Duration(seconds: 2));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(accountHost.connectedPlayerCount, 0);
+    expect((factory.sessions.values.single).handledCommands, 0);
+  });
+
   test('cloud restore failure rejects the handshake without welcome', () async {
     factory
       ..accountBound = true
