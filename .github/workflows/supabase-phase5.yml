@@ -1,0 +1,90 @@
+name: Supabase Phase 5 migration smoke test
+
+on:
+  push:
+    branches: [feature/phase-5-account-cloud-persistence]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/validation/**'
+      - '.github/workflows/supabase-phase5.yml'
+  pull_request:
+    branches: [feature/phase-5-account-cloud-persistence]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/validation/**'
+      - '.github/workflows/supabase-phase5.yml'
+  workflow_dispatch:
+
+jobs:
+  postgres-migration:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: archer_fm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d archer_fm_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: postgres
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/archer_fm_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create minimal Supabase auth roles and schema
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+          create role service_role nologin bypassrls;
+          create schema auth;
+          create table auth.users (
+            id uuid primary key,
+            email text unique
+          );
+          create or replace function auth.uid()
+          returns uuid
+          language sql
+          stable
+          set search_path = ''
+          as $auth_uid$
+            select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+          $auth_uid$;
+          SQL
+      - name: Apply Phase 5 migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202611270001_phase5_player_persistence.sql
+      - name: Assert RLS, client grants and server-only RPC privileges
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/validation/phase5_privileges.sql
+      - name: Verify new profile provisioning trigger
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users(id, email)
+          values ('123e4567-e89b-42d3-a456-426614174000', 'smoke@example.invalid');
+          do $assert$
+          begin
+            if not exists (
+              select 1 from public.player_profiles
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'profile provisioning trigger failed';
+            end if;
+            if not exists (
+              select 1 from public.hero_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'hero progression provisioning trigger failed';
+            end if;
+            if not exists (
+              select 1 from public.monster_progress
+              where user_id = '123e4567-e89b-42d3-a456-426614174000'
+            ) then
+              raise exception 'monster progression provisioning trigger failed';
+            end if;
+          end;
+          $assert$;
+          SQL
