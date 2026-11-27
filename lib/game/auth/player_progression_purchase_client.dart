@@ -18,6 +18,7 @@ class PlayerProgressionPurchaseClient {
   final SupabaseAccountService accountService;
   final String _apiUrl;
   final HttpClient _httpClient;
+  final Map<String, String> _pendingIdempotencyKeys = {};
 
   Future<ProgressionPurchaseCatalog> loadCatalog() async {
     final token = await _accessToken();
@@ -53,7 +54,11 @@ class PlayerProgressionPurchaseClient {
     final uri = base.replace(
       path: '${base.path.replaceFirst(RegExp(r'/+$'), '')}/v1/account/progression/purchase',
     );
-    final idempotencyKey = _newIdempotencyKey();
+    final operationKey = '$purchaseType:$targetId';
+    final idempotencyKey = _pendingIdempotencyKeys.putIfAbsent(
+      operationKey,
+      _newIdempotencyKey,
+    );
     final request = await _httpClient.postUrl(uri);
     request.headers
       ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
@@ -71,7 +76,9 @@ class PlayerProgressionPurchaseClient {
     if (response.statusCode != HttpStatus.ok) {
       throw ProgressionPurchaseException(_errorCode(decoded, 'purchase_failed'));
     }
-    return ProgressionPurchaseReceipt.fromJson(decoded);
+    final receipt = ProgressionPurchaseReceipt.fromJson(decoded);
+    _pendingIdempotencyKeys.remove(operationKey);
+    return receipt;
   }
 
   Future<String> _accessToken() async {
