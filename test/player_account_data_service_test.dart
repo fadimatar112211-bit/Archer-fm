@@ -59,6 +59,17 @@ void main() {
       expect(transaction.reason, 'weapon_upgrade');
     });
 
+    test('rejects fractional ledger values', () {
+      expect(
+        () => PlayerCurrencyTransaction.fromJson({
+          'id': 1.5,
+          'amount': 10,
+          'reason': 'match_reward',
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('rejects malformed ledger entries', () {
       expect(
         () => PlayerCurrencyTransaction.fromJson({
@@ -84,6 +95,20 @@ void main() {
       });
       expect(result.placement, 2);
       expect(result.crystalsRemaining, 4);
+    });
+
+    test('rejects fractional match result values', () {
+      expect(
+        () => PlayerMatchResult.fromJson({
+          'id': 'result-1',
+          'match_id': 'match-1',
+          'placement': 1,
+          'score': 7.5,
+          'crystals_remaining': 2,
+          'finish_reason': 'timeExpired',
+        }),
+        throwsFormatException,
+      );
     });
 
     test('rejects out-of-range placement and crystal counts', () {
