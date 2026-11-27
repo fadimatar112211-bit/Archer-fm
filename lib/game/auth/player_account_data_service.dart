@@ -202,6 +202,11 @@ class PlayerHeroProgress {
   final int unlockedWeaponCount;
   final int weaponUpgradeCount;
   final int revision;
+  final Set<String> unlockedWeaponIds;
+  final Map<String, int> weaponUpgradeLevels;
+
+  bool ownsWeapon(String weaponId) => unlockedWeaponIds.contains(weaponId);
+  int weaponLevel(String weaponId) => weaponUpgradeLevels[weaponId] ?? 0;
 
   factory PlayerHeroProgress.fromSaveData(
     Map<String, dynamic> data,
@@ -221,6 +226,8 @@ class PlayerHeroProgress {
           .where((level) => level > 0)
           .length,
       revision: revision,
+      unlockedWeaponIds: Set.unmodifiable(progress.unlockedWeaponIds),
+      weaponUpgradeLevels: Map.unmodifiable(progress.weaponUpgradeLevels),
     );
   }
 }
