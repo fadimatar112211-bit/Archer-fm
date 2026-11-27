@@ -344,3 +344,15 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - Hardened the server-only purchase RPC with an explicit allowlist of the 12 weapon IDs in the four-hero roster and the four supported monster types. Unknown IDs are rejected at the database boundary instead of relying solely on gateway validation.
 - Updated the PostgreSQL smoke workflow to use the real Ranger secondary weapon ID and to assert that unknown weapon and monster IDs are rejected. The workflow also applies migration 002 before running its atomic purchase, idempotency, insufficient-currency and revision-conflict assertions.
 - Changes are committed on the isolated Phase 5 branch. The updated PostgreSQL workflow must complete successfully before this hardening is considered validated; no result is claimed yet.
+
+
+## 24. Purchase allowlist validation-order correction — 2026-11-27
+
+- Inspected the failed PostgreSQL purchase smoke run [45976715973](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45976715973). The migrations and privilege checks passed; the purchase test failed because the unknown-weapon case supplied stale progression revisions after earlier successful purchases. The RPC therefore correctly raised a revision conflict before the test reached the unknown-ID assertion.
+- Corrected the RPC validation order: canonical weapon/monster target allowlists are now checked immediately after generic argument validation and before database row locks, idempotency/revision processing, or balance checks. An invalid catalog ID is rejected consistently even when the caller also supplies stale revisions.
+- Updated the SQL smoke test to deliberately submit stale revisions for the unknown-weapon case, proving that catalog validation is performed first. This is stronger than merely changing the test to use current revisions.
+- Fix commits: `715d93f5dd88d5e51802308b0b3d157083597244` (RPC validation order) and `dd4c4ee80f21593652b8e622308e8819503b0c6a` (workflow assertion). The intermediate workflow edit `0a0d5e6428c9bc7a2038d98bbab72aa780ce43b9` fixed the stale test inputs; the subsequent migration/test commits strengthened the validation contract.
+- Latest workflow runs for commit `dd4c4ee80f21593652b8e622308e8819503b0c6a` were still running at the time of this report update: PostgreSQL smoke [45977091196](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45977091196), Android validation [45977091205](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45977091205), and Match Rules checks [45977085172](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45977085172). No green result is claimed for this head yet.
+- Player-facing purchase commands remain intentionally unimplemented until the server-side catalog/economy configuration is approved. No weapon prices, monster upgrade prices, or monster growth values have been invented. Live Supabase staging, cross-device recovery, production WSS deployment and device runtime QA remain open.
+
+**Current acceptance status: IN PROGRESS — purchase validation fix awaiting CI; not ready for phase closure.**
