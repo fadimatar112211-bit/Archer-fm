@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../heroes/hero_roster.dart';
+
 import 'player_account_data_service.dart';
+import 'player_progression_purchase_client.dart';
 import 'supabase_account_service.dart';
 
 class PlayerAccountScreen extends StatefulWidget {
@@ -14,6 +17,9 @@ class PlayerAccountScreen extends StatefulWidget {
 
 class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
   late final PlayerAccountDataService _data;
+  late final PlayerProgressionPurchaseClient _purchaseClient;
+  ProgressionPurchaseCatalog? _purchaseCatalog;
+  final Set<String> _busyPurchases = {};
   PlayerProfile? _profile;
   PlayerWallet? _wallet;
   PlayerHeroProgress? _heroProgress;
@@ -27,6 +33,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
   void initState() {
     super.initState();
     _data = widget.accountService.playerData;
+    _purchaseClient = PlayerProgressionPurchaseClient(accountService: widget.accountService);
     _load();
   }
 
@@ -44,8 +51,15 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
         _data.loadCurrencyHistory(limit: 12),
         _data.loadRecentMatches(limit: 12),
       ]);
+      ProgressionPurchaseCatalog? catalog;
+      try {
+        catalog = await _purchaseClient.loadCatalog();
+      } catch (_) {
+        // Account data remains readable while the purchase gateway is deployed.
+      }
       if (!mounted) return;
       setState(() {
+        _purchaseCatalog = catalog;
         _profile = values[0] as PlayerProfile;
         _wallet = values[1] as PlayerWallet;
         _heroProgress = values[2] as PlayerHeroProgress;
@@ -108,9 +122,72 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
     }
   }
 
+  Future<void> _purchase(String purchaseType, String targetId) async {
+    final key = '$purchaseType:$targetId';
+    if (_busyPurchases.contains(key)) return;
+    setState(() => _busyPurchases.add(key));
+    try {
+      final receipt = await _purchaseClient.purchase(
+        purchaseType: purchaseType,
+        targetId: targetId,
+      );
+      if (!mounted) return;
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            receipt.alreadyApplied
+                ? 'تم تأكيد العملية السابقة دون خصم جديد'
+                : 'تمت العملية بنجاح • المستوى ${receipt.resultingLevel} • الرصيد ${receipt.currencyBalance}',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final code = error is ProgressionPurchaseException ? error.code : '';
+      final message = switch (code) {
+        'insufficient_currency' => 'رصيدك من العملات غير كافٍ',
+        'weapon_locked' => 'افتح السلاح أولاً',
+        'weapon_already_unlocked_or_invalid_save' => 'السلاح مفتوح مسبقاً',
+        'weapon_max_level' || 'monster_max_level' => 'وصلت إلى المستوى الأقصى',
+        'progression_purchase_revision_conflict' => 'تغيّرت بياناتك؛ حدّث الحساب وحاول مجدداً',
+        'purchase_service_not_configured' || 'purchase_service_unavailable' => 'خدمة الشراء غير مهيأة حالياً',
+        'unauthorized' => 'انتهت جلسة الحساب؛ سجّل الدخول مجدداً',
+        _ => 'تعذرت العملية. تحقق من الاتصال وحاول مجدداً.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      try {
+        await _load();
+      } catch (_) {}
+    } finally {
+      if (mounted) setState(() => _busyPurchases.remove(key));
+    }
+  }
+
+  Map<String, dynamic>? _weaponQuote(String id) {
+    for (final item in _purchaseCatalog?.weapons ?? const <Map<String, dynamic>>[]) {
+      if (item['id'] == id) return item;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _monsterQuote(String id) {
+    for (final item in _purchaseCatalog?.monsters ?? const <Map<String, dynamic>>[]) {
+      if (item['id'] == id) return item;
+    }
+    return null;
+  }
+
   Future<void> _signOut() async {
     await widget.accountService.signOut();
     if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    _purchaseClient.close();
+    super.dispose();
   }
 
   @override
@@ -193,14 +270,30 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+                      Text('الأسلحة وفتحها وتطويرها', style: Theme.of(context).textTheme.titleLarge),
+                      for (final hero in archerFmHeroes)
+                        Card(
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.shield_outlined),
+                                title: Text(hero.nameAr),
+                                subtitle: Text(hero.roleAr),
+                              ),
+                              for (final weapon in hero.weapons)
+                                _weaponPurchaseTile(weapon),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 18),
                       Text('مستويات الوحوش', style: Theme.of(context).textTheme.titleLarge),
                       Card(
                         child: Column(
                           children: [
-                            _monsterLevelTile('العدّاء', _monsterProgress?.runner),
-                            _monsterLevelTile('المدرّع', _monsterProgress?.tank),
-                            _monsterLevelTile('المتسلّل', _monsterProgress?.stalker),
-                            _monsterLevelTile('الرامي', _monsterProgress?.ranged),
+                            _monsterPurchaseTile('runner', 'العدّاء', _monsterProgress?.runner),
+                            _monsterPurchaseTile('tank', 'المدرّع', _monsterProgress?.tank),
+                            _monsterPurchaseTile('stalker', 'المتسلّل', _monsterProgress?.stalker),
+                            _monsterPurchaseTile('ranged', 'الرامي', _monsterProgress?.ranged),
                           ],
                         ),
                       ),
@@ -247,6 +340,72 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _weaponPurchaseTile(HeroWeapon weapon) {
+    final quote = _weaponQuote(weapon.id);
+    final owned = _heroProgress?.ownsWeapon(weapon.id) ?? false;
+    final level = _heroProgress?.weaponLevel(weapon.id) ?? 0;
+    final cost = quote?['cost'];
+    final available = quote?['available'] == true && cost is int;
+    final purchaseType = quote?['purchaseType'] as String? ??
+        (owned ? 'weapon_upgrade' : 'weapon_unlock');
+    final busyKey = '$purchaseType:${weapon.id}';
+    return ListTile(
+      dense: true,
+      title: Text(weapon.nameAr),
+      subtitle: Text(owned ? 'المستوى $level / 40' : 'مغلق'),
+      trailing: SizedBox(
+        width: 128,
+        child: FilledButton.tonal(
+          onPressed: available && !_busyPurchases.contains(busyKey)
+              ? () => _purchase(purchaseType, weapon.id)
+              : null,
+          child: Text(
+            quote == null
+                ? 'غير متاح'
+                : available
+                    ? '${owned ? 'تطوير' : 'فتح'} • $cost'
+                    : owned && level >= 40
+                        ? 'الحد الأقصى'
+                        : 'غير متاح',
+            maxLines: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _monsterPurchaseTile(String id, String title, int? level) {
+    final quote = _monsterQuote(id);
+    final cost = quote?['cost'];
+    final available = quote?['available'] == true && cost is int;
+    const purchaseType = 'monster_upgrade';
+    final busyKey = '$purchaseType:$id';
+    return ListTile(
+      dense: true,
+      leading: const Icon(Icons.pets_outlined),
+      title: Text(title),
+      subtitle: Text(level == null ? '—' : 'المستوى $level / 40'),
+      trailing: SizedBox(
+        width: 128,
+        child: FilledButton.tonal(
+          onPressed: available && !_busyPurchases.contains(busyKey)
+              ? () => _purchase(purchaseType, id)
+              : null,
+          child: Text(
+            quote == null
+                ? 'غير متاح'
+                : available
+                    ? 'تطوير • $cost'
+                    : (level ?? 1) >= 40
+                        ? 'الحد الأقصى'
+                        : 'غير متاح',
+            maxLines: 1,
+          ),
+        ),
+      ),
     );
   }
 
