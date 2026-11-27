@@ -4,13 +4,14 @@ import 'dart:io';
 
 import 'monster_models.dart';
 import 'monster_progression.dart';
+import 'monster_progress_store.dart';
 
 /// Single-node persistence adapter for permanent monster levels.
 ///
 /// The account ID must come from a trusted authenticated session. This file
 /// store is suitable for development/single-node hosting, not as a replacement
 /// for a production cloud database or distributed account store.
-class FileMonsterProgressStore {
+class FileMonsterProgressStore implements MonsterProgressStore {
   FileMonsterProgressStore(this.directory);
 
   final Directory directory;
@@ -31,6 +32,7 @@ class FileMonsterProgressStore {
         '${directory.path}${Platform.pathSeparator}$key.monsters.json',
       );
 
+  @override
   Future<Map<String, Object?>> loadData(String trustedAccountId) async {
     final key = _keyFor(trustedAccountId);
     await (_writeQueue[key] ?? Future<void>.value());
@@ -57,6 +59,7 @@ class FileMonsterProgressStore {
     return data;
   }
 
+  @override
   Future<void> save(
     String trustedAccountId,
     MonsterProgression progression,

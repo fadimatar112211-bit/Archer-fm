@@ -1,4 +1,5 @@
 import '../../monsters/monster_models.dart';
+import 'monster_progression_policy.dart';
 import 'match_combat_authority.dart';
 
 /// Strict decoder for a development/server-supplied match combat configuration.
@@ -62,6 +63,13 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     throw const FormatException('ultimateEnergyCosts must map every Ultimate ID to an integer.');
   }
   final ultimateEnergyCosts = Map<String, int>.from(rawEnergyCosts);
+  final rawMonsterPolicy = json['monsterProgressionPolicy'];
+  if (rawMonsterPolicy != null && rawMonsterPolicy is! Map) {
+    throw const FormatException('monsterProgressionPolicy must be an object.');
+  }
+  final monsterProgressionPolicy = rawMonsterPolicy == null
+      ? null
+      : MonsterProgressionPolicy.fromJson(rawMonsterPolicy as Map);
 
   return MatchCombatConfiguration(
     monsterCatalog: MonsterCatalog(definitions),
@@ -78,6 +86,7 @@ MatchCombatConfiguration decodeMatchCombatConfiguration(
     monsterKillResources: monsterKillResources,
     heroKillScore: heroKillScore,
     heroKillResources: heroKillResources,
+    monsterProgressionPolicy: monsterProgressionPolicy,
   );
 }
 

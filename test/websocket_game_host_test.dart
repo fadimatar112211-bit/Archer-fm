@@ -92,16 +92,57 @@ class _FakeScopedSession extends _FakeSession
       };
 }
 
+class _FakeAccountSession extends _FakeSession
+    implements AccountBoundGameServerSession, AccountProvisioningGameServerSession {
+  _FakeAccountSession(super.code);
+
+  final Map<String, String> _accounts = {};
+  bool provisioningComplete = false;
+  bool failProvisioning = false;
+
+  @override
+  GameServerPlayer? joinForAccount(String accountId) {
+    if (_accounts.containsValue(accountId)) return null;
+    final player = join();
+    if (player != null) _accounts[player.id] = accountId;
+    return player;
+  }
+
+  @override
+  bool ownsResumeToken(String resumeToken, String accountId) =>
+      _players.any((player) =>
+          player.resumeToken == resumeToken &&
+          _accounts[player.id] == accountId);
+
+  @override
+  Future<void> prepareAccount(GameServerPlayer player, String accountId) async {
+    if (_accounts[player.id] != accountId) {
+      throw StateError('account mismatch');
+    }
+    if (failProvisioning) throw StateError('cloud restore failed');
+    provisioningComplete = true;
+  }
+}
+
 class _FakeFactory {
   final Map<String, _FakeSession> sessions = {};
   bool scopedSnapshots = false;
+  bool accountBound = false;
+  bool failProvisioning = false;
 
   GameServerSession create(String code, Map<String, dynamic> message) =>
       sessions.putIfAbsent(
         code,
-        () => scopedSnapshots
-            ? _FakeScopedSession(code)
-            : _FakeSession(code),
+        () {
+          if (accountBound) {
+            final session = _FakeAccountSession(code)
+              ..failProvisioning = failProvisioning;
+            return session;
+          }
+          return scopedSnapshots
+              ? _FakeScopedSession(code)
+              : _FakeSession(code);
+        },
       );
 }
 
@@ -239,4 +280,217 @@ void main() {
     expect(response.statusCode, HttpStatus.badRequest);
     client.close(force: true);
   });
+
+  test('verified account is hydrated before the host sends welcome', () async {
+    factory.accountBound = true;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' ? 'verified-account' : null,
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final welcomeFuture = _nextType(messages, 'welcome');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    final welcome = await welcomeFuture;
+    expect(welcome['id'], 'p1');
+    expect((factory.sessions.values.single as _FakeAccountSession).provisioningComplete, isTrue);
+    await socket.close();
+  });
+
+  test('authenticated purchase HTTP routes derive account identity from bearer token', () async {
+    factory.accountBound = true;
+    String? purchasedAccount;
+    var purchaseCalls = 0;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' ? 'verified-account' : null,
+      progressionCatalogHandler: ({required trustedAccountId}) async {
+        expect(trustedAccountId, 'verified-account');
+        return {
+          'weapons': [
+            {'id': 'ranger_longbow', 'cost': 120, 'available': true},
+          ],
+          'monsters': [
+            {'id': 'runner', 'cost': 60, 'available': true},
+          ],
+        };
+      },
+      progressionPurchaseHandler: ({
+        required trustedAccountId,
+        required purchaseType,
+        required targetId,
+        required idempotencyKey,
+        required quotedCost,
+      }) async {
+        purchaseCalls++;
+        expect(quotedCost, 120);
+        purchasedAccount = trustedAccountId;
+        expect(purchaseType, 'weapon_unlock');
+        expect(targetId, 'ranger_longbow');
+        expect(idempotencyKey, 'retry-key-1');
+        return {
+          'currency_balance': 880,
+          'hero_revision': 2,
+          'monster_revision': 1,
+          'resulting_level': 0,
+          'already_applied': false,
+        };
+      },
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+    final client = HttpClient();
+
+    final catalogRequest = await client.getUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/catalog'),
+    );
+    catalogRequest.headers.set(HttpHeaders.authorizationHeader, 'Bearer valid-token');
+    final catalogResponse = await catalogRequest.close();
+    final catalog = jsonDecode(await catalogResponse.transform(utf8.decoder).join())
+        as Map<String, dynamic>;
+    expect(catalogResponse.statusCode, HttpStatus.ok);
+    expect(catalog['type'], 'progression_catalog');
+
+    final purchaseRequest = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    purchaseRequest.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer valid-token')
+      ..contentType = ContentType.json;
+    purchaseRequest.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key-1',
+      'quotedCost': 120,
+    }));
+    final purchaseResponse = await purchaseRequest.close();
+    final receipt = jsonDecode(await purchaseResponse.transform(utf8.decoder).join())
+        as Map<String, dynamic>;
+    expect(purchaseResponse.statusCode, HttpStatus.ok);
+    expect(receipt['currency_balance'], 880);
+    expect(purchasedAccount, 'verified-account');
+    expect(purchaseCalls, 1);
+
+    final spoofRequest = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    spoofRequest.headers
+      ..set(HttpHeaders.authorizationHeader, 'Bearer valid-token')
+      ..contentType = ContentType.json;
+    spoofRequest.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key-2',
+      'userId': 'attacker-account',
+      'cost': 1,
+      'expectedHeroRevision': 0,
+    }));
+    final spoofResponse = await spoofRequest.close();
+    expect(spoofResponse.statusCode, HttpStatus.badRequest);
+    expect(purchaseCalls, 1);
+    client.close(force: true);
+  });
+
+  test('purchase HTTP route rejects missing bearer authentication', () async {
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async => null,
+      progressionPurchaseHandler: ({
+        required trustedAccountId,
+        required purchaseType,
+        required targetId,
+        required idempotencyKey,
+        required quotedCost,
+      }) async => throw StateError('must not be called'),
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+    final client = HttpClient();
+    final request = await client.postUrl(
+      accountHost.uri.replace(scheme: 'http', path: '/v1/account/progression/purchase'),
+    );
+    request.headers.contentType = ContentType.json;
+    request.write(jsonEncode({
+      'purchaseType': 'weapon_unlock',
+      'targetId': 'ranger_longbow',
+      'idempotencyKey': 'retry-key',
+    }));
+    final response = await request.close();
+    expect(response.statusCode, HttpStatus.unauthorized);
+    client.close(force: true);
+  });
+
+  test('disconnects an authenticated socket when its token is revoked', () async {
+    factory.accountBound = true;
+    var tokenRevoked = false;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      authenticationRecheckInterval: const Duration(milliseconds: 20),
+      accessTokenVerifier: (token) async =>
+          token == 'valid-token' && !tokenRevoked
+              ? 'verified-account'
+              : null,
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final welcomeFuture = _nextType(messages, 'welcome');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    await welcomeFuture;
+    expect(accountHost.connectedPlayerCount, 1);
+
+    tokenRevoked = true;
+    await socket.done.timeout(const Duration(seconds: 2));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(accountHost.connectedPlayerCount, 0);
+    expect((factory.sessions.values.single).handledCommands, 0);
+  });
+
+  test('cloud restore failure rejects the handshake without welcome', () async {
+    factory
+      ..accountBound = true
+      ..failProvisioning = true;
+    final accountHost = WebSocketGameHost(
+      sessionFactory: factory.create,
+      address: InternetAddress.loopbackIPv4,
+      port: 0,
+      accessTokenVerifier: (token) async => 'verified-account',
+    );
+    await accountHost.start();
+    addTearDown(accountHost.close);
+
+    final socket = await WebSocket.connect(accountHost.uri.toString());
+    final messages = _messages(socket).asBroadcastStream();
+    final errorFuture = _nextType(messages, 'error');
+    socket.add(jsonEncode({
+      'type': 'create',
+      'accessToken': 'valid-token',
+    }));
+    final error = await errorFuture;
+    expect(error['reason'], 'account_restore_failed');
+    expect(accountHost.roomCount, 0);
+    await socket.close();
+  });
+
 }

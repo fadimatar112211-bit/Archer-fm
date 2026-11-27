@@ -1,12 +1,13 @@
 # Archer FM — Project Status
 
 > **Living project tracker.** Update this file after every meaningful work session and commit.
-> Last updated: 2026-11-26
-> Project status: Phase 1 technical asset integration complete (CI evidence); Phase 2 map quality pending real gameplay capture; Phase 3 core match/combat verification implemented and automated CI passing, with balance-dependent rewards and production account integration still open
-> Active work branch: `feature/match-rules-foundation` (PR #20, Draft, open)
+> Last updated: 2026-11-27
+> Project status: Phase 5 in progress — authenticated account persistence, atomic settlement, server-only purchase RPC, authenticated purchase/catalog HTTP routes, server-quoted prices, idempotent purchase retry handling, and Arabic account UI for all 12 weapons/four monster types are implemented on the phase-5 branch. PostgreSQL purchase/idempotency/RLS smoke tests pass. Flutter analyze/tests/build are running for the latest code. Actual approved economy prices/config, live Supabase deployment, HTTPS gateway build define, cross-device acceptance, production WSS and device QA remain open. Earlier phases retain their own acceptance gates.
+> Active work branch: `feature/phase-5-account-cloud-persistence` (new isolated Phase 5 branch)
+> Previous integration branch: `feature/match-rules-foundation` (PR #20 remains Draft/open/unmerged)
 > Default branch: `main`
 >
-> **Current status note (2026-11-26):** The detailed historical sections below include snapshots from earlier dates and are not a live completion claim. Official roadmap phases: Phase 1 = technical asset integration; Phase 2 = map quality; Phase 3 = core match/combat verification. Current evidence: `docs/ASSET_INTEGRATION_REPORT.md`, `docs/PHASE_3_CORE_MATCH_COMBAT_REPORT.md`, and `docs/PROJECT_AUDIT_AND_REMAINING_WORK.md`.
+> **Current status note (2026-11-27):** Phase 5 audit found local JSON progression stores but no production authentication provider, cloud database, or production TLS gateway. The client-supplied profile key is a development identifier, not authenticated identity. See `docs/PHASE_5_ACCOUNT_CLOUD_PERSISTENCE_REPORT.md`. The prior Phase 4 Android CI run built the debug APK and uploaded its artifact; emulator/device QA was skipped.
 
 ## 1. Project identity
 
@@ -391,3 +392,94 @@ Still to decide or test:
 - Latest heightfield viewport culling and parser fixes are committed; CI and Android emulator verification are pending. Do not mark the map or Phase 3 complete until those gates pass and the screenshot is reviewed.
 - Detailed scope and remaining work: `docs/ARENA_3D_TERRAIN_IMPLEMENTATION.md`.
 - All work remains on `feature/match-rules-foundation`; PR #20 remains unmerged and `main` is untouched.
+
+
+## Phase 5 continuation — 2026-11-27
+
+- Continued isolated Phase 5 work on `feature/phase-5-account-cloud-persistence`; PR #21 remains Draft/open/unmerged. PR #20 and `main` remain untouched.
+- Added an atomic Supabase RPC for per-player match result + reward settlement, including ledger insertion, permanent currency update, progression revision increment, and idempotent retry protection. Added server REST client and typed settlement adapter plus receipt tests.
+- The settlement primitive is not yet called by the authoritative match lifecycle. Runtime composition, trusted reward policy, durable retry handling, cloud profile restore and live Supabase acceptance remain incomplete.
+- Current Android CI run: [45908839341](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908839341), still running at this checkpoint. The latest successful Match Rules workflow predates the newest settlement changes; do not infer the new commit is green.
+- **Phase 5 remains IN PROGRESS.** No phase closure or production-readiness claim until latest CI passes and staging database/auth/reconnect/isolation tests are complete.
+
+
+## Phase 5 CI checkpoint — 2026-11-27
+
+- Corrected settlement REST client source passed Match Rules CI: Flutter analysis and the full test suite are green on commit `19306b11ed55f8f719d7f0ed92f69d503b4386ee` ([run 45908955504](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955504)).
+- Android workflow on the same source commit has passed analysis and tests; APK build is still running ([run 45908955588](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45908955588)).
+- PostgreSQL migration has not been applied to a live Supabase project. Atomic settlement RPC is implemented but not yet invoked by the authoritative match lifecycle. Phase 5 remains open.
+
+
+## Phase 5 continuation — 2026-11-27
+
+- Match completion now submits account-bound results/rewards to the idempotent Supabase settlement RPC and retries transient failures while the room remains alive.
+- Authenticated account hero progression is restored before the WebSocket welcome; the authoritative server enforces unlocked weapons and applies hero/weapon levels. Private progression appears only in the owning player's snapshot.
+- Added handshake, account isolation, settlement retry, private snapshot and profile restore coverage.
+- Hardened Supabase table/sequence grants and added a staging SQL privilege-check script.
+- Added a production WSS/systemd/Nginx deployment template.
+- Latest checked head before this status update: `c429c4ae0bff7813b529e90b335530a018258ca6`; Flutter analyze and tests passed, current Android APK build was still running. Earlier Android build success is recorded in the Phase 5 report.
+- Phase 5 is still open pending live Supabase staging execution, approved progression economy configuration, profile/upgrade handlers, cross-device/cross-account E2E, durable process-restart recovery and production deployment/device testing.
+- PR #21 remains Draft and unmerged; `main` and PR #20 remain untouched.
+
+## Phase 5 durable settlement follow-up — 2026-11-27
+
+- Added a disk-backed settlement outbox. Match results/rewards are persisted locally before Supabase delivery, retried every five seconds, restored on gateway startup and drained during graceful shutdown.
+- The outbox uses the existing database idempotency key so a crash after database commit but before local acknowledgement cannot award currency twice.
+- Added automated tests for offline retention, restart recovery, confirmed delivery cleanup and conflicting idempotency-key reuse.
+- Deployment template now provisions `/var/lib/archer-fm` as a private systemd state directory and documents the persistent outbox path.
+- This is durable for one gateway instance on persistent local storage. Multi-replica operation still requires a shared database queue/lease; do not share one JSON file across replicas.
+- New CI is expected from the latest commits; verify the exact latest head run before claiming this batch passed.
+
+- Settlement outbox CI correction: an initial analysis failure from a missing explicit `dart:async` import was fixed. The corrected source passed Flutter analysis and all tests in Android workflow [45911700825](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45911700825); debug APK compilation was still running at the latest check.
+
+- Added an Arabic player-account screen to the authenticated home menu. It reads the signed-in player's profile, wallet balance, currency ledger and recent match history through own-row RLS; players can edit only their display name and sign out. No client-side reward or progression writes were added.
+- Supabase access tokens are refreshed when within 30 seconds of expiry before game handshakes/reconnects.
+- Added typed account data models and validation tests. Latest CI must be checked at the current branch head before marking these changes verified.
+
+- Validation follow-up: workflow 45912232721 caught an invalid typed map invocation in the new player account history queries; this stopped analysis before tests/APK build. Both query mappers were corrected. The latest branch head has not yet produced a completed CI result, so validation remains pending.
+- Player profile names now have database-side checks against whitespace padding, control characters and Unicode bidi overrides. A trigger maintains updated_at while keeping timestamp columns unwritable by the client; staging assertions check the trigger.
+
+- Corrected account-data query code has passed `flutter analyze --no-fatal-infos` in workflow 45912332059. The full Flutter test suite was still running at the latest poll; APK build remains pending.
+
+## Phase 5 SQL verification — 2026-11-27
+
+- Fixed an invalid dollar-quote delimiter in the player-profile timestamp trigger function before any live deployment.
+- Added a dedicated PostgreSQL 16 migration smoke-test workflow. It creates minimal Supabase Auth roles/schema, applies the migration, runs the RLS/privilege assertions, verifies Auth-user provisioning of profile/hero/monster rows, checks the updated_at trigger and rejects whitespace-padded display names.
+- PostgreSQL smoke test [45968811877](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811877) passed all steps.
+- Flutter/Android validation for the same implementation head [45968811852](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811852) was still running at the latest poll.
+- This is local PostgreSQL 16 compatibility validation, not a live Supabase staging deployment. Phase 5 remains in progress.
+
+- Player account view now also reads and displays the authenticated player's four saved monster levels through own-row RLS. Added parsing tests for the versioned monster progression record and its level bounds. This is read-only visibility; applying levels to combat and upgrades still requires approved monster growth/cost rules.
+- Fresh Flutter and PostgreSQL validation workflows for this addition are running: [45969015691](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015691) and [45969015750](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015750).
+
+- Expanded PostgreSQL 16 smoke tests now exercise the atomic match settlement RPC, verify idempotent replay does not double-award currency, reject conflicting retries, and switch between two authenticated JWT subjects to verify RLS isolates profile/progression/ledger/match rows. Run [45969369330](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969369330) passed all steps.
+- Player account screen now displays the four hero levels, unlocked weapon count, upgraded weapon count and all four monster levels, in addition to wallet, currency ledger and recent match history. The UI remains read-only for progression/economy.
+- Latest expanded account-screen Flutter validation is [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437), queued at the latest check.
+
+- PostgreSQL migration, idempotent match settlement and two-account RLS isolation checks passed again on the expanded account-screen implementation: [workflow 45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438).
+- Account screen now includes hero levels and weapon ownership/upgrade summary in addition to monster levels, wallet, ledger and match history. Flutter validation for that expanded view is running in [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437).
+
+- Expanded account-screen Flutter workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) has now passed Flutter analysis and the complete test suite, including hero/weapon progression parsing and display. Android debug APK compilation is in progress; emulator execution remains a manual-dispatch-only QA step.
+
+
+## Phase 5 Android package verification — 2026-11-27
+
+- Flutter/Android workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) completed successfully: Flutter analysis, the full test suite and Android debug APK build all passed.
+- Uploaded APK artifact: `archer-fm-android-validation`, artifact ID `15184891380`, approximately 141 MB; available until 2026-12-11 according to GitHub.
+- Emulator step was skipped because it is intentionally limited to manual workflow dispatch. No emulator/physical-device runtime test is claimed.
+- PostgreSQL 16 smoke workflow [45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438) passed migration, privilege/RLS, settlement, idempotency, conflict rejection and two-account isolation checks. This is not a live Supabase staging test.
+- Phase 5 remains **IN PROGRESS** pending live Supabase deployment and E2E, approved progression economy and upgrade handlers, cross-device restore/reconnect, production deployment/storage/backup checks and device QA.
+- PR #21 remains draft/open/unmerged. PR #20 and `main` remain untouched.
+
+
+## Protected economy configuration — 2026-11-27
+
+- Added the approved server-side progression price catalog template at `config/progression-economy.example.json` for all 12 weapons and four monster types. Starter weapons are zero-cost and already unlocked; second/third weapons cost 1,200/2,500 permanent gold.
+- Weapon upgrade prices are fully populated for target levels 1–40; monster upgrade prices are fully populated for target levels 2–40.
+- Updated the strict economy decoder to allow zero only for the four canonical starter weapons and require positive prices for every unlockable weapon.
+- Added the exact same monster upgrade price schedule and approved health/damage/speed growth to `config/match-combat.example.json`. Production startup already checks purchase/combat price equality before listening.
+- Added `config/match-rewards.example.json` with rank rewards [140, 110, 85, 60] and changed the production gateway to require and load it through `ARCHER_FM_MATCH_REWARDS_CONFIG`; the old optional environment JSON reward value is no longer used.
+- Added `docs/PROTECTED_SERVER_ECONOMY_CONFIGURATION.md` with server-only installation paths, ownership/permissions, environment wiring and the explicit boundary that these are templates until installed on the real host.
+- Arithmetic correction: with starter weapons free, total unlock fees are 14,800; all 12 weapon upgrades total 121,512; all four monster upgrade tracks total 26,488; full account-wide unlock/upgrade completion totals 162,800 permanent gold. This corrects the earlier estimate that incorrectly charged 500 for each already-free starter weapon.
+- The current settlement contract supports rank-based permanent-currency rewards only. Participation/objective/kill/damage bonuses and match XP are not implemented by this configuration and must not be described as active.
+- Protected files have not been installed on a production server. Live server access, file permission verification and CI on this latest commit remain pending. Phase 5 remains in progress.

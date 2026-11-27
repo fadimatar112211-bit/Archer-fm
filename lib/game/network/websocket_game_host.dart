@@ -46,6 +46,31 @@ typedef GameServerSessionFactory = GameServerSession Function(
   Map<String, dynamic> createMessage,
 );
 
+abstract interface class AccountBoundGameServerSession implements GameServerSession {
+  GameServerPlayer? joinForAccount(String accountId);
+  bool ownsResumeToken(String resumeToken, String accountId);
+}
+
+/// Optional server-side account hydration hook. The host calls this only after
+/// Supabase has verified the access token and before sending the welcome state.
+abstract interface class AccountProvisioningGameServerSession {
+  Future<void> prepareAccount(GameServerPlayer player, String accountId);
+}
+
+typedef GameAccessTokenVerifier = Future<String?> Function(String accessToken);
+
+typedef AccountProgressionPurchaseHandler = Future<Map<String, dynamic>> Function({
+  required String trustedAccountId,
+  required String purchaseType,
+  required String targetId,
+  required String idempotencyKey,
+  required int quotedCost,
+});
+
+typedef AccountProgressionCatalogHandler = Future<Map<String, dynamic>> Function({
+  required String trustedAccountId,
+});
+
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
 ///
 /// It handles room codes, four-player transport sessions, reconnect tokens,
@@ -62,15 +87,30 @@ class WebSocketGameHost {
     this.rateLimitRefillPerSecond = 40,
     this.tickInterval = const Duration(milliseconds: 50),
     this.broadcastInterval = const Duration(milliseconds: 100),
+    this.accessTokenVerifier,
+    this.progressionPurchaseHandler,
+    this.progressionCatalogHandler,
+    this.authenticationRecheckInterval = const Duration(minutes: 1),
   })  : assert(port >= 0 && port <= 65535),
         assert(maxRooms > 0),
         assert(maxMessageCharacters > 0),
         assert(rateLimitBurst > 0),
         assert(rateLimitRefillPerSecond > 0),
         assert(tickInterval > Duration.zero),
-        assert(broadcastInterval > Duration.zero);
+        assert(broadcastInterval > Duration.zero),
+        assert(authenticationRecheckInterval > Duration.zero);
 
   final GameServerSessionFactory sessionFactory;
+  /// When set, all handshakes require a verified token and account-bound room.
+  /// Keep null only for isolated local development and tests.
+  final GameAccessTokenVerifier? accessTokenVerifier;
+  /// Invoked only after the HTTP bearer token has been verified. The callback
+  /// receives no client-supplied account ID, price, level cap or row revision.
+  final AccountProgressionPurchaseHandler? progressionPurchaseHandler;
+  final AccountProgressionCatalogHandler? progressionCatalogHandler;
+  /// Revalidates active bearer sessions so expired/revoked tokens cannot keep
+  /// issuing commands indefinitely after a successful WebSocket handshake.
+  final Duration authenticationRecheckInterval;
   final InternetAddress? address;
   final int port;
   final int maxRooms;
@@ -116,6 +156,14 @@ class WebSocketGameHost {
   }
 
   void _acceptRequest(HttpRequest request) {
+    if (request.uri.path == '/v1/account/progression/catalog') {
+      unawaited(_handleProgressionCatalogRequest(request));
+      return;
+    }
+    if (request.uri.path == '/v1/account/progression/purchase') {
+      unawaited(_handleProgressionPurchaseRequest(request));
+      return;
+    }
     if (!WebSocketTransformer.isUpgradeRequest(request)) {
       request.response.statusCode = HttpStatus.badRequest;
       unawaited(request.response.close());
@@ -124,6 +172,142 @@ class WebSocketGameHost {
     WebSocketTransformer.upgrade(request).then(_serve).catchError((Object error) {
       stderr.writeln('WebSocket upgrade failed: $error');
     });
+  }
+
+  Future<void> _handleProgressionCatalogRequest(HttpRequest request) async {
+    final handler = progressionCatalogHandler;
+    final verifier = accessTokenVerifier;
+    if (request.method != 'GET') {
+      await _writeJson(request.response, HttpStatus.methodNotAllowed,
+          {'error': 'method_not_allowed'});
+      return;
+    }
+    if (handler == null || verifier == null) {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_service_unavailable'});
+      return;
+    }
+    final authorization = request.headers.value(HttpHeaders.authorizationHeader);
+    if (authorization == null || !authorization.startsWith('Bearer ')) {
+      await _writeJson(request.response, HttpStatus.unauthorized,
+          {'error': 'unauthorized'});
+      return;
+    }
+    try {
+      final accountId = await verifier(authorization.substring(7));
+      if (accountId == null || accountId.isEmpty) {
+        await _writeJson(request.response, HttpStatus.unauthorized,
+            {'error': 'unauthorized'});
+        return;
+      }
+      final catalog = await handler(trustedAccountId: accountId);
+      await _writeJson(request.response, HttpStatus.ok, {
+        'type': 'progression_catalog',
+        ...catalog,
+      });
+    } on FormatException catch (error) {
+      await _writeJson(request.response, HttpStatus.conflict,
+          {'error': error.message.toString()});
+    } on Object {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'catalog_temporarily_unavailable'});
+    }
+  }
+
+  Future<void> _handleProgressionPurchaseRequest(HttpRequest request) async {
+    final handler = progressionPurchaseHandler;
+    final verifier = accessTokenVerifier;
+    if (request.method != 'POST') {
+      await _writeJson(request.response, HttpStatus.methodNotAllowed,
+          {'error': 'method_not_allowed'});
+      return;
+    }
+    if (handler == null || verifier == null) {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_service_unavailable'});
+      return;
+    }
+    final authorization = request.headers.value(HttpHeaders.authorizationHeader);
+    if (authorization == null || !authorization.startsWith('Bearer ')) {
+      await _writeJson(request.response, HttpStatus.unauthorized,
+          {'error': 'unauthorized'});
+      return;
+    }
+    try {
+      if (request.headers.contentType?.mimeType != 'application/json') {
+        await _writeJson(request.response, HttpStatus.unsupportedMediaType,
+            {'error': 'application_json_required'});
+        return;
+      }
+      if (request.contentLength > 4096) {
+        await _writeJson(request.response, HttpStatus.requestEntityTooLarge,
+            {'error': 'request_too_large'});
+        return;
+      }
+      final raw = await utf8.decoder.bind(request).join();
+      if (raw.length > 4096) {
+        await _writeJson(request.response, HttpStatus.requestEntityTooLarge,
+            {'error': 'request_too_large'});
+        return;
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic> ||
+          decoded.keys.toSet().difference(
+            {'purchaseType', 'targetId', 'idempotencyKey', 'quotedCost'},
+          ).isNotEmpty ||
+          decoded['purchaseType'] is! String ||
+          decoded['targetId'] is! String ||
+          decoded['idempotencyKey'] is! String ||
+          decoded['quotedCost'] is! int ||
+          (decoded['quotedCost'] as int) <= 0) {
+        await _writeJson(request.response, HttpStatus.badRequest,
+            {'error': 'invalid_purchase_request'});
+        return;
+      }
+      final accountId = await verifier(authorization.substring(7));
+      if (accountId == null || accountId.isEmpty) {
+        await _writeJson(request.response, HttpStatus.unauthorized,
+            {'error': 'unauthorized'});
+        return;
+      }
+      final result = await handler(
+        trustedAccountId: accountId,
+        purchaseType: decoded['purchaseType'] as String,
+        targetId: decoded['targetId'] as String,
+        idempotencyKey: decoded['idempotencyKey'] as String,
+        quotedCost: decoded['quotedCost'] as int,
+      );
+      await _writeJson(request.response, HttpStatus.ok, {
+        'type': 'purchase_result',
+        'currency_balance': result['currency_balance'],
+        'hero_revision': result['hero_revision'],
+        'monster_revision': result['monster_revision'],
+        'resulting_level': result['resulting_level'],
+        'already_applied': result['already_applied'],
+      });
+    } on FormatException catch (error) {
+      final code = error.message.toString();
+      await _writeJson(request.response, HttpStatus.conflict,
+          {'error': code.length <= 64 ? code : 'purchase_rejected'});
+    } on HttpException {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_backend_unavailable'});
+    } on Object {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_temporarily_unavailable'});
+    }
+  }
+
+  Future<void> _writeJson(
+    HttpResponse response,
+    int status,
+    Map<String, Object?> body,
+  ) async {
+    response.statusCode = status;
+    response.headers.contentType = ContentType.json;
+    response.headers.set(HttpHeaders.cacheControlHeader, 'no-store');
+    response.write(jsonEncode(body));
+    await response.close();
   }
 
   void _tick() {
@@ -170,8 +354,13 @@ class WebSocketGameHost {
     final refillClock = Stopwatch()..start();
     GameServerSession? room;
     GameServerPlayer? player;
+    var handshakePending = false;
+    Timer? authenticationTimer;
+    var authenticationCheckInFlight = false;
 
     void detach() {
+      authenticationTimer?.cancel();
+      authenticationTimer = null;
       final currentPlayer = player;
       if (currentPlayer == null ||
           !identical(_sockets[currentPlayer.id], socket)) {
@@ -208,10 +397,52 @@ class WebSocketGameHost {
           }
           final message = decoded;
           if (player == null) {
-            _handshake(socket, message, (session, joined) {
+            if (handshakePending) return;
+            handshakePending = true;
+            unawaited(_handshake(socket, message, (session, joined, verifiedAccountId) {
               room = session;
               player = joined;
-            });
+              final verifier = accessTokenVerifier;
+              final token = message['accessToken'];
+              if (verifier != null && token is String) {
+                authenticationTimer?.cancel();
+                authenticationTimer = Timer.periodic(
+                  authenticationRecheckInterval,
+                  (timer) async {
+                    if (authenticationCheckInFlight ||
+                        !identical(_sockets[joined.id], socket)) {
+                      return;
+                    }
+                    authenticationCheckInFlight = true;
+                    try {
+                      final verifiedAccount = await verifier(token);
+                      if (verifiedAccount == null ||
+                          verifiedAccount != verifiedAccountId) {
+                        timer.cancel();
+                        if (identical(_sockets[joined.id], socket)) {
+                          socket.close(
+                            WebSocketStatus.policyViolation,
+                            'session_expired_or_revoked',
+                          );
+                        }
+                      }
+                    } on Object {
+                      // Fail closed: an unverifiable session must not retain
+                      // authority when the identity provider cannot be reached.
+                      timer.cancel();
+                      if (identical(_sockets[joined.id], socket)) {
+                        socket.close(
+                          WebSocketStatus.policyViolation,
+                          'session_revalidation_failed',
+                        );
+                      }
+                    } finally {
+                      authenticationCheckInFlight = false;
+                    }
+                  },
+                );
+              }
+            }).whenComplete(() => handshakePending = false));
             return;
           }
 
@@ -253,64 +484,116 @@ class WebSocketGameHost {
     );
   }
 
-  void _handshake(
+  Future<void> _handshake(
     WebSocket socket,
     Map<String, dynamic> message,
-    void Function(GameServerSession, GameServerPlayer) attach,
-  ) {
-    final type = message['type'];
-    GameServerSession? room;
-    GameServerPlayer? player;
-
-    switch (type) {
-      case 'create':
-        if (_rooms.length >= maxRooms) {
-          _send(socket, {'type': 'error', 'reason': 'server_full'});
+    void Function(GameServerSession, GameServerPlayer, String?) attach,
+  ) async {
+    try {
+      final verifier = accessTokenVerifier;
+      String? accountId;
+      if (verifier != null) {
+        final accessToken = message['accessToken'];
+        if (accessToken is! String) {
+          _send(socket, {'type': 'error', 'reason': 'unauthorized'});
           return;
         }
-        final code = _newRoomCode();
-        room = sessionFactory(code, message);
-        _rooms[code] = room;
-        player = room.join();
-        break;
-      case 'join':
-        final code = message['code'];
-        if (code is String) room = _rooms[code];
-        player = room?.join();
-        break;
-      case 'resume':
-        final code = message['code'];
-        final token = message['token'];
-        if (code is String) room = _rooms[code];
-        if (token is String) player = room?.resume(token);
-        break;
-      default:
-        _send(socket, {'type': 'error', 'reason': 'bad_handshake'});
+        accountId = await verifier(accessToken);
+        if (accountId == null || accountId.isEmpty) {
+          _send(socket, {'type': 'error', 'reason': 'unauthorized'});
+          return;
+        }
+      }
+
+      GameServerSession? room;
+      GameServerPlayer? player;
+      GameServerPlayer? joinRoom(GameServerSession session) {
+        if (verifier == null) return session.join();
+        if (session is! AccountBoundGameServerSession) return null;
+        return session.joinForAccount(accountId!);
+      }
+
+      switch (message['type']) {
+        case 'create':
+          if (_rooms.length >= maxRooms) {
+            _send(socket, {'type': 'error', 'reason': 'server_full'});
+            return;
+          }
+          final code = _newRoomCode();
+          room = sessionFactory(code, message);
+          player = joinRoom(room);
+          if (player == null) {
+            _send(socket, {'type': 'error', 'reason': 'account_binding_unavailable'});
+            return;
+          }
+          _rooms[code] = room;
+          break;
+        case 'join':
+          final code = message['code'];
+          if (code is String) room = _rooms[code];
+          if (room != null) player = joinRoom(room);
+          break;
+        case 'resume':
+          final code = message['code'];
+          final token = message['token'];
+          if (code is String) room = _rooms[code];
+          if (room != null && token is String) {
+            if (verifier == null) {
+              player = room.resume(token);
+            } else if (room is AccountBoundGameServerSession &&
+                room.ownsResumeToken(token, accountId!)) {
+              player = room.resume(token);
+            }
+          }
+          break;
+        default:
+          _send(socket, {'type': 'error', 'reason': 'bad_handshake'});
+          return;
+      }
+
+      final joinedRoom = room;
+      final joinedPlayer = player;
+      if (joinedRoom == null || joinedPlayer == null) {
+        _send(socket, {'type': 'error', 'reason': 'no_session'});
         return;
+      }
+      if (accountId != null &&
+          joinedRoom is AccountProvisioningGameServerSession) {
+        try {
+          await (joinedRoom as AccountProvisioningGameServerSession)
+              .prepareAccount(joinedPlayer, accountId);
+        } on Object {
+          joinedRoom.leave(joinedPlayer);
+          if (joinedRoom.players.isEmpty) {
+            _rooms.remove(joinedRoom.code);
+          }
+          _send(socket, {'type': 'error', 'reason': 'account_restore_failed'});
+          return;
+        }
+      }
+      if (socket.readyState != WebSocket.open) {
+        joinedRoom.disconnect(joinedPlayer);
+        return;
+      }
+      joinedPlayer.connected = true;
+      final oldSocket = _sockets[joinedPlayer.id];
+      _sockets[joinedPlayer.id] = socket;
+      oldSocket?.close();
+      attach(joinedRoom, joinedPlayer, accountId);
+      _send(socket, {
+        'type': 'welcome',
+        'id': joinedPlayer.id,
+        'token': joinedPlayer.resumeToken,
+        'code': joinedRoom.code,
+        'lastSeq': joinedPlayer.lastSequence,
+      });
+      final initialSnapshot = joinedRoom is PlayerScopedSnapshotSession
+          ? (joinedRoom as PlayerScopedSnapshotSession).snapshotFor(joinedPlayer)
+          : joinedRoom.snapshot();
+      _send(socket, initialSnapshot);
+    } catch (_) {
+      _send(socket, {'type': 'error', 'reason': 'handshake_failed'});
     }
-
-    if (room == null || player == null) {
-      _send(socket, {'type': 'error', 'reason': 'no_session'});
-      return;
-    }
-
-    player.connected = true;
-    final oldSocket = _sockets[player.id];
-    _sockets[player.id] = socket;
-    oldSocket?.close();
-
-    attach(room, player);
-    _send(socket, {
-      'type': 'welcome',
-      'id': player.id,
-      'token': player.resumeToken,
-      'code': room.code,
-      'lastSeq': player.lastSequence,
-    });
-    final initialSnapshot = room is PlayerScopedSnapshotSession
-        ? (room as PlayerScopedSnapshotSession).snapshotFor(player)
-        : room.snapshot();
-    _send(socket, initialSnapshot);
   }
 
   String _newRoomCode() {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../game/match/match_loadout_screen.dart';
 import '../game/feedback/game_feedback_preferences.dart';
 import '../game/match/hero_armory_screen.dart';
+import '../game/auth/player_account_screen.dart';
+import '../game/auth/supabase_account_service.dart';
 import '../hero/hero_assets.dart';
 import '../hero/hero_viewer_screen.dart';
 
@@ -9,9 +11,11 @@ class ArcherFmHomeScreen extends StatelessWidget {
   const ArcherFmHomeScreen({
     super.key,
     required this.loaderFactory,
+    this.accountService,
   });
 
   final HeroLoaderFactory loaderFactory;
+  final SupabaseAccountService? accountService;
 
   void _open(BuildContext context, Widget page) {
     Navigator.of(context).push(
@@ -94,6 +98,16 @@ class ArcherFmHomeScreen extends StatelessWidget {
                             const HeroArmoryScreen(),
                           ),
                         ),
+                        if (accountService != null)
+                          _HomeAction(
+                            icon: Icons.account_circle,
+                            title: 'حساب اللاعب',
+                            subtitle: 'الملف الشخصي ورصيد العملات وسجل المباريات',
+                            onTap: () => _open(
+                              context,
+                              PlayerAccountScreen(accountService: accountService!),
+                            ),
+                          ),
                         _HomeAction(
                           icon: Icons.settings,
                           title: 'الإعدادات',

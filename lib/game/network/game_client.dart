@@ -24,6 +24,7 @@ class GameClient {
     this.onSession,
     this.profileKey,
     this.onProfile,
+    this.accessTokenProvider,
     this.connectTimeout = const Duration(seconds: 8),
     this.maxReconnectDelay = const Duration(seconds: 30),
   });
@@ -36,6 +37,9 @@ class GameClient {
   /// Production identity must come from the account/authentication service.
   String? profileKey;
   final void Function(String key)? onProfile;
+  /// Supplies a fresh Supabase access token for each socket handshake,
+  /// including reconnects. Omit only for local development hosts.
+  final Future<String?> Function()? accessTokenProvider;
 
   /// Persist the room code and resume token to support reconnect after app pause.
   final void Function(String code, String token)? onSession;
@@ -117,6 +121,15 @@ class GameClient {
 
     WebSocket? socket;
     try {
+      final helloMessage = Map<String, Object?>.from(hello);
+      final tokenProvider = accessTokenProvider;
+      if (tokenProvider != null) {
+        final accessToken = await tokenProvider().timeout(connectTimeout);
+        if (accessToken == null || accessToken.isEmpty) {
+          throw StateError('A valid signed-in session is required.');
+        }
+        helloMessage['accessToken'] = accessToken;
+      }
       socket = await WebSocket.connect(url).timeout(connectTimeout);
       if (_disposed) {
         await socket.close();
@@ -131,7 +144,7 @@ class GameClient {
         onError: (_) => _lost(current),
         cancelOnError: true,
       );
-      current.add(jsonEncode(hello));
+      current.add(jsonEncode(helloMessage));
     } catch (_) {
       if (socket != null) {
         try {

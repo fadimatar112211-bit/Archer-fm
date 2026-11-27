@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [monster-army-work, feature/match-rules-foundation]
+    branches: [monster-army-work, feature/match-rules-foundation, feature/phase-5-account-cloud-persistence]
     paths:
       - 'lib/monsters/**'
       - 'test/monster_*_test.dart'

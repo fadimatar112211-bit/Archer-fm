@@ -5,8 +5,10 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archer_fm/game/heroes/hero_roster.dart';
 import 'package:archer_fm/game/network/match_combat_authority.dart';
+import 'package:archer_fm/game/progression/hero_progress.dart';
 import 'package:archer_fm/monsters/monster_models.dart';
 import 'package:archer_fm/monsters/monster_progression.dart';
+import 'package:archer_fm/monsters/monster_navigation.dart';
 import 'package:archer_fm/game/match/match_rules.dart';
 import 'package:archer_fm/game/world/arena_map.dart';
 import 'package:archer_fm/game/world/castle_system.dart';
@@ -103,6 +105,24 @@ AuthoritativeMatchSession _combatReadySession({
 }
 
 void main() {
+  test(
+    'authoritative monster AI receives navigation built from match obstacles',
+    () {
+      final session = _combatReadySession();
+      final grid = session.combat!.monsters.combatLoop.navigationGrid;
+
+      expect(grid, isA<MonsterNavigationGrid>());
+      final navigationGrid = grid!;
+      expect(navigationGrid.columns, greaterThan(0));
+      expect(navigationGrid.rows, greaterThan(0));
+      expect(navigationGrid.cellSize, 48);
+    // The generated arena contains trees and rocks; the runtime grid must
+    // include their collision footprints instead of relying on steering alone.
+      expect(navigationGrid.blockedCells, isNotEmpty);
+      expect(navigationGrid.revision, 1);
+    },
+  );
+
   test('snapshot publishes deterministic static arena geometry for clients', () {
     final session = _combatReadySession();
     final world = session.snapshot()['world'] as Map;
@@ -200,6 +220,68 @@ void main() {
     expect(session.combat, isNotNull);
     expect(session.combat!.armies, hasLength(4));
     expect(session.rules!.duration.minutes, 10);
+  });
+
+  test('cloud monster progression is hydrated before match combat starts', () async {
+    final config = _combatConfiguration();
+    final session = AuthoritativeMatchSession(
+      code: 'cloud-monsters',
+      mapFactory: () => ArenaMap.generate(Random(909)),
+      combatConfiguration: config,
+      loadAccountMonsterProgression: (accountId) async => MonsterProgression(
+        catalog: config.monsterCatalog,
+        growth: {
+          for (final type in MonsterType.values)
+            type: const MonsterUpgradeGrowth(
+              healthPerLevel: 0.1,
+              damagePerLevel: 0.05,
+              speedPerLevel: 0.02,
+            ),
+        },
+        costForLevel: (_, level) => level * 10,
+        levels: {
+          MonsterType.runner: accountId == 'account-1' ? 3 : 1,
+        },
+      ),
+    );
+    final players = [
+      for (var i = 0; i < 4; i++) session.joinForAccount('account-${i + 1}')!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      await session.prepareAccount(players[i], 'account-${i + 1}');
+      final hero = archerFmHeroes[i];
+      expect(session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      }), isNull);
+      expect(session.handle(players[i], {
+        'type': 'army_select',
+        'counts': {'runner': 20},
+      }), isNull);
+    }
+
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    final p1Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p1');
+    final p2Army = session.combat!.armies.firstWhere((army) => army.ownerId == 'p2');
+    expect(p1Army.units.first.stats.maxHealth, 1200);
+    expect(p2Army.units.first.stats.maxHealth, 1000);
+    expect(
+      session.combat!.configuration.monsterProgressionByPlayer['p1']!
+          .levelOf(MonsterType.runner),
+      3,
+    );
+    expect(
+      (session.snapshot()['combat'] as Map)['monsterProgression'],
+      isA<Map>(),
+    );
+    final p1Progression = (session.snapshotFor(players.first)['combat'] as Map)
+        ['monsterProgression'] as Map;
+    final p2Progression = (session.snapshotFor(players[1])['combat'] as Map)
+        ['monsterProgression'] as Map;
+    expect(p1Progression.keys, ['p1']);
+    expect(p2Progression.keys, ['p2']);
+    expect(p1Progression.containsKey('p2'), isFalse);
   });
 
   test('loaded permanent monster progression scales only its owner army', () {
@@ -1030,4 +1112,201 @@ void main() {
     expect(session.rules!.phase, MatchPhase.finished);
     expect(session.snapshot()['phase'], 'finished');
   });
+
+  test('finished account-bound matches are durably settled for every player', () async {
+    final settlements = <Map<String, Object?>>[];
+    final session = AuthoritativeMatchSession(
+      code: 'settle1',
+      onMatchSettlement: ({
+        required matchId,
+        required accountId,
+        required standing,
+        required finishReason,
+      }) async {
+        settlements.add({
+          'matchId': matchId,
+          'accountId': accountId,
+          'rank': standing.rank,
+          'score': standing.score,
+          'crystals': standing.livingCrystals,
+          'reason': finishReason.name,
+        });
+      },
+    );
+    final accounts = [
+      'account-one',
+      'account-two',
+      'account-three',
+      'account-four',
+    ];
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(
+        session.handle(players[i], {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': hero.weapons.first.id,
+        }),
+        isNull,
+      );
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+
+    for (final player in players.take(3)) {
+      expect(
+        session.handle(player, {'type': 'forfeit'}),
+        isNull,
+      );
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(session.rules!.phase, MatchPhase.finished);
+    expect(settlements, hasLength(4));
+    expect(
+      settlements.map((item) => item['accountId']).toSet(),
+      accounts.toSet(),
+    );
+    expect(
+      settlements.every((item) => item['matchId'] != 'settle1'),
+      isTrue,
+    );
+    expect(
+      settlements.every((item) => item['reason'] == 'lastCrystalHolder'),
+      isTrue,
+    );
+  });
+
+
+  test('one verified account cannot occupy multiple slots in one room', () {
+    final session = AuthoritativeMatchSession(code: 'account1');
+    expect(session.joinForAccount('same-account'), isNotNull);
+    expect(session.joinForAccount('same-account'), isNull);
+    expect(session.players, hasLength(1));
+  });
+
+
+  test('verified cloud hero progression is restored before match loadout checks', () async {
+    final ranger = archerFmHeroes.first;
+    final unlocked = {
+      for (final hero in archerFmHeroes) hero.weapons.first.id,
+      ranger.weapons[1].id,
+    };
+    final progress = HeroProgress(
+      unlockedWeaponIds: unlocked,
+      weaponUpgradeLevels: {ranger.weapons[1].id: 2},
+      heroLevels: {ranger.id.name: 7},
+    );
+    final accounts = ['restore-a', 'restore-b', 'restore-c', 'restore-d'];
+    final session = AuthoritativeMatchSession(
+      code: 'restore1',
+      combatConfiguration: _combatConfiguration(),
+      loadAccountHeroProgress: (accountId) async => HeroProgress(
+        permanentCurrency: accountId == 'restore-a' ? 17 : 29,
+        unlockedWeaponIds: progress.unlockedWeaponIds,
+        weaponUpgradeLevels: progress.weaponUpgradeLevels,
+        heroLevels: progress.heroLevels,
+      ),
+    );
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      await session.prepareAccount(players[i], accounts[i]);
+    }
+
+    await expectLater(
+      session.prepareAccount(players.first, 'different-account'),
+      throwsStateError,
+    );
+
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      expect(
+        session.handle(players[i], {
+          'type': 'select',
+          'heroId': hero.id.name,
+          'weaponId': i == 0 ? ranger.weapons[1].id : hero.weapons.first.id,
+        }),
+        isNull,
+      );
+      expect(
+        session.handle(players[i], {
+          'type': 'army_select',
+          'counts': {'runner': 20},
+        }),
+        isNull,
+      );
+    }
+    expect(session.handle(players.first, {'type': 'start'}), isNull);
+    final heroes = (session.snapshot()['combat'] as Map)['heroes'] as Map;
+    expect((heroes['p1'] as Map)['level'], 7);
+    expect((heroes['p1'] as Map)['weaponId'], ranger.weapons[1].id);
+    final firstProfile = session.snapshotFor(players.first)['accountProgression'] as Map;
+    final secondProfile = session.snapshotFor(players[1])['accountProgression'] as Map;
+    expect(firstProfile['permanentCurrency'], 17);
+    expect(secondProfile['permanentCurrency'], 29);
+    expect(session.snapshot().containsKey('accountProgression'), isFalse);
+  });
+
+
+  test('failed match settlements retry and keep a finished room alive', () async {
+    var attempts = 0;
+    var failedOnce = false;
+    final settled = <String>{};
+    final session = AuthoritativeMatchSession(
+      code: 'retry01',
+      onMatchSettlement: ({
+        required matchId,
+        required accountId,
+        required standing,
+        required finishReason,
+      }) async {
+        attempts++;
+        if (accountId == 'retry-account-1' && !failedOnce) {
+          failedOnce = true;
+          throw StateError('temporary database outage');
+        }
+        settled.add(accountId);
+      },
+    );
+    final accounts = [
+      'retry-account-1',
+      'retry-account-2',
+      'retry-account-3',
+      'retry-account-4',
+    ];
+    final players = [
+      for (final account in accounts) session.joinForAccount(account)!,
+    ];
+    for (var i = 0; i < players.length; i++) {
+      final hero = archerFmHeroes[i];
+      session.handle(players[i], {
+        'type': 'select',
+        'heroId': hero.id.name,
+        'weaponId': hero.weapons.first.id,
+      });
+    }
+    session.handle(players.first, {'type': 'start'});
+    for (final player in players.take(3)) {
+      session.handle(player, {'type': 'forfeit'});
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(settled, hasLength(3));
+
+    for (final player in players) {
+      session.disconnect(player);
+    }
+    expect(session.shouldRemove, isFalse);
+    session.tick(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(settled, hasLength(4));
+    expect(attempts, 5);
+    expect(session.shouldRemove, isTrue);
+  });
+
 }

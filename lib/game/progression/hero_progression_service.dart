@@ -1,5 +1,5 @@
 import 'hero_progress.dart';
-import 'file_hero_progress_store.dart';
+import 'hero_progress_store.dart';
 
 /// Economy values are provided by the authoritative server configuration.
 /// This interface intentionally has no default prices or upgrade multipliers.
@@ -86,7 +86,7 @@ class PersistentHeroProgressionService {
     required this.economy,
   });
 
-  final FileHeroProgressStore store;
+  final HeroProgressStore store;
   final HeroProgressionEconomy economy;
   final Map<String, Future<void>> _accountQueues = {};
 

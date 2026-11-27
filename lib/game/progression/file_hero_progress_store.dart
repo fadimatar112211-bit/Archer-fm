@@ -3,14 +3,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'hero_progress.dart';
+import 'hero_progress_store.dart';
 
 /// Single-node development persistence adapter.
-///
+/// 
 /// The account ID must come from a trusted authenticated session. This class
 /// is not an authentication system and is not a substitute for cloud/database
-/// persistence in production. It adapts the sample ZIP's atomic JSON-file
-/// storage to the canonical Archer FM progression model.
-class FileHeroProgressStore {
+/// persistence in production. It adapts atomic JSON-file storage to the
+/// canonical Archer FM progression model.
+class FileHeroProgressStore implements HeroProgressStore {
   FileHeroProgressStore(this.directory);
 
   final Directory directory;
@@ -27,6 +28,7 @@ class FileHeroProgressStore {
         '${directory.path}${Platform.pathSeparator}$key.progress.json',
       );
 
+  @override
   Future<HeroProgress> load(String accountId) async {
     final key = _keyFor(accountId);
     await (_writeQueue[key] ?? Future<void>.value());
@@ -40,6 +42,7 @@ class FileHeroProgressStore {
     return HeroProgress.fromJson(decoded);
   }
 
+  @override
   Future<void> save(String accountId, HeroProgress progress) async {
     final key = _keyFor(accountId);
     final previous = _writeQueue[key] ?? Future<void>.value();

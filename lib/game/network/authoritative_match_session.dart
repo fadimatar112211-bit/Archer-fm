@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -5,11 +6,24 @@ import '../heroes/hero_roster.dart';
 import '../world/arena_map.dart';
 import '../world/castle_system.dart';
 import '../match/match_rules.dart';
+import '../progression/hero_progress.dart';
 import 'match_world_authority.dart';
 import 'match_combat_authority.dart';
 import '../../monsters/monster_models.dart';
 import '../../monsters/monster_army.dart';
+import '../../monsters/monster_progression.dart';
 import 'websocket_game_host.dart';
+
+typedef AccountHeroProgressLoader = Future<HeroProgress> Function(String accountId);
+typedef AccountMonsterProgressionLoader =
+    Future<MonsterProgression> Function(String accountId);
+
+typedef MatchSettlementHandler = Future<void> Function({
+  required String matchId,
+  required String accountId,
+  required MatchStanding standing,
+  required MatchFinishReason finishReason,
+});
 
 /// Concrete four-player match session used by [WebSocketGameHost].
 ///
@@ -17,7 +31,8 @@ import 'websocket_game_host.dart';
 /// forfeit. Scores and crystal counts are updated only through trusted
 /// server-side methods called by the authoritative combat/castle systems.
 class AuthoritativeMatchSession
-    implements GameServerSession, PlayerScopedSnapshotSession {
+    implements PlayerScopedSnapshotSession, AccountBoundGameServerSession,
+        AccountProvisioningGameServerSession {
   AuthoritativeMatchSession({
     required this.code,
     int durationMinutes = 30,
@@ -27,7 +42,15 @@ class AuthoritativeMatchSession
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
-  })  : _mapFactory = mapFactory,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
+    AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
+  })  : _loadAccountHeroProgress = loadAccountHeroProgress,
+        _loadAccountMonsterProgression = loadAccountMonsterProgression,
+        _onMatchSettlement = onMatchSettlement,
+        _onMatchSettlementError = onMatchSettlementError,
+        _mapFactory = mapFactory,
         _combatConfiguration = combatConfiguration,
         duration = MatchDuration.fromMinutes(durationMinutes),
         _random = random ?? Random.secure(),
@@ -44,6 +67,10 @@ class AuthoritativeMatchSession
     int Function(String playerId, String heroId)? heroLevelForPlayer,
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
+    AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
   }) {
     return (roomCode, message) => AuthoritativeMatchSession.fromCreateMessage(
           roomCode,
@@ -53,6 +80,10 @@ class AuthoritativeMatchSession
           weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
           mapFactory: mapFactory,
           combatConfiguration: combatConfiguration,
+          onMatchSettlement: onMatchSettlement,
+          onMatchSettlementError: onMatchSettlementError,
+          loadAccountHeroProgress: loadAccountHeroProgress,
+          loadAccountMonsterProgression: loadAccountMonsterProgression,
         );
   }
 
@@ -64,6 +95,10 @@ class AuthoritativeMatchSession
     int Function(String playerId, String weaponId)? weaponUpgradeLevelForPlayer,
     ArenaMap Function()? mapFactory,
     MatchCombatConfiguration? combatConfiguration,
+    MatchSettlementHandler? onMatchSettlement,
+    void Function(Object error)? onMatchSettlementError,
+    AccountHeroProgressLoader? loadAccountHeroProgress,
+    AccountMonsterProgressionLoader? loadAccountMonsterProgression,
   }) {
     final requestedDuration = message['durationMinutes'];
     if (requestedDuration != null && requestedDuration is! int) {
@@ -77,14 +112,29 @@ class AuthoritativeMatchSession
       weaponUpgradeLevelForPlayer: weaponUpgradeLevelForPlayer,
       mapFactory: mapFactory,
       combatConfiguration: combatConfiguration,
+      onMatchSettlement: onMatchSettlement,
+      onMatchSettlementError: onMatchSettlementError,
+      loadAccountHeroProgress: loadAccountHeroProgress,
+      loadAccountMonsterProgression: loadAccountMonsterProgression,
     );
   }
 
   @override
   final String code;
+  late final String matchId = '$code-${_token()}';
   final MatchDuration duration;
   final ArenaMap Function()? _mapFactory;
   final MatchCombatConfiguration? _combatConfiguration;
+  final AccountHeroProgressLoader? _loadAccountHeroProgress;
+  final AccountMonsterProgressionLoader? _loadAccountMonsterProgression;
+  final Map<String, HeroProgress> _accountHeroProgress = {};
+  final Map<String, MonsterProgression> _accountMonsterProgression = {};
+  final MatchSettlementHandler? _onMatchSettlement;
+  final void Function(Object error)? _onMatchSettlementError;
+  final Map<String, _PendingMatchSettlement> _pendingSettlements = {};
+  bool _settlementInFlight = false;
+  bool _settlementsQueued = false;
+  Duration _settlementRetryElapsed = Duration.zero;
   MatchCombatAuthority? combat;
   MatchWorldAuthority? world;
   int _worldNowMs = 0;
@@ -109,18 +159,64 @@ class AuthoritativeMatchSession
   bool get shouldRemove =>
       _players.isEmpty ||
       (_rules?.phase == MatchPhase.finished &&
-          _players.every((player) => !player.connected));
+          _players.every((player) => !player.connected) &&
+          _pendingSettlements.isEmpty &&
+          !_settlementInFlight);
 
   @override
-  GameServerPlayer? join() {
-    if (_rules != null || _players.length >= 4) return null;
+  GameServerPlayer? join() => _join(accountId: null);
+
+  @override
+  GameServerPlayer? joinForAccount(String accountId) {
+    if (accountId.trim().isEmpty || accountId.length > 180) return null;
+    return _join(accountId: accountId);
+  }
+
+  GameServerPlayer? _join({required String? accountId}) {
+    if (_rules != null ||
+        _players.length >= 4 ||
+        (accountId != null &&
+            _players.any((player) => player.accountId == accountId))) {
+      return null;
+    }
     final number = _nextPlayerNumber++;
     final player = _MatchPlayer(
       id: 'p$number',
       resumeToken: _token(),
+      accountId: accountId,
     );
     _players.add(player);
     return player;
+  }
+
+  @override
+  Future<void> prepareAccount(GameServerPlayer player, String accountId) async {
+    final matchPlayer = _find(player.id);
+    if (matchPlayer == null || matchPlayer.accountId != accountId) {
+      throw StateError('Verified account does not own this match slot.');
+    }
+    if (!_accountHeroProgress.containsKey(player.id)) {
+      final heroLoader = _loadAccountHeroProgress;
+      if (heroLoader != null) {
+        _accountHeroProgress[player.id] = await heroLoader(accountId);
+      }
+    }
+    if (!_accountMonsterProgression.containsKey(player.id)) {
+      final monsterLoader = _loadAccountMonsterProgression;
+      if (monsterLoader != null) {
+        _accountMonsterProgression[player.id] = await monsterLoader(accountId);
+      }
+    }
+  }
+
+  @override
+  bool ownsResumeToken(String resumeToken, String accountId) {
+    for (final player in _players) {
+      if (player.resumeToken == resumeToken) {
+        return player.accountId == accountId;
+      }
+    }
+    return false;
   }
 
   @override
@@ -157,6 +253,7 @@ class AuthoritativeMatchSession
     if (_rules?.phase == MatchPhase.running) {
       _rules!.forfeit(matchPlayer.id);
       matchPlayer.connected = false;
+      _queueFinishedSettlements();
       return;
     }
     _players.remove(matchPlayer);
@@ -180,7 +277,10 @@ class AuthoritativeMatchSession
           return 'invalid_loadout';
         }
         final isStartingWeapon = hero.single.weapons.first.id == weaponId;
-        if (!isStartingWeapon && !(_canUseWeapon?.call(current.id, weaponId) ?? false)) {
+        final accountProgress = _accountHeroProgress[current.id];
+        final ownsWeapon = accountProgress?.ownsWeapon(weaponId) ??
+            (_canUseWeapon?.call(current.id, weaponId) ?? false);
+        if (!isStartingWeapon && !ownsWeapon) {
           return 'weapon_locked';
         }
         current.heroId = heroId;
@@ -237,17 +337,25 @@ class AuthoritativeMatchSession
               },
               heroLevels: {
                 for (final item in _players)
-                  item.id: _heroLevelForPlayer?.call(item.id, item.heroId!) ?? 1,
+                  item.id: _accountHeroProgress[item.id]?.heroLevel(item.heroId!) ??
+                      _heroLevelForPlayer?.call(item.id, item.heroId!) ??
+                      1,
               },
               initialArmies: {
                 for (final item in _players)
                   item.id: item.initialArmySelection!,
               },
-              configuration: config,
+              configuration: _accountMonsterProgression.isEmpty
+                  ? config
+                  : config.withMonsterProgressionByPlayer({
+                      ...config.monsterProgressionByPlayer,
+                      for (final entry in _accountMonsterProgression.entries)
+                        entry.key: entry.value,
+                    }),
               weaponUpgradeLevels: {
                 for (final item in _players)
-                  item.id: _weaponUpgradeLevelForPlayer
-                          ?.call(item.id, item.weaponId!) ??
+                  item.id: _accountHeroProgress[item.id]?.weaponLevel(item.weaponId!) ??
+                      _weaponUpgradeLevelForPlayer?.call(item.id, item.weaponId!) ??
                       0,
               },
               onKill: (playerId, targetKind) {
@@ -280,6 +388,7 @@ class AuthoritativeMatchSession
         final rules = _rules;
         if (rules == null || rules.phase != MatchPhase.running) return 'match_not_running';
         final result = rules.forfeit(current.id);
+        if (result.accepted) _queueFinishedSettlements();
         return result.accepted ? null : 'forfeit_rejected';
       case 'move':
         if (_rules?.phase != MatchPhase.running) return 'match_not_running';
@@ -389,7 +498,9 @@ class AuthoritativeMatchSession
     if (rules == null) {
       return const MatchCommandResult.rejected('المباراة لم تبدأ');
     }
-    return rules.setLivingCrystals(playerId, count);
+    final result = rules.setLivingCrystals(playerId, count);
+    if (result.accepted) _queueFinishedSettlements();
+    return result;
   }
 
   /// Server-authoritative movement through map collision and terrain rules.
@@ -418,6 +529,7 @@ class AuthoritativeMatchSession
     );
     if (result.accepted && result.ownerId != null && result.livingCrystals != null) {
       rules!.setLivingCrystals(result.ownerId!, result.livingCrystals!);
+      _queueFinishedSettlements();
     }
     return result;
   }
@@ -434,6 +546,7 @@ class AuthoritativeMatchSession
     final result = matchWorld.rebuildCrystal(ownerId: ownerId, position: position);
     if (result == CrystalRebuildResult.ok) {
       rules!.setLivingCrystals(ownerId, matchWorld.livingCrystals(ownerId));
+      _queueFinishedSettlements();
     }
     return result;
   }
@@ -441,10 +554,19 @@ class AuthoritativeMatchSession
   @override
   void tick(Duration elapsed) {
     final rules = _rules;
+    if (rules?.phase == MatchPhase.finished) {
+      _settlementRetryElapsed += elapsed;
+      if (_settlementRetryElapsed >= const Duration(seconds: 1)) {
+        _settlementRetryElapsed = Duration.zero;
+        _attemptPendingSettlements();
+      }
+      return;
+    }
     if (rules?.phase != MatchPhase.running) return;
     rules!.advance(elapsed);
     if (rules.phase != MatchPhase.running) {
       combat?.clear();
+      _queueFinishedSettlements();
       return;
     }
     final authority = combat;
@@ -475,6 +597,7 @@ class AuthoritativeMatchSession
       for (final entry in result.livingCrystals.entries) {
         rules.setLivingCrystals(entry.key, entry.value);
       }
+      _queueFinishedSettlements();
     }
   }
 
@@ -743,6 +866,15 @@ class AuthoritativeMatchSession
     result['world'] = worldCopy;
 
     final scopedCombat = Map<String, Object?>.from(combatData);
+    final monsterProgression = combatData['monsterProgression'];
+    if (monsterProgression is Map) {
+      // Permanent monster levels are account data. Keep only the recipient's
+      // own entry; enemy unit stats are already represented by visible units.
+      scopedCombat['monsterProgression'] = {
+        if (monsterProgression.containsKey(player.id))
+          player.id: monsterProgression[player.id],
+      };
+    }
     final heroes = combatData['heroes'];
     if (heroes is Map) {
       final scopedHeroes = Map<String, Object?>.from(heroes);
@@ -766,7 +898,66 @@ class AuthoritativeMatchSession
           projectiles.where(visibleToPlayer).toList();
     }
     result['combat'] = scopedCombat;
+    final accountProgress = _accountHeroProgress[player.id];
+    if (accountProgress != null) {
+      // Cloud profile details are private: include them only in this player's
+      // recipient-scoped snapshot, never the shared match broadcast.
+      result['accountProgression'] = accountProgress.toJson();
+    }
     return result;
+  }
+
+  void _queueFinishedSettlements() {
+    if (_settlementsQueued) return;
+    final result = _rules?.result;
+    final handler = _onMatchSettlement;
+    if (result == null || handler == null) return;
+    _settlementsQueued = true;
+    for (final standing in result.standings) {
+      final player = _find(standing.playerId);
+      final accountId = player?.accountId;
+      if (accountId == null || accountId.isEmpty) continue;
+      _pendingSettlements[accountId] = _PendingMatchSettlement(
+        accountId: accountId,
+        standing: standing,
+        finishReason: result.reason,
+      );
+    }
+    _attemptPendingSettlements();
+  }
+
+  void _attemptPendingSettlements() {
+    final handler = _onMatchSettlement;
+    if (_settlementInFlight || handler == null || _pendingSettlements.isEmpty) {
+      return;
+    }
+    unawaited(_persistPendingSettlements(handler));
+  }
+
+  Future<void> _persistPendingSettlements(
+    MatchSettlementHandler handler,
+  ) async {
+    if (_settlementInFlight) return;
+    _settlementInFlight = true;
+    try {
+      for (final pending in _pendingSettlements.values.toList()) {
+        try {
+          await handler(
+            matchId: matchId,
+            accountId: pending.accountId,
+            standing: pending.standing,
+            finishReason: pending.finishReason,
+          );
+          _pendingSettlements.remove(pending.accountId);
+        } on Object catch (error) {
+          _onMatchSettlementError?.call(error);
+          // Keep the entry queued. The host's next ticks retry it; the
+          // database RPC is idempotent if the previous response was lost.
+        }
+      }
+    } finally {
+      _settlementInFlight = false;
+    }
   }
 
   void _syncCrystalStandings() {
@@ -774,8 +965,10 @@ class AuthoritativeMatchSession
     final matchWorld = world;
     if (rules == null || matchWorld == null) return;
     for (final id in matchWorld.playerIds) {
+      if (rules.phase != MatchPhase.running) break;
       rules.setLivingCrystals(id, matchWorld.livingCrystals(id));
     }
+    _queueFinishedSettlements();
   }
 
   _MatchPlayer? _find(String id) {
@@ -792,12 +985,13 @@ class AuthoritativeMatchSession
 }
 
 class _MatchPlayer implements GameServerPlayer {
-  _MatchPlayer({required this.id, required this.resumeToken});
+  _MatchPlayer({required this.id, required this.resumeToken, this.accountId});
 
   @override
   final String id;
   @override
   String resumeToken;
+  final String? accountId;
   @override
   int lastSequence = 0;
   @override
@@ -810,4 +1004,16 @@ class _MatchPlayer implements GameServerPlayer {
   Map<String, Object?>? lastCombatAction;
   Map<String, Object?>? lastPurchase;
   Map<String, Object?>? lastRebuild;
+}
+
+class _PendingMatchSettlement {
+  const _PendingMatchSettlement({
+    required this.accountId,
+    required this.standing,
+    required this.finishReason,
+  });
+
+  final String accountId;
+  final MatchStanding standing;
+  final MatchFinishReason finishReason;
 }
