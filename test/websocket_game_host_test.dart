@@ -332,8 +332,10 @@ void main() {
         required purchaseType,
         required targetId,
         required idempotencyKey,
+        required quotedCost,
       }) async {
         purchaseCalls++;
+        expect(quotedCost, 120);
         purchasedAccount = trustedAccountId;
         expect(purchaseType, 'weapon_unlock');
         expect(targetId, 'ranger_longbow');
@@ -371,6 +373,7 @@ void main() {
       'purchaseType': 'weapon_unlock',
       'targetId': 'ranger_longbow',
       'idempotencyKey': 'retry-key-1',
+      'quotedCost': 120,
     }));
     final purchaseResponse = await purchaseRequest.close();
     final receipt = jsonDecode(await purchaseResponse.transform(utf8.decoder).join())
@@ -411,6 +414,7 @@ void main() {
         required purchaseType,
         required targetId,
         required idempotencyKey,
+        required quotedCost,
       }) async => throw StateError('must not be called'),
     );
     await accountHost.start();
