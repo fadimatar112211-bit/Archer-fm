@@ -460,3 +460,13 @@ Still to decide or test:
 - Account screen now includes hero levels and weapon ownership/upgrade summary in addition to monster levels, wallet, ledger and match history. Flutter validation for that expanded view is running in [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437).
 
 - Expanded account-screen Flutter workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) has now passed Flutter analysis and the complete test suite, including hero/weapon progression parsing and display. Android debug APK compilation is in progress; emulator execution remains a manual-dispatch-only QA step.
+
+
+## Phase 5 Android package verification — 2026-11-27
+
+- Flutter/Android workflow [45969584437](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584437) completed successfully: Flutter analysis, the full test suite and Android debug APK build all passed.
+- Uploaded APK artifact: `archer-fm-android-validation`, artifact ID `15184891380`, approximately 141 MB; available until 2026-12-11 according to GitHub.
+- Emulator step was skipped because it is intentionally limited to manual workflow dispatch. No emulator/physical-device runtime test is claimed.
+- PostgreSQL 16 smoke workflow [45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438) passed migration, privilege/RLS, settlement, idempotency, conflict rejection and two-account isolation checks. This is not a live Supabase staging test.
+- Phase 5 remains **IN PROGRESS** pending live Supabase deployment and E2E, approved progression economy and upgrade handlers, cross-device restore/reconnect, production deployment/storage/backup checks and device QA.
+- PR #21 remains draft/open/unmerged. PR #20 and `main` remain untouched.
