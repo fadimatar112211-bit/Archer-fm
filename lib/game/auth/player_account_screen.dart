@@ -387,8 +387,9 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
     final quote = _weaponQuote(weapon.id);
     final owned = _heroProgress?.ownsWeapon(weapon.id) ?? false;
     final level = _heroProgress?.weaponLevel(weapon.id) ?? 0;
-    final cost = quote?['cost'];
-    final available = quote?['available'] == true && cost is int;
+    final rawCost = quote?['cost'];
+    final cost = rawCost is int ? rawCost : 0;
+    final available = quote?['available'] == true && rawCost is int;
     final purchaseType = quote?['purchaseType'] as String? ??
         (owned ? 'weapon_upgrade' : 'weapon_unlock');
     final busyKey = '$purchaseType:${weapon.id}';
@@ -404,7 +405,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                     purchaseType: purchaseType,
                     targetId: weapon.id,
                     title: weapon.nameAr,
-                    cost: cost as int,
+                    cost: cost,
                   )
               : null,
           child: Text(
@@ -424,8 +425,9 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
 
   Widget _monsterPurchaseTile(String id, String title, int? level) {
     final quote = _monsterQuote(id);
-    final cost = quote?['cost'];
-    final available = quote?['available'] == true && cost is int;
+    final rawCost = quote?['cost'];
+    final cost = rawCost is int ? rawCost : 0;
+    final available = quote?['available'] == true && rawCost is int;
     const purchaseType = 'monster_upgrade';
     final busyKey = '$purchaseType:$id';
     return ListTile(
@@ -441,7 +443,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                     purchaseType: purchaseType,
                     targetId: id,
                     title: title,
-                    cost: cost as int,
+                    cost: cost,
                   )
               : null,
           child: Text(
