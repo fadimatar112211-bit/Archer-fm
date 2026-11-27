@@ -139,7 +139,9 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
           content: Text(
             receipt.alreadyApplied
                 ? 'تم تأكيد العملية السابقة دون خصم جديد'
-                : 'تمت العملية بنجاح • المستوى ${receipt.resultingLevel} • الرصيد ${receipt.currencyBalance}',
+                : purchaseType == 'weapon_unlock'
+                    ? 'تم فتح السلاح بنجاح • الرصيد ${receipt.currencyBalance}'
+                    : 'تم التطوير إلى المستوى ${receipt.resultingLevel} • الرصيد ${receipt.currencyBalance}',
           ),
         ),
       );
