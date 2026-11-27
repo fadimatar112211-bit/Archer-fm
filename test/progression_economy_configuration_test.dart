@@ -9,7 +9,7 @@ Map<String, dynamic> _validConfig() => {
     for (final hero in archerFmHeroes)
       for (final weapon in hero.weapons)
         weapon.id: {
-          'unlockCost': 100,
+          'unlockCost': hero.weapons.first.id == weapon.id ? 0 : 1200,
           'upgradeCosts': {
             for (var level = 1; level <= 40; level++) '$level': level * 10,
           },
@@ -28,10 +28,28 @@ Map<String, dynamic> _validConfig() => {
 void main() {
   test('loads all canonical weapon and monster prices without defaults', () {
     final config = ProgressionEconomyConfiguration.fromJson(_validConfig());
-    expect(config.unlockCost('ranger_longbow'), 100);
+    expect(config.unlockCost('ranger_greenbow'), 0);
+    expect(config.unlockCost('ranger_longbow'), 1200);
     expect(config.weaponUpgradeCost('ranger_longbow', 3), 30);
     expect(config.monsterUpgradeCost('runner', 4), 80);
     expect(config.weaponUpgradeCost('ranger_longbow', 41), isNull);
+  });
+
+
+  test('requires free starter weapons and paid unlocks for other slots', () {
+    final starterCost = _validConfig();
+    ((starterCost['weapons'] as Map)['ranger_greenbow'] as Map)['unlockCost'] = 1;
+    expect(
+      () => ProgressionEconomyConfiguration.fromJson(starterCost),
+      throwsFormatException,
+    );
+
+    final paidWeaponFree = _validConfig();
+    ((paidWeaponFree['weapons'] as Map)['ranger_longbow'] as Map)['unlockCost'] = 0;
+    expect(
+      () => ProgressionEconomyConfiguration.fromJson(paidWeaponFree),
+      throwsFormatException,
+    );
   });
 
   test('rejects a missing weapon from the server price catalog', () {
