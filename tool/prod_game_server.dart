@@ -172,11 +172,13 @@ Future<void> main() async {
       required purchaseType,
       required targetId,
       required idempotencyKey,
+      required quotedCost,
     }) => progressionPurchaseService.purchase(
       trustedAccountId: trustedAccountId,
       purchaseType: purchaseType,
       targetId: targetId,
       idempotencyKey: idempotencyKey,
+      quotedCost: quotedCost,
     ),
     progressionCatalogHandler: ({
       required trustedAccountId,
