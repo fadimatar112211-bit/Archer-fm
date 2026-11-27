@@ -66,6 +66,10 @@ typedef AccountProgressionPurchaseHandler = Future<Map<String, dynamic>> Functio
   required String idempotencyKey,
 });
 
+typedef AccountProgressionCatalogHandler = Future<Map<String, dynamic>> Function({
+  required String trustedAccountId,
+});
+
 /// WebSocket room gateway adapted from the supplied multiplayer sample.
 ///
 /// It handles room codes, four-player transport sessions, reconnect tokens,
@@ -84,6 +88,7 @@ class WebSocketGameHost {
     this.broadcastInterval = const Duration(milliseconds: 100),
     this.accessTokenVerifier,
     this.progressionPurchaseHandler,
+    this.progressionCatalogHandler,
     this.authenticationRecheckInterval = const Duration(minutes: 1),
   })  : assert(port >= 0 && port <= 65535),
         assert(maxRooms > 0),
@@ -101,6 +106,7 @@ class WebSocketGameHost {
   /// Invoked only after the HTTP bearer token has been verified. The callback
   /// receives no client-supplied account ID, price, level cap or row revision.
   final AccountProgressionPurchaseHandler? progressionPurchaseHandler;
+  final AccountProgressionCatalogHandler? progressionCatalogHandler;
   /// Revalidates active bearer sessions so expired/revoked tokens cannot keep
   /// issuing commands indefinitely after a successful WebSocket handshake.
   final Duration authenticationRecheckInterval;
@@ -149,6 +155,10 @@ class WebSocketGameHost {
   }
 
   void _acceptRequest(HttpRequest request) {
+    if (request.uri.path == '/v1/account/progression/catalog') {
+      unawaited(_handleProgressionCatalogRequest(request));
+      return;
+    }
     if (request.uri.path == '/v1/account/progression/purchase') {
       unawaited(_handleProgressionPurchaseRequest(request));
       return;
@@ -161,6 +171,46 @@ class WebSocketGameHost {
     WebSocketTransformer.upgrade(request).then(_serve).catchError((Object error) {
       stderr.writeln('WebSocket upgrade failed: $error');
     });
+  }
+
+  Future<void> _handleProgressionCatalogRequest(HttpRequest request) async {
+    final handler = progressionCatalogHandler;
+    final verifier = accessTokenVerifier;
+    if (request.method != 'GET') {
+      await _writeJson(request.response, HttpStatus.methodNotAllowed,
+          {'error': 'method_not_allowed'});
+      return;
+    }
+    if (handler == null || verifier == null) {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'purchase_service_unavailable'});
+      return;
+    }
+    final authorization = request.headers.value(HttpHeaders.authorizationHeader);
+    if (authorization == null || !authorization.startsWith('Bearer ')) {
+      await _writeJson(request.response, HttpStatus.unauthorized,
+          {'error': 'unauthorized'});
+      return;
+    }
+    try {
+      final accountId = await verifier(authorization.substring(7));
+      if (accountId == null || accountId.isEmpty) {
+        await _writeJson(request.response, HttpStatus.unauthorized,
+            {'error': 'unauthorized'});
+        return;
+      }
+      final catalog = await handler(trustedAccountId: accountId);
+      await _writeJson(request.response, HttpStatus.ok, {
+        'type': 'progression_catalog',
+        ...catalog,
+      });
+    } on FormatException catch (error) {
+      await _writeJson(request.response, HttpStatus.conflict,
+          {'error': error.message.toString()});
+    } on Object {
+      await _writeJson(request.response, HttpStatus.serviceUnavailable,
+          {'error': 'catalog_temporarily_unavailable'});
+    }
   }
 
   Future<void> _handleProgressionPurchaseRequest(HttpRequest request) async {
