@@ -183,7 +183,7 @@ class ProgressionPurchaseService {
   int _revision(Map<String, dynamic> row, String label) {
     final value = row['revision'];
     if (value is! num || value < 0 || value != value.toInt()) {
-      throw FormatException('invalid_$label_revision');
+      throw FormatException('invalid_${label}_revision');
     }
     return value.toInt();
   }
