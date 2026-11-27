@@ -85,13 +85,14 @@ class ProgressionPurchaseService {
     required String purchaseType,
     required String targetId,
     required String idempotencyKey,
+    required int quotedCost,
   }) async {
     if (!const {'weapon_unlock', 'weapon_upgrade', 'monster_upgrade'}
         .contains(purchaseType)) {
       throw const FormatException('unsupported_purchase_type');
     }
     if (targetId.isEmpty || targetId.length > 96 ||
-        idempotencyKey.isEmpty || idempotencyKey.length > 128) {
+        idempotencyKey.isEmpty || idempotencyKey.length > 128 || quotedCost <= 0) {
       throw const FormatException('invalid_purchase_request');
     }
 
@@ -142,6 +143,9 @@ class ProgressionPurchaseService {
           (throw const FormatException('monster_upgrade_not_configured'));
     }
 
+    if (cost != quotedCost) {
+      throw const FormatException('quote_changed');
+    }
     try {
       return await client.purchaseProgression(
         trustedAccountId: trustedAccountId,
