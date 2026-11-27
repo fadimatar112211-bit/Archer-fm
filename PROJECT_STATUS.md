@@ -470,3 +470,16 @@ Still to decide or test:
 - PostgreSQL 16 smoke workflow [45969584438](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969584438) passed migration, privilege/RLS, settlement, idempotency, conflict rejection and two-account isolation checks. This is not a live Supabase staging test.
 - Phase 5 remains **IN PROGRESS** pending live Supabase deployment and E2E, approved progression economy and upgrade handlers, cross-device restore/reconnect, production deployment/storage/backup checks and device QA.
 - PR #21 remains draft/open/unmerged. PR #20 and `main` remain untouched.
+
+
+## Protected economy configuration — 2026-11-27
+
+- Added the approved server-side progression price catalog template at `config/progression-economy.example.json` for all 12 weapons and four monster types. Starter weapons are zero-cost and already unlocked; second/third weapons cost 1,200/2,500 permanent gold.
+- Weapon upgrade prices are fully populated for target levels 1–40; monster upgrade prices are fully populated for target levels 2–40.
+- Updated the strict economy decoder to allow zero only for the four canonical starter weapons and require positive prices for every unlockable weapon.
+- Added the exact same monster upgrade price schedule and approved health/damage/speed growth to `config/match-combat.example.json`. Production startup already checks purchase/combat price equality before listening.
+- Added `config/match-rewards.example.json` with rank rewards [140, 110, 85, 60] and changed the production gateway to require and load it through `ARCHER_FM_MATCH_REWARDS_CONFIG`; the old optional environment JSON reward value is no longer used.
+- Added `docs/PROTECTED_SERVER_ECONOMY_CONFIGURATION.md` with server-only installation paths, ownership/permissions, environment wiring and the explicit boundary that these are templates until installed on the real host.
+- Arithmetic correction: with starter weapons free, total unlock fees are 14,800; all 12 weapon upgrades total 121,512; all four monster upgrade tracks total 26,488; full account-wide unlock/upgrade completion totals 162,800 permanent gold. This corrects the earlier estimate that incorrectly charged 500 for each already-free starter weapon.
+- The current settlement contract supports rank-based permanent-currency rewards only. Participation/objective/kill/damage bonuses and match XP are not implemented by this configuration and must not be described as active.
+- Protected files have not been installed on a production server. Live server access, file permission verification and CI on this latest commit remain pending. Phase 5 remains in progress.
