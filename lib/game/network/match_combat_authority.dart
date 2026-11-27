@@ -16,6 +16,7 @@ import '../../monsters/monster_projectile_manager.dart';
 import '../../monsters/monster_progression.dart';
 import 'monster_progression_policy.dart';
 import '../../monsters/monster_ranged_attack_handler.dart';
+import '../world/arena_map.dart';
 import 'match_world_authority.dart';
 import 'match_status_effects.dart';
 
