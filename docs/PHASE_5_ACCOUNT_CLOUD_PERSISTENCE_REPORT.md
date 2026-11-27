@@ -337,3 +337,10 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - No owner-approved weapon unlock/upgrade prices, monster upgrade costs, monster growth schedule, or match reward schedule have been supplied. The production gateway therefore keeps match rewards at zero by default and requires explicit combat tuning. Do not invent these economy values or enable purchases with guessed prices.
 
 **Current status:** source-level purchase primitives and monster match hydration are present; latest purchase-migration CI, player-facing authoritative purchase integration, live Supabase staging, cross-device E2E, production WSS deployment and device QA remain open.
+
+
+## 23. Purchase target allowlist hardening — 2026-11-27
+
+- Hardened the server-only purchase RPC with an explicit allowlist of the 12 weapon IDs in the four-hero roster and the four supported monster types. Unknown IDs are rejected at the database boundary instead of relying solely on gateway validation.
+- Updated the PostgreSQL smoke workflow to use the real Ranger secondary weapon ID and to assert that unknown weapon and monster IDs are rejected. The workflow also applies migration 002 before running its atomic purchase, idempotency, insufficient-currency and revision-conflict assertions.
+- Changes are committed on the isolated Phase 5 branch. The updated PostgreSQL workflow must complete successfully before this hardening is considered validated; no result is claimed yet.
