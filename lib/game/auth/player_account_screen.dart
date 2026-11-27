@@ -16,6 +16,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
   late final PlayerAccountDataService _data;
   PlayerProfile? _profile;
   PlayerWallet? _wallet;
+  PlayerMonsterProgress? _monsterProgress;
   List<PlayerCurrencyTransaction> _transactions = const [];
   List<PlayerMatchResult> _matches = const [];
   bool _loading = true;
@@ -37,6 +38,7 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       final values = await Future.wait<Object>([
         _data.loadProfile(),
         _data.loadWallet(),
+        _data.loadMonsterProgress(),
         _data.loadCurrencyHistory(limit: 12),
         _data.loadRecentMatches(limit: 12),
       ]);
@@ -44,8 +46,9 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
       setState(() {
         _profile = values[0] as PlayerProfile;
         _wallet = values[1] as PlayerWallet;
-        _transactions = values[2] as List<PlayerCurrencyTransaction>;
-        _matches = values[3] as List<PlayerMatchResult>;
+        _monsterProgress = values[2] as PlayerMonsterProgress;
+        _transactions = values[3] as List<PlayerCurrencyTransaction>;
+        _matches = values[4] as List<PlayerMatchResult>;
         _loading = false;
       });
     } catch (_) {
@@ -164,6 +167,18 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+                      Text('مستويات الوحوش', style: Theme.of(context).textTheme.titleLarge),
+                      Card(
+                        child: Column(
+                          children: [
+                            _monsterLevelTile('العدّاء', _monsterProgress?.runner),
+                            _monsterLevelTile('المدرّع', _monsterProgress?.tank),
+                            _monsterLevelTile('المتسلّل', _monsterProgress?.stalker),
+                            _monsterLevelTile('الرامي', _monsterProgress?.ranged),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
                       Text('سجل العملات', style: Theme.of(context).textTheme.titleLarge),
                       if (_transactions.isEmpty)
                         const ListTile(title: Text('لا توجد حركات مسجلة بعد'))
@@ -208,6 +223,16 @@ class _PlayerAccountScreenState extends State<PlayerAccountScreen> {
                 ),
     );
   }
+
+  Widget _monsterLevelTile(String title, int? level) => ListTile(
+        dense: true,
+        leading: const Icon(Icons.pets_outlined),
+        title: Text(title),
+        trailing: Text(
+          level == null ? '—' : 'المستوى $level / 40',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
 
   String _transactionLabel(String reason) => switch (reason) {
         'match_reward' => 'مكافأة مباراة',
