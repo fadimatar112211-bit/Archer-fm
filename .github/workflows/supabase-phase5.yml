@@ -62,6 +62,8 @@ jobs:
           SQL
       - name: Apply Phase 5 migration
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202611270001_phase5_player_persistence.sql
+      - name: Apply atomic progression purchase migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202611270002_atomic_progression_purchases.sql
       - name: Assert RLS, client grants and server-only RPC privileges
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/validation/phase5_privileges.sql
       - name: Verify new profile provisioning trigger
