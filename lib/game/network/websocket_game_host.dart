@@ -64,6 +64,7 @@ typedef AccountProgressionPurchaseHandler = Future<Map<String, dynamic>> Functio
   required String purchaseType,
   required String targetId,
   required String idempotencyKey,
+  required int quotedCost,
 });
 
 typedef AccountProgressionCatalogHandler = Future<Map<String, dynamic>> Function({
@@ -252,11 +253,13 @@ class WebSocketGameHost {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic> ||
           decoded.keys.toSet().difference(
-            {'purchaseType', 'targetId', 'idempotencyKey'},
+            {'purchaseType', 'targetId', 'idempotencyKey', 'quotedCost'},
           ).isNotEmpty ||
           decoded['purchaseType'] is! String ||
           decoded['targetId'] is! String ||
-          decoded['idempotencyKey'] is! String) {
+          decoded['idempotencyKey'] is! String ||
+          decoded['quotedCost'] is! int ||
+          (decoded['quotedCost'] as int) <= 0) {
         await _writeJson(request.response, HttpStatus.badRequest,
             {'error': 'invalid_purchase_request'});
         return;
@@ -272,6 +275,7 @@ class WebSocketGameHost {
         purchaseType: decoded['purchaseType'] as String,
         targetId: decoded['targetId'] as String,
         idempotencyKey: decoded['idempotencyKey'] as String,
+        quotedCost: decoded['quotedCost'] as int,
       );
       await _writeJson(request.response, HttpStatus.ok, {
         'type': 'purchase_result',
