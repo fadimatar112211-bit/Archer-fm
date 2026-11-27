@@ -237,7 +237,7 @@ class WebSocketGameHost {
           if (player == null) {
             if (handshakePending) return;
             handshakePending = true;
-            unawaited(_handshake(socket, message, (session, joined) {
+            unawaited(_handshake(socket, message, (session, joined, verifiedAccountId) {
               room = session;
               player = joined;
               final verifier = accessTokenVerifier;
@@ -254,7 +254,8 @@ class WebSocketGameHost {
                     authenticationCheckInFlight = true;
                     try {
                       final verifiedAccount = await verifier(token);
-                      if (verifiedAccount == null) {
+                      if (verifiedAccount == null ||
+                          verifiedAccount != verifiedAccountId) {
                         timer.cancel();
                         if (identical(_sockets[joined.id], socket)) {
                           socket.close(
@@ -324,7 +325,7 @@ class WebSocketGameHost {
   Future<void> _handshake(
     WebSocket socket,
     Map<String, dynamic> message,
-    void Function(GameServerSession, GameServerPlayer) attach,
+    void Function(GameServerSession, GameServerPlayer, String?) attach,
   ) async {
     try {
       final verifier = accessTokenVerifier;
@@ -416,7 +417,7 @@ class WebSocketGameHost {
       final oldSocket = _sockets[joinedPlayer.id];
       _sockets[joinedPlayer.id] = socket;
       oldSocket?.close();
-      attach(joinedRoom, joinedPlayer);
+      attach(joinedRoom, joinedPlayer, accountId);
       _send(socket, {
         'type': 'welcome',
         'id': joinedPlayer.id,
