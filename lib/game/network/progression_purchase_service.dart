@@ -1,4 +1,5 @@
 import '../progression/hero_progress.dart';
+import '../heroes/hero_roster.dart';
 import '../progression/progression_economy_configuration.dart';
 import '../../monsters/monster_models.dart';
 import 'supabase_rest_client.dart';
@@ -13,6 +14,71 @@ class ProgressionPurchaseService {
 
   final SupabaseRestClient client;
   final ProgressionEconomyConfiguration economy;
+
+  Future<Map<String, dynamic>> catalog(String trustedAccountId) async {
+    final heroRow = await client.loadProgressionRow(
+      table: 'hero_progress',
+      trustedAccountId: trustedAccountId,
+    );
+    final monsterRow = await client.loadProgressionRow(
+      table: 'monster_progress',
+      trustedAccountId: trustedAccountId,
+    );
+    if (heroRow == null || monsterRow == null ||
+        heroRow['data'] is! Map<String, dynamic> ||
+        monsterRow['data'] is! Map) {
+      throw const FormatException('account_progress_missing');
+    }
+    final hero = HeroProgress.fromJson(heroRow['data'] as Map<String, dynamic>);
+    final monsterData = monsterRow['data'] as Map;
+    final rawLevels = monsterData['levels'];
+    if (monsterData['version'] != 1 || rawLevels is! Map) {
+      throw const FormatException('invalid_monster_progress');
+    }
+    final weapons = <Map<String, Object?>>[];
+    for (final heroDefinition in archerFmHeroes) {
+      for (final weapon in heroDefinition.weapons) {
+        final owned = hero.ownsWeapon(weapon.id);
+        final level = hero.weaponLevel(weapon.id);
+        final type = owned ? 'weapon_upgrade' : 'weapon_unlock';
+        final cost = owned
+            ? economy.weaponUpgradeCost(weapon.id, level + 1)
+            : economy.unlockCost(weapon.id);
+        weapons.add({
+          'id': weapon.id,
+          'name': weapon.nameAr,
+          'hero': heroDefinition.nameAr,
+          'owned': owned,
+          'level': level,
+          'purchaseType': type,
+          'cost': cost,
+          'available': cost != null && (!owned || level < 40),
+        });
+      }
+    }
+    final monsters = <Map<String, Object?>>[];
+    const names = {
+      'runner': 'العدّاء',
+      'tank': 'المدرّع',
+      'stalker': 'المتسلّل',
+      'ranged': 'الرامي',
+    };
+    for (final type in MonsterType.values) {
+      final level = rawLevels[type.name];
+      if (level is! int || level < 1 || level > 40) {
+        throw const FormatException('invalid_monster_progress');
+      }
+      monsters.add({
+        'id': type.name,
+        'name': names[type.name],
+        'level': level,
+        'purchaseType': 'monster_upgrade',
+        'cost': level < 40 ? economy.monsterUpgradeCost(type.name, level + 1) : null,
+        'available': level < 40 && economy.monsterUpgradeCost(type.name, level + 1) != null,
+      });
+    }
+    return {'weapons': weapons, 'monsters': monsters};
+  }
 
   Future<Map<String, dynamic>> purchase({
     required String trustedAccountId,
