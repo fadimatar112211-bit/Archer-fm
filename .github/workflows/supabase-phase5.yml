@@ -261,6 +261,21 @@ jobs:
               raise exception 'weapon upgrade purchase returned invalid receipt';
             end if;
 
+            -- A lost-response retry may carry the old idempotency key but
+            -- observe a new level price. It must return the prior result and
+            -- never charge a second time.
+            select * into retry_receipt
+            from public.purchase_player_progression(
+              v_user_id, 'weapon_upgrade', 'ranger_longbow', 3, 40,
+              2, 0, 'purchase:weapon-upgrade:test-1'
+            );
+            if not retry_receipt.already_applied
+               or retry_receipt.currency_balance <> 35
+               or retry_receipt.hero_revision <> 3
+               or retry_receipt.resulting_level <> 1 then
+              raise exception 'weapon upgrade retry with changed quote was not idempotent';
+            end if;
+
             select * into receipt
             from public.purchase_player_progression(
               v_user_id, 'monster_upgrade', 'runner', 7, 40,
