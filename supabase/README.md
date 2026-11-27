@@ -77,6 +77,6 @@ Still required before production use:
 - Load cloud profile on login and migrate existing local saves with a tested conflict policy.
 - Add end-to-end tests against a staging Supabase project, including second-device recovery, concurrent/idempotent settlement and cross-account isolation.
 - Apply the deployment template to the chosen host, then complete monitoring, backups and a restore drill; no live deployment or operations validation has been performed yet.
-- Test token expiry/revocation during long-lived WebSocket sessions.
+- Live staging verification of token expiry/revocation semantics remains required. The gateway now revalidates active sessions every 60 seconds and a local test simulates revocation, identity mismatch and verifier failure handling; this does not replace a real Supabase staging test.
 
 No real cloud project, credentials or staging environment were available during this code pass. The database schema and adapters are source changes only until an owner creates and configures the Supabase project.
