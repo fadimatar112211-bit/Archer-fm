@@ -277,3 +277,11 @@ The code is **not production-deployed or fully cloud-wired yet**. No Supabase pr
 - PostgreSQL migration smoke test [45968811877](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811877) completed successfully. Migration apply, all privilege assertions, Auth provisioning and profile constraint/timestamp checks passed.
 - This validates the SQL against PostgreSQL 16 with a minimal Supabase-compatible Auth schema. It is not a substitute for applying the migration to the actual Supabase staging project and testing its real Auth/RLS configuration.
 - Flutter/Android validation for the same branch head is running as [45968811852](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45968811852); it had not completed at the time of this report update.
+
+## 22. Player account monster progression visibility — 2026-11-27
+
+- Extended the authenticated account data service to read the signed-in player's own `monster_progress` row under RLS and validate its schema/revision.
+- The Arabic player-account screen now displays the four saved monster levels (runner, tank, stalker and ranged), alongside the wallet, ledger and match history.
+- Added parser tests for all four levels, unsupported schema versions, missing monster types and the level 1–40 bounds.
+- This is read-only visibility. It does not invent upgrade prices or stat growth, and it does not yet apply cloud monster levels to match combat; that requires approved monster growth tuning and server-authoritative upgrade rules.
+- Fresh Flutter and PostgreSQL workflows for this addition are [45969015691](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015691) and [45969015750](https://github.com/fadimatar112211-bit/Archer-fm/actions/runs/45969015750); both were running at the latest poll.
