@@ -70,6 +70,60 @@ void main() {
     expect(config.ultimateEnergyCosts, hasLength(16));
   });
 
+  Map<String, Object?> _monsterProgressionPolicy() => {
+    'growth': {
+      for (final type in MonsterType.values)
+        type.name: {
+          'healthPerLevel': 0.1,
+          'damagePerLevel': 0.05,
+          'speedPerLevel': 0.02,
+        },
+    },
+    'upgradeCosts': {
+      for (final type in MonsterType.values)
+        type.name: {
+          for (var level = 2; level <= 40; level++)
+            level.toString(): level * 10,
+        },
+    },
+  };
+
+  test('loads cloud monster levels only when a complete approved policy is supplied', () {
+    final withoutPolicy = decodeMatchCombatConfiguration(_validConfiguration());
+    expect(withoutPolicy.monsterProgressionPolicy, isNull);
+
+    final json = _validConfiguration()
+      ..['monsterProgressionPolicy'] = _monsterProgressionPolicy();
+    final config = decodeMatchCombatConfiguration(json);
+    final progression = config.monsterProgressionPolicy!.restore(
+      catalog: config.monsterCatalog,
+      saveData: {
+        'version': 1,
+        'levels': {
+          for (final type in MonsterType.values)
+            type.name: type == MonsterType.runner ? 3 : 1,
+        },
+      },
+    );
+    expect(progression.statsFor(MonsterType.runner).maxHealth, 1200);
+    expect(progression.statsFor(MonsterType.tank).maxHealth, 1000);
+    expect(progression.costForNextLevel(MonsterType.runner), 40);
+  });
+
+  test('rejects incomplete monster growth and upgrade cost policies', () {
+    final missingCost = _monsterProgressionPolicy();
+    ((missingCost['upgradeCosts'] as Map)['runner'] as Map).remove('40');
+    final json = _validConfiguration()
+      ..['monsterProgressionPolicy'] = missingCost;
+    expect(() => decodeMatchCombatConfiguration(json), throwsFormatException);
+
+    final missingGrowth = _monsterProgressionPolicy();
+    ((missingGrowth['growth'] as Map)['tank'] as Map).remove('damagePerLevel');
+    final invalid = _validConfiguration()
+      ..['monsterProgressionPolicy'] = missingGrowth;
+    expect(() => decodeMatchCombatConfiguration(invalid), throwsFormatException);
+  });
+
   test('rejects a missing monster type instead of silently using defaults', () {
     final json = _validConfiguration();
     (json['monsterCatalog'] as Map).remove('ranged');
