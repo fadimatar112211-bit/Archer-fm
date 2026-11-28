@@ -29,7 +29,7 @@
 ## تدقيق المستودع قبل التعديل
 
 - الفرع الحالي: `integration/audit-and-unification`.
-- HEAD الحقيقي (Git محلي + origin): `f858820e51d79fc96be52f6920a65afb6e20da79` (`docs: add Archer FM master plan audit status`).
+- HEAD الحقيقي (Git محلي + origin): `64ba069cbe6857639b2787cc7af62654b6d6bf49` (`docs: correct HEAD/commit verification in master plan`).
 - تم الفحص: `git status`, بنية Android, `pubspec.yaml`, auth imports, الاختبارات الفاشلة، ومسارات اللعب/الشبكة/الأصول الرئيسية.
 - لا تعديل على `main`، لا دمج PR، لا حذف أصول مرجعية.
 
